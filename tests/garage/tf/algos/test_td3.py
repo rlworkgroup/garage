@@ -8,6 +8,7 @@ from garage.envs import GarageEnv
 from garage.experiment import LocalTFRunner
 from garage.np.exploration_policies import AddGaussianNoise
 from garage.replay_buffer import PathBuffer
+from garage.sampler import LocalSampler
 from garage.tf.algos import TD3
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
@@ -54,6 +55,7 @@ class TestTD3(TfGraphTestCase):
                        qf=qf,
                        qf2=qf2,
                        replay_buffer=replay_buffer,
+                       max_path_length=100,
                        steps_per_epoch=20,
                        target_update_tau=0.005,
                        n_train_steps=50,
@@ -67,6 +69,6 @@ class TestTD3(TfGraphTestCase):
                        policy_optimizer=tf.compat.v1.train.AdamOptimizer,
                        qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
-            runner.setup(algo, env)
+            runner.setup(algo, env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=250)
-            assert last_avg_ret > 400
+            assert last_avg_ret > 360

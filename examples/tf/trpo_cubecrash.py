@@ -53,8 +53,7 @@ def trpo_cubecrash(ctxt=None, seed=1, batch_size=4000):
                     discount=0.99,
                     gae_lambda=0.95,
                     lr_clip_range=0.2,
-                    policy_ent_coeff=0.0,
-                    flatten_input=False)
+                    policy_ent_coeff=0.0)
 
         runner.setup(algo, env)
         runner.train(n_epochs=100, batch_size=batch_size)

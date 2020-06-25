@@ -4,7 +4,6 @@ TD3, or Twin Delayed Deep Deterministic Policy Gradient, uses actor-critic
 method to optimize the policy and reward prediction. Notably, it uses the
 minimum value of two critics instead of one to limit overestimation.
 """
-from collections import deque
 
 from dowel import logger, tabular
 import numpy as np
@@ -13,9 +12,8 @@ import tensorflow as tf
 from garage import _Default, make_optimizer
 from garage import log_performance
 from garage.np import obtain_evaluation_samples
-from garage.np import samples_to_tensors
 from garage.np.algos import RLAlgorithm
-from garage.sampler import OffPolicyVectorizedSampler
+from garage.sampler import LocalSampler
 from garage.tf.misc import tensor_utils
 
 
@@ -59,7 +57,6 @@ class TD3(RLAlgorithm):
         buffer_batch_size (int): Size of replay buffer.
         min_buffer_size (int):
             Number of samples in replay buffer before first optimization.
-        rollout_batch_size (int): Roll out batch size.
         reward_scale (float): Scale to reward.
         exploration_policy_sigma (float): Action noise sigma.
         exploration_policy_clip (float): Action noise clip.
@@ -98,7 +95,6 @@ class TD3(RLAlgorithm):
             n_train_steps=50,
             buffer_batch_size=64,
             min_buffer_size=1e4,
-            rollout_batch_size=1,
             reward_scale=1.,
             exploration_policy_sigma=0.2,
             actor_update_period=2,
@@ -113,7 +109,6 @@ class TD3(RLAlgorithm):
         self._name = name
         self._clip_pos_returns = clip_pos_returns
         self._clip_return = clip_return
-        self._success_history = deque(maxlen=100)
 
         self._episode_rewards = []
         self._episode_policy_losses = []
@@ -152,14 +147,12 @@ class TD3(RLAlgorithm):
         self.max_path_length = max_path_length
         self._max_eval_path_length = max_eval_path_length
 
-        # used by OffPolicyVectorizedSampler
         self.env_spec = env_spec
-        self.rollout_batch_size = rollout_batch_size
         self.replay_buffer = replay_buffer
         self.policy = policy
         self.exploration_policy = exploration_policy
 
-        self.sampler_cls = OffPolicyVectorizedSampler
+        self.sampler_cls = LocalSampler
 
         self.init_opt()
 
@@ -314,9 +307,7 @@ class TD3(RLAlgorithm):
 
         for _ in runner.step_epochs():
             for cycle in range(self._steps_per_epoch):
-                runner.step_path = runner.obtain_samples(runner.step_itr)
-                for path in runner.step_path:
-                    path['rewards'] *= self._reward_scale
+                runner.step_path = runner.obtain_trajectories(runner.step_itr)
                 last_return = self.train_once(runner.step_itr,
                                               runner.step_path)
                 if (cycle == 0 and self.replay_buffer.n_transitions_stored >=
@@ -330,46 +321,31 @@ class TD3(RLAlgorithm):
 
         return last_return
 
-    def train_once(self, itr, paths):
+    def train_once(self, itr, trajectories):
         """Perform one step of policy optimization given one batch of samples.
 
         Args:
             itr (int): Iteration number.
-            paths (list[dict]): A list of collected paths.
+            trajectories (TrajectoryBatch): Batch of trajectories.
 
         Returns:
             np.float64: Average return.
 
         """
-        paths = samples_to_tensors(paths)
+        self.replay_buffer.add_trajectory_batch(trajectories)
 
         epoch = itr / self._steps_per_epoch
 
-        self._episode_rewards.extend([
-            path for path, complete in zip(paths['undiscounted_returns'],
-                                           paths['complete']) if complete
-        ])
-        self._success_history.extend([
-            path for path, complete in zip(paths['success_history'],
-                                           paths['complete']) if complete
-        ])
+        self._episode_rewards.extend(
+            [traj.rewards.sum() for traj in trajectories.split()])
 
         # Avoid calculating the mean of an empty list in cases where
         # all paths were non-terminal.
 
         last_average_return = np.NaN
-        avg_success_rate = 0
 
         if self._episode_rewards:
             last_average_return = np.mean(self._episode_rewards)
-
-        if self._success_history:
-            if (itr % self._steps_per_epoch == 0
-                    and self.replay_buffer.n_transitions_stored >=
-                    self._min_buffer_size):
-                avg_success_rate = np.mean(self._success_history)
-
-        self._qf.log_diagnostics(paths)
 
         for _ in range(self._n_train_steps):
             if (self.replay_buffer.n_transitions_stored >=
@@ -399,7 +375,6 @@ class TD3(RLAlgorithm):
                 tabular.record('QFunction/MaxY', np.max(self._epoch_ys))
                 tabular.record('QFunction/AverageAbsY',
                                np.mean(np.abs(self._epoch_ys)))
-                tabular.record('AverageSuccessRate', avg_success_rate)
 
             if not self._smooth_return:
                 self._episode_rewards = []
@@ -408,7 +383,6 @@ class TD3(RLAlgorithm):
                 self._epoch_ys = []
                 self._epoch_qs = []
 
-            self._success_history.clear()
         return last_average_return
 
     def optimize_policy(self, itr):
@@ -432,6 +406,8 @@ class TD3(RLAlgorithm):
         actions = transitions['actions']
         next_observations = transitions['next_observations']
         terminals = transitions['terminals']
+
+        rewards *= self._reward_scale
 
         next_inputs = next_observations
         inputs = observations

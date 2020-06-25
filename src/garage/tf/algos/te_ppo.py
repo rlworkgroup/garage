@@ -43,9 +43,6 @@ class TEPPO(TENPO):
             distribution of the entropy to prevent the entropy from being
             negative.
         stop_ce_gradient (bool): Whether to stop the cross entropy gradient.
-        flatten_input (bool): Whether to flatten input along the observation
-            dimension. If True, for example, an observation with shape (2, 4)
-            will be flattened to 8.
         inference (garage.tf.embedding.encoder.StochasticEncoder): A encoder
             that infers the task embedding from trajectory.
         inference_optimizer (object): The optimizer of the inference. Should be
@@ -78,7 +75,6 @@ class TEPPO(TENPO):
                  encoder_ent_coeff=1e-3,
                  use_softplus_entropy=False,
                  stop_ce_gradient=False,
-                 flatten_input=True,
                  inference=None,
                  inference_optimizer=None,
                  inference_optimizer_args=None,
@@ -110,7 +106,6 @@ class TEPPO(TENPO):
                          encoder_ent_coeff=encoder_ent_coeff,
                          use_softplus_entropy=use_softplus_entropy,
                          stop_ce_gradient=stop_ce_gradient,
-                         flatten_input=flatten_input,
                          inference=inference,
                          inference_optimizer=inference_optimizer,
                          inference_optimizer_args=inference_optimizer_args,

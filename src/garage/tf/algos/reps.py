@@ -9,13 +9,12 @@ import tensorflow as tf
 from garage import _Default, make_optimizer
 from garage import log_performance, TrajectoryBatch
 from garage.np.algos import RLAlgorithm
-from garage.sampler import OnPolicyVectorizedSampler
+from garage.sampler import RaySampler
 from garage.tf import paths_to_tensors
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import flatten_inputs
 from garage.tf.misc.tensor_utils import graph_inputs
 from garage.tf.optimizers import LbfgsOptimizer
-from garage.tf.samplers import BatchSampler
 
 
 # pylint: disable=differing-param-doc, differing-type-doc
@@ -92,7 +91,6 @@ class REPS(RLAlgorithm):  # noqa: D416
         self._center_adv = center_adv
         self._positive_adv = positive_adv
         self._fixed_horizon = fixed_horizon
-        self._flatten_input = True
 
         self._name = name
         self._name_scope = tf.name_scope(self._name)
@@ -116,10 +114,7 @@ class REPS(RLAlgorithm):  # noqa: D416
         self._l2_reg_loss = float(l2_reg_loss)
 
         self._episode_reward_mean = collections.deque(maxlen=100)
-        if policy.vectorized:
-            self.sampler_cls = OnPolicyVectorizedSampler
-        else:
-            self.sampler_cls = BatchSampler
+        self.sampler_cls = RaySampler
 
         self.init_opt()
 
@@ -170,9 +165,7 @@ class REPS(RLAlgorithm):  # noqa: D416
         # -- Stage: Calculate baseline
         paths = [
             dict(
-                observations=self._env_spec.observation_space.flatten_n(
-                    path['observations'])
-                if self._flatten_input else path['observations'],
+                observations=path['observations'],
                 actions=(
                     self._env_spec.action_space.flatten_n(  # noqa: E126
                         path['actions'])),

@@ -294,7 +294,6 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         self._rl2_max_path_length = rl2_max_path_length
         self.env_spec = self._inner_algo._env_spec
         self._n_epochs_per_eval = n_epochs_per_eval
-        self._flatten_input = self._inner_algo._flatten_input
         self._policy = self._inner_algo.policy
         self._discount = self._inner_algo._discount
         self._meta_batch_size = meta_batch_size
@@ -474,14 +473,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
                 values of shape :math:`[max_path_length, S^*]`
 
         """
-        if self._flatten_input:
-            observations = np.concatenate([
-                self.env_spec.observation_space.flatten_n(path['observations'])
-                for path in paths
-            ])
-        else:
-            observations = np.concatenate(
-                [path['observations'] for path in paths])
+        observations = np.concatenate([path['observations'] for path in paths])
         actions = np.concatenate([
             self.env_spec.action_space.flatten_n(path['actions'])
             for path in paths

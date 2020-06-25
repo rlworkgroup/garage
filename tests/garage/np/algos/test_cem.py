@@ -4,7 +4,7 @@ from garage.envs import GarageEnv
 from garage.experiment import LocalTFRunner
 from garage.np.algos import CEM
 from garage.np.baselines import LinearFeatureBaseline
-from garage.sampler import OnPolicyVectorizedSampler
+from garage.sampler import LocalSampler
 from garage.tf.policies import CategoricalMLPPolicy
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -31,7 +31,7 @@ class TestCEM(TfGraphTestCase):
                        max_path_length=100,
                        n_samples=n_samples)
 
-            runner.setup(algo, env, sampler_cls=OnPolicyVectorizedSampler)
+            runner.setup(algo, env, sampler_cls=LocalSampler)
             rtn = runner.train(n_epochs=10, batch_size=2048)
             assert rtn > 40
 

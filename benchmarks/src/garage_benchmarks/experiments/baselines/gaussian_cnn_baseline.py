@@ -64,7 +64,6 @@ def gaussian_cnn_baseline(ctxt, env_id, seed):
             gae_lambda=0.95,
             lr_clip_range=0.2,
             policy_ent_coeff=0.0,
-            flatten_input=False,
             optimizer_args=dict(
                 batch_size=32,
                 max_epochs=10,

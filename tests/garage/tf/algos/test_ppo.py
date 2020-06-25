@@ -9,6 +9,7 @@ import tensorflow as tf
 from garage.envs import GarageEnv, normalize
 from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import LocalSampler
 from garage.tf.algos import PPO
 from garage.tf.baselines import ContinuousMLPBaseline
 from garage.tf.baselines import GaussianMLPBaseline
@@ -49,7 +50,7 @@ class TestPPO(TfGraphTestCase):
                        discount=0.99,
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32, max_epochs=10))
-            runner.setup(algo, self.env)
+            runner.setup(algo, self.env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
@@ -68,7 +69,7 @@ class TestPPO(TfGraphTestCase):
                        entropy_method='max',
                        policy_ent_coeff=0.02,
                        center_adv=False)
-            runner.setup(algo, self.env)
+            runner.setup(algo, self.env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
@@ -91,7 +92,7 @@ class TestPPO(TfGraphTestCase):
                        entropy_method='max',
                        policy_ent_coeff=0.02,
                        center_adv=False)
-            runner.setup(algo, self.env)
+            runner.setup(algo, self.env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
@@ -114,7 +115,7 @@ class TestPPO(TfGraphTestCase):
                        entropy_method='regularized',
                        policy_ent_coeff=0.0,
                        center_adv=True)
-            runner.setup(algo, self.env)
+            runner.setup(algo, self.env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
@@ -132,39 +133,10 @@ class TestPPO(TfGraphTestCase):
                        stop_entropy_gradient=False,
                        entropy_method='regularized',
                        policy_ent_coeff=0.02,
-                       center_adv=True,
-                       flatten_input=False)
-            runner.setup(algo, self.env)
+                       center_adv=True)
+            runner.setup(algo, self.env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
-
-    @pytest.mark.mujoco
-    def test_ppo_pendulum_flatten_input(self):
-        """Test PPO with CartPole to test observation flattening."""
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = GarageEnv(
-                normalize(ReshapeObservation(gym.make('CartPole-v1'), (2, 2))))
-            policy = CategoricalMLPPolicy(
-                env_spec=env.spec,
-                hidden_nonlinearity=tf.nn.tanh,
-            )
-            baseline = LinearFeatureBaseline(env_spec=env.spec)
-            algo = PPO(env_spec=env.spec,
-                       policy=policy,
-                       baseline=baseline,
-                       max_path_length=100,
-                       discount=0.99,
-                       gae_lambda=0.95,
-                       lr_clip_range=0.2,
-                       policy_ent_coeff=0.0,
-                       optimizer_args=dict(
-                           batch_size=32,
-                           max_epochs=10,
-                           learning_rate=1e-3,
-                       ))
-            runner.setup(algo, env)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 80
 
     def teardown_method(self):
         self.env.close()
@@ -205,7 +177,7 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
                 policy_ent_coeff=0.02,
                 center_adv=False,
             )
-            runner.setup(algo, env)
+            runner.setup(algo, env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 100
 
@@ -238,7 +210,7 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
                 policy_ent_coeff=0.02,
                 center_adv=False,
             )
-            runner.setup(algo, env)
+            runner.setup(algo, env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 100
 
@@ -274,7 +246,7 @@ class TestPPOPendulumLSTM(TfGraphTestCase):
                 policy_ent_coeff=0.02,
                 center_adv=False,
             )
-            runner.setup(algo, env)
+            runner.setup(algo, env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 80
 
@@ -308,6 +280,6 @@ class TestPPOPendulumGRU(TfGraphTestCase):
                 policy_ent_coeff=0.02,
                 center_adv=False,
             )
-            runner.setup(algo, env)
+            runner.setup(algo, env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 80

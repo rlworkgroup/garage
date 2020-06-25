@@ -26,6 +26,26 @@ class PathBuffer:
         self._path_segments = collections.deque()
         self._buffer = {}
 
+    def add_trajectory_batch(self, trajectories):
+        """Add a TrajectoryBatch to the buffer.
+
+        Args:
+            trajectories (TrajectoryBatch): Trajectories to add.
+
+        """
+        env_spec = trajectories.env_spec
+        obs_space = env_spec.observation_space
+        for traj in trajectories.split():
+            path = {
+                'observations': obs_space.flatten_n(traj.observations),
+                'next_observations':
+                obs_space.flatten_n(traj.next_observations),
+                'actions': env_spec.action_space.flatten_n(traj.actions),
+                'rewards': traj.rewards.reshape(-1, 1),
+                'terminals': traj.terminals.reshape(-1, 1),
+            }
+            self.add_path(path)
+
     def add_path(self, path):
         """Add a path to the buffer.
 

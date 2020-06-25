@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from garage import log_performance, TrajectoryBatch
 from garage.misc import tensor_utils as tu
 from garage.np.algos.rl_algorithm import RLAlgorithm
-from garage.sampler import OnPolicyVectorizedSampler
+from garage.sampler import RaySampler
 from garage.torch import (compute_advantages, filter_valids, pad_to_last)
 from garage.torch.optimizers import OptimizerWrapper
 
@@ -93,7 +93,7 @@ class VPG(RLAlgorithm):
                                           stop_entropy_gradient,
                                           policy_ent_coeff)
         self._episode_reward_mean = collections.deque(maxlen=100)
-        self.sampler_cls = OnPolicyVectorizedSampler
+        self.sampler_cls = RaySampler
 
         if policy_optimizer:
             self._policy_optimizer = policy_optimizer

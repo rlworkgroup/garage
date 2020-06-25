@@ -8,6 +8,7 @@ import pytest
 from garage.envs import GarageEnv, normalize
 from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
 from garage.tf.optimizers import ConjugateGradientOptimizer
 from garage.tf.optimizers import FiniteDifferenceHvp
@@ -42,7 +43,7 @@ class TestCategoricalPolicies(TfGraphTestCase):
                     base_eps=1e-5)),
             )
 
-            runner.setup(algo, env)
+            runner.setup(algo, env, sampler_cls=LocalSampler)
             runner.train(n_epochs=1, batch_size=4000)
 
             env.close()

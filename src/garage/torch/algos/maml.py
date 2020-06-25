@@ -10,7 +10,8 @@ from garage import _Default, make_optimizer
 from garage import log_multitask_performance
 from garage import TrajectoryBatch
 from garage.misc import tensor_utils
-from garage.sampler import OnPolicyVectorizedSampler
+from garage.sampler import RaySampler
+from garage.sampler.env_update import SetTaskUpdate
 from garage.torch import update_module_params
 from garage.torch.optimizers import ConjugateGradientOptimizer
 from garage.torch.optimizers import DifferentiableSGD
@@ -50,7 +51,7 @@ class MAML:
                  num_grad_updates=1,
                  meta_evaluator=None,
                  evaluate_every_n_epochs=1):
-        self.sampler_cls = OnPolicyVectorizedSampler
+        self.sampler_cls = RaySampler
 
         self.max_path_length = inner_algo.max_path_length
 
@@ -193,10 +194,11 @@ class MAML:
         theta = dict(self._policy.named_parameters())
 
         for i, task in enumerate(tasks):
-            self._set_task(runner, task)
 
             for j in range(self._num_grad_updates + 1):
-                paths = runner.obtain_samples(runner.step_itr)
+                env_up = SetTaskUpdate(None, task=task)
+                paths = runner.obtain_samples(runner.step_itr,
+                                              env_update=env_up)
                 batch_samples = self._process_samples(paths)
                 all_samples[i].append(batch_samples)
 
@@ -337,11 +339,6 @@ class MAML:
         # pylint: disable=protected-access
         entropies = self._inner_algo._compute_policy_entropy(obs)
         return entropies.mean()
-
-    def _set_task(self, runner, task):
-        # pylint: disable=protected-access, no-self-use
-        for env in runner._sampler._vec_env.envs:
-            env.set_task(task)
 
     @property
     def policy(self):

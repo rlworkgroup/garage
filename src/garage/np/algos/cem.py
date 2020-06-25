@@ -7,7 +7,7 @@ import numpy as np
 from garage import log_performance, TrajectoryBatch
 from garage.np import paths_to_tensors
 from garage.np.algos.rl_algorithm import RLAlgorithm
-from garage.tf.samplers import BatchSampler
+from garage.sampler import RaySampler
 
 
 class CEM(RLAlgorithm):
@@ -50,7 +50,7 @@ class CEM(RLAlgorithm):
                  extra_decay_time=100):
         self.policy = policy
         self.max_path_length = max_path_length
-        self.sampler_cls = BatchSampler
+        self.sampler_cls = RaySampler
 
         self._best_frac = best_frac
         self._baseline = baseline

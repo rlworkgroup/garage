@@ -16,6 +16,7 @@ import torch
 from garage.envs import GarageEnv, normalize
 from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import deterministic, LocalRunner
+from garage.sampler import LocalSampler
 from garage.torch.algos import MAMLPPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -61,7 +62,7 @@ class TestMAMLPPO:
                        inner_lr=0.1,
                        num_grad_updates=1)
 
-        runner.setup(algo, self.env)
+        runner.setup(algo, self.env, sampler_cls=LocalSampler)
         last_avg_ret = runner.train(n_epochs=10,
                                     batch_size=rollouts_per_task *
                                     max_path_length)

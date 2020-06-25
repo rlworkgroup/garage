@@ -67,8 +67,7 @@ def ppo_memorize_digits(ctxt=None, seed=1, batch_size=4000):
                        batch_size=32,
                        max_epochs=10,
                        learning_rate=1e-3,
-                   ),
-                   flatten_input=False)
+                   ))
 
         runner.setup(algo, env)
         runner.train(n_epochs=1000, batch_size=batch_size)

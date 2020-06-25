@@ -57,22 +57,19 @@ def categorical_cnn_policy(ctxt, env_id, seed):
                 hidden_sizes=hyper_params['hidden_sizes'],
                 use_trust_region=hyper_params['use_trust_region']))
 
-        algo = PPO(
-            env_spec=env.spec,
-            policy=policy,
-            baseline=baseline,
-            max_path_length=100,
-            discount=0.99,
-            gae_lambda=0.95,
-            lr_clip_range=0.2,
-            policy_ent_coeff=0.0,
-            optimizer_args=dict(
-                batch_size=32,
-                max_epochs=10,
-                learning_rate=1e-3,
-            ),
-            flatten_input=False,
-        )
+        algo = PPO(env_spec=env.spec,
+                   policy=policy,
+                   baseline=baseline,
+                   max_path_length=100,
+                   discount=0.99,
+                   gae_lambda=0.95,
+                   lr_clip_range=0.2,
+                   policy_ent_coeff=0.0,
+                   optimizer_args=dict(
+                       batch_size=32,
+                       max_epochs=10,
+                       learning_rate=1e-3,
+                   ))
 
         runner.setup(algo, env)
         runner.train(n_epochs=hyper_params['n_epochs'],

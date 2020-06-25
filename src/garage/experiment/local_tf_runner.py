@@ -32,20 +32,10 @@ class LocalTFRunner(LocalRunner):
         snapshot_config (garage.experiment.SnapshotConfig): The snapshot
             configuration used by LocalRunner to create the snapshotter.
             If None, it will create one with default settings.
-        max_cpus (int): The maximum number of parallel sampler workers.
         sess (tf.Session): An optional TensorFlow session.
               A new session will be created immediately if not provided.
 
     Note:
-        The local runner will set up a joblib task pool of size max_cpus
-        possibly later used by BatchSampler. If BatchSampler is not used,
-        the processes in the pool will remain dormant.
-
-        This setup is required to use TensorFlow in a multiprocess
-        environment before a TensorFlow session is created
-        because TensorFlow is not fork-safe. See
-        https://github.com/tensorflow/tensorflow/issues/2448.
-
         When resume via command line, new snapshots will be
         saved into the SAME directory if not specified.
 
@@ -81,8 +71,8 @@ class LocalTFRunner(LocalRunner):
 
     """
 
-    def __init__(self, snapshot_config, sess=None, max_cpus=1):
-        super().__init__(snapshot_config=snapshot_config, max_cpus=max_cpus)
+    def __init__(self, snapshot_config, sess=None):
+        super().__init__(snapshot_config=snapshot_config)
         self.sess = sess or tf.compat.v1.Session()
         self.sess_entered = False
 

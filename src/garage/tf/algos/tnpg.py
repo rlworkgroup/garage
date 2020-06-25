@@ -47,9 +47,6 @@ class TNPG(NPO):
             dense entropy to the reward for each time step. 'regularized' adds
             the mean entropy to the surrogate objective. See
             https://arxiv.org/abs/1805.00909 for more details.
-        flatten_input (bool): Whether to flatten input along the observation
-            dimension. If True, for example, an observation with shape (2, 4)
-            will be flattened to 8.
         name (str): The name of the algorithm.
 
     """
@@ -74,7 +71,6 @@ class TNPG(NPO):
                  use_neg_logli_entropy=False,
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
-                 flatten_input=True,
                  name='TNPG'):
         if optimizer is None:
             optimizer = ConjugateGradientOptimizer
@@ -103,5 +99,4 @@ class TNPG(NPO):
                          use_neg_logli_entropy=use_neg_logli_entropy,
                          stop_entropy_gradient=stop_entropy_gradient,
                          entropy_method=entropy_method,
-                         flatten_input=flatten_input,
                          name=name)

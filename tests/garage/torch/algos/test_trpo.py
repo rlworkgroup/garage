@@ -5,6 +5,7 @@ import torch
 
 from garage.envs import GarageEnv, normalize
 from garage.experiment import deterministic, LocalRunner
+from garage.sampler import LocalSampler
 from garage.torch.algos import TRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -42,6 +43,6 @@ class TestTRPO:
                     discount=0.99,
                     gae_lambda=0.98)
 
-        runner.setup(algo, self.env)
+        runner.setup(algo, self.env, sampler_cls=LocalSampler)
         last_avg_ret = runner.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 0

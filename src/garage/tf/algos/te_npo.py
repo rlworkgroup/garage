@@ -68,9 +68,6 @@ class TENPO(RLAlgorithm):
             distribution of the entropy to prevent the entropy from being
             negative.
         stop_ce_gradient (bool): Whether to stop the cross entropy gradient.
-        flatten_input (bool): Whether to flatten input along the observation
-            dimension. If True, for example, an observation with shape (2, 4)
-            will be flattened to 8.
         inference (garage.tf.embeddings.StochasticEncoder): A encoder
             that infers the task embedding from trajectory.
         inference_optimizer (object): The optimizer of the inference. Should be
@@ -103,7 +100,6 @@ class TENPO(RLAlgorithm):
                  encoder_ent_coeff=0.0,
                  use_softplus_entropy=False,
                  stop_ce_gradient=False,
-                 flatten_input=True,
                  inference=None,
                  inference_optimizer=None,
                  inference_optimizer_args=None,
@@ -124,7 +120,6 @@ class TENPO(RLAlgorithm):
         self._center_adv = center_adv
         self._positive_adv = positive_adv
         self._fixed_horizon = fixed_horizon
-        self._flatten_input = flatten_input
         self._name = name
         self._name_scope = tf.name_scope(self._name)
         self._old_policy = policy.clone('old_policy')
@@ -322,10 +317,6 @@ class TENPO(RLAlgorithm):
             return latent_infos
 
         for path in paths:
-            if self._flatten_input:
-                path['observations'] = (
-                    self._env_spec.observation_space.flatten_n(
-                        path['observations']))
             path['actions'] = (self._env_spec.action_space.flatten_n(
                 path['actions']))
             path['tasks'] = self.policy.task_space.flatten_n(
@@ -400,28 +391,17 @@ class TENPO(RLAlgorithm):
         trajectory_space = self._inference.spec.input_space
 
         with tf.name_scope('inputs'):
-            if self._flatten_input:
-                obs_var = tf.compat.v1.placeholder(
-                    tf.float32,
-                    shape=[None, None, observation_space.flat_dim],
-                    name='obs')
-                task_var = tf.compat.v1.placeholder(
-                    tf.float32,
-                    shape=[None, None, task_space.flat_dim],
-                    name='task')
-                trajectory_var = tf.compat.v1.placeholder(
-                    tf.float32, shape=[None, None, trajectory_space.flat_dim])
-                latent_var = tf.compat.v1.placeholder(
-                    tf.float32, shape=[None, None, latent_space.flat_dim])
-            else:
-                obs_var = observation_space.to_tf_placeholder(name='obs',
-                                                              batch_dims=2)
-                task_var = task_space.to_tf_placeholder(name='task',
-                                                        batch_dims=2)
-                trajectory_var = trajectory_space.to_tf_placeholder(
-                    name='trajectory', batch_dims=2)
-                latent_var = latent_space.to_tf_placeholder(name='latent',
-                                                            batch_dims=2)
+            obs_var = observation_space.to_tf_placeholder(name='obs',
+                                                          batch_dims=2)
+            task_var = tf.compat.v1.placeholder(
+                tf.float32,
+                shape=[None, None, task_space.flat_dim],
+                name='task')
+            trajectory_var = tf.compat.v1.placeholder(
+                tf.float32, shape=[None, None, trajectory_space.flat_dim])
+            latent_var = tf.compat.v1.placeholder(
+                tf.float32, shape=[None, None, latent_space.flat_dim])
+
             action_var = action_space.to_tf_placeholder(name='action',
                                                         batch_dims=2)
             reward_var = tf.compat.v1.placeholder(tf.float32,

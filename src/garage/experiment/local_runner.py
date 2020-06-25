@@ -9,8 +9,6 @@ import psutil
 
 from garage.experiment.deterministic import get_seed, set_seed
 from garage.experiment.snapshotter import Snapshotter
-from garage.sampler import parallel_sampler
-from garage.sampler.sampler_deprecated import BaseSampler
 # This is avoiding a circular import
 from garage.sampler.default_worker import DefaultWorker  # noqa: I100
 from garage.sampler.worker_factory import WorkerFactory
@@ -86,7 +84,6 @@ class LocalRunner:
         snapshot_config (garage.experiment.SnapshotConfig): The snapshot
             configuration used by LocalRunner to create the snapshotter.
             If None, it will create one with default settings.
-        max_cpus (int): The maximum number of parallel sampler workers.
 
     Note:
         For the use of any TensorFlow environments, policies and algorithms,
@@ -116,16 +113,10 @@ class LocalRunner:
 
     """
 
-    def __init__(self, snapshot_config, max_cpus=1):
+    def __init__(self, snapshot_config):
         self._snapshotter = Snapshotter(snapshot_config.snapshot_dir,
                                         snapshot_config.snapshot_mode,
                                         snapshot_config.snapshot_gap)
-
-        parallel_sampler.initialize(max_cpus)
-
-        seed = get_seed()
-        if seed is not None:
-            parallel_sampler.set_seed(seed)
 
         self._has_setup = False
         self._plot = False
@@ -186,33 +177,34 @@ class LocalRunner:
             sampler_cls: An instance of the sampler class.
 
         """
-        if not hasattr(self._algo, 'policy'):
+        policy = getattr(self._algo, 'exploration_policy', None)
+        if policy is None:
+            policy = getattr(self._algo, 'policy', None)
+        if policy is None:
             raise ValueError('If the runner is used to construct a sampler, '
-                             'the algorithm must have a `policy` field.')
+                             'the algorithm must have a `policy` or '
+                             '`exploration_policy` field.')
         if max_path_length is None:
             if hasattr(self._algo, 'max_path_length'):
                 max_path_length = self._algo.max_path_length
-            else:
-                raise ValueError('If `sampler_cls` is specified in '
-                                 'runner.setup, the algorithm must have '
-                                 'a `max_path_length` field.')
+        if max_path_length is None:
+            raise ValueError('If `sampler_cls` is specified in runner.setup, '
+                             'the algorithm must specify `max_path_length`')
         if seed is None:
             seed = get_seed()
         if sampler_args is None:
             sampler_args = {}
         if worker_args is None:
             worker_args = {}
-        if issubclass(sampler_cls, BaseSampler):
-            return sampler_cls(self._algo, self._env, **sampler_args)
-        else:
-            return sampler_cls.from_worker_factory(WorkerFactory(
-                seed=seed,
-                max_path_length=max_path_length,
-                n_workers=n_workers,
-                worker_class=worker_class,
-                worker_args=worker_args),
-                                                   agents=self._algo.policy,
-                                                   envs=self._env)
+
+        return sampler_cls.from_worker_factory(WorkerFactory(
+            seed=seed,
+            max_path_length=max_path_length,
+            n_workers=n_workers,
+            worker_class=worker_class,
+            worker_args=worker_args),
+                                               agents=policy,
+                                               envs=self._env)
 
     def setup(self,
               algo,
@@ -275,8 +267,6 @@ class LocalRunner:
 
     def _start_worker(self):
         """Start Plotter and Sampler workers."""
-        if isinstance(self._sampler, BaseSampler):
-            self._sampler.start_worker()
         if self._plot:
             # pylint: disable=import-outside-toplevel
             from garage.plotter import Plotter
@@ -289,6 +279,52 @@ class LocalRunner:
             self._sampler.shutdown_worker()
         if self._plot:
             self._plotter.close()
+
+    def obtain_trajectories(self,
+                            itr,
+                            batch_size=None,
+                            agent_update=None,
+                            env_update=None):
+        """Obtain one batch of trajectories.
+
+        Args:
+            itr (int): Index of iteration (epoch).
+            batch_size (int): Number of steps in batch.
+                This is a hint that the sampler may or may not respect.
+            agent_update (object): Value which will be passed into the
+                `agent_update_fn` before doing rollouts. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
+            env_update (object): Value which will be passed into the
+                `env_update_fn` before doing rollouts. If a list is passed in,
+                it must have length exactly `factory.n_workers`, and will be
+                spread across the workers.
+
+        Raises:
+            ValueError: Raised if the runner was initialized without a sampler,
+                        or batch_size wasn't provided here or to train.
+
+        Returns:
+            TrajectoryBatch: Batch of trajectories.
+
+        """
+        if self._sampler is None:
+            raise ValueError('Runner was not initialized with `sampler_cls`. '
+                             'Either provide `sampler_cls` to runner.setup, '
+                             ' or set `algo.sampler_cls`.')
+        if batch_size is None and self._train_args.batch_size is None:
+            raise ValueError('Runner was not initialized with `batch_size`. '
+                             'Either provide `batch_size` to runner.train, '
+                             ' or pass `batch_size` to runner.obtain_samples.')
+        paths = None
+        if agent_update is None:
+            agent_update = self._algo.policy.get_param_values()
+        paths = self._sampler.obtain_samples(
+            itr, (batch_size or self._train_args.batch_size),
+            agent_update=agent_update,
+            env_update=env_update)
+        self._stats.total_env_steps += sum(paths.lengths)
+        return paths
 
     def obtain_samples(self,
                        itr,
@@ -318,30 +354,9 @@ class LocalRunner:
             list[dict]: One batch of samples.
 
         """
-        if self._sampler is None:
-            raise ValueError('Runner was not initialized with `sampler_cls`. '
-                             'Either provide `sampler_cls` to runner.setup, '
-                             ' or set `algo.sampler_cls`.')
-        if batch_size is None and self._train_args.batch_size is None:
-            raise ValueError('Runner was not initialized with `batch_size`. '
-                             'Either provide `batch_size` to runner.train, '
-                             ' or pass `batch_size` to runner.obtain_samples.')
-        paths = None
-        if isinstance(self._sampler, BaseSampler):
-            paths = self._sampler.obtain_samples(
-                itr, (batch_size or self._train_args.batch_size))
-        else:
-            if agent_update is None:
-                agent_update = self._algo.policy.get_param_values()
-            paths = self._sampler.obtain_samples(
-                itr, (batch_size or self._train_args.batch_size),
-                agent_update=agent_update,
-                env_update=env_update)
-            paths = paths.to_trajectory_list()
-
-        self._stats.total_env_steps += sum([len(p['rewards']) for p in paths])
-
-        return paths
+        trajs = self.obtain_trajectories(itr, batch_size, agent_update,
+                                         env_update)
+        return trajs.to_trajectory_list()
 
     def save(self, epoch):
         """Save snapshot of current batch.
