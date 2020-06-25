@@ -12,7 +12,7 @@ import tensorflow as tf
 from garage import _Default, log_performance, make_optimizer
 from garage.np import obtain_evaluation_samples
 from garage.np.algos import RLAlgorithm
-from garage.sampler import LocalSampler
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf.misc import tensor_utils
 
 
@@ -147,6 +147,7 @@ class TD3(RLAlgorithm):
         self.exploration_policy = exploration_policy
 
         self.sampler_cls = LocalSampler
+        self.worker_cls = FragmentWorker
 
         self.init_opt()
 

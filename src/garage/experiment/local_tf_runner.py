@@ -110,7 +110,7 @@ class LocalTFRunner(LocalRunner):
                      seed=None,
                      n_workers=psutil.cpu_count(logical=False),
                      max_path_length=None,
-                     worker_class=DefaultWorker,
+                     worker_class=None,
                      sampler_args=None,
                      worker_args=None):
         """Construct a Sampler from a Sampler class.
@@ -131,6 +131,8 @@ class LocalTFRunner(LocalRunner):
             sampler_cls: An instance of the sampler class.
 
         """
+        if worker_class is None:
+            worker_class = getattr(self._algo, 'worker_cls', DefaultWorker)
         # pylint: disable=useless-super-delegation
         return super().make_sampler(
             sampler_cls,
@@ -147,7 +149,7 @@ class LocalTFRunner(LocalRunner):
               sampler_cls=None,
               sampler_args=None,
               n_workers=psutil.cpu_count(logical=False),
-              worker_class=DefaultWorker,
+              worker_class=None,
               worker_args=None):
         """Set up runner and sessions for algorithm and environment.
 

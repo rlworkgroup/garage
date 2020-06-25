@@ -2,12 +2,11 @@
 import collections
 import copy
 
-import gym
 import numpy as np
 
 from garage import TrajectoryBatch
+from garage.sampler import _apply_env_update
 from garage.sampler.default_worker import DefaultWorker
-from garage.sampler.env_update import EnvUpdate
 
 
 class VecWorker(DefaultWorker):
@@ -64,13 +63,10 @@ class VecWorker(DefaultWorker):
         self._needs_agent_reset = True
 
     def update_env(self, env_update):
-        """Use any non-None env_update as a new environment.
+        """Update the environments.
 
-        A simple env update function. If env_update is not None, it should be
-        the complete new environment.
-
-        This allows changing environments by passing the new environment as
-        `env_update` into `obtain_samples`.
+        If passed a list (*inside* this list passed to the Sampler itself),
+        distributes the environments across the "vectorization" dimension.
 
         Args:
             env_update(gym.Env or EnvUpdate or None): The environment to
@@ -89,35 +85,15 @@ class VecWorker(DefaultWorker):
                                  '({}) environments, but received {} '
                                  'environments.'.format(
                                      self._n_envs, len(env_update)))
-            for env_index, env_up in enumerate(env_update):
-                self._update_env_inner(env_up, env_index)
         elif env_update is not None:
-            for env_index in range(self._n_envs):
-                self._update_env_inner(copy.deepcopy(env_update), env_index)
-
-    def _update_env_inner(self, env_update, env_index):
-        """Update a single environment.
-
-        Args:
-            env_update(gym.Env or EnvUpdate or None): The environment to
-                replace the existing env with. Note that other implementations
-                of `Worker` may take different types for this parameter.
-            env_index (int): Number of the environment to update.
-
-        Raises:
-            TypeError: If env_update is not one of the documented types.
-
-        """
-        if isinstance(env_update, EnvUpdate):
-            self._envs[env_index] = env_update(self._envs[env_index])
-            self._needs_env_reset = True
-        elif isinstance(env_update, gym.Env):
-            if self._envs[env_index] is not None:
-                self._envs[env_index].close()
-            self._envs[env_index] = env_update
-            self._needs_env_reset = True
-        else:
-            raise TypeError('Unknown environment update type.')
+            env_update = [
+                copy.deepcopy(env_update) for _ in range(self._n_envs)
+            ]
+        if env_update:
+            for env_index, env_up in enumerate(env_update):
+                self._envs[env_index], up = _apply_env_update(
+                    self._envs[env_index], env_up)
+                self._needs_env_reset |= up
 
     def start_rollout(self):
         """Begin a new rollout."""
