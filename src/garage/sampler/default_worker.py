@@ -1,12 +1,11 @@
 """Default Worker class."""
 from collections import defaultdict
 
-import gym
 import numpy as np
 
 from garage import TrajectoryBatch
 from garage.experiment import deterministic
-from garage.sampler.env_update import EnvUpdate
+from garage.sampler import _apply_env_update
 from garage.sampler.worker import Worker
 
 
@@ -90,15 +89,7 @@ class DefaultWorker(Worker):
             TypeError: If env_update is not one of the documented types.
 
         """
-        if env_update is not None:
-            if isinstance(env_update, EnvUpdate):
-                self.env = env_update(self.env)
-            elif isinstance(env_update, gym.Env):
-                if self.env is not None:
-                    self.env.close()
-                self.env = env_update
-            else:
-                raise TypeError('Uknown environment update type.')
+        self.env, _ = _apply_env_update(self.env, env_update)
 
     def start_rollout(self):
         """Begin a new rollout."""

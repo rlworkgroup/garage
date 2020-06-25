@@ -151,7 +151,7 @@ class LocalRunner:
                      seed=None,
                      n_workers=psutil.cpu_count(logical=False),
                      max_path_length=None,
-                     worker_class=DefaultWorker,
+                     worker_class=None,
                      sampler_args=None,
                      worker_args=None):
         """Construct a Sampler from a Sampler class.
@@ -190,6 +190,8 @@ class LocalRunner:
         if max_path_length is None:
             raise ValueError('If `sampler_cls` is specified in runner.setup, '
                              'the algorithm must specify `max_path_length`')
+        if worker_class is None:
+            worker_class = getattr(self._algo, 'worker_cls', DefaultWorker)
         if seed is None:
             seed = get_seed()
         if sampler_args is None:

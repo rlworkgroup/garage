@@ -9,7 +9,7 @@ from garage import _Default, make_optimizer
 from garage import log_performance
 from garage.np import obtain_evaluation_samples
 from garage.np.algos import RLAlgorithm
-from garage.sampler import LocalSampler
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch import dict_np_to_torch, torch_to_np
 
 
@@ -137,6 +137,7 @@ class DDPG(RLAlgorithm):
                                             lr=qf_lr)
         self._eval_env = None
         self.sampler_cls = LocalSampler
+        self.worker_cls = FragmentWorker
 
     def train(self, runner):
         """Obtain samplers and start actual training for each epoch.
