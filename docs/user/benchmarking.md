@@ -33,7 +33,7 @@ def your_benchmarks():
     iterate_experiments(trpo_garage_pytorch, MuJoCo1M_ENV_SET)
     iterate_experiments(trpo_garage_tf, MuJoCo1M_ENV_SET)
 ```
-The excution function should be placed in one of the following files:
+The execution function should be placed in one of the following files:
 ```bash
 garage/benchmarks/src/garage_benchmarks
                       ├── benchmark_algos.py
