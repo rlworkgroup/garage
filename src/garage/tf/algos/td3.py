@@ -146,6 +146,7 @@ class TD3(RLAlgorithm):
         self._smooth_return = smooth_return
         self.max_path_length = max_path_length
         self._max_eval_path_length = max_eval_path_length
+        self._eval_env = None
 
         self.env_spec = env_spec
         self.replay_buffer = replay_buffer
@@ -302,6 +303,8 @@ class TD3(RLAlgorithm):
             float: The average return in last epoch cycle.
 
         """
+        if not self._eval_env:
+            self._eval_env = runner.get_env_copy()
         last_return = None
         runner.enable_logging = False
 
@@ -315,7 +318,7 @@ class TD3(RLAlgorithm):
                     runner.enable_logging = True
                     log_performance(runner.step_itr,
                                     obtain_evaluation_samples(
-                                        self.policy, runner.get_env_copy()),
+                                        self.policy, self._eval_env),
                                     discount=self._discount)
                 runner.step_itr += 1
 
