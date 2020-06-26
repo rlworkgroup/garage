@@ -71,6 +71,7 @@ class TestCategoricalLSTMPolicy(TfGraphTestCase):
         ((1, 1), 1, 4),
         ((2, 2), 2, 4),
     ])
+    # pylint: disable=no-member
     def test_build_state_include_action(self, obs_dim, action_dim, hidden_dim):
         env = GarageEnv(
             DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
@@ -101,6 +102,7 @@ class TestCategoricalLSTMPolicy(TfGraphTestCase):
         ((1, 1), 1, 4),
         ((2, 2), 2, 4),
     ])
+    # pylint: disable=no-member
     def test_build_state_not_include_action(self, obs_dim, action_dim,
                                             hidden_dim):
         env = GarageEnv(
@@ -124,6 +126,7 @@ class TestCategoricalLSTMPolicy(TfGraphTestCase):
             feed_dict={state_input: [[obs.flatten()], [obs.flatten()]]})
         assert np.array_equal(output1, output2)
 
+    # pylint: disable=no-member
     def test_is_pickleable(self):
         env = GarageEnv(DummyDiscreteEnv(obs_dim=(1, ), action_dim=1))
         policy = CategoricalLSTMPolicy(env_spec=env.spec,

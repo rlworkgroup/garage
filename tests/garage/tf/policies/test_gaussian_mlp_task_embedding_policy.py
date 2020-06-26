@@ -77,6 +77,7 @@ class TestGaussianMLPTaskEmbeddingPolicy(TfGraphTestCase):
         assert latent_info['mean'].shape == (latent_dim, )
         assert latent_info['log_std'].shape == (latent_dim, )
 
+    # pylint: disable=no-member
     def test_auxiliary(self):
         obs_dim, action_dim, task_num, latent_dim = (2, ), (2, ), 2, 2
         env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))

@@ -75,6 +75,7 @@ class TestGaussianLSTMPolicy(TfGraphTestCase):
         ((2, 2), (2, ), 4)
     ])
     # yapf: enable
+    # pylint: disable=no-member
     def test_build_state_include_action(self, obs_dim, action_dim, hidden_dim):
         env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         policy = GaussianLSTMPolicy(env_spec=env.spec,
@@ -106,6 +107,7 @@ class TestGaussianLSTMPolicy(TfGraphTestCase):
         ((2, 2), (2, ), 4)
     ])
     # yapf: enable
+    # pylint: disable=no-member
     def test_build_state_not_include_action(self, obs_dim, action_dim,
                                             hidden_dim):
         env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
@@ -129,6 +131,7 @@ class TestGaussianLSTMPolicy(TfGraphTestCase):
             feed_dict={state_input: [[obs.flatten()], [obs.flatten()]]})
         assert np.array_equal(output1, output2)
 
+    # pylint: disable=no-member
     def test_is_pickleable(self):
         env = GarageEnv(DummyBoxEnv(obs_dim=(1, ), action_dim=(1, )))
         policy = GaussianLSTMPolicy(env_spec=env.spec,

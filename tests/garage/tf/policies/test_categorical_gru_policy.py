@@ -47,6 +47,7 @@ class TestCategoricalGRUPolicy(TfGraphTestCase):
         ((1, 1), 1, 4),
         ((2, 2), 2, 4),
     ])
+    # pylint: disable=no-member
     def test_build_state_include_action(self, obs_dim, action_dim, hidden_dim):
         env = GarageEnv(
             DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
@@ -77,6 +78,7 @@ class TestCategoricalGRUPolicy(TfGraphTestCase):
         ((1, 1), 1, 4),
         ((2, 2), 2, 4),
     ])
+    # pylint: disable=no-member
     def test_build_state_not_include_action(self, obs_dim, action_dim,
                                             hidden_dim):
         env = GarageEnv(
@@ -122,6 +124,7 @@ class TestCategoricalGRUPolicy(TfGraphTestCase):
         for action in actions:
             assert env.action_space.contains(action)
 
+    # pylint: disable=no-member
     def test_is_pickleable(self):
         env = GarageEnv(DummyDiscreteEnv(obs_dim=(1, ), action_dim=1))
         policy = CategoricalGRUPolicy(env_spec=env.spec,
