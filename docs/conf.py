@@ -8,10 +8,11 @@
 # list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 
+import datetime
 import os
 import sys
 
-from recommonmark.parser import CommonMarkParser
+from recommonmark.transform import AutoStructify
 
 # -- Path setup --------------------------------------------------------------
 
@@ -28,46 +29,20 @@ with open('../VERSION') as v:
 
 add_module_names = False
 
-
-# Auto-generate API documentation for readthedocs.org
-# See https://github.com/rtfd/readthedocs.org/issues/1139#issuecomment-398083449  # noqa: E501
-def run_apidoc(_):
-    ignore_paths = []
-
-    argv = [
-        '-f',
-        # '-T',
-        '-e',
-        '-M',
-        '-o', './_apidoc',
-        '../src/'
-    ] + ignore_paths  # yapf: disable
-
-    try:
-        # Sphinx 1.7+
-        from sphinx.ext import apidoc
-        apidoc.main(argv)
-    except ImportError:
-        # Sphinx 1.6 (and earlier)
-        from sphinx import apidoc
-        argv.insert(0, apidoc.__file__)
-        apidoc.main(argv)
-
-
-def setup(app):
-    app.connect('builder-inited', run_apidoc)
-
-
 # -- Project information -----------------------------------------------------
+this_year = datetime.datetime.now().year
 
 project = 'garage'
-copyright = '2019, garage contributors'
+copyright = f'{this_year}, garage contributors'
 author = 'garage contributors'
 
 # The short X.Y version.
 version = version_
 # The full version, including alpha/beta/rc tags.
 release = version_
+
+# This allows AutoStructify to remap relative URLs to GitHub links
+github_doc_root = f'https://github.com/rlworkgroup/garage/tree/{version_}/docs/'
 
 # -- General configuration ---------------------------------------------------
 
@@ -83,12 +58,8 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    'recommonmark',
 ]
-
-# Markdown parsing
-source_parsers = {
-    '.md': CommonMarkParser,
-}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -150,7 +121,9 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-# html_theme_options = {}
+html_theme_options = {
+    'navigation_depth': 10,
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -351,3 +324,39 @@ todo_include_todos = True
 autodoc_mock_imports = [
     'dm_control', 'glfw', 'mujoco_py', 'ray', 'torch', 'torchvision'
 ]
+
+
+# Auto-generate API documentation for readthedocs.org
+# See https://github.com/rtfd/readthedocs.org/issues/1139#issuecomment-398083449  # noqa: E501
+def run_apidoc(_):
+    ignore_paths = []
+
+    argv = [
+        '-f',
+        '-e',
+        '-d 10',
+        '-M',
+        '-o', './_apidoc',
+        '../src/'
+    ] + ignore_paths  # yapf: disable
+
+    try:
+        # Sphinx 1.7+
+        from sphinx.ext import apidoc
+        apidoc.main(argv)
+    except ImportError:
+        # Sphinx 1.6 (and earlier)
+        from sphinx import apidoc
+        argv.insert(0, apidoc.__file__)
+        apidoc.main(argv)
+
+
+# App setup entrypoint
+def setup(app):
+    app.connect('builder-inited', run_apidoc)
+    app.add_config_value(
+        'recommonmark_config', {
+            'url_resolver': lambda url: github_doc_root + url,
+            'auto_toc_tree_sections': 'Contents',
+        }, True)
+    app.add_transform(AutoStructify)
