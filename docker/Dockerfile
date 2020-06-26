@@ -32,7 +32,9 @@ RUN \
     libbz2-dev \
     libreadline-dev \
     libssl-dev \
-    libsqlite3-dev && \
+    libsqlite3-dev \
+    # ruby
+    ruby-full && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 

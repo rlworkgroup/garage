@@ -155,7 +155,8 @@ sudo apt install -y \
   swig \
   libsdl2-dev \
   libopenmpi-dev \
-  openmpi-bin
+  openmpi-bin \
+  ruby-full
 
 # Build GLFW because the Ubuntu 16.04 version is too old
 # See https://github.com/glfw/glfw/issues/1004

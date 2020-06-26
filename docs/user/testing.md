@@ -1,21 +1,28 @@
 # Testing
 
-In this section, we will talk about how to test different modules and algorithms in garage.
+In this section, we will talk about how to test
+different modules and algorithms in garage.
 
-In garage, we use [pytest](https://docs.pytest.org/en/stable/getting-started.html) to carry out tests.
+In garage, we use [pytest]<https://docs.pytest.org/en/stable/getting-started.html>
+to carry out tests.
 
 ## Test Modules
 
-All test files are stored under `tests/` in the garage respository.
+All test files are stored under `tests/` in the
+garage respository.
 
-Test modules are organized in the same way as the garage main repository. Ideally, all main modules and files under `src/garage/` should be covered with test cases.
+Test modules are organized in the same way as the
+garage main repository. Ideally, all main modules
+and files under `src/garage/` should be covered
+with test cases.
 
 Test modules of garage are structured in the following ways:
 
 - `tests/` contains all tests and supporting code
 - `tests/garage` contains unit tests
 - `tests/integration_tests` contains integration tests
-- modules in `tests/` and `tests/fixtures` contain helper codes and fixtures which make writing good tests easier.
+- modules in `tests/` and `tests/fixtures` contain helper
+  codes and fixtures which make writing good tests easier.
 
 ```bash
 tests
@@ -28,46 +35,73 @@ tests
 
 ## Prerequisites
 
-To begin testing, we suggest using the same Python manager environment i.e. `virtualenv`, `conda` as we develop on garage repository so that all packages and dependencies required for testing are installed in the virutal environment.
+To begin testing, we suggest using the same
+Python manager environment i.e. `virtualenv`, `conda`
+as we develop on garage repository so that all
+packages and dependencies required for testing
+are installed in the virutal environment.
 
 Let's begin by activating the virtual environment:
 
 ```bash
 # Conda
-$ conda activate myenv
+conda activate myenv
 
 # Virtualenv
-$ source myenv/bin/activate
+source myenv/bin/activate
 ```
 
-Next, we need to install pytest. Generally, pytest should have already been installed upon garage's `dev` installation. To install the garage environment for testing, you will need to install the `garage[all,dev]` for dependencies such as pytest, mujoco and so on.
+Next, we need to install pytest. Generally, pytest
+should have already been installed upon garage's
+`dev` installation. To install the garage environment
+ for testing, you will need to install the
+`garage[all,dev]` for dependencies such as pytest,
+mujoco and so on.
 
-Also, you may want to check out our installation guide first before diving into tests. It is also recommened to check out official [pytest](https://docs.pytest.org/en/stable/getting-started.html) documentation.
+Also, you may want to check out our installation guide
+first before diving into tests. It is also recommened
+to check out official
+[pytest](https://docs.pytest.org/en/stable/getting-started.html) documentation.
 
 ```bash
-$ cd path/to/garage/
-$ pip install -e '.[all,dev]'
+cd path/to/garage/
+pip install -e '.[all,dev]'
 ```
 
 To get started, run pytest as follows:
 
 ```bash
-$ pytest
+pytest
 ```
 
 ## Basic Pytest Usage
 
 Congrats! Now you're ready for testing garage!
 
-We will start with a simple test. To be consistent with pytest requirement and garage modules, we name our test `.py` file with pre-fix `test_`.
+We will start with a simple test. To be consistent
+with pytest requirement and garage modules,
+we name our test `.py` file with pre-fix `test_`.
 
-Let's write a simple test case for the vpg algorithm `src/garage/tf/algos/vpg.py`.
+Let's write a simple test case for the vpg
+algorithm `src/garage/tf/algos/vpg.py`.
 
 We begin by creating a file called `test_vpg.py` and put it under the tree `tests/garage/tf/algos/`.
 
-We want to test VPG in the cart pole environment. Hence, we create a unitest named `test_vpg_cartpole`. Inside the function, we define the environemnt, the policy and the baselien and feed them to the VPG algorithm and run the experiment. Finally, we make sure the return value is identical to our expectation by using `assert`.
+We want to test VPG in the cart pole environment.
+Hence, we create a unitest named `test_vpg_cartpole`.
+Inside the function, we define the environemnt,
+the policy and the baselien and feed them to the
+VPG algorithm and run the experiment. Finally,
+we make sure the return value is identical to our
+expectation by using `assert`.
 
-In new xunit-style tests, multiple tests are modeled into a class for modular and scalable structure. There is no need to subclass or anything, but make sure the prefix of the class starts with `Test`, otherwise the class will be skipped. Note that it's not encouraged to use this style, especially when a test doesn't require `setup_method` and `teardown_method`.
+In new xunit-style tests, multiple tests are modeled
+into a class for modular and scalable structure.
+There is no need to subclass or anything,
+but make sure the prefix of the class starts
+with `Test`, otherwise the class will be skipped.
+Note that it's not encouraged to use this style,
+especially when a test doesn't require `setup_method` and `teardown_method`.
 
 ```python
 # test_vpg.py
@@ -103,10 +137,14 @@ class TestVPG(...):
 In general, we can start running tests simply by:
 
 ```bash
-$ pytest
+pytest
 ```
 
-However, in most of the cases, we simply don't have the time to test everything, plus Travis CI will take care of the  majority of tests upon the deployment workflow. We can use the following ways to carry out specific tests to make life easier.
+However, in most of the cases, we simply don't have
+the time to test everything, plus Travis CI will
+ take care of the  majority of tests upon the
+  deployment workflow. We can use the following
+   ways to carry out specific tests to make life easier.
 
 ### Specifying Tests / Selecting Tests
 
@@ -114,10 +152,11 @@ Pytest supports several ways to run and select tests.
 
 #### Run tests in a directory
 
-Run a test on particular module(s) by specifying a directory path.
+Run a test on particular module(s) by specifying
+a directory path.
 
 ```bash
-$ pytest tests/garage/tf/algo/
+pytest tests/garage/tf/algo/
 ```
 
 #### Run tests in a module
@@ -125,7 +164,7 @@ $ pytest tests/garage/tf/algo/
 Run a test on a particular module by specifying a file path.
 
 ```bash
-$ pytest tests/garage/tf/algo/test_ppo.py
+pytest tests/garage/tf/algo/test_ppo.py
 ```
 
 #### Run tests by keyword expressions
@@ -133,19 +172,26 @@ $ pytest tests/garage/tf/algo/test_ppo.py
 Run tests by keyword expressions. This is useful for running particular test function(s).
 
 ```bash
-$ pytest -k test_ppo_pendulum_continuous_baseline
+pytest -k test_ppo_pendulum_continuous_baseline
 
 ```
 
 ## Useful Pytest Methods
 
-Below are the pytest methods and functions that we found helpful for testing garage.
+Below are the pytest methods and functions that
+we found helpful for testing garage.
 
 ### Setup and teardown methods
 
-`setup_method` is called before every tests to set up the test environment. It setups any state tied to the execution of the given method in a class.  `setup_method` is invoked for every test method of a class.
+`setup_method` is called before every tests to
+set up the test environment. It setups any state
+tied to the execution of the given method in
+a class.  `setup_method` is invoked for every
+test method of a class.
 
-`teardown_method` is called after every tests to teardown any state that was previously setup with a `setup_method`.
+`teardown_method` is called after every tests to
+teardown any state that was previously setup
+with a `setup_method`.
 
 For details on `setup_method` and `teardown_method`, check [this](https://docs.pytest.org/en/2.8.7/xunit_setup.html).
 
@@ -164,7 +210,11 @@ class TestSampleClass:
 
 ### Parametrized test functions
 
-Parametrized test function is a  delightful solution to save us from tedious testing in same scenarios with different parameters. We can simply specify the name of the arguments that will be pass to the test function and a list of arguments corresponding to the names.
+Parametrized test function is a  delightful solution to
+save us from tedious testing in same scenarios with
+different parameters. We can simply specify the name
+of the arguments that will be pass to the test function
+and a list of arguments corresponding to the names.
 
 ```python
 import pytest

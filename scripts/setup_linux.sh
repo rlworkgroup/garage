@@ -121,6 +121,7 @@ BASH_RC="${HOME}/.bashrc"
 # Required for mujoco_py: libglew-dev, patchelf, libosmesa6-dev
 # Required for OpenAI gym: libpq-dev, ffmpeg, libjpeg-dev, swig, libsdl2-dev
 # Required for OpenAI baselines: libopenmpi-dev, openmpi-bin
+# Required ruby for markdown lint tool
 echo "Installing garage dependencies"
 echo "You will probably be asked for your sudo password"
 sudo apt -y -q update
@@ -140,7 +141,8 @@ sudo apt install -y \
   swig \
   libsdl2-dev \
   libopenmpi-dev \
-  openmpi-bin
+  openmpi-bin \
+  ruby-full
 
 # Build GLFW because the Ubuntu 16.04 version is too old
 # See https://github.com/glfw/glfw/issues/1004
