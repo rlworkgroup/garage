@@ -128,3 +128,7 @@ If you would like to contribute changes back to garage, please also read :code:`
     pip uninstall garage  # To ensure no existing install gets in the way.
     cd path/to/garage/repo
     pip install -e '.[all,dev]'
+
+----
+
+This page was authored by K.R. Zentner (`@krzentner <https://github.com/krzentner>`_), with contributions from Gitanshu Sardana (`@gitanshu <https://github.com/gitanshu>`_), Hayden Shively (`@haydenshively <https://github.com/haydenshively>`_), Ryan Julian (`@ryanjulian <https://github.com/ryanjulian>`_), Jonathon Shen (`@jonashen <https://github.com/jonashen>`_), Keren Zhu (`@naeioi <https://github.com/naeioi>`_), Peter Lillian (`@pelillian <https://github.com/pelillian>`_), Gautam Salhotra (`@gautams3 <https://github.com/gautams3>`_), Aman Soni (`@amansoni <https://github.com/amansoni>`_), and Rocky Duan (`@dementrock <https://github.com/dementrock>`_).

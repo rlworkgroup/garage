@@ -204,3 +204,7 @@ def  pixel_observations_example(ctxt=None, seed=1, buffer_size=int(1e4)):
         # pass env to the algorithm
 
 ```
+
+----
+
+*This page was authored by Mishari Aliesa ([@maliesa96](https://github.com/maliesa96)).*
