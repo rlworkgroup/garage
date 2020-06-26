@@ -1,18 +1,33 @@
 # Training a policy to solve an environment
+
 This page will guide you training a policy to solve an environment.
-### Define an experiment
-In garage, we train a policy in an experiment, which is a function wrapped by a decorator called `wrap_experiment`. Below is an simple example. `wrap_experiment` could have some arguments. You can see the [experiments doc](experiments.rst) for details of running experiments.
+
+## Define an experiment
+
+In garage, we train a policy in an experiment, which is a function wrapped by a
+decorator called `wrap_experiment`. Below is an simple example.
+`wrap_experiment` could have some arguments. You can see the [experiments doc](experiments.rst)
+for details of running experiments.
+
 ```py
 @wrap_experiment
 def my_first_experiment():
     ...
 ```
-### Construct a LocalRunner
-Within the experiment, we need a `LocalRunner` to sets up important state (such as a TensorFlow Session) for training a policy. To construct a `LocalRunner`, an experiment context called `ctxt` is needed. This is used to create the snapshotter, and we can set it `None` here to make it simple.
 
-Garage supports both PyTorch and TensorFlow. If you use TensorFlow, you should use `LocalTFRunner`.
+## Construct a LocalRunner
 
-Besides, in order to produce determinism, you can set a seed for the random number generator.
+Within the experiment, we need a `LocalRunner` to sets up important state (such
+as a TensorFlow Session) for training a policy. To construct a `LocalRunner`, an
+experiment context called `ctxt` is needed. This is used to create the
+snapshotter, and we can set it `None` here to make it simple.
+
+Garage supports both PyTorch and TensorFlow. If you use TensorFlow, you should
+use `LocalTFRunner`.
+
+Besides, in order to produce determinism, you can set a seed for the random
+number generator.
+
 ```py
 @wrap_experiment
 def my_first_experiment(ctxt=None, seed=1):
@@ -24,13 +39,25 @@ def my_first_experiment(ctxt=None, seed=1):
     with LocalTFRunner(ctxt) as runner:
         ...
 ```
-### Construct an environment
-Garage supports many environments. You can also implement your own environment like [this](implement_env.rst). In this example, we choose `CartPole-V1` environment.
+
+## Construct an environment
+
+Garage supports many environments. You can also implement your own environment
+like [this](implement_env.rst). In this example, we choose `CartPole-V1`
+environment.
+
 ```py
 env = GarageEnv(env_name='CartPole-v1')
 ```
-### Construct a policy and an algorithm
-Construct your policy and choose an algorithm to train it. Here, we use `CategoricalMLPPolicy` and `TRPO`, you can also implement your own algorithm like [this](implement_algo.rst). Your policy should be compatible with the environment's observations and action space (CNN for image observations, discrete policy for discrete action spaces, etc).
+
+## Construct a policy and an algorithm
+
+Construct your policy and choose an algorithm to train it. Here, we use
+`CategoricalMLPPolicy` and `TRPO`, you can also implement your own algorithm
+like [this](implement_algo.rst). Your policy should be compatible with the
+environment's observations and action space (CNN for image observations,
+discrete policy for discrete action spaces, etc).
+
 ```py
 policy = CategoricalMLPPolicy(name='policy',
                               env_spec=env.spec,
@@ -45,14 +72,24 @@ algo = TRPO(env_spec=env.spec,
             discount=0.99,
             max_kl_step=0.01)
 ```
-### Train your policy
-The final step is calling `runner.setup` and `runner.train` to co-ordinate training the policy.
+
+## Train your policy
+
+The final step is calling `runner.setup` and `runner.train` to co-ordinate
+training the policy.
+
 ```py
 runner.setup(algo, env)
 runner.train(n_epochs=100, batch_size=4000)
 ```
-### Run the experiment
-In the above steps, we construct the required components to train a `CategoricalMLPPolicy` with `TRPO` to solve `CartPole-v1` and wrap all into an experiment function. You can find the full example in [`examples/tf/trpo_cartpole.py`](https://github.com/rlworkgroup/garage/blob/master/examples/tf/trpo_cartpole.py), which is also pasted below:
+
+## Run the experiment
+
+In the above steps, we construct the required components to train a
+`CategoricalMLPPolicy` with `TRPO` to solve `CartPole-v1` and wrap all into an
+experiment function. You can find the full example in [`examples/tf/trpo_cartpole.py`](https://github.com/rlworkgroup/garage/blob/master/examples/tf/trpo_cartpole.py),
+which is also pasted below:
+
 ```py
 from garage import wrap_experiment
 from garage.envs import GarageEnv
@@ -97,7 +134,9 @@ def trpo_cartpole(ctxt=None, seed=1):
 
 trpo_cartpole()
 ```
+
 Running the above should produce output like:
+
 ```sh
 2020-06-25 14:03:46 | [trpo_cartpole] Logging to /home/ruofu/garage/data/local/experiment/trpo_cartpole_4
 2020-06-25 14:03:48 | [trpo_cartpole] Obtaining samples...
@@ -107,7 +146,8 @@ Sampling  [####################################]  100%
 2020-06-25 14:03:52 | [trpo_cartpole] epoch #0 | Computing loss before
 2020-06-25 14:03:52 | [trpo_cartpole] epoch #0 | Computing KL before
 2020-06-25 14:03:52 | [trpo_cartpole] epoch #0 | Optimizing
-2020-06-25 14:03:52 | [trpo_cartpole] epoch #0 | Start CG optimization: #parameters: 1282, #inputs: 186, #subsample_inputs: 186
+2020-06-25 14:03:52 | [trpo_cartpole] epoch #0 | Start CG optimization:
+#parameters: 1282, #inputs: 186, #subsample_inputs: 186
 2020-06-25 14:03:52 | [trpo_cartpole] epoch #0 | computing loss before
 2020-06-25 14:03:52 | [trpo_cartpole] epoch #0 | computing gradient
 2020-06-25 14:03:52 | [trpo_cartpole] epoch #0 | gradient computed
