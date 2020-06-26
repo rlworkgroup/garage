@@ -183,3 +183,7 @@ policy/Perplexity                          25.0916
 policy/dLoss                                0.000476599
 ---------------------------------------  --------------
 ```
+
+----
+
+*This page was authored by Ruofu Wang ([@yeukfu](https://github.com/yeukfu)).*
