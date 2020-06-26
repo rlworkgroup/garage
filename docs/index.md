@@ -30,6 +30,7 @@ and how to implement new MDPs and new algorithms.
    user/save_load_resume_exp
    user/reuse_garage_policy
    user/docker
+   user/ensure_your_experiments_are_reproducible
 
 .. toctree::
    :maxdepth: 2
