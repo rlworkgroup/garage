@@ -1,13 +1,18 @@
 # Use a pre-trained network to start a new experiment
 
-In general starting a new experiment with a pre-trained network follow the same few steps:
+In general starting a new experiment with a pre-trained
+network follow the same few steps:
 
-- Initialize the pretrained model
-- Reshape the final layer(s) to have the same number of outputs as the number of classes in the new dataset
-- Define for the optimization algorithm which parameters we want to update during training
-- Run the training step
+- Initialize the `Snapshotter` instance
+- Restore the pre-trained model
+- Define for the parameters we want to update during training
+- Run the training step with `resume`
 
-In this tutorial, we will walk you through how to use a pre-trained network to start a new experiment with `TRPO algorithm` in garage. In practice, garage allows users to save and load a pre-trained model to perform the task of interest in reinforcement learning.
+In this tutorial, we will walk you through how to use
+a pre-trained network to start a new experiment with
+`TRPO algorithm` in garage. In practice, garage allows
+users to save and load a pre-trained model to perform
+the task of interest in reinforcement learning.
 
 ```python
 import garage
@@ -19,16 +24,15 @@ from garage.experiment.deterministic import set_seed
 
 ### Use garage snapshot
 
-To load the previously trained model, one recommended way is to use garage snapshot, a `Snapshotter` instance that is directly used when we run experiments with `LocalRunner` or `LocalTFRunner`. A snapshot of the model and its data is automatically saved to the local directory (by dafault: `data/local/experiment/`) as a new experiment is run.
+To load the previously trained model, one recommended
+way is to use garage snapshot, a `Snapshotter` instance
+that is directly used when we run experiments with `LocalRunner`
+or `LocalTFRunner`. A snapshot of the model and its data
+is automatically saved to the local directory
+(by dafault: `data/local/experiment/`) as a new experiment is run.
 
-In general starting a new experiment with a pre-trained network follow the same few steps:
-
-- Initialize the `Snapshotter` instance
-- Restore the pre-trained model
-- Define for the parameters we want to update during training
-- Run the training step with `resume`
-
-To load a pre-trained model stored as an `Snapshotter` instance, we simply need to pass a defined snapshot configuration as a parameter `snapshot_config` to a `LocalRunner` instance.
+First, we pass a defined snapshot configuration as a
+parameter `snapshot_config` to a `LocalRunner` instance.
 
 Define snapshot configuration as follows:
 
@@ -38,18 +42,25 @@ Define snapshot configuration as follows:
 
 ```python
 snapshot_dir = 'mysnapshot/'  # specify the path
-ctxt = garage.experiment.SnapshotConfig(snapshot_dir=snapshot_dir,
-                                      snapshot_mode='last', # only last iteration will be saved
-                                      snapshot_gap=1)
+ctxt = garage.experiment.SnapshotConfig(
+                            snapshot_dir=snapshot_dir,
+                            snapshot_mode='last', # only last iteration will be saved
+                            snapshot_gap=1)
 ```
 
-`Snapshotter` object is initialized once `ctxt` is passed to the `LocalTFRunner` instance. If `snapshot_config` is set to`None`, a default snapshot configuration will be used.
+`Snapshotter` object is initialized once `ctxt` is
+passed to the `LocalTFRunner` instance. If `snapshot_config`
+is set to`None`, a default snapshot configuration
+will be used.
 
-Next, we can load the pre-trained model with `runner.restore()` by passing the directory path as an argument.
+Next, we can load the pre-trained model with `runner.restore()`
+by passing the directory path as an argument.
 
-For fine-tunning, we can update the parameters i.e. `n_epochs`, `batch_size` for training.
+For fine-tunning, we can update the parameters i.e.
+`n_epochs`, `batch_size` for training.
 
-Last but not least, we start the training by `runner.resume()` with defined parameters as arguments.
+Last but not least, we start the training by
+`runner.resume()` with defined parameters as arguments.
 
 ```python
 
@@ -66,7 +77,8 @@ Let's start training now!
 pre_trained_trpo_cartpole(snapshot_dir)
 ```
 
-Congratulation, you successfully load a pre-trained model and start a new experiment!
+Congratulation, you successfully load a pre-trained model and
+start a new experiment!
 
 ```bash
 2020-06-26 13:42:00 | Setting seed to 1
@@ -87,7 +99,8 @@ Congratulation, you successfully load a pre-trained model and start a new experi
 2020-06-26 13:42:02 | epoch #10 | Computing loss before
 2020-06-26 13:42:02 | epoch #10 | Computing KL before
 2020-06-26 13:42:02 | epoch #10 | Optimizing
-2020-06-26 13:42:02 | epoch #10 | Start CG optimization: #parameters: 1282, #inputs: 53, #subsample_inputs: 53
+2020-06-26 13:42:02 | epoch #10 | Start CG optimization:
+#parameters: 1282, #inputs: 53, #subsample_inputs: 53
 2020-06-26 13:42:02 | epoch #10 | computing loss before
 2020-06-26 13:42:02 | epoch #10 | computing gradient
 2020-06-26 13:42:02 | epoch #10 | gradient computed
@@ -132,7 +145,8 @@ policy/dLoss                                  0.0110392
 2020-06-26 13:42:17 | epoch #18 | Computing loss before
 2020-06-26 13:42:17 | epoch #18 | Computing KL before
 2020-06-26 13:42:17 | epoch #18 | Optimizing
-2020-06-26 13:42:17 | epoch #18 | Start CG optimization: #parameters: 1282, #inputs: 52, #subsample_inputs: 52
+2020-06-26 13:42:17 | epoch #18 | Start CG optimization:
+#parameters: 1282, #inputs: 52, #subsample_inputs: 52
 2020-06-26 13:42:17 | epoch #18 | computing loss before
 2020-06-26 13:42:17 | epoch #18 | computing gradient
 2020-06-26 13:42:17 | epoch #18 | gradient computed
@@ -176,7 +190,8 @@ policy/dLoss                                  0.00815403
 2020-06-26 13:42:19 | epoch #19 | Computing loss before
 2020-06-26 13:42:19 | epoch #19 | Computing KL before
 2020-06-26 13:42:19 | epoch #19 | Optimizing
-2020-06-26 13:42:19 | epoch #19 | Start CG optimization: #parameters: 1282, #inputs: 52, #subsample_inputs: 52
+2020-06-26 13:42:19 | epoch #19 | Start CG optimization:
+#parameters: 1282, #inputs: 52, #subsample_inputs: 52
 2020-06-26 13:42:19 | epoch #19 | computing loss before
 2020-06-26 13:42:19 | epoch #19 | computing gradient
 2020-06-26 13:42:19 | epoch #19 | gradient computed
@@ -216,4 +231,7 @@ policy/dLoss                                  0.00285632
 ---------------------------------------  ---------------
 ```
 
-You may find the full example under `examples/jupyter/pre-trained_trpo_gym_tf_cartpole.ipynb`.
+You may find the full example at `examples/jupyter/pre-trained_trpo_gym_tf_cartpole.ipynb`.
+
+----
+*This page was authored by Iris Liu ([@irisliucy](https://github.com/irisliucy)).*
