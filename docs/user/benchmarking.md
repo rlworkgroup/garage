@@ -5,8 +5,7 @@ This guide explains how to write and run garage benchmark scripts.
 ## Prerequisites
 
 Firstly, you should have installed garage. If not, you can see instructions in
-the [latest documentation](https://garage.readthedocs.io/en/latest/user/installation.html)
-to install garage.
+the [latest documentation](installation.rst) to install garage.
 
 ## Install `garage-benchmarks`
 
@@ -21,7 +20,7 @@ Use `@wrap_experiment` to define your experiment. `ctxt` is used for
 The second and third parameters of the function should be `env_id` and `seed`.
 You should give your function a good name because it is used as the label name
 when it comes to plotting. See more [examples](https://github.com/rlworkgroup/garage/tree/master/benchmarks/src/garage_benchmarks/experiments).
-You can see detailed documentations of defining experiments [here](https://garage.readthedocs.io/en/stable/user/experiments.html#).
+You can see detailed documentations of defining experiments [here](experiments.rst).
 
 ```py
 @wrap_experiment
