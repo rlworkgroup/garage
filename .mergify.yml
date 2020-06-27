@@ -31,3 +31,19 @@ pull_request_rules:
         strict_method: rebase
         method: squash
       delete_head_branch: {}
+  - name: Automatic merge queue for only docs on master
+    conditions:
+      - base=master
+      - -conflict
+      - "#approved-reviews-by>=2"
+      - "approved-reviews-by=@maintainers"
+      - "#changes-requested-reviews-by=0"
+      - status-success=Travis CI - Pull Request
+      - label=ready-to-merge
+      - -files~=\.(?!md|rst|png)
+    actions:
+      merge:
+        strict: smart
+        strict_method: rebase
+        method: squash
+      delete_head_branch: {}
