@@ -14,13 +14,37 @@ and how to implement new MDPs and new algorithms.
 
 ```eval_rst
 .. toctree::
+   :caption: Getting Started
    :maxdepth: 2
 
    user/installation
-   user/usage_guide
-   user/tutorials
-   user/development_guide
-   user/api_reference
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Usage Guide (How-To)
+
+   user/experiments
+   user/pixel_observations
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Tutorials
+
+   user/implement_env
+   user/implement_algo
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Development Guide
+
+   user/testing
+   user/benchmarking
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference
+
+   garage <../_apidoc/garage.rst>
 ```
 
 ## Citing garage
