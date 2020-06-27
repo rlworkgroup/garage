@@ -65,14 +65,23 @@ For the above example, the results will be saved in `./data/local/benchmarks/you
 
 ## Environment sets
 
-| Algorithm | Observation | Action | Environment Set |
-| --- | --- | --- | --- |
-| On-policy | Pixel | Discrete | *PIXEL_ENV_SET |
-| Off-policy | Pixel | Discrete | Atari1M |
-| Meta-RL | Non-Pixel | Discrete | *ML_ENV_SET |
-| MultiTask-RL | Non-Pixel | Discrete | *MT_ENV_SET |
-| ALL | Non-Pixel | Discrete | *NON_PIXEL_ENV_SET |
-| ALL | Non-Pixel | Continuous | MuJoCo1M |
+```eval_rst
++---------------+-------------+------------+--------------------+
+| Algorithm     | Observation | Action     | Environment Set    |
++===============+=============+============+====================+
+| On-policy     | Pixel       | Discrete   | *PIXEL_ENV_SET     |
++---------------+-------------+------------+--------------------+
+| Off-policy    | Pixel       | Discrete   | Atari1M            |
++---------------+-------------+------------+--------------------+
+| Meta-RL       | Non-Pixel   | Discrete   | *ML_ENV_SET        |
++---------------+-------------+------------+--------------------+
+| Multi-Task RL | Non-Pixel   | Discrete   | *MT_ENV_SET        |
++---------------+-------------+------------+--------------------+
+| ALL           | Non-Pixel   | Discrete   | *NON_PIXEL_ENV_SET |
++---------------+-------------+------------+--------------------+
+| ALL           | Non-Pixel   | Continuous | MuJoCo-1M          |
++---------------+-------------+------------+--------------------+
+```
 
 ```py
 PIXEL_ENV_SET = [
