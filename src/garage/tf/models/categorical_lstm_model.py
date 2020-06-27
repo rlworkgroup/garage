@@ -67,7 +67,7 @@ class CategoricalLSTMModel(LSTMModel):
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
                  recurrent_w_init=tf.initializers.glorot_uniform(),
-                 output_nonlinearity=None,
+                 output_nonlinearity=tf.nn.softmax,
                  output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
@@ -85,7 +85,7 @@ class CategoricalLSTMModel(LSTMModel):
             hidden_b_init=hidden_b_init,
             recurrent_nonlinearity=recurrent_nonlinearity,
             recurrent_w_init=recurrent_w_init,
-            output_nonlinearity=tf.nn.softmax,
+            output_nonlinearity=output_nonlinearity,
             output_w_init=output_w_init,
             output_b_init=output_b_init,
             hidden_state_init=hidden_state_init,
@@ -94,7 +94,6 @@ class CategoricalLSTMModel(LSTMModel):
             cell_state_init_trainable=cell_state_init_trainable,
             forget_bias=forget_bias,
             layer_normalization=layer_normalization)
-        self._output_normalization_fn = output_nonlinearity
 
     def network_output_spec(self):
         """Network output spec.
@@ -147,8 +146,6 @@ class CategoricalLSTMModel(LSTMModel):
                                      step_hidden,
                                      step_cell,
                                      name=name)
-        if self._output_normalization_fn:
-            outputs = self._output_normalization_fn(outputs)
         dist = tfp.distributions.OneHotCategorical(probs=outputs)
         return (dist, step_output, step_hidden, step_cell, init_hidden,
                 init_cell)

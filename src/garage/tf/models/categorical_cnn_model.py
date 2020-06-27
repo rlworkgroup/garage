@@ -68,7 +68,7 @@ class CategoricalCNNModel(Model):
                  hidden_nonlinearity=tf.nn.relu,
                  hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
-                 output_nonlinearity=None,
+                 output_nonlinearity=tf.nn.softmax,
                  output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):

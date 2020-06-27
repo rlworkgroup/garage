@@ -41,21 +41,6 @@ class TestCategoricalLSTMModel(TfGraphTestCase):
                            step_hidden_var, step_cell_var).dist
         assert isinstance(dist, tfp.distributions.OneHotCategorical)
 
-    def test_output_nonlinearity(self):
-        model = CategoricalLSTMModel(output_dim=1,
-                                     hidden_dim=4,
-                                     output_nonlinearity=lambda x: x / 2)
-        obs_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, None, 1))
-        step_obs_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, 1))
-        step_hidden_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, 4))
-        step_cell_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, 4))
-        obs = np.ones((1, 1, 1))
-        dist = model.build(obs_ph, step_obs_ph, step_hidden_ph,
-                           step_cell_ph).dist
-        probs = tf.compat.v1.get_default_session().run(dist.probs,
-                                                       feed_dict={obs_ph: obs})
-        assert probs == [0.5]
-
     @pytest.mark.parametrize('output_dim', [1, 2, 5, 10])
     def test_output_normalized(self, output_dim):
         model = CategoricalLSTMModel(output_dim=output_dim, hidden_dim=4)
