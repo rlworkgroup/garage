@@ -15,22 +15,6 @@ pull_request_rules:
         strict_method: rebase
         method: squash
       delete_head_branch: {}
-  - name: Automatic merge queue for master (maintainers)
-    conditions:
-      - base=master
-      - -conflict
-      - author=@maintainers
-      - "#approved-reviews-by>=1"
-      - "#changes-requested-reviews-by=0"
-      - status-success=Travis CI - Pull Request
-      - status-success=codecov/patch
-      - label=ready-to-merge
-    actions:
-      merge:
-        strict: smart
-        strict_method: rebase
-        method: squash
-      delete_head_branch: {}
   - name: Automatic merge queue for only docs on master
     conditions:
       - base=master
@@ -47,3 +31,33 @@ pull_request_rules:
         strict_method: rebase
         method: squash
       delete_head_branch: {}
+  - name: Automatically create backports for v2019.10
+    conditions:
+      - base=master
+      - -conflict
+      - "#approved-reviews-by>=2"
+      - "approved-reviews-by=@maintainers"
+      - "#changes-requested-reviews-by=0"
+      - status-success=Travis CI - Pull Request
+      - status-success=codecov/patch
+      - label=ready-to-merge
+      - label=backport-to-2019.10
+    actions:
+      backport:
+        branches:
+          - release-2019.10
+  - name: Automatically create backports for v2020.06
+    conditions:
+      - base=master
+      - -conflict
+      - "#approved-reviews-by>=2"
+      - "approved-reviews-by=@maintainers"
+      - "#changes-requested-reviews-by=0"
+      - status-success=Travis CI - Pull Request
+      - status-success=codecov/patch
+      - label=ready-to-merge
+      - label=backport-to-2020.06
+    actions:
+      backport:
+        branches:
+          - release-2020.06
