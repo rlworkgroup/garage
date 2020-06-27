@@ -133,13 +133,12 @@ ci-job-verify-envs-pipenv:
 ci-deploy-docker: assert-travis
 	echo "${DOCKER_API_KEY}" | docker login -u "${DOCKER_USERNAME}" \
 		--password-stdin
-	docker tag "${TAG}" rlworkgroup/garage-ci:latest
 	docker push rlworkgroup/garage-ci
 
 build-ci: TAG ?= rlworkgroup/garage-ci:latest
 build-ci: assert-docker-version docker/Dockerfile
 	docker build \
-		--cache-from rlworkgroup/garage-ci:latest \
+		--cache-from ${TAG} \
 		-f docker/Dockerfile \
 		--target garage-dev-18.04 \
 		-t ${TAG} \

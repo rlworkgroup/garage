@@ -123,8 +123,8 @@ before_install:
 
 install:
   # Pull cached docker image
-  - docker pull rlworkgroup/garage-ci:latest
   - tag="rlworkgroup/garage-ci:${TRAVIS_BUILD_NUMBER}"
+  - docker pull ${tag}
   - make build-ci TAG="${tag}"
 
 before_script:
