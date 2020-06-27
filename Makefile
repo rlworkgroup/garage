@@ -80,7 +80,6 @@ ci-verify-pipenv:
 ci-deploy-docker:
 	echo "${DOCKER_API_KEY}" | docker login -u "${DOCKER_USERNAME}" \
 		--password-stdin
-	docker tag "${TAG}" rlworkgroup/garage-ci:latest
 	docker push rlworkgroup/garage-ci
 
 build-ci: TAG ?= rlworkgroup/garage-ci:latest
