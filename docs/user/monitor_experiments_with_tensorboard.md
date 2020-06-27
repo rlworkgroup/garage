@@ -20,7 +20,7 @@ Use `@wrap_experiment` to setup your experiment.
 This will automatically setup TensorBoard output and allocate an experiment
 directory for you.
 
-Find more about how to use `@wrap_experiment` [here](https://github.com/rlworkgroup/garage/blob/master/docs/user/experiments.rst).
+Find more about how to use `@wrap_experiment` [here](experiments).
 
 ## Log to TensorBoard
 
