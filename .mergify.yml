@@ -31,6 +31,64 @@ pull_request_rules:
         strict_method: rebase
         method: squash
       delete_head_branch: {}
+  - name: Automatic merge queue for release-2019.10
+    conditions:
+      - base=release-2019.10
+      - -conflict
+      - "#approved-reviews-by>=1"
+      - "#changes-requested-reviews-by=0"
+      - status-success=Travis CI - Pull Request
+      - status-success=codecov/patch
+      - label=ready-to-merge
+    actions:
+      merge:
+        strict: smart
+        strict_method: rebase
+        method: squash
+      delete_head_branch: {}
+  - name: Automatic merge queue for release-2019.10 (automatic backports)
+    conditions:
+      - base=release-2019.10
+      - author=mergify-bot
+      - -conflict
+      - "#changes-requested-reviews-by=0"
+      - status-success=Travis CI - Pull Request
+      - status-success=codecov/patch
+    actions:
+      merge:
+        strict: smart
+        strict_method: rebase
+        method: squash
+      delete_head_branch: {}
+  - name: Automatic merge queue for release-2020.06
+    conditions:
+      - base=release-2020.06
+      - -conflict
+      - "#approved-reviews-by>=1"
+      - "#changes-requested-reviews-by=0"
+      - status-success=Travis CI - Pull Request
+      - status-success=codecov/patch
+      - label=ready-to-merge
+    actions:
+      merge:
+        strict: smart
+        strict_method: rebase
+        method: squash
+      delete_head_branch: {}
+  - name: Automatic merge queue for release-2020.06 (automatic backports)
+    conditions:
+      - base=release-2020.06
+      - author=mergify-bot
+      - -conflict
+      - "#changes-requested-reviews-by=0"
+      - status-success=Travis CI - Pull Request
+      - status-success=codecov/patch
+    actions:
+      merge:
+        strict: smart
+        strict_method: rebase
+        method: squash
+      delete_head_branch: {}
   - name: Automatically create backports for v2019.10
     conditions:
       - base=master
