@@ -102,3 +102,7 @@ STATE_ENV_SET = [
  'Breakout-ramDeterministic-v4', 'ChopperCommand-ramDeterministic-v4',
  'Tutankham-ramDeterministic-v4']
 ```
+
+----
+
+*This page was authored by Ruofu Wang ([@yeukfu](https://github.com/yeukfu)).*
