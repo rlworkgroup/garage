@@ -6,7 +6,7 @@ This page will guide you training a policy to solve an environment.
 
 In garage, we train a policy in an experiment, which is a function wrapped by a
 decorator called `wrap_experiment`. Below is an simple example.
-`wrap_experiment` could have some arguments. You can see the [experiments doc](experiments.rst)
+`wrap_experiment` could have some arguments. You can see the [experiments doc](experiments)
 for details of running experiments.
 
 ```py
@@ -43,7 +43,7 @@ def my_first_experiment(ctxt=None, seed=1):
 ## Construct an environment
 
 Garage supports many environments. You can also implement your own environment
-like [this](implement_env.rst). In this example, we choose `CartPole-V1`
+like [this](implement_env). In this example, we choose `CartPole-V1`
 environment.
 
 ```py
@@ -54,7 +54,7 @@ env = GarageEnv(env_name='CartPole-v1')
 
 Construct your policy and choose an algorithm to train it. Here, we use
 `CategoricalMLPPolicy` and `TRPO`, you can also implement your own algorithm
-like [this](implement_algo.rst). Your policy should be compatible with the
+like [this](implement_algo). Your policy should be compatible with the
 environment's observations and action space (CNN for image observations,
 discrete policy for discrete action spaces, etc).
 
