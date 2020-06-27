@@ -169,3 +169,8 @@ Assume that the file is :code:`examples/tf/trpo_point.py`. You can then run the 
 .. code-block:: bash
 
     python examples/tf/trpo_point.py
+
+
+----
+
+This page was authored by K.R. Zentner (`@krzentner <https://github.com/krzentner>`_), with contributions from Ryan Julian (`@ryanjulian <https://github.com/ryanjulian>`_), Jonathon Shen (`@jonashen <https://github.com/jonashen>`_), and Rocky Duan (`@dementrock <https://github.com/dementrock>`_).

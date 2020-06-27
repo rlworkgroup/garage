@@ -350,3 +350,7 @@ For completeness, the full experiment file is repeated below:
 
 
 .. [1] Williams, Ronald J. "Simple statistical gradient-following algorithms for connectionist reinforcement learning." Machine learning 8.3-4 (1992): 229-256.
+
+----
+
+This page was authored by K.R. Zentner (`@krzentner <https://github.com/krzentner>`_).

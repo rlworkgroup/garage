@@ -226,3 +226,7 @@ In order to enable the GPU for PyTorch, add the following code snippets to the e
     algo.to()
 
 See :code:`examples/torch/sac_half_cheetah_batch.py` for a more detailed example.
+
+----
+
+This page was authored by K.R. Zentner (`@krzentner <https://github.com/krzentner>`_), with contributions from Iris Liu (`@irisliucy <https://github.com/irisliucy>`_), Zequn Yu (`@zequnyu <https://github.com/zequnyu>`_), Angel Ivan Gonzalez (`@gonzaiva <https://github.com/gonzaiva>`_), `@wyjw <https://github.com/wyjw>`_, Gitanshu Sardana (`@gitanshu <https://github.com/gitanshu>`_), Ryan Julian (`@ryanjulian <https://github.com/ryanjulian>`_), Jonathon Shen (`@jonashen <https://github.com/jonashen>`_), Gunjan Baid (`@gunjanbaid <https://github.com/gunjanbaid>`_), and Rocky Duan (`@dementrock <https://github.com/dementrock>`_).

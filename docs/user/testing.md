@@ -237,3 +237,7 @@ def test_output_value(self, filters, in_channels, strides):
     ...
 
 ```
+
+----
+
+*This page was authored by Iris Liu ([@irisliucy](https://github.com/irisliucy)).*
