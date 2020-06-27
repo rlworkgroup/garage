@@ -5,4 +5,5 @@
    :maxdepth: 1
 
    testing
+   benchmarking
 ```
