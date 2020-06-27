@@ -64,7 +64,7 @@ RUN wget https://github.com/glfw/glfw/releases/download/3.3/glfw-3.3.zip && \
   make -j"$(nproc)" && \
   make install && \
   cd ../../ && \
-  rm -rf glfw
+  rm -rf glfw-3.3
 
 ARG user=garage-user
 ARG uid=999
@@ -99,15 +99,13 @@ RUN python3.5 -m venv $VIRTUAL_ENV
 ENV PATH "$VIRTUAL_ENV/bin:$PATH"
 
 # Prevent pip from complaining about available upgrades inside virtualenv
-RUN pip install --upgrade pip setuptools wheel
+RUN pip install --upgrade pip setuptools wheel && \
+  rm -r $HOME/.cache/pip
 
 # We need a MuJoCo key to install mujoco_py
 # In this step only the presence of the file mjkey.txt is required, so we only
 # create an empty file
 RUN touch $HOME/.mujoco/mjkey.txt
-RUN pip install garage && \
-    pip install garage[all] && \
-    rm -r $HOME/.cache/pip
 
 COPY --chown=$user:$user docker/entrypoint-runtime.sh $HOME/code/garage/docker/entrypoint-runtime.sh
 ENTRYPOINT ["code/garage/docker/entrypoint-runtime.sh"]
@@ -164,15 +162,14 @@ COPY --chown=$user:$user .pre-commit-config.yaml $HOME/code/garage
 RUN git init && \
   pip install pre-commit && \
   pre-commit install && \
-  pre-commit install-hooks
+  pre-commit install-hooks && \
+  rm -r $HOME/.cache/pip
 
 # Install deps (but not the code)
-# Note that we don't delete the pip cache for dev builds
-RUN rm -rf $VIRTUAL_ENV && \
-  python3.5 -m venv $VIRTUAL_ENV && \
-  pip install --upgrade pip setuptools wheel && \
+RUN pip install --upgrade pip setuptools wheel && \
   pip install .[all,dev] && \
-  rm $HOME/.mujoco/mjkey.txt
+  rm $HOME/.mujoco/mjkey.txt && \
+  rm -r $HOME/.cache/pip
 
 # Add code stub last (ensures code changes have the shortest builds)
 COPY --chown=$user:$user . $HOME/code/garage
