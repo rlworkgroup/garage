@@ -1,5 +1,5 @@
 # garage Maintainers at root
-* @rlworkgroup/maintainers
+* @rlworkgroup/maintainers @mergify
 
 # TensorFlow tree
 /garage/tf/* @ahtsan
