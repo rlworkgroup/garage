@@ -1,5 +1,13 @@
 pull_request_rules:
-  - name: Automatic merge queue for master
+  - name: Request reviews from contributors
+    conditions:
+      - -merged
+      - -draft
+    actions:
+      request_reviews:
+        teams:
+          - "@rlworkgroup/garage-contributors"
+  - name: Merge queue for master
     conditions:
       - base=master
       - -conflict
@@ -15,7 +23,7 @@ pull_request_rules:
         strict_method: rebase
         method: squash
       delete_head_branch: {}
-  - name: Automatic merge queue for only docs on master
+  - name: Merge queue for only docs on master
     conditions:
       - base=master
       - -conflict
@@ -31,7 +39,7 @@ pull_request_rules:
         strict_method: rebase
         method: squash
       delete_head_branch: {}
-  - name: Automatic merge queue for release-2019.10
+  - name: Merge queue for release-2019.10
     conditions:
       - base=release-2019.10
       - -conflict
@@ -46,7 +54,7 @@ pull_request_rules:
         strict_method: rebase
         method: squash
       delete_head_branch: {}
-  - name: Automatic merge queue for release-2019.10 (automatic backports)
+  - name: Merge queue for release-2019.10 (automatic backports)
     conditions:
       - base=release-2019.10
       - head~=^mergify/bp/release-2019.10/pr.*
@@ -60,7 +68,7 @@ pull_request_rules:
         strict_method: rebase
         method: squash
       delete_head_branch: {}
-  - name: Automatic merge queue for release-2020.06
+  - name: Merge queue for release-2020.06
     conditions:
       - base=release-2020.06
       - -conflict
@@ -75,7 +83,7 @@ pull_request_rules:
         strict_method: rebase
         method: squash
       delete_head_branch: {}
-  - name: Automatic merge queue for release-2020.06 (automatic backports)
+  - name: Merge queue for release-2020.06 (automatic backports)
     conditions:
       - base=release-2020.06
       - head~=^mergify/bp/release-2020.06/pr.*
@@ -89,7 +97,7 @@ pull_request_rules:
         strict_method: rebase
         method: squash
       delete_head_branch: {}
-  - name: Automatically create backports for v2019.10
+  - name: Create backports for v2019.10
     conditions:
       - base=master
       - merged
@@ -104,7 +112,7 @@ pull_request_rules:
       backport:
         branches:
           - release-2019.10
-  - name: Automatically create backports for v2020.06
+  - name: Create backports for v2020.06
     conditions:
       - base=master
       - merged
