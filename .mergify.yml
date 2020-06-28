@@ -49,7 +49,7 @@ pull_request_rules:
   - name: Automatic merge queue for release-2019.10 (automatic backports)
     conditions:
       - base=release-2019.10
-      - author=mergify-bot
+      - head~=^mergify/bp/release-2019.10/pr.*
       - -conflict
       - "#changes-requested-reviews-by=0"
       - status-success=Travis CI - Pull Request
@@ -78,7 +78,7 @@ pull_request_rules:
   - name: Automatic merge queue for release-2020.06 (automatic backports)
     conditions:
       - base=release-2020.06
-      - author=mergify-bot
+      - head~=^mergify/bp/release-2020.06/pr.*
       - -conflict
       - "#changes-requested-reviews-by=0"
       - status-success=Travis CI - Pull Request
@@ -92,13 +92,13 @@ pull_request_rules:
   - name: Automatically create backports for v2019.10
     conditions:
       - base=master
+      - merged
       - -conflict
       - "#approved-reviews-by>=2"
       - "approved-reviews-by=@maintainers"
       - "#changes-requested-reviews-by=0"
       - status-success=Travis CI - Pull Request
       - status-success=codecov/patch
-      - label=ready-to-merge
       - label=backport-to-2019.10
     actions:
       backport:
@@ -107,13 +107,13 @@ pull_request_rules:
   - name: Automatically create backports for v2020.06
     conditions:
       - base=master
+      - merged
       - -conflict
       - "#approved-reviews-by>=2"
       - "approved-reviews-by=@maintainers"
       - "#changes-requested-reviews-by=0"
       - status-success=Travis CI - Pull Request
       - status-success=codecov/patch
-      - label=ready-to-merge
       - label=backport-to-2020.06
     actions:
       backport:
