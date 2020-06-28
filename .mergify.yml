@@ -1,12 +1,18 @@
 pull_request_rules:
   - name: Request reviews from contributors
     conditions:
-      - -merged
       - -draft
     actions:
       request_reviews:
         teams:
           - "@rlworkgroup/garage-contributors"
+  - name: Approve PRs by maintainers
+    conditions:
+      - -draft
+      - "author=@rlworkgroup/maintainers"
+    actions:
+      review:
+        type: APPROVE
   - name: Merge queue for master
     conditions:
       - base=master
