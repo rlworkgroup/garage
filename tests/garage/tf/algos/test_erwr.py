@@ -1,7 +1,7 @@
 import pytest
 
 from garage.envs import GarageEnv
-from garage.experiment import LocalTFRunner
+from garage.experiment import deterministic, LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import ERWR
 from garage.tf.policies import CategoricalMLPPolicy
@@ -14,6 +14,7 @@ class TestERWR(TfGraphTestCase):
     def test_erwr_cartpole(self):
         """Test ERWR with Cartpole-v1 environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+            deterministic.set_seed(1)
             env = GarageEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
