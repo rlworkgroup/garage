@@ -107,12 +107,6 @@ pull_request_rules:
     conditions:
       - base=master
       - merged
-      - -conflict
-      - "#approved-reviews-by>=2"
-      - "approved-reviews-by=@maintainers"
-      - "#changes-requested-reviews-by=0"
-      - status-success=Travis CI - Pull Request
-      - status-success=codecov/patch
       - label=backport-to-2019.10
     actions:
       backport:
@@ -122,12 +116,6 @@ pull_request_rules:
     conditions:
       - base=master
       - merged
-      - -conflict
-      - "#approved-reviews-by>=2"
-      - "approved-reviews-by=@maintainers"
-      - "#changes-requested-reviews-by=0"
-      - status-success=Travis CI - Pull Request
-      - status-success=codecov/patch
       - label=backport-to-2020.06
     actions:
       backport:
