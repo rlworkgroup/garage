@@ -3,8 +3,8 @@
 # pylint: disable=no-name-in-module
 import click
 
+from garage import wrap_experiment  # pylint: disable=import-self
 from garage.experiment import LocalTFRunner
-from garage.experiment import run_experiment
 
 
 @click.group()
@@ -32,15 +32,13 @@ def resume(from_dir, from_epoch, log_dir):
     if log_dir is None:
         log_dir = from_dir
 
-    def run_task(_snapshot_config, _variant_data, _from_dir, _from_epoch):
-        with LocalTFRunner(snapshot_config=_snapshot_config) as runner:
-            runner.restore(from_dir=_from_dir, from_epoch=_from_epoch)
+    @wrap_experiment(log_dir=log_dir)
+    def run_resume(ctxt=None):
+        with LocalTFRunner(snapshot_config=ctxt) as runner:
+            runner.restore(from_dir=from_dir, from_epoch=from_epoch)
             runner.resume()
 
-    run_experiment(run_task,
-                   log_dir=log_dir,
-                   resume_from_dir=from_dir,
-                   resume_from_epoch=from_epoch)
+    run_resume()
 
 
 if __name__ == '__main__':

@@ -6,6 +6,8 @@ pipelines data between sampler and algorithm during training.
 from dowel import logger
 import psutil
 
+# pylint: disable=no-name-in-module
+
 from garage.experiment import LocalRunner
 from garage.sampler import DefaultWorker
 
@@ -40,7 +42,7 @@ class LocalTFRunner(LocalRunner):
         saved into the SAME directory if not specified.
 
         When resume programmatically, snapshot directory should be
-        specify manually or through run_experiment() interface.
+        specify manually or through @wrap_experiment interface.
 
     Examples:
         # to train
