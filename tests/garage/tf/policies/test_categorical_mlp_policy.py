@@ -55,10 +55,10 @@ class TestCategoricalMLPPolicy(TfGraphTestCase):
                                                shape=(None, None,
                                                       policy.input_dim))
         dist_sym = policy.build(state_input, name='dist_sym').dist
-        output1 = self.sess.run(
-            [policy.distribution.probs],
-            feed_dict={policy.model.input: [[obs.flatten()]]})
-        output2 = self.sess.run([dist_sym.probs],
+        dist_sym2 = policy.build(state_input, name='dist_sym2').dist
+        output1 = self.sess.run([dist_sym.probs],
+                                feed_dict={state_input: [[obs.flatten()]]})
+        output2 = self.sess.run([dist_sym2.probs],
                                 feed_dict={state_input: [[obs.flatten()]]})
         assert np.array_equal(output1, output2)
 
@@ -74,22 +74,27 @@ class TestCategoricalMLPPolicy(TfGraphTestCase):
         policy = CategoricalMLPPolicy(env_spec=env.spec)
         obs = env.reset()
 
-        with tf.compat.v1.variable_scope(
-                'CategoricalMLPPolicy/CategoricalMLPModel', reuse=True):
+        with tf.compat.v1.variable_scope('CategoricalMLPPolicy', reuse=True):
             bias = tf.compat.v1.get_variable('mlp/hidden_0/bias')
         # assign it to all one
         bias.load(tf.ones_like(bias).eval())
-        output1 = self.sess.run(
-            [policy.distribution.probs],
-            feed_dict={policy.model.input: [[obs.flatten()]]})
+        state_input = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, None,
+                                                      policy.input_dim))
+        dist_sym = policy.build(state_input, name='dist_sym').dist
+        output1 = self.sess.run([dist_sym.probs],
+                                feed_dict={state_input: [[obs.flatten()]]})
 
         p = pickle.dumps(policy)
 
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
-            output2 = sess.run(
-                [policy_pickled.distribution.probs],
-                feed_dict={policy_pickled.model.input: [[obs.flatten()]]})
+            state_input = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, None,
+                                                          policy.input_dim))
+            dist_sym = policy_pickled.build(state_input, name='dist_sym').dist
+            output2 = sess.run([dist_sym.probs],
+                               feed_dict={state_input: [[obs.flatten()]]})
             assert np.array_equal(output1, output2)
 
     @pytest.mark.parametrize('obs_dim, action_dim', [

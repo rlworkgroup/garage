@@ -5,14 +5,16 @@ import warnings
 
 import tensorflow as tf
 
+from garage.tf.models.module import Module
+
 
 class BaseModel(abc.ABC):
     """Interface-only abstract class for models.
 
     A Model contains the structure/configuration of a set of computation
     graphs, or can be understood as a set of networks. Using a model
-    requires calling `build()` with given input placeholder, which can be
-    either tf.compat.v1.placeholder, or the output from another model. This
+    requires calling `build()` with given input placeholder, which can
+    be either tf.compat.v1.placeholder, or the output from another model. This
     makes composition of complex models with simple models much easier.
 
     Examples:
@@ -130,7 +132,7 @@ class Network:
         return self._outputs
 
 
-class Model(BaseModel):
+class Model(BaseModel, Module):
     r"""Model class for TensorFlow.
 
     A TfModel only contains the structure/configuration of the underlying
@@ -180,8 +182,7 @@ class Model(BaseModel):
     """
 
     def __init__(self, name):
-        super().__init__()
-        self._name = name or type(self).__name__  # name default to class
+        super().__init__(name or type(self).__name__)
         self._networks = {}
         self._default_parameters = None
         self._variable_scope = None
@@ -276,7 +277,7 @@ class Model(BaseModel):
         return out_network
 
     def _build(self, *inputs, name=None):
-        """Output of the model given input placeholder(s).
+        """Build this model given input placeholder(s).
 
         User should implement _build() inside their subclassed model,
         and construct the computation graphs in this function.
@@ -436,7 +437,7 @@ class Model(BaseModel):
             dict: The pickled state.
 
         """
-        new_dict = self.__dict__.copy()
+        new_dict = super().__getstate__()
         del new_dict['_networks']
         new_dict['_default_parameters'] = self.parameters
         return new_dict
@@ -448,5 +449,5 @@ class Model(BaseModel):
             state (dict): unpickled state.
 
         """
-        self.__dict__.update(state)
+        super().__setstate__(state)
         self._networks = {}

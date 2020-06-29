@@ -6,10 +6,11 @@ import akro
 import numpy as np
 import tensorflow as tf
 
+from garage.tf.models import Module
 from garage.tf.policies.policy import Policy
 
 
-class DiscreteQfDerivedPolicy(Policy):
+class DiscreteQfDerivedPolicy(Module, Policy):
     """DiscreteQfDerived policy.
 
     Args:
@@ -20,9 +21,8 @@ class DiscreteQfDerivedPolicy(Policy):
     """
 
     def __init__(self, env_spec, qf, name='DiscreteQfDerivedPolicy'):
-        super().__init__(name, env_spec)
-
         assert isinstance(env_spec.action_space, akro.Discrete)
+        super().__init__(name)
         self._env_spec = env_spec
         self._qf = qf
 
@@ -33,16 +33,6 @@ class DiscreteQfDerivedPolicy(Policy):
             self._variable_scope = vs
             self._f_qval = tf.compat.v1.get_default_session().make_callable(
                 self._qf.q_vals, feed_list=[self._qf.model.input])
-
-    @property
-    def vectorized(self):
-        """Vectorized or not.
-
-        Returns:
-            Bool: True if primitive supports vectorized operations.
-
-        """
-        return True
 
     def get_action(self, observation):
         """Get action from this policy for the input observation.
@@ -88,6 +78,16 @@ class DiscreteQfDerivedPolicy(Policy):
 
         return opt_actions, dict()
 
+    @property
+    def env_spec(self):
+        """Policy environment specification.
+
+        Returns:
+            garage.EnvSpec: Environment specification.
+
+        """
+        return self._env_spec
+
     def __getstate__(self):
         """Object.__getstate__.
 
@@ -95,7 +95,7 @@ class DiscreteQfDerivedPolicy(Policy):
             dict: the state to be pickled for the instance.
 
         """
-        new_dict = self.__dict__.copy()
+        new_dict = super().__getstate__()
         del new_dict['_f_qval']
         return new_dict
 
@@ -106,5 +106,5 @@ class DiscreteQfDerivedPolicy(Policy):
             state (dict): Unpickled state.
 
         """
-        self.__dict__.update(state)
+        super().__setstate__(state)
         self._initialize()

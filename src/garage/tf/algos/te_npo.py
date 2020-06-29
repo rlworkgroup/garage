@@ -123,7 +123,7 @@ class TENPO(RLAlgorithm):
         self._name = name
         self._name_scope = tf.name_scope(self._name)
         self._old_policy = policy.clone('old_policy')
-        self._old_policy.model.parameters = self.policy.model.parameters
+        self._old_policy.parameters = self.policy.parameters
         self._old_policy.encoder.model.parameters = (
             self.policy.encoder.model.parameters)
         self._use_softplus_entropy = use_softplus_entropy
@@ -268,7 +268,7 @@ class TENPO(RLAlgorithm):
         logger.log('Fitting baseline...')
         self._baseline.fit(paths)
 
-        self._old_policy.model.parameters = self.policy.model.parameters
+        self._old_policy.parameters = self.policy.parameters
         self._old_policy.encoder.model.parameters = (
             self.policy.encoder.model.parameters)
         self._old_inference.model.parameters = self._inference.model.parameters
@@ -768,6 +768,7 @@ class TENPO(RLAlgorithm):
             samples_data['latent_infos'][k]
             for k in self.policy.encoder.state_info_keys
         ]
+        # pylint: disable=unexpected-keyword-arg
         policy_opt_input_values = self._policy_opt_inputs._replace(
             obs_var=samples_data['observations'],
             action_var=samples_data['actions'],

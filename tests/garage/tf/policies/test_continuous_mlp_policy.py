@@ -10,7 +10,6 @@ from garage.envs import GarageEnv
 from garage.tf.policies import ContinuousMLPPolicy
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
-from tests.fixtures.models import SimpleMLPModel
 
 
 class TestContinuousMLPPolicy(TfGraphTestCase):
@@ -27,27 +26,20 @@ class TestContinuousMLPPolicy(TfGraphTestCase):
     def test_get_action(self, obs_dim, action_dim):
         """Test get_action method"""
         env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
-        with mock.patch(('garage.tf.policies.'
-                         'continuous_mlp_policy.MLPModel'),
-                        new=SimpleMLPModel):
-            policy = ContinuousMLPPolicy(env_spec=env.spec)
+        policy = ContinuousMLPPolicy(env_spec=env.spec)
 
         env.reset()
         obs, _, _, _ = env.step(1)
 
         action, _ = policy.get_action(obs.flatten())
 
-        expected_action = np.full(action_dim, 0.5)
-
         assert env.action_space.contains(action)
-        assert np.array_equal(action, expected_action)
 
         actions, _ = policy.get_actions(
             [obs.flatten(), obs.flatten(),
              obs.flatten()])
         for action in actions:
             assert env.action_space.contains(action)
-            assert np.array_equal(action, expected_action)
 
     @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), (1, )),
@@ -57,13 +49,10 @@ class TestContinuousMLPPolicy(TfGraphTestCase):
         ((1, 1), (2, 2)),
         ((2, 2), (2, 2)),
     ])
-    def test_get_action_sym(self, obs_dim, action_dim):
-        """Test get_action_sym method"""
+    def test_build(self, obs_dim, action_dim):
+        """Test build method"""
         env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
-        with mock.patch(('garage.tf.policies.'
-                         'continuous_mlp_policy.MLPModel'),
-                        new=SimpleMLPModel):
-            policy = ContinuousMLPPolicy(env_spec=env.spec)
+        policy = ContinuousMLPPolicy(env_spec=env.spec)
 
         env.reset()
         obs, _, _, _ = env.step(1)
@@ -71,15 +60,12 @@ class TestContinuousMLPPolicy(TfGraphTestCase):
         obs_dim = env.spec.observation_space.flat_dim
         state_input = tf.compat.v1.placeholder(tf.float32,
                                                shape=(None, obs_dim))
-        action_sym = policy.get_action_sym(state_input, name='action_sym')
-
-        expected_action = np.full(action_dim, 0.5)
+        action_sym = policy.build(state_input, name='action_sym')
 
         action = self.sess.run(action_sym,
                                feed_dict={state_input: [obs.flatten()]})
         action = policy.action_space.unflatten(action)
 
-        assert np.array_equal(action, expected_action)
         assert env.action_space.contains(action)
 
     @pytest.mark.parametrize('obs_dim, action_dim', [
@@ -93,29 +79,29 @@ class TestContinuousMLPPolicy(TfGraphTestCase):
     def test_is_pickleable(self, obs_dim, action_dim):
         """Test if ContinuousMLPPolicy is pickleable"""
         env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
-        with mock.patch(('garage.tf.policies.'
-                         'continuous_mlp_policy.MLPModel'),
-                        new=SimpleMLPModel):
-            policy = ContinuousMLPPolicy(env_spec=env.spec)
-
+        policy = ContinuousMLPPolicy(env_spec=env.spec)
+        state_input = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, np.prod(obs_dim)))
+        outputs = policy.build(state_input, name='policy')
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        with tf.compat.v1.variable_scope('ContinuousMLPPolicy/MLPModel',
-                                         reuse=True):
-            return_var = tf.compat.v1.get_variable('return_var')
+        with tf.compat.v1.variable_scope('ContinuousMLPPolicy', reuse=True):
+            bias = tf.compat.v1.get_variable('mlp/hidden_0/bias')
         # assign it to all one
-        return_var.load(tf.ones_like(return_var).eval())
-        output1 = self.sess.run(
-            policy.model.outputs,
-            feed_dict={policy.model.input: [obs.flatten()]})
+        bias.load(tf.ones_like(bias).eval())
+        output1 = self.sess.run([outputs],
+                                feed_dict={state_input: [obs.flatten()]})
 
         p = pickle.dumps(policy)
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
-            output2 = sess.run(
-                policy_pickled.model.outputs,
-                feed_dict={policy_pickled.model.input: [obs.flatten()]})
+            state_input = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None,
+                                                          np.prod(obs_dim)))
+            outputs = policy_pickled.build(state_input, name='policy')
+            output2 = sess.run([outputs],
+                               feed_dict={state_input: [obs.flatten()]})
             assert np.array_equal(output1, output2)
 
     @pytest.mark.parametrize('obs_dim, action_dim', [

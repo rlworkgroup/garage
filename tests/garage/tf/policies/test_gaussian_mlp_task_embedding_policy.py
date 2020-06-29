@@ -77,6 +77,7 @@ class TestGaussianMLPTaskEmbeddingPolicy(TfGraphTestCase):
         assert latent_info['mean'].shape == (latent_dim, )
         assert latent_info['log_std'].shape == (latent_dim, )
 
+    # pylint: disable=no-member
     def test_auxiliary(self):
         obs_dim, action_dim, task_num, latent_dim = (2, ), (2, ), 2, 2
         env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
@@ -91,17 +92,17 @@ class TestGaussianMLPTaskEmbeddingPolicy(TfGraphTestCase):
         obs_input = tf.compat.v1.placeholder(tf.float32, shape=(None, None, 2))
         task_input = tf.compat.v1.placeholder(tf.float32,
                                               shape=(None, None, 2))
-        policy.build(obs_input, task_input)
+        networks = policy.build(obs_input, task_input)
+        dist = networks[0].dist
+        encoder_dist = networks[1].dist
 
-        assert policy.distribution.loc.get_shape().as_list(
-        )[-1] == env.action_space.flat_dim
+        assert dist.loc.get_shape().as_list()[-1] == env.action_space.flat_dim
         assert policy.encoder == encoder
         assert policy.latent_space.flat_dim == latent_dim
         assert policy.task_space.flat_dim == task_num
         assert (policy.augmented_observation_space.flat_dim ==
                 env.observation_space.flat_dim + task_num)
-        assert policy.encoder_distribution.loc.get_shape().as_list(
-        )[-1] == latent_dim
+        assert encoder_dist.loc.get_shape().as_list()[-1] == latent_dim
 
     def test_split_augmented_observation(self):
         obs_dim, task_num = 3, 5

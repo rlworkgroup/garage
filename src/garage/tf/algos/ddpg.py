@@ -149,8 +149,8 @@ class DDPG(RLAlgorithm):
                     shape=(None, self.env_spec.action_space.flat_dim),
                     name='input_action')
 
-            policy_network_outputs = self._target_policy.get_action_sym(
-                obs, name='policy')
+            policy_network_outputs = self._target_policy.build(obs,
+                                                               name='policy')
             target_qf_outputs = self._target_qf.get_qval_sym(obs,
                                                              actions,
                                                              name='qf')
@@ -190,7 +190,7 @@ class DDPG(RLAlgorithm):
                     shape=(None, self.env_spec.action_space.flat_dim),
                     name='input_action')
             # Set up policy training function
-            next_action = self.policy.get_action_sym(obs, name='policy_action')
+            next_action = self.policy.build(obs, name='policy_action')
             next_qval = self._qf.get_qval_sym(obs,
                                               next_action,
                                               name='policy_action_qval')

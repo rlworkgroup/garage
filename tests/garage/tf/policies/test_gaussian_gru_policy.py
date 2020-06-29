@@ -75,6 +75,7 @@ class TestGaussianGRUPolicy(TfGraphTestCase):
         ((2, 2), (2, ), 4)
     ])
     # yapf: enable
+    # pylint: disable=no-member
     def test_build_state_include_action(self, obs_dim, action_dim, hidden_dim):
         env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         policy = GaussianGRUPolicy(env_spec=env.spec,
@@ -87,13 +88,14 @@ class TestGaussianGRUPolicy(TfGraphTestCase):
                                                shape=(None, None,
                                                       policy.input_dim))
         dist_sym = policy.build(state_input, name='dist_sym').dist
+        dist_sym2 = policy.build(state_input, name='dist_sym2').dist
 
         concat_obs = np.concatenate([obs.flatten(), np.zeros(action_dim)])
         output1 = self.sess.run(
-            [policy.distribution.loc],
-            feed_dict={policy.model.input: [[concat_obs], [concat_obs]]})
-        output2 = self.sess.run(
             [dist_sym.loc],
+            feed_dict={state_input: [[concat_obs], [concat_obs]]})
+        output2 = self.sess.run(
+            [dist_sym2.loc],
             feed_dict={state_input: [[concat_obs], [concat_obs]]})
         assert np.array_equal(output1, output2)
 
@@ -105,6 +107,7 @@ class TestGaussianGRUPolicy(TfGraphTestCase):
         ((2, 2), (2, ), 4)
     ])
     # yapf: enable
+    # pylint: disable=no-member
     def test_build_state_not_include_action(self, obs_dim, action_dim,
                                             hidden_dim):
         env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
@@ -118,46 +121,53 @@ class TestGaussianGRUPolicy(TfGraphTestCase):
                                                shape=(None, None,
                                                       policy.input_dim))
         dist_sym = policy.build(state_input, name='dist_sym').dist
+        dist_sym2 = policy.build(state_input, name='dist_sym2').dist
 
         output1 = self.sess.run(
-            [policy.distribution.loc],
-            feed_dict={policy.model.input: [[obs.flatten()], [obs.flatten()]]})
-        output2 = self.sess.run(
             [dist_sym.loc],
+            feed_dict={state_input: [[obs.flatten()], [obs.flatten()]]})
+        output2 = self.sess.run(
+            [dist_sym2.loc],
             feed_dict={state_input: [[obs.flatten()], [obs.flatten()]]})
         assert np.array_equal(output1, output2)
 
+    # pylint: disable=no-member
     def test_is_pickleable(self):
         env = GarageEnv(DummyBoxEnv(obs_dim=(1, ), action_dim=(1, )))
         policy = GaussianGRUPolicy(env_spec=env.spec,
                                    state_include_action=False)
         env.reset()
         obs = env.reset()
-        with tf.compat.v1.variable_scope('GaussianGRUPolicy/GaussianGRUModel',
-                                         reuse=True):
+        with tf.compat.v1.variable_scope('GaussianGRUPolicy', reuse=True):
             param = tf.compat.v1.get_variable(
                 'dist_params/log_std_param/parameter')
         # assign it to all one
         param.load(tf.ones_like(param).eval())
 
+        state_input = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, None,
+                                                      policy.input_dim))
+        dist_sym = policy.build(state_input, name='dist_sym').dist
         output1 = self.sess.run(
-            [policy.distribution.loc,
-             policy.distribution.stddev()],
-            feed_dict={policy.model.input: [[obs.flatten()], [obs.flatten()]]})
+            [dist_sym.loc, dist_sym.stddev()],
+            feed_dict={state_input: [[obs.flatten()], [obs.flatten()]]})
 
         p = pickle.dumps(policy)
 
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
             # yapf: disable
+            state_input = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, None,
+                                                          policy.input_dim))
+            dist_sym = policy_pickled.build(state_input, name='dist_sym').dist
             output2 = sess.run(
                 [
-                    policy_pickled.distribution.loc,
-                    policy_pickled.distribution.stddev()
+                    dist_sym.loc,
+                    dist_sym.stddev()
                 ],
                 feed_dict={
-                    policy_pickled.model.input: [[obs.flatten()],
-                                                 [obs.flatten()]]
+                    state_input: [[obs.flatten()], [obs.flatten()]]
                 })
             assert np.array_equal(output1, output2)
             # yapf: enable
