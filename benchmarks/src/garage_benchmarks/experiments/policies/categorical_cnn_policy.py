@@ -50,12 +50,11 @@ def categorical_cnn_policy(ctxt, env_id, seed):
 
         baseline = GaussianCNNBaseline(
             env_spec=env.spec,
-            regressor_args=dict(
-                filters=hyper_params['conv_filters'],
-                strides=hyper_params['conv_strides'],
-                padding=hyper_params['conv_pad'],
-                hidden_sizes=hyper_params['hidden_sizes'],
-                use_trust_region=hyper_params['use_trust_region']))
+            filters=hyper_params['conv_filters'],
+            strides=hyper_params['conv_strides'],
+            padding=hyper_params['conv_pad'],
+            hidden_sizes=hyper_params['hidden_sizes'],
+            use_trust_region=hyper_params['use_trust_region'])
 
         algo = PPO(env_spec=env.spec,
                    policy=policy,

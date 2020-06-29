@@ -148,7 +148,8 @@ class GaussianCNNRegressorModel(GaussianCNNModel):
                          std_output_nonlinearity=std_output_nonlinearity,
                          std_output_w_init=std_output_w_init,
                          std_parameterization=std_parameterization,
-                         layer_normalization=layer_normalization)
+                         layer_normalization=layer_normalization,
+                         name=name)
         self._input_shape = input_shape
 
     def network_output_spec(self):

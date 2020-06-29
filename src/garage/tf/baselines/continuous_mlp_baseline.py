@@ -25,7 +25,6 @@ class ContinuousMLPBaseline(Baseline):
                  num_seq_inputs=1,
                  regressor_args=None,
                  name='ContinuousMLPBaseline'):
-        super().__init__(env_spec)
         if regressor_args is None:
             regressor_args = dict()
 
@@ -48,17 +47,17 @@ class ContinuousMLPBaseline(Baseline):
         returns = np.concatenate([p['returns'] for p in paths])
         self._regressor.fit(observations, returns.reshape((-1, 1)))
 
-    def predict(self, path):
+    def predict(self, paths):
         """Predict value based on paths.
 
         Args:
-            path (dict[numpy.ndarray]): Sample paths.
+            paths (dict[numpy.ndarray]): Sample paths.
 
         Returns:
             numpy.ndarray: Predicted value.
 
         """
-        return self._regressor.predict(path['observations']).flatten()
+        return self._regressor.predict(paths['observations']).flatten()
 
     def get_param_values(self):
         """Get parameter values.
@@ -86,4 +85,4 @@ class ContinuousMLPBaseline(Baseline):
             variable scope.
 
         """
-        return self._regressor.get_params_internal()
+        return self._regressor.get_params()

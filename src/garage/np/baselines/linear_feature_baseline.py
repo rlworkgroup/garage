@@ -15,7 +15,7 @@ class LinearFeatureBaseline(Baseline):
     """
 
     def __init__(self, env_spec, reg_coeff=1e-5, name='LinearFeatureBaseline'):
-        super().__init__(env_spec)
+        del env_spec
         self._coeffs = None
         self._reg_coeff = reg_coeff
         self.name = name
@@ -78,16 +78,16 @@ class LinearFeatureBaseline(Baseline):
                 break
             reg_coeff *= 10
 
-    def predict(self, path):
+    def predict(self, paths):
         """Predict value based on paths.
 
         Args:
-            path (list[dict]): Sample paths.
+            paths (list[dict]): Sample paths.
 
         Returns:
             numpy.ndarray: Predicted value.
 
         """
         if self._coeffs is None:
-            return np.zeros(len(path['rewards']))
-        return self._features(path).dot(self._coeffs)
+            return np.zeros(len(paths['rewards']))
+        return self._features(paths).dot(self._coeffs)

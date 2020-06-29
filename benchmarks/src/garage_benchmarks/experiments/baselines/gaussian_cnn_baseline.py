@@ -49,11 +49,11 @@ def gaussian_cnn_baseline(ctxt, env_id, seed):
 
         baseline = GaussianCNNBaseline(
             env_spec=env.spec,
-            regressor_args=dict(filters=params['conv_filters'],
-                                strides=params['conv_strides'],
-                                padding=params['conv_pad'],
-                                hidden_sizes=params['hidden_sizes'],
-                                use_trust_region=params['use_trust_region']))
+            filters=params['conv_filters'],
+            strides=params['conv_strides'],
+            padding=params['conv_pad'],
+            hidden_sizes=params['hidden_sizes'],
+            use_trust_region=params['use_trust_region'])
 
         algo = PPO(
             env_spec=env.spec,

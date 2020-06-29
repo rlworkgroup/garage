@@ -30,7 +30,6 @@ class GaussianMLPBaseline(Baseline):
             regressor_args=None,
             name='GaussianMLPBaseline',
     ):
-        super().__init__(env_spec)
         if regressor_args is None:
             regressor_args = dict()
 
@@ -54,17 +53,17 @@ class GaussianMLPBaseline(Baseline):
         returns = np.concatenate([p['returns'] for p in paths])
         self._regressor.fit(observations, returns.reshape((-1, 1)))
 
-    def predict(self, path):
+    def predict(self, paths):
         """Predict value based on paths.
 
         Args:
-            path (list[dict]): Sample paths.
+            paths (list[dict]): Sample paths.
 
         Returns:
             numpy.ndarray: Predicted value.
 
         """
-        return self._regressor.predict(path['observations']).flatten()
+        return self._regressor.predict(paths['observations']).flatten()
 
     def get_param_values(self):
         """Get parameter values.
@@ -92,4 +91,4 @@ class GaussianMLPBaseline(Baseline):
             variable scope.
 
         """
-        return self._regressor.get_params_internal()
+        return self._regressor.get_params()
