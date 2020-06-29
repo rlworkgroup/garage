@@ -194,7 +194,8 @@ brew install \
   sdl2 \
   swig \
   openmpi \
-  ruby
+  ruby \
+  graphviz
 set -e
 
 # Leave a note in ~/.bash_profile for the added environment variables

@@ -50,8 +50,9 @@ github_doc_root = f'https://github.com/rlworkgroup/garage/tree/{version_}/docs/'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
+    'autoapi.extension',
     'sphinx.ext.doctest',
+    'sphinx.ext.inheritance_diagram',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
@@ -321,39 +322,31 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
-autodoc_mock_imports = [
-    'dm_control', 'glfw', 'mujoco_py', 'ray', 'torch', 'torchvision'
+# -- Options for autodoc extension --------------------------------------------
+# autodoc_mock_imports = [
+#     'dm_control', 'glfw', 'mujoco_py', 'ray', 'torch', 'torchvision'
+# ]
+
+# -- Options for autoapi extension --------------------------------------------
+autoapi_root = '_autoapi'
+autoapi_dirs = ['../src']
+autoapi_add_toctree_entry = False
+autoapi_keep_files = True
+autoapi_template_dir = 'autoapi_templates'
+autoapi_options = [
+    'members',
+    'inherited-members',
+    'undoc-members',
+    'show-inheritance',
+    'show-module-summary',
+    'show-inheritance-diagram',
+    'show-module-summary',
+    'imported-members',
 ]
-
-
-# Auto-generate API documentation for readthedocs.org
-# See https://github.com/rtfd/readthedocs.org/issues/1139#issuecomment-398083449  # noqa: E501
-def run_apidoc(_):
-    ignore_paths = []
-
-    argv = [
-        '-f',
-        '-e',
-        '-d 10',
-        '-M',
-        '-o', './_apidoc',
-        '../src/'
-    ] + ignore_paths  # yapf: disable
-
-    try:
-        # Sphinx 1.7+
-        from sphinx.ext import apidoc
-        apidoc.main(argv)
-    except ImportError:
-        # Sphinx 1.6 (and earlier)
-        from sphinx import apidoc
-        argv.insert(0, apidoc.__file__)
-        apidoc.main(argv)
 
 
 # App setup entrypoint
 def setup(app):
-    app.connect('builder-inited', run_apidoc)
     app.add_config_value(
         'recommonmark_config', {
             'url_resolver': lambda url: github_doc_root + url,

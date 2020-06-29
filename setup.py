@@ -71,6 +71,7 @@ EXTRAS['dev'] = [
     'pytest-xdist',
     'recommonmark',
     'sphinx',
+    'sphinx-autoapi>=1.4.0',
     'sphinx_rtd_theme',
     'yapf==0.28.0',
 ]  # yapf: disable

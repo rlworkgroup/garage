@@ -132,8 +132,22 @@ ENTRYPOINT ["code/garage/docker/entrypoint-headless.sh"]
 # Assumes $PWD is the garage repository.
 FROM garage-headless-18.04 AS garage-dev-18.04
 
+# apt dependencies
+USER root
+RUN \
+  apt-get -y -q update && \
+  # Prevents debconf from prompting for user input
+  # See https://github.com/phusion/baseimage-docker/issues/58
+  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    # graphviz for autoapi documentation
+    graphviz && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
 ARG user=garage-user
 ARG uid=999
+USER $user
+
 # Copy over just setup.py first, so the Docker cache doesn't expire until
 # dependencies change
 #
