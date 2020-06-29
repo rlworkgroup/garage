@@ -6,6 +6,7 @@ from garage.torch.policies.deterministic_mlp_policy import (
     DeterministicMLPPolicy)
 from garage.torch.policies.discrete_qf_argmax_policy import (
     DiscreteQFArgmaxPolicy)
+from garage.torch.policies.gaussian_gru_policy import GaussianGRUPolicy
 from garage.torch.policies.gaussian_mlp_policy import GaussianMLPPolicy
 from garage.torch.policies.policy import Policy
 from garage.torch.policies.tanh_gaussian_mlp_policy import (
@@ -15,6 +16,7 @@ __all__ = [
     'CategoricalCNNPolicy',
     'DeterministicMLPPolicy',
     'DiscreteQFArgmaxPolicy',
+    'GaussianGRUPolicy',
     'GaussianMLPPolicy',
     'Policy',
     'TanhGaussianMLPPolicy',

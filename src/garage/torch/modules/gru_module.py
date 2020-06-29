@@ -6,10 +6,15 @@ from torch.autograd import Variable
 
 class GRUModule(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, layer_dim, output_dim,
-                 bias=True):
+    def __init__(
+            self,
+            input_dim,
+            hidden_dim,
+            # hidden_nonlinearity,
+            layer_dim,
+            output_dim,
+            bias=True):
         super().__init__()
-        # Hidden dimensions
         self._hidden_dim = hidden_dim
         # Number of hidden layers
         self._layer_dim = layer_dim
@@ -37,6 +42,8 @@ class GRUModule(nn.Module):
             outs.append(hn)
         out = outs[-1].squeeze()
         out = self._fc(out)
+        outs = torch.stack(outs)  # convert list of tensors to tensor
+        outs = self._fc(outs)
         # out.size() --> 100, 10
         # return out
         return outs, out, hn, h0

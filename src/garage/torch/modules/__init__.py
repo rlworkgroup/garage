@@ -1,9 +1,11 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 """PyTorch Modules."""
 # yapf: disable
 # isort:skip_file
 from garage.torch.modules.categorical_cnn_module import CategoricalCNNModule
 from garage.torch.modules.cnn_module import CNNModule
+from garage.torch.modules.gaussian_gru_module import GaussianGRUModule
 from garage.torch.modules.gaussian_mlp_module import (
     GaussianMLPIndependentStdModule)  # noqa: E501
 from garage.torch.modules.gaussian_mlp_module import (
@@ -25,5 +27,6 @@ __all__ = [
     'GaussianMLPModule',
     'GaussianMLPIndependentStdModule',
     'GaussianMLPTwoHeadedModule',
+    'GaussianGRUModule',
     'GRUModule',
 ]
