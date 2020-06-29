@@ -178,7 +178,7 @@ run-headless: build-headless
 
 run-nvidia: ## Run the Docker container for machines with NVIDIA GPUs
 run-nvidia: ## Requires https://github.com/NVIDIA/nvidia-container-runtime and CUDA 10.2
-run-headless: CONTAINER_NAME ?= ''
+run-nvidia: CONTAINER_NAME ?= ''
 run-nvidia: user ?= $$USER
 run-nvidia: build-nvidia
 	xhost +local:docker
