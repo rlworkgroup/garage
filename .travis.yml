@@ -65,11 +65,10 @@ before_install:
   - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
-  # Pull cached docker image
-  - docker pull rlworkgroup/garage-ci:latest
 
 install:
   - tag="rlworkgroup/garage-ci:${TRAVIS_BUILD_NUMBER}"
+  - docker pull "${tag}" || true
   - TAG="${tag}" make build-ci
 
 before_script:

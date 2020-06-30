@@ -3,14 +3,14 @@ services:
   garage-base:
     build:
       cache_from:
-        - rlworkgroup/garage-ci:latest
+        - ${TAG}
       context: ../
       dockerfile: docker/Dockerfile.base.18.04
     image: rlworkgroup/garage-base
   garage-ci-no-files:
     build:
       cache_from:
-        - rlworkgroup/garage-ci:latest
+        - ${TAG}
       context: ../
       dockerfile: docker/Dockerfile.headless
       args:
@@ -19,7 +19,7 @@ services:
   garage-ci:
     build:
       cache_from:
-        - rlworkgroup/garage-ci:latest
+        - ${TAG}
       context: ../
       dockerfile: docker/Dockerfile.runtime
       args:

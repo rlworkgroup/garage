@@ -64,7 +64,7 @@ RUN wget https://github.com/glfw/glfw/releases/download/3.3/glfw-3.3.zip && \
   make -j"$(nproc)" && \
   make install && \
   cd ../../ && \
-  rm -rf glfw
+  rm -rf glfw-3.3
 
 # MuJoCo 2.0 (for dm_control)
 RUN mkdir -p /root/.mujoco && \
