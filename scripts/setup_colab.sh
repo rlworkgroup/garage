@@ -156,7 +156,8 @@ sudo apt install -y \
   libsdl2-dev \
   libopenmpi-dev \
   openmpi-bin \
-  ruby-full
+  ruby-full \
+  graphviz
 
 # Build GLFW because the Ubuntu 16.04 version is too old
 # See https://github.com/glfw/glfw/issues/1004

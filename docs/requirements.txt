@@ -19,4 +19,5 @@ tensorflow-probability
 matplotlib
 recommonmark
 sphinx
+sphinx-autoapi>=1.4.0
 sphinx_rtd_theme
