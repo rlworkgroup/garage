@@ -605,7 +605,10 @@ class LocalRunner:
             garage.envs.GarageEnv: An environement instance.
 
         """
-        return cloudpickle.loads(cloudpickle.dumps(self._env))
+        if self._env:
+            return cloudpickle.loads(cloudpickle.dumps(self._env))
+        else:
+            return None
 
     @property
     def total_env_steps(self):

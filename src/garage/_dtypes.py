@@ -939,3 +939,28 @@ class TimeStepBatch(
         ]
 
         return TimeStepBatch.concatenate(*ts_batches)
+
+    @classmethod
+    def from_trajectory_batch(cls, batch):
+        """Construct a TimeStepBatch from a TrajectoryBatch.
+
+        Args:
+            batch (TrajectoryBatch): TrajectoryBatch to convert.
+
+        Returns:
+            TimeStepBatch: The converted batch.
+
+        """
+        next_observations = np.concatenate(
+            tuple([
+                np.concatenate((traj.observations[1:], traj.last_observations))
+                for traj in batch.split()
+            ]))
+        return cls(env_spec=batch.env_spec,
+                   observations=batch.observations,
+                   actions=batch.actions,
+                   rewards=batch.rewards,
+                   next_observations=next_observations,
+                   terminals=batch.terminals,
+                   env_infos=batch.env_infos,
+                   agent_infos=batch.agent_infos)
