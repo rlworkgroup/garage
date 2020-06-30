@@ -3,7 +3,7 @@
 In this section, we will talk about how to test
 different modules and algorithms in garage.
 
-In garage, we use [pytest]<https://docs.pytest.org/en/stable/getting-started.html>
+In garage, we use [pytest](https://docs.pytest.org/en/stable/getting-started.html)
 to carry out tests.
 
 ## Test Modules
