@@ -49,20 +49,20 @@ ci-job-normal: assert-docker
 	[ ! -f $(MJKEY_PATH) ] || mv $(MJKEY_PATH) $(MJKEY_PATH).bak
 	pytest --cov=garage --cov-report=xml -m \
 	    'not nightly and not huge and not flaky and not large and not mujoco and not mujoco_long' --durations=20
-	bash <(curl -s https://codecov.io/bash)
+	bash <(curl -s https://codecov.io/bash) -Z
 
 ci-job-large: assert-docker
 	[ ! -f $(MJKEY_PATH) ] || mv $(MJKEY_PATH) $(MJKEY_PATH).bak
 	pytest --cov=garage --cov-report=xml -m 'large and not flaky' --durations=20
-	bash <(curl -s https://codecov.io/bash)
+	bash <(curl -s https://codecov.io/bash) -Z
 
 ci-job-mujoco: assert-docker
 	pytest --cov=garage --cov-report=xml -m 'mujoco and not flaky' --durations=20
-	bash <(curl -s https://codecov.io/bash)
+	bash <(curl -s https://codecov.io/bash) -Z
 
 ci-job-mujoco-long: assert-docker
 	pytest --cov=garage --cov-report=xml -m 'mujoco_long and not flaky' --durations=20
-	bash <(curl -s https://codecov.io/bash)
+	bash <(curl -s https://codecov.io/bash) -Z
 
 ci-job-nightly: assert-docker
 	pytest -m nightly
