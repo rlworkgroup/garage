@@ -1,6 +1,6 @@
 # Training a policy to solve an environment
 
-This page will guide you training a policy to solve an environment.
+This page will guide you how to train a policy to solve an environment.
 
 ## Define an experiment
 
@@ -17,7 +17,7 @@ def my_first_experiment():
 
 ## Construct a LocalRunner
 
-Within the experiment, we need a `LocalRunner` to sets up important state (such
+Within the experiment, we need a `LocalRunner` to set up important state (such
 as a TensorFlow Session) for training a policy. To construct a `LocalRunner`, an
 experiment context called `ctxt` is needed. This is used to create the
 snapshotter, and we can set it `None` here to make it simple.
@@ -54,9 +54,10 @@ env = GarageEnv(env_name='CartPole-v1')
 
 Construct your policy and choose an algorithm to train it. Here, we use
 `CategoricalMLPPolicy` and `TRPO`, you can also implement your own algorithm
-like [this](implement_algo). Your policy should be compatible with the
+like [this](implement_algo). The policy should be compatible with the
 environment's observations and action space (CNN for image observations,
-discrete policy for discrete action spaces, etc).
+discrete policy for discrete action spaces, etc). The action space of
+`CartPole-V1` is discrete so we choose a discrete policy here.
 
 ```py
 policy = CategoricalMLPPolicy(name='policy',
@@ -73,7 +74,7 @@ algo = TRPO(env_spec=env.spec,
             max_kl_step=0.01)
 ```
 
-## Train your policy
+## Train the policy
 
 The final step is calling `runner.setup` and `runner.train` to co-ordinate
 training the policy.
