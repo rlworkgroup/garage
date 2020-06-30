@@ -1,6 +1,7 @@
 """"Gaussian GRU Policy."""
 import torch
 from torch import nn
+from torch.distributions.independent import Independent
 
 from garage.torch.modules import GaussianGRUModule
 from garage.torch.policies.stochastic_policy import StochasticPolicy
@@ -13,7 +14,7 @@ class GaussianGRUPolicy(StochasticPolicy):
     def __init__(
             self,
             env_spec,
-            hidden_sizes=(32, 32),
+            hidden_dim=(32, 32),
             hidden_nonlinearity=torch.tanh,
             hidden_w_init=nn.init.xavier_uniform_,
             hidden_b_init=nn.init.zeros_,
@@ -33,7 +34,7 @@ class GaussianGRUPolicy(StochasticPolicy):
         self._module = GaussianGRUModule(
             input_dim=self._obs_dim,
             output_dim=self._action_dim,
-            hidden_sizes=hidden_sizes,
+            hidden_dim=hidden_dim,
             hidden_nonlinearity=hidden_nonlinearity,
             hidden_w_init=hidden_w_init,
             hidden_b_init=hidden_b_init,
@@ -42,8 +43,6 @@ class GaussianGRUPolicy(StochasticPolicy):
             output_b_init=output_b_init,
             learn_std=learn_std,
             init_std=init_std,
-            # min_std=min_std,
-            # max_std=max_std,
             std_parameterization=std_parameterization,
             layer_normalization=layer_normalization)
 
@@ -59,5 +58,10 @@ class GaussianGRUPolicy(StochasticPolicy):
             dict[str, torch.Tensor]: Additional agent_info, as torch Tensors
 
         """
+
         dist = self._module(observations)
+        dist = dist[0]
+        assert isinstance(dist, torch.distributions.independent.Independent)
+        assert dist.event_shape == torch.Size((1, ))
+        assert dist.batch_shape == torch.Size((1, ))
         return (dist, dict(mean=dist.mean, log_std=(dist.variance**.5).log()))

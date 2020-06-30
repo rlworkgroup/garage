@@ -7,7 +7,7 @@ from torch.distributions import Normal
 from torch.distributions.independent import Independent
 
 from garage.torch.distributions import TanhNormal
-from garage.torch.modules import GRUModule
+from garage.torch.modules.gru_module import GRUModule
 
 
 class GaussianGRUBaseModule(nn.Module):
@@ -60,9 +60,10 @@ class GaussianGRUBaseModule(nn.Module):
         # self._std_share_network = std_share_network
         self._std_parameterization = std_parameterization,
         self._layer_normalization = layer_normalization
+        self._norm_dist_class = normal_distribution_cls
 
-        if self._std_parameterization not in ('exp', 'softplus'):
-            raise NotImplementedError
+        # if self._std_parameterization not in ('exp', 'softplus'):
+        #     raise NotImplementedError
         init_std_param = torch.Tensor([init_std]).log()
         if self._learn_std:
             self._init_std = torch.nn.Parameter(init_std_param)
@@ -87,7 +88,7 @@ class GaussianGRUBaseModule(nn.Module):
     def _get_mean_and_log_std(self, *inputs):
         pass
 
-    def forward(self):
+    def forward(self, *inputs):
         """Forward method.
 
         Args:
@@ -102,9 +103,9 @@ class GaussianGRUBaseModule(nn.Module):
          hidden_init) = self._get_mean_and_log_std(*inputs)
 
         if self._std_parameterization == 'exp':
-            std = log_std_var.exp()
+            std = log_std.exp()
         else:
-            std = log_std_var.exp().exp().add(1.).log()
+            std = log_std.exp().exp().add(1.).log()
         dist = self._norm_dist_class(mean, std)
         if not isinstance(dist, TanhNormal):
             # Makes it so that a sample from the distribution is treated as a
@@ -177,12 +178,10 @@ class GaussianGRUModule(GaussianGRUBaseModule):
         (mean_outputs, step_mean_outputs, step_hidden,
          hidden_init_var) = self._mean_gru_module(*inputs)
 
-        broadcast_shape = list(inputs.shape[:-1]) + [self._input_dim]
-        uncentered_log_std = torch.zeros(*broadcast_shape) + self._init_std
+        uncentered_log_std = torch.zeros(inputs[0].size(-1)) + self._init_std
 
-        step_broadcast_shape = list(inputs[0].shape[:-1]) + [self._input_dim]
         uncentered_step_log_std = torch.zeros(
-            *broadcast_shape) + self._init_std
+            inputs[0].size(-1)) + self._init_std
 
         return (mean_outputs, step_mean_outputs, uncentered_log_std,
                 uncentered_step_log_std, step_hidden, hidden_init_var)

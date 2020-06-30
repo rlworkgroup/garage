@@ -22,23 +22,24 @@ class GRUModule(nn.Module):
         # self.gru_cell = GRUCell(input_dim, hidden_dim, layer_dim)
         self._fc = nn.Linear(hidden_dim, output_dim)
 
-    def forward(self, x):
+    def forward(self, *input):
+        # input = input[0]
+        input = Variable(input[0].view(-1, input[0].size(0), input[0].size(1)))
 
         # Initialize hidden state with zeros
-        #print(x.shape,"x.shape")100, 28, 28
         if torch.cuda.is_available():
             h0 = Variable(
-                torch.zeros(self._layer_dim, x.size(0),
+                torch.zeros(self._layer_dim, input.size(0),
                             self._hidden_dim).cuda())
         else:
             h0 = Variable(
-                torch.zeros(self._layer_dim, x.size(0), self._hidden_dim))
+                torch.zeros(self._layer_dim, input.size(0), self._hidden_dim))
 
         outs = []
         hn = h0[0, :, :]
 
-        for seq in range(x.size(1)):
-            hn = self._gru_cell(x[:, seq, :], hn)
+        for seq in range(input.size(1)):
+            hn = self._gru_cell(input[:, seq, :], hn)
             outs.append(hn)
         out = outs[-1].squeeze()
         out = self._fc(out)
