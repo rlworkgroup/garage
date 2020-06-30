@@ -64,7 +64,7 @@ class PixelObservationWrapper(gym.Wrapper):
         Performs one action step in the enviornment.
 
         Args:
-            action (np.ndarray): Action of shape :math:`(A*, ) `
+            action (np.ndarray): Action of shape :math:`(A*, )`
                 to pass to the environment.
 
         Returns:
