@@ -29,6 +29,20 @@ log different types of TensorBoard output.
 
 Find more about how to use `logger` [here](https://github.com/rlworkgroup/dowel/blob/master/src/dowel/logger.py).
 
+## Configure Output Directory and `x_axis`
+
+By default, `@wrap_experiment` sets up TensorBoard output via:
+
+`logger.add_output(dowel.TensorBoardOutput(log_dir, x_axis='TotalEnvSteps'))`
+
+The default `log_dir` is `$(pwd)/data/local`, and the `x_axis` is
+'TotalEnvSteps'.
+
+To manually output to a different directory or with a different x axis, you can
+set up `logger` in your experiment by:
+
+`logger.add_output(dowel.TensorBoardOutput(MyLogDir, x_axis='MyXAxis'))`
+
 ### Log **Scalar** Values to TensorBoard
 
 You would need [`dowel.TabularInput`](https://github.com/rlworkgroup/dowel/blob/master/src/dowel/tabular_input.py).
