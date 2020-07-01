@@ -52,7 +52,7 @@ def continuous_mlp_baseline(ctxt, env_id, seed):
 
         baseline = ContinuousMLPBaseline(
             env_spec=env.spec,
-            regressor_args=dict(hidden_sizes=(64, 64)),
+            hidden_sizes=(64, 64),
         )
 
         algo = PPO(env_spec=env.spec,

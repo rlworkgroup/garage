@@ -158,7 +158,7 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
             )
             baseline = ContinuousMLPBaseline(
                 env_spec=env.spec,
-                regressor_args=dict(hidden_sizes=(32, 32)),
+                hidden_sizes=(32, 32),
             )
             algo = PPO(
                 env_spec=env.spec,
@@ -191,7 +191,7 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
             policy = GaussianLSTMPolicy(env_spec=env.spec, )
             baseline = ContinuousMLPBaseline(
                 env_spec=env.spec,
-                regressor_args=dict(hidden_sizes=(32, 32)),
+                hidden_sizes=(32, 32),
             )
             algo = PPO(
                 env_spec=env.spec,
