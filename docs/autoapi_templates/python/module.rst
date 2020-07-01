@@ -70,8 +70,8 @@ Functions
 {% block subpackages %}
 {% set visible_subpackages = obj.subpackages|selectattr("display")|list %}
 {% if visible_subpackages %}
-Subpackages
------------
+{# Subpackages
+----------- #}
 .. toctree::
    :titlesonly:
    :maxdepth: 1
