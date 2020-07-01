@@ -25,6 +25,7 @@ and how to implement new MDPs and new algorithms.
 
    user/experiments
    user/pixel_observations
+   user/monitor_experiments_with_tensorboard
    user/training_a_policy
 
 .. toctree::
