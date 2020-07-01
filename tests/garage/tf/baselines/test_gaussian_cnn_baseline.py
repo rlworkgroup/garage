@@ -1,132 +1,238 @@
 import pickle
 from unittest import mock
 
+import akro
 import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.envs import GarageEnv
-from garage.misc.tensor_utils import normalize_pixel_batch
+from garage.envs.env_spec import EnvSpec
 from garage.tf.baselines import GaussianCNNBaseline
+from garage.tf.optimizers import LbfgsOptimizer
 from tests.fixtures import TfGraphTestCase
-from tests.fixtures.envs.dummy import DummyBoxEnv
-from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
-from tests.fixtures.regressors import SimpleGaussianCNNRegressor
+
+
+def get_train_test_data():
+    matrices = [
+        np.linspace(i - 0.5, i + 0.5, 300).reshape((10, 10, 3))
+        for i in range(110)
+    ]
+    data = [np.sin(matrices[i]) for i in range(100)]
+    obs = [{'observations': [x], 'returns': [np.mean(x)]} for x in data]
+
+    observations = np.concatenate([p['observations'] for p in obs])
+    returns = np.concatenate([p['returns'] for p in obs])
+    returns = returns.reshape((-1, 1))
+
+    paths = {'observations': [np.sin(matrices[i]) for i in range(100, 110)]}
+
+    expected = [[np.mean(x)] for x in paths['observations']]
+
+    return (obs, observations, returns), (paths, expected)
+
+
+test_env_spec = EnvSpec(observation_space=akro.Box(low=-1,
+                                                   high=1,
+                                                   shape=(10, 10, 3)),
+                        action_space=None)
 
 
 class TestGaussianCNNBaseline(TfGraphTestCase):
 
-    @pytest.mark.parametrize('obs_dim', [[1, 1, 1], [2, 2, 2], [1, 1], [2, 2]])
-    def test_fit(self, obs_dim):
-        box_env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim))
-        with mock.patch(('garage.tf.baselines.'
-                         'gaussian_cnn_baseline.'
-                         'GaussianCNNRegressor'),
-                        new=SimpleGaussianCNNRegressor):
-            gcb = GaussianCNNBaseline(env_spec=box_env.spec)
-        paths = [{
-            'observations': [np.full(obs_dim, 1)],
-            'returns': [1]
-        }, {
-            'observations': [np.full(obs_dim, 2)],
-            'returns': [2]
-        }]
-        gcb.fit(paths)
+    @pytest.mark.large
+    def test_fit_normalized(self):
+        gcr = GaussianCNNBaseline(env_spec=test_env_spec,
+                                  filters=((3, (3, 3)), (6, (3, 3))),
+                                  strides=(1, 1),
+                                  padding='SAME',
+                                  hidden_sizes=(32, ),
+                                  adaptive_std=False,
+                                  use_trust_region=True)
 
-        obs = {'observations': [np.full(obs_dim, 1), np.full(obs_dim, 2)]}
-        prediction = gcb.predict(obs)
-        assert np.array_equal(prediction, [1, 2])
+        train_data, test_data = get_train_test_data()
+        train_paths, observations, returns = train_data
+        for _ in range(20):
+            gcr.fit(train_paths)
 
-    @pytest.mark.parametrize('obs_dim', [[1], [2], [1, 1, 1, 1], [2, 2, 2, 2]])
-    def test_invalid_obs_shape(self, obs_dim):
-        box_env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim))
-        with pytest.raises(ValueError):
-            GaussianCNNBaseline(env_spec=box_env.spec)
+        test_paths, expected = test_data
+        prediction = gcr.predict(test_paths)
 
-    def test_obs_is_image(self):
-        env = GarageEnv(DummyDiscretePixelEnv(), is_image=True)
-        with mock.patch(('garage.tf.baselines.'
-                         'gaussian_cnn_baseline.'
-                         'GaussianCNNRegressor'),
-                        new=SimpleGaussianCNNRegressor):
-            with mock.patch(
-                    'garage.tf.baselines.'
-                    'gaussian_cnn_baseline.'
-                    'normalize_pixel_batch',
-                    side_effect=normalize_pixel_batch) as npb:
+        average_error = 0.0
+        for i, exp in enumerate(expected):
+            average_error += np.abs(exp - prediction[i])
+        average_error /= len(expected)
+        assert average_error <= 0.1
 
-                gcb = GaussianCNNBaseline(env_spec=env.spec)
+        x_mean = self.sess.run(gcr._networks['default'].x_mean)
+        x_mean_expected = np.mean(observations, axis=0, keepdims=True)
+        x_std = self.sess.run(gcr._networks['default'].x_std)
+        x_std_expected = np.std(observations, axis=0, keepdims=True)
 
-                obs_dim = env.spec.observation_space.shape
-                paths = [{
-                    'observations': [np.full(obs_dim, 1)],
-                    'returns': [1]
-                }, {
-                    'observations': [np.full(obs_dim, 2)],
-                    'returns': [2]
-                }]
+        assert np.allclose(x_mean, x_mean_expected)
+        assert np.allclose(x_std, x_std_expected)
 
-                gcb.fit(paths)
-                observations = np.concatenate(
-                    [p['observations'] for p in paths])
-                npb.assert_called_once()
-                assert (npb.call_args_list[0][0][0] == observations).all()
+        y_mean = self.sess.run(gcr._networks['default'].y_mean)
+        y_mean_expected = np.mean(returns, axis=0, keepdims=True)
+        y_std = self.sess.run(gcr._networks['default'].y_std)
+        y_std_expected = np.std(returns, axis=0, keepdims=True)
 
-                obs = {
-                    'observations': [np.full(obs_dim, 1),
-                                     np.full(obs_dim, 2)]
-                }
-                observations = obs['observations']
-                gcb.predict(obs)
-                assert npb.call_args_list[1][0][0] == observations
+        assert np.allclose(y_mean, y_mean_expected)
+        assert np.allclose(y_std, y_std_expected)
 
-    def test_obs_not_image(self):
-        env = GarageEnv(DummyDiscretePixelEnv(), is_image=False)
-        with mock.patch(('garage.tf.baselines.'
-                         'gaussian_cnn_baseline.'
-                         'GaussianCNNRegressor'),
-                        new=SimpleGaussianCNNRegressor):
-            with mock.patch(
-                    'garage.tf.baselines.'
-                    'gaussian_cnn_baseline.'
-                    'normalize_pixel_batch',
-                    side_effect=normalize_pixel_batch) as npb:
+    @pytest.mark.large
+    def test_fit_unnormalized(self):
+        gcr = GaussianCNNBaseline(env_spec=test_env_spec,
+                                  filters=((3, (3, 3)), (6, (3, 3))),
+                                  strides=(1, 1),
+                                  padding='SAME',
+                                  hidden_sizes=(32, ),
+                                  adaptive_std=True,
+                                  normalize_inputs=False,
+                                  normalize_outputs=False)
 
-                gcb = GaussianCNNBaseline(env_spec=env.spec)
+        train_data, test_data = get_train_test_data()
+        train_paths, _, _ = train_data
 
-                obs_dim = env.spec.observation_space.shape
-                paths = [{
-                    'observations': [np.full(obs_dim, 1)],
-                    'returns': [1]
-                }, {
-                    'observations': [np.full(obs_dim, 2)],
-                    'returns': [2]
-                }]
+        for _ in range(20):
+            gcr.fit(train_paths)
 
-                gcb.fit(paths)
-                obs = {
-                    'observations': [np.full(obs_dim, 1),
-                                     np.full(obs_dim, 2)]
-                }
-                gcb.predict(obs)
-                assert not npb.called
+        test_paths, expected = test_data
 
-    @pytest.mark.parametrize('obs_dim', [[1, 1, 1], [2, 2, 2], [1, 1], [2, 2]])
-    def test_param_values(self, obs_dim):
-        box_env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim))
-        with mock.patch(('garage.tf.baselines.'
-                         'gaussian_cnn_baseline.'
-                         'GaussianCNNRegressor'),
-                        new=SimpleGaussianCNNRegressor):
-            gcb = GaussianCNNBaseline(env_spec=box_env.spec)
-            new_gcb = GaussianCNNBaseline(env_spec=box_env.spec,
-                                          name='GaussianCNNBaseline2')
+        prediction = gcr.predict(test_paths)
+        average_error = 0.0
+        for i, exp in enumerate(expected):
+            average_error += np.abs(exp - prediction[i])
+        average_error /= len(expected)
+        assert average_error <= 0.1
+
+        x_mean = self.sess.run(gcr._networks['default'].x_mean)
+        x_mean_expected = np.zeros_like(x_mean)
+        x_std = self.sess.run(gcr._networks['default'].x_std)
+        x_std_expected = np.ones_like(x_std)
+        assert np.array_equal(x_mean, x_mean_expected)
+        assert np.array_equal(x_std, x_std_expected)
+
+        y_mean = self.sess.run(gcr._networks['default'].y_mean)
+        y_mean_expected = np.zeros_like(y_mean)
+        y_std = self.sess.run(gcr._networks['default'].y_std)
+        y_std_expected = np.ones_like(y_std)
+
+        assert np.allclose(y_mean, y_mean_expected)
+        assert np.allclose(y_std, y_std_expected)
+
+    @pytest.mark.large
+    def test_fit_smaller_subsample_factor(self):
+        gcr = GaussianCNNBaseline(env_spec=test_env_spec,
+                                  filters=((3, (3, 3)), (6, (3, 3))),
+                                  strides=(1, 1),
+                                  padding='SAME',
+                                  hidden_sizes=(32, ),
+                                  subsample_factor=0.9,
+                                  adaptive_std=False)
+        train_data, test_data = get_train_test_data()
+        train_paths, _, _ = train_data
+
+        for _ in range(20):
+            gcr.fit(train_paths)
+
+        test_paths, expected = test_data
+
+        prediction = gcr.predict(test_paths)
+        average_error = 0.0
+        for i, exp in enumerate(expected):
+            average_error += np.abs(exp - prediction[i])
+        average_error /= len(expected)
+        assert average_error <= 0.1
+
+    @pytest.mark.large
+    def test_fit_without_trusted_region(self):
+        gcr = GaussianCNNBaseline(env_spec=test_env_spec,
+                                  filters=((3, (3, 3)), (6, (3, 3))),
+                                  strides=(1, 1),
+                                  padding='SAME',
+                                  hidden_sizes=(32, ),
+                                  adaptive_std=False,
+                                  use_trust_region=False)
+        train_data, test_data = get_train_test_data()
+        train_paths, _, _ = train_data
+
+        for _ in range(20):
+            gcr.fit(train_paths)
+
+        test_paths, expected = test_data
+
+        prediction = gcr.predict(test_paths)
+        average_error = 0.0
+        for i, exp in enumerate(expected):
+            average_error += np.abs(exp - prediction[i])
+        average_error /= len(expected)
+        assert average_error <= 0.1
+
+    @mock.patch('tests.garage.tf.baselines.'
+                'test_gaussian_cnn_baseline.'
+                'LbfgsOptimizer')
+    def test_optimizer_args(self, mock_lbfgs):
+        lbfgs_args = dict(max_opt_itr=25)
+        gcr = GaussianCNNBaseline(env_spec=test_env_spec,
+                                  filters=((3, (3, 3)), (6, (3, 3))),
+                                  strides=(1, 1),
+                                  padding='SAME',
+                                  hidden_sizes=(32, ),
+                                  optimizer=LbfgsOptimizer,
+                                  optimizer_args=lbfgs_args,
+                                  use_trust_region=True)
+
+        assert mock_lbfgs.return_value is gcr._optimizer
+
+        mock_lbfgs.assert_called_with(max_opt_itr=25)
+
+    def test_is_pickleable(self):
+        gcr = GaussianCNNBaseline(env_spec=test_env_spec,
+                                  filters=((3, (3, 3)), (6, (3, 3))),
+                                  strides=(1, 1),
+                                  padding='SAME',
+                                  hidden_sizes=(32, ),
+                                  adaptive_std=False,
+                                  use_trust_region=False)
+
+        with tf.compat.v1.variable_scope('GaussianCNNBaseline', reuse=True):
+            bias = tf.compat.v1.get_variable(
+                'dist_params/mean_network/hidden_0/bias')
+        bias.load(tf.ones_like(bias).eval())
+
+        _, test_data = get_train_test_data()
+        test_paths, _ = test_data
+
+        result1 = gcr.predict(test_paths)
+        h = pickle.dumps(gcr)
+
+        with tf.compat.v1.Session(graph=tf.Graph()):
+            gcr_pickled = pickle.loads(h)
+            result2 = gcr_pickled.predict(test_paths)
+            assert np.array_equal(result1, result2)
+
+    def test_param_values(self):
+        gcb = GaussianCNNBaseline(env_spec=test_env_spec,
+                                  filters=((3, (3, 3)), (6, (3, 3))),
+                                  strides=(1, 1),
+                                  padding='SAME',
+                                  hidden_sizes=(32, ),
+                                  adaptive_std=False,
+                                  use_trust_region=False)
+        new_gcb = GaussianCNNBaseline(env_spec=test_env_spec,
+                                      filters=((3, (3, 3)), (6, (3, 3))),
+                                      strides=(1, 1),
+                                      padding='SAME',
+                                      hidden_sizes=(32, ),
+                                      adaptive_std=False,
+                                      use_trust_region=False,
+                                      name='GaussianCNNBaseline2')
 
         # Manual change the parameter of GaussianCNNBaseline
         with tf.compat.v1.variable_scope('GaussianCNNBaseline', reuse=True):
-            return_var = tf.compat.v1.get_variable(
-                'SimpleGaussianCNNModel/return_var')
-        return_var.load(1.0)
+            bias_var = tf.compat.v1.get_variable(
+                'dist_params/mean_network/hidden_0/bias')
+        bias_var.load(tf.ones_like(bias_var).eval())
 
         old_param_values = gcb.get_param_values()
         new_param_values = new_gcb.get_param_values()
@@ -135,40 +241,15 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
         new_param_values = new_gcb.get_param_values()
         assert np.array_equal(old_param_values, new_param_values)
 
-    @pytest.mark.parametrize('obs_dim', [[1, 1, 1], [2, 2, 2], [1, 1], [2, 2]])
-    def test_get_params_internal(self, obs_dim):
-        box_env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim))
-        with mock.patch(('garage.tf.baselines.'
-                         'gaussian_cnn_baseline.'
-                         'GaussianCNNRegressor'),
-                        new=SimpleGaussianCNNRegressor):
-            gcb = GaussianCNNBaseline(env_spec=box_env.spec,
-                                      regressor_args=dict())
-        params_interal = gcb.get_params_internal()
+    def test_get_params(self):
+        gcb = GaussianCNNBaseline(env_spec=test_env_spec,
+                                  filters=((3, (3, 3)), (6, (3, 3))),
+                                  strides=(1, 1),
+                                  padding='SAME',
+                                  hidden_sizes=(32, ),
+                                  adaptive_std=False,
+                                  use_trust_region=False)
+        params_interal = gcb.get_params()
         trainable_params = tf.compat.v1.trainable_variables(
             scope='GaussianCNNBaseline')
         assert np.array_equal(params_interal, trainable_params)
-
-    def test_is_pickleable(self):
-        box_env = GarageEnv(DummyBoxEnv(obs_dim=(1, 1)))
-        with mock.patch(('garage.tf.baselines.'
-                         'gaussian_cnn_baseline.'
-                         'GaussianCNNRegressor'),
-                        new=SimpleGaussianCNNRegressor):
-            gcb = GaussianCNNBaseline(env_spec=box_env.spec)
-        obs = {'observations': [np.full((1, 1), 1), np.full((1, 1), 1)]}
-
-        with tf.compat.v1.variable_scope('GaussianCNNBaseline', reuse=True):
-            return_var = tf.compat.v1.get_variable(
-                'SimpleGaussianCNNModel/return_var')
-        return_var.load(1.0)
-
-        prediction = gcb.predict(obs)
-
-        h = pickle.dumps(gcb)
-
-        with tf.compat.v1.Session(graph=tf.Graph()):
-            gcb_pickled = pickle.loads(h)
-            prediction2 = gcb_pickled.predict(obs)
-
-            assert np.array_equal(prediction, prediction2)

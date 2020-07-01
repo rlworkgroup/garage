@@ -233,20 +233,9 @@ class NPO(RLAlgorithm):
 
         samples_data['average_return'] = np.mean(undiscounted_returns)
 
-        self.log_diagnostics(samples_data)
         logger.log('Optimizing policy...')
         self.optimize_policy(samples_data)
         return samples_data['average_return']
-
-    def log_diagnostics(self, paths):
-        """Log diagnostic information.
-
-        Args:
-            paths (list[dict]): A list of collected paths.
-
-        """
-        logger.log('Logging diagnostics...')
-        self._baseline.log_diagnostics(paths)
 
     def optimize_policy(self, samples_data):
         """Optimize policy.
