@@ -6,13 +6,6 @@ pull_request_rules:
       request_reviews:
         teams:
           - "@rlworkgroup/garage-contributors"
-  - name: Approve PRs by maintainers
-    conditions:
-      - -draft
-      - "author=@rlworkgroup/maintainers"
-    actions:
-      review:
-        type: APPROVE
   - name: Merge queue for master
     conditions:
       - base=master
@@ -20,8 +13,9 @@ pull_request_rules:
       - "#approved-reviews-by>=2"
       - "approved-reviews-by=@maintainers"
       - "#changes-requested-reviews-by=0"
-      - status-success=Travis CI - Pull Request
-      - status-success=codecov/patch
+      - status-success="Travis CI - Pull Request"
+      - status-success="codecov/patch"
+      - status-success="docs/readthedocs.org:garage"
       - label=ready-to-merge
     actions:
       merge:
@@ -29,14 +23,49 @@ pull_request_rules:
         strict_method: rebase
         method: squash
       delete_head_branch: {}
-  - name: Merge queue for only docs on master
+  - name: Merge queue for master (maintainers)
+    conditions:
+      - base=master
+      - -conflict
+      - "author=@rlworkgroup/maintainers"
+      - "#approved-reviews-by>=1"
+      - "#changes-requested-reviews-by=0"
+      - status-success="Travis CI - Pull Request"
+      - status-success="codecov/patch"
+      - status-success="docs/readthedocs.org:garage"
+      - label=ready-to-merge
+    actions:
+      merge:
+        strict: smart
+        strict_method: rebase
+        method: squash
+      delete_head_branch: {}
+  - name: Merge for master (docs only)
     conditions:
       - base=master
       - -conflict
       - "#approved-reviews-by>=2"
       - "approved-reviews-by=@maintainers"
       - "#changes-requested-reviews-by=0"
-      - status-success=Travis CI - Pull Request
+      - status-success="Travis CI - Pull Request"
+      - status-success="docs/readthedocs.org:garage"
+      - label=ready-to-merge
+      - -files~=\.(?!md|rst|png)
+    actions:
+      merge:
+        strict: smart
+        strict_method: rebase
+        method: squash
+      delete_head_branch: {}
+  - name: Merge for master (docs only, maintainers)
+    conditions:
+      - base=master
+      - -conflict
+      - "author=@rlworkgroup/maintainers"
+      - "#approved-reviews-by>=1"
+      - "#changes-requested-reviews-by=0"
+      - status-success="Travis CI - Pull Request"
+      - status-success="docs/readthedocs.org:garage"
       - label=ready-to-merge
       - -files~=\.(?!md|rst|png)
     actions:
@@ -51,8 +80,8 @@ pull_request_rules:
       - -conflict
       - "#approved-reviews-by>=1"
       - "#changes-requested-reviews-by=0"
-      - status-success=Travis CI - Pull Request
-      - status-success=codecov/patch
+      - status-success="Travis CI - Pull Request"
+      - status-success="codecov/patch"
       - label=ready-to-merge
     actions:
       merge:
@@ -66,8 +95,8 @@ pull_request_rules:
       - head~=^mergify/bp/release-2019.10/pr.*
       - -conflict
       - "#changes-requested-reviews-by=0"
-      - status-success=Travis CI - Pull Request
-      - status-success=codecov/patch
+      - status-success="Travis CI - Pull Request"
+      - status-success="codecov/patch"
     actions:
       merge:
         strict: smart
@@ -80,8 +109,8 @@ pull_request_rules:
       - -conflict
       - "#approved-reviews-by>=1"
       - "#changes-requested-reviews-by=0"
-      - status-success=Travis CI - Pull Request
-      - status-success=codecov/patch
+      - status-success="Travis CI - Pull Request"
+      - status-success="codecov/patch"
       - label=ready-to-merge
     actions:
       merge:
@@ -95,8 +124,8 @@ pull_request_rules:
       - head~=^mergify/bp/release-2020.06/pr.*
       - -conflict
       - "#changes-requested-reviews-by=0"
-      - status-success=Travis CI - Pull Request
-      - status-success=codecov/patch
+      - status-success="Travis CI - Pull Request"
+      - status-success="codecov/patch"
     actions:
       merge:
         strict: smart
