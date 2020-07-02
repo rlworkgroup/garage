@@ -167,7 +167,7 @@ run-ci:
 run-headless: ## Run the Docker container for headless machines
 run-headless: CONTAINER_NAME ?= ''
 run-headless: user ?= $$USER
-run-headless: build-headless
+run-headless: ensure-data-path-exists build-headless
 	docker run \
 		-it \
 		--rm \
@@ -181,7 +181,7 @@ run-nvidia: ## Run the Docker container for machines with NVIDIA GPUs
 run-nvidia: ## Requires https://github.com/NVIDIA/nvidia-container-runtime and CUDA 10.2
 run-nvidia: CONTAINER_NAME ?= ''
 run-nvidia: user ?= $$USER
-run-nvidia: build-nvidia
+run-nvidia: ensure-data-path-exists build-nvidia
 	xhost +local:docker
 	docker run \
 		-it \
@@ -207,6 +207,9 @@ ifndef TRAVIS
 	@echo 'This recipe is only to be run from TravisCI'
 	@exit 1
 endif
+
+ensure-data-path-exists:
+	mkdir -p $(DATA_PATH)/$(CONTAINER_NAME) || exit 1
 
 # Help target
 # See https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
