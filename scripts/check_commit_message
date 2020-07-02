@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-"""Checks that a commit message conforms the the style guide."""
 import sys
 
 # Get the commit message location
@@ -10,10 +9,6 @@ lines = list((line.rstrip() for line in open(commit_msg_filepath, 'r')))
 
 # Remove all commented lines
 lines = [line for line in lines if len(line) == 0 or line[0] != '#']
-
-# Skip if this is an automated backport
-if len(lines) >= 2 and 'cherry picked from commit' in lines[-2]:
-    sys.exit(0)
 
 exit_code = 0
 
