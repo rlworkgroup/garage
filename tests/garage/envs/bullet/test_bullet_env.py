@@ -82,3 +82,19 @@ def test_pickle_creates_new_server(env_ids):
 
         for env in envs:
             env.close()
+
+
+def test_time_limit_env():
+    """Test BulletEnv emits done signal when time limit expiration occurs.
+
+    MinitaurBulletEnv-v0 has max_episode_steps=1000, thus
+    info['BulletEnv.TimeLimitTerminated'] is expected to be True after 1000
+    steps.
+
+    """
+    env = BulletEnv(env_name='MinitaurBulletEnv-v0')
+    env.reset()
+    for _ in range(1000):
+        _, _, done, info = env.step(env.spec.action_space.sample())
+    assert not done and info['TimeLimit.truncated']
+    assert info['BulletEnv.TimeLimitTerminated']

@@ -4,6 +4,7 @@ import copy
 
 import akro
 import gym
+from gym.wrappers.time_limit import TimeLimit
 
 from garage.envs.bullet import _get_bullet_env_list, BulletEnv
 from garage.envs.env_spec import EnvSpec
@@ -59,7 +60,9 @@ class GarageEnv(gym.Wrapper):
         env = None
         if 'env' in kwargs:  # env passed as a keyword arg
             env = kwargs['env']
-        elif len(args) > 1 and args[0]:  # env passed as a positional arg
+        elif len(args) >= 1 and isinstance(args[0], TimeLimit):
+            # env passed as a positional arg
+            # only checks env created by gym.make(), which has type TimeLimit
             env = args[0]
         if env and any(env.env.spec.id == name
                        for name in _get_bullet_env_list()):
@@ -68,7 +71,8 @@ class GarageEnv(gym.Wrapper):
         env_name = ''
         if 'env_name' in kwargs:  # env_name as a keyword arg
             env_name = kwargs['env_name']
-        elif len(args) > 2 and args[1] != '':  # env_name as a positional arg
+        elif len(args) >= 2:
+            # env_name as a positional arg
             env_name = args[1]
         if env_name != '' and any(env_name == name
                                   for name in _get_bullet_env_list()):

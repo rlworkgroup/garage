@@ -115,9 +115,9 @@ class BulletEnv(gym.Wrapper):
         # environment termination, and not a time limit
         # termination. The time limit termination signal
         # will be saved inside env_infos as
-        # 'GarageEnv.TimeLimitTerminated'
+        # 'BulletEnv.TimeLimitTerminated'
         if 'TimeLimit.truncated' in info:
-            info['GarageEnv.TimeLimitTerminated'] = done  # done = True always
+            info['BulletEnv.TimeLimitTerminated'] = done  # done = True always
             done = not info['TimeLimit.truncated']
         return observation, reward, done, info
 
