@@ -42,7 +42,7 @@ docs:  ## Build HTML documentation
 docs:
 	@pushd docs && make html && popd
 
-ci-job-precommit: assert-docker docs
+ci-job-precommit: assert-docker
 	scripts/travisci/check_precommit.sh
 
 ci-job-normal: assert-docker
