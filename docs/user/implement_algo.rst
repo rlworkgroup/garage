@@ -1,8 +1,8 @@
 .. _implement_algo:
 
-===========================
-Implementing New Algorithms
-===========================
+=========================
+Implement a New Algorithm
+=========================
 
 In this section, we will describe how to implement an RL algorithm using garage.
 Note that this section assumes some level of familiarity with reinforcement

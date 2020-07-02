@@ -1,8 +1,8 @@
 .. _implement_mdp:
 
-=============================
-Implementing New Environments
-=============================
+===========================
+Implement a New Environment
+===========================
 
 Garage uses an environment API based on the very popular OpenAI Gym interface. The main difference is that garage uses :code:`akro` to describe input and output spaces, which are an extension of the :code:`gym.Space` API.
 

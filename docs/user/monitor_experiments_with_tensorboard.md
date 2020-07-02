@@ -29,20 +29,6 @@ log different types of TensorBoard output.
 
 Find more about how to use `logger` [here](https://github.com/rlworkgroup/dowel/blob/master/src/dowel/logger.py).
 
-## Configure Output Directory and `x_axis`
-
-By default, `@wrap_experiment` sets up TensorBoard output via:
-
-`logger.add_output(dowel.TensorBoardOutput(log_dir, x_axis='TotalEnvSteps'))`
-
-The default `log_dir` is `$(pwd)/data/local`, and the `x_axis` is
-'TotalEnvSteps'.
-
-To manually output to a different directory or with a different x axis, you can
-set up `logger` in your experiment by:
-
-`logger.add_output(dowel.TensorBoardOutput(MyLogDir, x_axis='MyXAxis'))`
-
 ### Log **Scalar** Values to TensorBoard
 
 You would need [`dowel.TabularInput`](https://github.com/rlworkgroup/dowel/blob/master/src/dowel/tabular_input.py).
@@ -50,11 +36,13 @@ You would need [`dowel.TabularInput`](https://github.com/rlworkgroup/dowel/blob/
 To prepare your TensorBoard output, import dowel's `TabularInput` instance
 `tabular` by:
 
-`from dowel import tabular`
+```py
+from dowel import tabular
+```
 
 Add scalar values:
 
-```bash
+```py
 tabular.record('Epoch', epoch)
 tabular.record('# Sample', i_sample)
 tabular.record('AverageDiscountedReturn', return)
@@ -62,7 +50,9 @@ tabular.record('AverageDiscountedReturn', return)
 
 Finally, log your scalar values with `logger`:
 
-`logger.log(tabular)`
+```py
+logger.log(tabular)
+```
 
 ### Log **Histograms** to TensorBoard
 
@@ -75,7 +65,7 @@ It will accept input that `numpy.asarray` will.
 
 For example:
 
-```bash
+```py
 from dowel import Histogram, logger, tabular
 
 samples = norm.rvs(100)  # ndarray of 100 samples of a normal distribution
@@ -139,6 +129,44 @@ Now you can go to the link provided to view your experiment, or share it with
 others.
 
 Find more about TensorBoard Dev [here](https://tensorboard.dev/#get-started).
+
+## Advanced Features
+
+### Change the output directory or x-axis
+
+By default, `@wrap_experiment` sets up TensorBoard output via:
+
+```py
+logger.add_output(dowel.TensorBoardOutput(log_dir, x_axis='TotalEnvSteps'))
+```
+
+The default `log_dir` is `$(pwd)/data/local`, and the `x_axis` is
+`'TotalEnvSteps'`.
+
+To manually output to a different directory, you can
+set up `logger` in your experiment by:
+
+```py
+logger.add_output(dowel.TensorBoardOutput(MyLogDir))
+```
+
+### Add additional x-axes
+
+If you'd like to view your logs on more than one x-axis, you can configure dowel
+to log to additional x-axes by passing a list of tabular keys to the
+`additional_x_axes` parameter of `TensorBoardOutput`.
+
+```py
+logger.add_output(dowel.TensorBoardOutput(
+    log_dir,
+    x_axis='TotalEnvSteps',
+    additional_x_axes=['Itr'],  # Logs keys by optimization iteration as well
+))
+```
+
+Using this configuration, the key `Loss` will appear in TensorBoard under both
+the tag `Loss` using `TotalEnvSteps` as its x-axis, and under the tag `Loss/Itr`
+using `Itr` as its x-axis.
 
 ----
 
