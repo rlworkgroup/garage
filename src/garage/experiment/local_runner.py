@@ -7,10 +7,10 @@ import cloudpickle
 from dowel import logger, tabular
 import psutil
 
+# This is avoiding a circular import
 from garage.experiment.deterministic import get_seed, set_seed
 from garage.experiment.snapshotter import Snapshotter
-# This is avoiding a circular import
-from garage.sampler.default_worker import DefaultWorker  # noqa: I100
+from garage.sampler.default_worker import DefaultWorker
 from garage.sampler.worker_factory import WorkerFactory
 
 

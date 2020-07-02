@@ -1,11 +1,10 @@
 """setuptools based setup module."""
 import os
 
-from setuptools import find_packages
-from setuptools import setup
+from setuptools import find_packages, setup
 
 GARAGE_GH_TOKEN = os.environ.get('GARAGE_GH_TOKEN') or 'git'
-GYM_VERSION = '==0.15.4'
+GYM_VERSION = '0.15.4'
 
 # Required dependencies
 REQUIRED = [
@@ -15,7 +14,7 @@ REQUIRED = [
     'cloudpickle<1.5',
     'cma==2.7.0',
     'dowel==0.0.3',
-    'gym[atari,box2d,classic_control]' + GYM_VERSION,
+    f'gym[atari,box2d,classic_control]=={GYM_VERSION}',
     'numpy>=1.14.5',
     'psutil',
     # Pyglet 1.4.0 introduces some api change which breaks some
@@ -38,7 +37,7 @@ EXTRAS = {}
 
 EXTRAS['mujoco'] = [
     'mujoco-py<2.1,>=2.0',
-    'gym[all]' + GYM_VERSION,
+    f'gym[all]=={GYM_VERSION}',
 ]
 
 EXTRAS['dm_control'] = [
@@ -59,12 +58,13 @@ EXTRAS['dev'] = [
     'flake8',
     'flake8-docstrings>=1.5.0',
     'flake8-import-order',
-    'metaworld @ https://{}@api.github.com/repos/rlworkgroup/metaworld/tarball/861ae8d8c4bef80a7ed86f47f47acaa494d4ab77'.format(GARAGE_GH_TOKEN),  # noqa: E501
+    f'metaworld @ https://{GARAGE_GH_TOKEN}@api.github.com/repos/rlworkgroup/metaworld/tarball/861ae8d8c4bef80a7ed86f47f47acaa494d4ab77',  # noqa: E501
+    'isort>=4.3.21,<5.0.0',
     'pep8-naming==0.7.0',
     'pre-commit',
     'pycodestyle>=2.5.0',
     'pydocstyle>=4.0.0',
-    'pylint>=2.4.3',
+    'pylint>=2.5.3',
     'pytest>=4.5.0',  # Required for strict-markers
     'pytest-cov',
     'pytest-timeout',
@@ -73,7 +73,7 @@ EXTRAS['dev'] = [
     'sphinx',
     'sphinx-autoapi>=1.4.0',
     'sphinx_rtd_theme',
-    'yapf==0.28.0',
+    'yapf==0.30.0',
 ]  # yapf: disable
 
 with open('README.md') as f:

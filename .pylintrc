@@ -17,10 +17,11 @@ extension-pkg-whitelist =
 [MESSAGES CONTROL]
 enable = all
 disable =
-    # Style rules handled by yapf/flake8
+    # Style rules handled by yapf/flake8/isort
     bad-continuation,
     invalid-name,
     line-too-long,
+    wrong-import-order,
     # Algorithms and neural networks generally have a lot of variables
     too-many-instance-attributes,
     too-many-arguments,
