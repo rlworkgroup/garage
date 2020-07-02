@@ -17,6 +17,7 @@ class DummyPolicy(Policy):
             self,
             env_spec,
     ):
+        # pylint: disable=super-init-not-called
         self._env_spec = env_spec
         self._param = []
         self._param_values = np.random.uniform(-1, 1, 1000)
@@ -32,7 +33,7 @@ class DummyPolicy(Policy):
             dict: Distribution parameters.
 
         """
-        return self.action_space.sample(), dict(dummy='dummy')
+        return self.action_space.sample(), dict(dummy='dummy', mean=0.)
 
     def get_actions(self, observations):
         """Get multiple actions from this policy for the input observations.

@@ -32,6 +32,13 @@ class TestRollout:
         assert path['observations'][0].shape == (16, )
         assert path['actions'][0].shape == (2, 2)
 
+    def test_deterministic_action(self):
+        path = utils.rollout(self.env,
+                             self.policy,
+                             max_path_length=5,
+                             deterministic=True)
+        assert (path['actions'] == 0.).all()
+
 
 class TestTruncatePaths:
 
