@@ -52,6 +52,7 @@ The table below summarizes the algorithms available in garage.
 | MTPPO                  | PyTorch, TensorFlow |
 | MTTRPO                 | PyTorch, TensorFlow |
 | Task Embedding         | TensorFlow          |
+| Behavioral Cloning     | PyTorch             |
 
 ## Supported Tools and Frameworks
 Starting from version 2020.09, garage supports Python 3.6+. 2020.06 was the last version of garage that supports Python 3.5.
