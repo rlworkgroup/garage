@@ -88,7 +88,7 @@ In general, loading models and resuming an experiment includes
 # to resume immediately.
 runner = LocalRunner()
 runner.restore(resume_from_dir)
-runner.resume
+runner.resume()
 
 # to resume with modified training arguments.
 runner = LocalRunner()

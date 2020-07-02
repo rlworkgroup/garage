@@ -28,10 +28,7 @@ and how to implement new MDPs and new algorithms.
    user/monitor_experiments_with_tensorboard
    user/training_a_policy
    user/save_load_resume_exp
-<<<<<<< HEAD
    user/docker
-=======
->>>>>>> 67ff17b7... Third draft
 
 .. toctree::
    :maxdepth: 2
