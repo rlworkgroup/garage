@@ -12,7 +12,7 @@ REQUIRED = [
     # Please keep alphabetized
     'akro',
     'click>=2.0',
-    'cloudpickle',
+    'cloudpickle<1.5',
     'cma==2.7.0',
     'dowel==0.0.3',
     'gym[atari,box2d,classic_control]' + GYM_VERSION,
