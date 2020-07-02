@@ -55,6 +55,7 @@ and how to implement new MDPs and new algorithms.
    _autoapi/garage/np/index
    _autoapi/garage/plotter/index
    _autoapi/garage/replay_buffer/index
+   _autoapi/garage/sampler/index
    _autoapi/garage/tf/index
    _autoapi/garage/torch/index
 ```
