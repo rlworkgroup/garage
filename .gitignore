@@ -80,6 +80,7 @@ target/
 # Jupyter Notebook examples
 gym-results/
 mujoco_fake_key
+jupyter/data/
 
 # IPython
 profile_default/
