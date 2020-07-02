@@ -74,16 +74,19 @@ class BC(RLAlgorithm):
         self._batch_size = batch_size
         self._name = name
 
+        # For plotting
+        self.policy = self.learner
+
         # Public fields for sampling.
         self.env_spec = env_spec
-        self.policy = None
+        self.exploration_policy = None
         self.max_path_length = max_path_length
         self.sampler_cls = None
         if isinstance(self._source, Policy):
             if max_path_length is None:
                 raise ValueError('max_path_length must be passed if the '
                                  'source is a policy')
-            self.policy = self._source
+            self.exploration_policy = self._source
             self.sampler_cls = RaySampler
             self._source = source
         else:
