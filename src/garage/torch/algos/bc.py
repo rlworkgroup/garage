@@ -76,13 +76,17 @@ class BC(RLAlgorithm):
         self._batch_size = batch_size
         self._name = name
 
+        # For plotting
+        self.policy = self.learner
+
         # Public fields for sampling.
         self._env_spec = env_spec
+        self.exploration_policy = None
         self.policy = None
         self.max_episode_length = env_spec.max_episode_length
         self.sampler_cls = None
         if isinstance(self._source, Policy):
-            self.policy = self._source
+            self.exploration_policy = self._source
             self.sampler_cls = RaySampler
             self._source = source
         else:
