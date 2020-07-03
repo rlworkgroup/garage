@@ -38,15 +38,13 @@ def gaussian_gru_policy(ctxt, env_id, seed):
 
         baseline = GaussianMLPBaseline(
             env_spec=env.spec,
-            regressor_args=dict(
-                hidden_sizes=(64, 64),
-                use_trust_region=False,
-                optimizer=FirstOrderOptimizer,
-                optimizer_args=dict(
-                    batch_size=32,
-                    max_epochs=10,
-                    learning_rate=1e-3,
-                ),
+            hidden_sizes=(64, 64),
+            use_trust_region=False,
+            optimizer=FirstOrderOptimizer,
+            optimizer_args=dict(
+                batch_size=32,
+                max_epochs=10,
+                learning_rate=1e-3,
             ),
         )
 

@@ -36,7 +36,7 @@ class TestPPO(TfGraphTestCase):
         self.gru_policy = GaussianGRUPolicy(env_spec=self.env.spec)
         self.baseline = GaussianMLPBaseline(
             env_spec=self.env.spec,
-            regressor_args=dict(hidden_sizes=(32, 32)),
+            hidden_sizes=(32, 32),
         )
 
     @pytest.mark.mujoco
@@ -227,7 +227,7 @@ class TestPPOPendulumLSTM(TfGraphTestCase):
             lstm_policy = GaussianLSTMPolicy(env_spec=env.spec)
             baseline = GaussianMLPBaseline(
                 env_spec=env.spec,
-                regressor_args=dict(hidden_sizes=(32, 32)),
+                hidden_sizes=(32, 32),
             )
             algo = PPO(
                 env_spec=env.spec,
@@ -261,7 +261,7 @@ class TestPPOPendulumGRU(TfGraphTestCase):
             gru_policy = GaussianGRUPolicy(env_spec=env.spec)
             baseline = GaussianMLPBaseline(
                 env_spec=env.spec,
-                regressor_args=dict(hidden_sizes=(32, 32)),
+                hidden_sizes=(32, 32),
             )
             algo = PPO(
                 env_spec=env.spec,

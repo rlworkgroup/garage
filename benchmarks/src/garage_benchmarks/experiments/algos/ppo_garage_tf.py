@@ -44,15 +44,13 @@ def ppo_garage_tf(ctxt, env_id, seed):
 
         baseline = TF_GMB(
             env_spec=env.spec,
-            regressor_args=dict(
-                hidden_sizes=(32, 32),
-                use_trust_region=False,
-                optimizer=FirstOrderOptimizer,
-                optimizer_args=dict(
-                    batch_size=32,
-                    max_epochs=10,
-                    learning_rate=3e-4,
-                ),
+            hidden_sizes=(32, 32),
+            use_trust_region=False,
+            optimizer=FirstOrderOptimizer,
+            optimizer_args=dict(
+                batch_size=32,
+                max_epochs=10,
+                learning_rate=3e-4,
             ),
         )
 

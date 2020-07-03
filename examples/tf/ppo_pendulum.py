@@ -45,10 +45,8 @@ def ppo_pendulum(ctxt=None, seed=1):
 
         baseline = GaussianMLPBaseline(
             env_spec=env.spec,
-            regressor_args=dict(
-                hidden_sizes=(32, 32),
-                use_trust_region=True,
-            ),
+            hidden_sizes=(32, 32),
+            use_trust_region=True,
         )
 
         # NOTE: make sure when setting entropy_method to 'max', set

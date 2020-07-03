@@ -28,7 +28,7 @@ class TestNPO(TfGraphTestCase):
         )
         self.baseline = GaussianMLPBaseline(
             env_spec=self.env.spec,
-            regressor_args=dict(hidden_sizes=(32, 32)),
+            hidden_sizes=(32, 32),
         )
 
     @pytest.mark.flaky
