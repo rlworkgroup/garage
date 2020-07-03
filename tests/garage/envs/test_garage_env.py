@@ -1,6 +1,8 @@
+import gym
 import pytest
 
 from garage.envs import EnvSpec, GarageEnv
+from garage.envs.bullet import BulletEnv
 
 
 class TestGarageEnv:
@@ -32,3 +34,13 @@ class TestGarageEnv:
                 garage_env.spec.action_space.sample())
         assert not done and info['TimeLimit.truncated']
         assert info['GarageEnv.TimeLimitTerminated']
+
+    def test_return_bullet_env(self):
+        env = GarageEnv(env=gym.make('CartPoleBulletEnv-v1'))
+        assert isinstance(env, BulletEnv)
+        env = GarageEnv(env_name='CartPoleBulletEnv-v1')
+        assert isinstance(env, BulletEnv)
+        env = GarageEnv(gym.make('CartPoleBulletEnv-v1'))
+        assert isinstance(env, BulletEnv)
+        env = GarageEnv(None, 'CartPoleBulletEnv-v1')
+        assert isinstance(env, BulletEnv)

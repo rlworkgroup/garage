@@ -4,7 +4,9 @@ import copy
 
 import akro
 import gym
+from gym.wrappers.time_limit import TimeLimit
 
+from garage.envs.bullet import _get_bullet_env_list, BulletEnv
 from garage.envs.env_spec import EnvSpec
 
 # The gym environments using one of the packages in the following lists as
@@ -35,18 +37,62 @@ class GarageEnv(gym.Wrapper):
     convert action_space and observation_space from gym.Spaces to
     akro.spaces.
 
-    Args:
-        env (gym.Env): An env that will be wrapped
-        env_name (str): If the env_name is speficied, a gym environment
-            with that name will be created. If such an environment does not
-            exist, a `gym.error` is thrown.
-        is_image (bool): True if observations contain pixel values,
-            false otherwise. Setting this to true converts a gym.Spaces.Box
-            obs space to an akro.Image and normalizes pixel values.
-
+    GarageEnv handles all environments created by gym.make().
+    It returns a different wrapper class instance if the input environment
+    requires special handling.
+    Current supported wrapper classes are:
+        garage.envs.bullet.BulletEnv for Bullet-based gym environments.
+    See __new__() for details.
     """
 
+    def __new__(cls, *args, **kwargs):
+        """Returns environment specific wrapper based on input environment type.
+
+        Args:
+            args: positional arguments
+            kwargs: keyword arguments
+
+        Returns:
+             garage.envs.bullet.BulletEnv: if the environment is a bullet-based
+                environment. Else returns a garage.envs.GarageEnv
+        """
+        # Determine if the input env is a bullet-based gym environment
+        env = None
+        if 'env' in kwargs:  # env passed as a keyword arg
+            env = kwargs['env']
+        elif len(args) >= 1 and isinstance(args[0], TimeLimit):
+            # env passed as a positional arg
+            # only checks env created by gym.make(), which has type TimeLimit
+            env = args[0]
+        if env and any(env.env.spec.id == name
+                       for name in _get_bullet_env_list()):
+            return BulletEnv(env)
+
+        env_name = ''
+        if 'env_name' in kwargs:  # env_name as a keyword arg
+            env_name = kwargs['env_name']
+        elif len(args) >= 2:
+            # env_name as a positional arg
+            env_name = args[1]
+        if env_name != '' and any(env_name == name
+                                  for name in _get_bullet_env_list()):
+            return BulletEnv(gym.make(env_name))
+
+        return super(GarageEnv, cls).__new__(cls)
+
     def __init__(self, env=None, env_name='', is_image=False):
+        """Initializes a GarageEnv.
+
+        Args:
+            env (gym.wrappers.time_limit): A gym.wrappers.time_limit.TimeLimit
+                object wrapping a gym.Env created via gym.make().
+            env_name (str): If the env_name is speficied, a gym environment
+                with that name will be created. If such an environment does not
+                exist, a `gym.error` is thrown.
+            is_image (bool): True if observations contain pixel values,
+                false otherwise. Setting this to true converts a gym.Spaces.Box
+                obs space to an akro.Image and normalizes pixel values.
+        """
         # Needed for deserialization
         self._env_name = env_name
         self._env = env
@@ -59,8 +105,8 @@ class GarageEnv(gym.Wrapper):
         self.action_space = akro.from_gym(self.env.action_space)
         self.observation_space = akro.from_gym(self.env.observation_space,
                                                is_image=is_image)
-        self.__spec = EnvSpec(action_space=self.action_space,
-                              observation_space=self.observation_space)
+        self._spec = EnvSpec(action_space=self.action_space,
+                             observation_space=self.observation_space)
 
     @property
     def spec(self):
@@ -73,7 +119,7 @@ class GarageEnv(gym.Wrapper):
             garage.envs.env_spec.EnvSpec: The envionrment specification.
 
         """
-        return self.__spec
+        return self._spec
 
     def close(self):
         """Close the wrapped env."""
@@ -140,12 +186,12 @@ class GarageEnv(gym.Wrapper):
         thrown by gym.Wrapper.
 
         Args:
-            action (object): An action provided by the agent.
+            action (np.ndarray): An action provided by the agent.
 
         Returns:
-            object: Agent's observation of the current environment
-            float : Amount of reward returned after previous action
-            bool : Whether the episode has ended, in which case further step()
+            np.ndarray: Agent's observation of the current environment
+            float: Amount of reward returned after previous action
+            bool: Whether the episode has ended, in which case further step()
                 calls will return undefined results
             dict: Contains auxiliary diagnostic information (helpful for
                 debugging, and sometimes learning)
