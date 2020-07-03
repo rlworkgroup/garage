@@ -1,6 +1,5 @@
 """Test CategoricalCNNModule."""
 import pickle
-from unittest import mock
 
 import numpy as np
 import pytest
@@ -37,13 +36,12 @@ class TestCategoricalCNNModule:
         assert isinstance(dist, Categorical)
 
     @pytest.mark.parametrize(
-        'output_dim, hidden_channels, kernel_sizes, strides, hidden_sizes',
-        [
-            (1, (1, ), (1, 1), (1, ), (1, )),
-            (1, (3, ), (3, 3), (2, ), (2, )),
-            (1, (3, ), (3, 3), (2, ), (3, )),
-            # (2, (3, ), (3, 3), (32, (3, 3))), (2, 2), (1, 1)),
-            # (3, (3, ), (3, 3), (32, (3, 3))), (2, 2), (2, 2)),
+        'output_dim, hidden_channels, kernel_sizes, strides, hidden_sizes', [
+            (1, (1, ), (1, ), (1, ), (1, )),
+            (1, (3, ), (3, ), (2, ), (2, )),
+            (1, (3, ), (3, ), (2, ), (3, )),
+            (2, (3, 3), (3, 3), (2, 2), (1, 1)),
+            (3, (3, 3), (3, 3), (2, 2), (2, 2)),
         ])
     def test_is_pickleable(self, output_dim, hidden_channels, kernel_sizes,
                            strides, hidden_sizes):
@@ -63,4 +61,5 @@ class TestCategoricalCNNModule:
         dist2 = model_pickled(self.input)
 
         assert np.array_equal(dist1.probs.shape, dist2.probs.shape)
-        # assert np.array_equal(dist1.probs, dist2.probs)
+        assert np.array_equal(torch.all(torch.eq(dist1.probs, dist2.probs)),
+                              True)

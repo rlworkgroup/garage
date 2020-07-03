@@ -7,7 +7,6 @@ followed a multilayer perceptron (MLP).
 import torch
 from torch import nn
 from torch.distributions import Categorical
-from torch.distributions import OneHotCategorical
 
 from garage.torch.modules.cnn_module import CNNModule
 
@@ -20,7 +19,6 @@ class CategoricalCNNModule(nn.Module):
     by a fully-connected layer.
 
     Args:
-        # input_dim (int): Input dimension of the model.
         input_var (torch.tensor): Input tensor of the model.
         output_dim (int): Output dimension of the model.
         kernel_sizes (tuple[int]): Dimension of the conv filters.
@@ -71,7 +69,6 @@ class CategoricalCNNModule(nn.Module):
 
     def __init__(
             self,
-            # input_dim,
             input_var,
             output_dim,
             kernel_sizes,
@@ -92,7 +89,6 @@ class CategoricalCNNModule(nn.Module):
             layer_normalization=False,
     ):
         super().__init__()
-        # self._input_dim = input_dim
         self._input_var = input_var
         self._action_dim = output_dim
         self._kernel_sizes = kernel_sizes
@@ -134,10 +130,10 @@ class CategoricalCNNModule(nn.Module):
         Returns:
             torch.distributions.Categorical: Policy distribution.
 
-
         """
         assert len(inputs) == 1
-        cnn_output = self._cnn_module(*inputs)
+        cnn_output = self._cnn_module(inputs[0])
+
         # low-level pytorch fully-connection layer
         w = torch.empty((cnn_output.shape[1], self._action_dim))
         w.requires_grad = True
@@ -146,5 +142,6 @@ class CategoricalCNNModule(nn.Module):
         fc_w = self._hidden_w_init(w)
         fc_b = self._hidden_b_init(b)
         fc_output = cnn_output.mm(fc_w) + fc_b
-        dist = fc_output
-        return OneHotCategorical(probs=dist)
+
+        dist = Categorical(logits=fc_output)
+        return dist

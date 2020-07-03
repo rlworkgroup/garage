@@ -1,8 +1,9 @@
 """CNN Module."""
 import copy
 
-import torch
 from torch import nn
+
+from garage.torch._functions import flatten_to_single_vector
 
 
 # pylint: disable=unused-argument
@@ -10,7 +11,7 @@ class CNNModule(nn.Module):
     """Convolutional neural network (CNN) model in pytorch.
 
     Args:
-        input_var (int): Input tensor of the model.
+        input_var (pytorch.tensor): Input tensor of the model.
             Based on 'NCHW' data format: [batch_size, channel, height, width].
         kernel_sizes (tuple[int]): Dimension of the conv filters.
             For example, (3, 5) means there are two convolutional layers.
@@ -33,10 +34,11 @@ class CNNModule(nn.Module):
         hidden_b_init (callable): Initializer function for the bias
             of intermediate dense layer(s). The function should return a
             torch.Tensor.
-        paddings (tuple[int]): Amount of zero-padding added to both sides of 
+        paddings (tuple[int]): Amount of zero-padding added to both sides of
             the input of a conv layer.
         padding_mode (str): The type of padding algorithm to use, i.e.
-            'constant', 'reflect', 'replicate' or 'circular' and by default is 'zeros'.
+            'constant', 'reflect', 'replicate' or 'circular' and
+            by default is 'zeros'.
         max_pool (bool): Bool for using max-pooling or not.
         pool_shape (tuple[int]): Dimension of the pooling layer(s). For
             example, (2, 2) means that all pooling layers are of the same
@@ -66,51 +68,22 @@ class CNNModule(nn.Module):
             n_layers=None,
     ):
         super().__init__()
+        self._hidden_channels = hidden_channels
+        self._kernel_sizes = kernel_sizes
+        self._strides = strides
+        self._hidden_nonlinearity = hidden_nonlinearity
+        self._hidden_w_init = hidden_w_init
+        self._hidden_b_init = hidden_b_init
+        self._paddings = paddings
+        self._padding_mode = padding_mode
+        self._max_pool = max_pool
+        self._pool_shape = pool_shape
+        self._pool_stride = pool_stride
+        self._layer_normalization = layer_normalization
 
         self._cnn_layers = nn.ModuleList()
-
-        if isinstance(input_var, torch.Tensor): 
-            in_channel = input_var.shape[1]  # read in N, C, H, W
-        else:
-            in_channel = input_var.shape[0]
-        prev_channel = in_channel
-        for index, (channel, kernel_size, stride) in enumerate(
-                zip(hidden_channels, kernel_sizes, strides)):
-
-            hidden_layers = nn.Sequential()
-
-            if isinstance(paddings, (list, tuple)):
-                padding = paddings[index]
-            elif isinstance(paddings, int):
-                padding = paddings
-
-            # conv 2D layer
-            conv_layer = _conv(in_channels=prev_channel,
-                               out_channels=channel,
-                               kernel_size=kernel_size,
-                               stride=stride,
-                               padding=padding)
-            hidden_w_init(conv_layer.weight)
-            hidden_b_init(conv_layer.bias)
-            hidden_layers.add_module('conv_{}'.format(index), conv_layer)
-
-            # layer normalization
-            if layer_normalization:
-                hidden_layers.add_module('layer_normalization',
-                                         nn.LayerNorm(channel))
-
-            # non-linear function
-            if hidden_nonlinearity:
-                hidden_layers.add_module('non_linearity',
-                                         _NonLinearity(hidden_nonlinearity))
-            # max-pooling
-            if max_pool:
-                hidden_layers.add_module(
-                    'max_pooling',
-                    nn.MaxPool2d(kernel_size=pool_shape, stride=pool_stride))
-
-            self._cnn_layers.append(hidden_layers)
-            prev_channel = channel
+        self._in_channel = input_var.shape[1]  # read in N, C, H, W
+        self._CNNCell()
 
     @classmethod
     def _check_parameter_for_output_layer(cls, var, n_layers):
@@ -153,8 +126,50 @@ class CNNModule(nn.Module):
         x = input_val
         for layer in self._cnn_layers:
             x = layer(x)
-        x = flatten(x)
+        x = flatten_to_single_vector(x)
         return x
+
+    def _CNNCell(self):
+        """Helper function for initializing convolutional layer(s)."""
+        prev_channel = self._in_channel
+        for index, (channel, kernel_size, stride) in enumerate(
+                zip(self._hidden_channels, self._kernel_sizes, self._strides)):
+            hidden_layers = nn.Sequential()
+
+            if isinstance(self._paddings, (list, tuple)):
+                padding = self._paddings[index]
+            elif isinstance(self._paddings, int):
+                padding = self._paddings
+
+            # conv 2D layer
+            conv_layer = _conv(in_channels=prev_channel,
+                               out_channels=channel,
+                               kernel_size=kernel_size,
+                               stride=stride,
+                               padding=padding)
+            self._hidden_w_init(conv_layer.weight)
+            self._hidden_b_init(conv_layer.bias)
+            hidden_layers.add_module('conv_{}'.format(index), conv_layer)
+
+            # layer normalization
+            if self._layer_normalization:
+                hidden_layers.add_module('layer_normalization',
+                                         nn.LayerNorm(channel))
+
+            # non-linear function
+            if self._hidden_nonlinearity:
+                hidden_layers.add_module(
+                    'non_linearity', _NonLinearity(self._hidden_nonlinearity))
+
+            # max-pooling
+            if self._max_pool:
+                hidden_layers.add_module(
+                    'max_pooling',
+                    nn.MaxPool2d(kernel_size=self._pool_shape,
+                                 stride=self._pool_stride))
+
+            self._cnn_layers.append(hidden_layers)
+            prev_channel = channel
 
 
 def _conv(in_channels,
@@ -197,22 +212,6 @@ def _conv(in_channels,
                      padding_mode=padding_mode,
                      dilation=dilation,
                      bias=bias)
-
-
-# pylint: disable=missing-return-type-doc
-def flatten(x):
-    """Collapse the C x H x W values per representation into a single long vector.
-
-    Args:
-        x (torch.tensor): batch of data
-
-    Returns:
-        View of that data (analogous to numpy.reshape)
-
-    """
-    N = x.shape[0]  # read in N, C, H, W
-    return x.view(
-        N, -1)  # "flatten" the C * H * W values into a single vector per image
 
 
 class _NonLinearity(nn.Module):

@@ -1,5 +1,5 @@
 """PyTorch Policies."""
-from garage.torch.policies.categorical_cnn_policy import (CategoricalCNNPolicy)
+from garage.torch.policies.categorical_cnn_policy import CategoricalCNNPolicy
 from garage.torch.policies.context_conditioned_policy import (
     ContextConditionedPolicy)
 from garage.torch.policies.deterministic_mlp_policy import (

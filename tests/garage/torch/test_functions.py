@@ -5,16 +5,19 @@ import pytest
 import torch
 import torch.nn.functional as F
 
+from garage.envs import GarageEnv
 from garage.torch import (compute_advantages,
                           dict_np_to_torch,
+                          flatten_to_single_vector
                           global_device,
                           pad_to_last,
                           product_of_gaussians,
                           set_gpu_mode,
-                          torch_to_np)
+                          torch_to_np.
+                          TransposeImage)
 import garage.torch._functions as tu
-
 from tests.fixtures import TfGraphTestCase
+from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 # yapf: enable
 
@@ -72,6 +75,26 @@ def test_product_of_gaussians():
     output = product_of_gaussians(mu, sigmas_squared)
     assert output[0] == 1
     assert output[1] == 1 / size
+
+
+def test_flatten_to_single_vector():
+    """ Test test_flatten_to_single_vector"""
+    x = torch.arange(12).view(2, 1, 3, 2)
+    flatten_tensor = flatten_to_single_vector(x)
+    expected = np.arange(12).reshape(2, 6)
+    # expect [[ 0,  1,  2,  3,  4,  5], [ 6,  7,  8,  9, 10, 11]]
+    assert torch.Size([2, 6]) == flatten_tensor.size()
+    assert expected.shape == flatten_tensor.shape
+
+
+def test_transpose_image():
+    """Test TransposeImage."""
+    original_env = GarageEnv(DummyDiscretePixelEnv(), is_image=True)
+    obs_shape = original_env.observation_space.shape
+    if len(obs_shape) == 3 and obs_shape[2] in [1, 3]:
+        transposed_env = TransposeImage(original_env)
+        assert (original_env.observation_space.shape[2] ==
+                transposed_env.observation_space.shape[0])
 
 
 class TestTorchAlgoUtils(TfGraphTestCase):

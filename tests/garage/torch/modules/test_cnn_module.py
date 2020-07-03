@@ -7,7 +7,6 @@ import torch
 import torch.nn as nn
 
 from garage.torch.modules import CNNModule
-from garage.torch.modules.cnn_module import flatten
 
 
 class TestCNNModule:
@@ -143,19 +142,6 @@ class TestCNNModule:
 
         assert np.array_equal(torch.all(torch.eq(output1, output2)), True)
 
-    def test_flatten(self):
-        """ Test `flatten` function
-
-        `flatten` is expected to collapse the C * H * W values
-        into a single vector per data. It is similar to `np.reshape`.
-        """
-        x = torch.arange(12).view(2, 1, 3, 2)
-        flatten_tensor = flatten(x)
-        expected = np.arange(12).reshape(2, 6)
-        # expect [[ 0,  1,  2,  3,  4,  5], [ 6,  7,  8,  9, 10, 11]]
-        assert torch.Size([2, 6]) == flatten_tensor.size()
-        assert expected.shape == flatten_tensor.shape
-
     @pytest.mark.parametrize('kernel_sizes, hidden_channels, '
                              'strides, pool_shape, pool_stride',
                              [((1, ), (32, ), (1, ), 1, 1),
@@ -178,23 +164,6 @@ class TestCNNModule:
         fc_b = torch.zeros(10)
         result = x.mm(fc_w) + fc_b
         assert result.size() == torch.Size([64, 10])
-
-    def test_output_with_invalid_padding(self):
-        """ Test invalid padding shape
-
-        `padding` in pytorch controls the zero-padding added to both sides.
-        It must confront to the formula:
-        P = F - 1 / 2
-        , whereas P is `padding` and F is `kernel_sizes`.
-        """
-        expected_msg = 'Invalid padding shape at index *.'
-        with pytest.raises(AssertionError, match=expected_msg):
-            CNNModule(input_var=self.input,
-                      hidden_channels=(32, ),
-                      kernel_sizes=(3, ),
-                      strides=(1, ),
-                      paddings=(2, ),
-                      padding_mode='zeros')
 
     @pytest.mark.parametrize('hidden_nonlinear', [('test'), (object())])
     def test_no_head_invalid_settings(self, hidden_nonlinear):

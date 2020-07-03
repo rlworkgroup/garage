@@ -1,17 +1,28 @@
-"""Test categoricalCNNPolicy."""
-import pickle
-
-import numpy as np
+"""Test categoricalCNNPolicy in PyTorch."""
+import cloudpickle
 import pytest
-import torch
-from torch import nn
 
 from garage.envs import GarageEnv
+from garage.torch._functions import TransposeImage
 from garage.torch.policies import CategoricalCNNPolicy
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
-class TestCategoricalCNNPolicies:
+class TestCategoricalCNNPolicy:
+
+    def _initialize_obs_env(self, env):
+        """Initialize observation env depends on observation space type.
+
+        If observation space (i.e. akro.Image, gym.spaces.Box) is an image,
+        wrap the input of shape (W, H, 3) for PyTorch (N, 3, W, H).
+
+        Return:
+            Transformed environment (garage.envs).
+        """
+        obs_shape = env.observation_space.shape
+        if len(obs_shape) == 3 and obs_shape[2] in [1, 3]:
+            env = TransposeImage(env)
+        return env
 
     @pytest.mark.parametrize(
         'hidden_channels, kernel_sizes, strides, hidden_sizes', [
@@ -23,31 +34,88 @@ class TestCategoricalCNNPolicies:
                         hidden_sizes):
         """Test get_action function."""
         env = GarageEnv(DummyDiscretePixelEnv())
-        # obs_dim = env_spec.observation_space.flat_dim
-        # act_dim = env_spec.action_space.flat_dim
-        # obs = torch.ones(obs_dim, dtype=torch.float32)
-        policy = CategoricalCNNPolicy(env_spec=env.spec,
+        env = self._initialize_obs_env(env)
+        policy = CategoricalCNNPolicy(env=env,
                                       kernel_sizes=kernel_sizes,
                                       hidden_channels=hidden_channels,
                                       strides=strides,
                                       hidden_sizes=hidden_sizes)
         env.reset()
         obs, _, _, _ = env.step(1)
-        action, prob = policy.get_action(obs)
+
+        action = policy.get_action(obs)
         assert env.action_space.contains(action)
 
-        actions, _ = policy.get_actions([obs, obs, obs])
+    @pytest.mark.parametrize(
+        'hidden_channels, kernel_sizes, strides, hidden_sizes', [
+            ((3, ), (3, ), (1, ), (4, )),
+            ((3, 3), (3, 3), (1, 1), (4, 4)),
+            ((3, 3), (3, 3), (2, 2), (4, 4)),
+        ])
+    def test_get_action_img_obs(self, hidden_channels, kernel_sizes, strides,
+                                hidden_sizes):
+        """Test get_action function with akro.Image observation space."""
+        env = GarageEnv(DummyDiscretePixelEnv(), is_image=True)
+        env = self._initialize_obs_env(env)
+        policy = CategoricalCNNPolicy(env=env,
+                                      kernel_sizes=kernel_sizes,
+                                      hidden_channels=hidden_channels,
+                                      strides=strides,
+                                      hidden_sizes=hidden_sizes)
+        env.reset()
+        obs, _, _, _ = env.step(1)
+
+        action = policy.get_action(obs)
+        assert env.action_space.contains(action)
+
+    @pytest.mark.parametrize(
+        'hidden_channels, kernel_sizes, strides, hidden_sizes', [
+            ((3, ), (3, ), (1, ), (4, )),
+            ((3, 3), (3, 3), (1, 1), (4, 4)),
+            ((3, 3), (3, 3), (2, 2), (4, 4)),
+        ])
+    def test_get_actions(self, hidden_channels, kernel_sizes, strides,
+                         hidden_sizes):
+        """Test get_actions function with akro.Image observation space."""
+        env = GarageEnv(DummyDiscretePixelEnv(), is_image=True)
+        env = self._initialize_obs_env(env)
+        policy = CategoricalCNNPolicy(env=env,
+                                      kernel_sizes=kernel_sizes,
+                                      hidden_channels=hidden_channels,
+                                      strides=strides,
+                                      hidden_sizes=hidden_sizes)
+        env.reset()
+        obs, _, _, _ = env.step(1)
+
+        actions = policy.get_actions([obs, obs, obs])
         for action in actions:
             assert env.action_space.contains(action)
 
-    def test_get_action_np(self):
-        pass
+    @pytest.mark.parametrize(
+        'hidden_channels, kernel_sizes, strides, hidden_sizes', [
+            ((3, ), (3, ), (1, ), (4, )),
+            ((3, 3), (3, 3), (1, 1), (4, 4)),
+            ((3, 3), (3, 3), (2, 2), (4, 4)),
+        ])
+    def test_is_pickleable(self, hidden_channels, kernel_sizes, strides,
+                           hidden_sizes):
+        """Test if policy is pickable."""
+        env = GarageEnv(DummyDiscretePixelEnv(), is_image=True)
+        env = self._initialize_obs_env(env)
+        policy = CategoricalCNNPolicy(env=env,
+                                      kernel_sizes=kernel_sizes,
+                                      hidden_channels=hidden_channels,
+                                      strides=strides,
+                                      hidden_sizes=hidden_sizes)
+        env.reset()
+        obs, _, _, _ = env.step(1)
 
-    def test_get_actions(self):
-        pass
+        output_action_1 = policy.get_action(obs)
 
-    def test_get_actions_np(self):
-        pass
+        p = cloudpickle.dumps(policy)
+        policy_pickled = cloudpickle.loads(p)
+        output_action_2 = policy_pickled.get_action(obs)
 
-    def test_is_pickleable(self):
-        pass
+        assert env.action_space.contains(output_action_1)
+        assert env.action_space.contains(output_action_2)
+        assert output_action_1.shape == output_action_2.shape
