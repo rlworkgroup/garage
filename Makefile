@@ -41,6 +41,7 @@ test: build-test
 docs:  ## Build HTML documentation
 docs:
 	@pushd docs && make html && popd
+	@python -c 'import os, webbrowser; webbrowser.open("file://" + os.path.realpath("docs/_build/html/index.html"))'
 
 ci-job-precommit: assert-docker
 	scripts/travisci/check_precommit.sh
