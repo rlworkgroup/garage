@@ -1,9 +1,9 @@
 .. _experiments:
 
 
-===================
-Running Experiments
-===================
+===============
+Run Experiments
+===============
 
 In garage, experiments are described using Python files we call "experiment
 launchers." There is nothing unusual about how experiment launchers are

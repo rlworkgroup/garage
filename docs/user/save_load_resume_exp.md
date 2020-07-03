@@ -1,13 +1,7 @@
-# Save, load and resume experiments
+# Save, Load, and Resume Experiments
 
 This document provides solutions to a variety of use cases
-regarding saving, loading and resuming of Garage experiments.
-
-**Contents**:
-
-- [LocalRunner & LocalTFRunner for Garage experiment](#localrunner-localtfrunner-for-garage-experiment)
-- [Saving & Training Models in an experiment](#saving-training-models-in-an-experiment)
-- [Loading Models & Resuming an experiment](#loading-models-resuming-an-experiment)
+regarding saving, loading and resuming of garage experiments.
 
 ```python
 import garage
@@ -15,18 +9,17 @@ from garage.experiment import LocalRunner, LocalTFRunner
 from garage.experiment.deterministic import set_seed
 ```
 
-## LocalRunner & LocalTFRunner for Garage experiment
+## Use LocalRunner or LocalTFRunner
 
-`LocalRunner` class in Garage provides users with a range
-of utilities to set up environment and train an algorithm
-for an experiment.
+`LocalRunner` provides utilities for managing the algorithm training workflow.
 
 ```Python
 runner = LocalRunner()
 ```
 
-`LocalTFRunner` inherits `LocalRunner` class and provides
-a default TensorFlow session using Python context.
+`LocalTFRunner` inherits from the `LocalRunner` class and provides
+a default TensorFlow session for TensorFlow-based algorithms. It is implemented
+as a context manager.
 
 ```Python
 with LocalTFRunner(snapshot_config=ctxt) as runner:
@@ -52,10 +45,9 @@ an experiment, `Local_runner` provides four core functions:
 - `LocalRunner.resume`: To train an algorithm from a restored
     experiment. This function provides the same interface as train().
 
-## Saving & Training Models in an experiment
+## Train and Save an Experiment
 
-In general, saving and training models in an experiment includes
- the following steps:
+In general, saving and training an experiment includes the following steps:
 
 - Initialize the `LocalRunner`/ `LocalTFRunner` instance
 - Define the environment and algorithms for an experiment
@@ -74,15 +66,14 @@ runner.setup(algo, env)
 runner.train(n_epochs=100, batch_size=4000)
 ```
 
-## Loading Models & Resuming an experiment
+## Load and Resume an Experiment
 
 In general, loading models and resuming an experiment includes
  the following steps:
 
 - Initialize the `LocalRunner`/ `LocalTFRunner` instance
 - Restore the algorithm and experiment setup with `LocalRunner.restore`
-- Define for the parameters we want to update during training
-- Run the training step with `LocalRunner.resume`
+- Continue training with `LocalRunner.resume`
 
 ```Python
 # to resume immediately.
@@ -96,7 +87,7 @@ runner.restore(resume_from_dir)
 runner.resume(n_epochs=20)
 ```
 
-### Example on loading TRPO model & finetuning
+## Example: Continue Training TRPO on `CartPole-v1`
 
 To provide a setp-by-step example, we will walk you through how to load
 a pre-trained network and resume an experiment with

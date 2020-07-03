@@ -1,4 +1,4 @@
-# Using Image Observations
+# Use Image Observations
 
 Although most environments return observations that somehow describe the
 physical state of the agent and environment, others return observations that
@@ -78,7 +78,7 @@ which then:
 * Unflattens observations when necessary to preserve relationships between
   spatial data.
 
-### Pixel-specific Wrappers
+### Pixel-Specific Wrappers
 
 These are used to modify the environment observations, usually in ways that
 would reduce the input size and improve training speed. They can be found in the

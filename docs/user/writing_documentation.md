@@ -1,4 +1,3 @@
-
 # Writing Documentation
 
 When adding new features to garage, it is important that these features are

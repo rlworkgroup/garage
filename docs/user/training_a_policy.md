@@ -1,8 +1,8 @@
-# Training a policy to solve an environment
+# Train a Policy to Solve an Environment
 
 This page will guide you how to train a policy to solve an environment.
 
-## Define an experiment
+## Define the Experiment
 
 In garage, we train a policy in an experiment, which is a function wrapped by a
 decorator called `wrap_experiment`. Below is an simple example.
@@ -15,7 +15,7 @@ def my_first_experiment():
     ...
 ```
 
-## Construct a LocalRunner
+### Construct a LocalRunner
 
 Within the experiment, we need a `LocalRunner` to set up important state (such
 as a TensorFlow Session) for training a policy. To construct a `LocalRunner`, an
@@ -40,7 +40,7 @@ def my_first_experiment(ctxt=None, seed=1):
         ...
 ```
 
-## Construct an environment
+### Construct an Environment
 
 Garage supports many environments. You can also implement your own environment
 like [this](implement_env). In this example, we choose `CartPole-V1`
@@ -50,7 +50,7 @@ environment.
 env = GarageEnv(env_name='CartPole-v1')
 ```
 
-## Construct a policy and an algorithm
+### Construct a Policy and an Algorithm
 
 Construct your policy and choose an algorithm to train it. Here, we use
 `CategoricalMLPPolicy` and `TRPO`, you can also implement your own algorithm
@@ -74,7 +74,7 @@ algo = TRPO(env_spec=env.spec,
             max_kl_step=0.01)
 ```
 
-## Train the policy
+### Tell `LocalRunner` How to Train the Policy
 
 The final step is calling `runner.setup` and `runner.train` to co-ordinate
 training the policy.
@@ -84,7 +84,21 @@ runner.setup(algo, env)
 runner.train(n_epochs=100, batch_size=4000)
 ```
 
-## Run the experiment
+## Run the Experiment
+
+To run the experiment, simply call the experiment function you just defined.
+
+```py
+my_first_experiment()
+my_first_experiment(seed=3)  # changes the seed to 3
+```
+
+Often these will appear at the end of your launcher script, but your experiment
+functions are regular Python functions, and can be imported anywhere.
+
+See below for a full example.
+
+## Example: Train TRPO to Solve `CartPole-v1`
 
 In the above steps, we construct the required components to train a
 `CategoricalMLPPolicy` with `TRPO` to solve `CartPole-v1` and wrap all into an
