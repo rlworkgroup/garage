@@ -26,7 +26,7 @@ repos:
         args: [--rcfile=tests/garage/.pylintrc]
 
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.2.3
+    rev: v3.1.0
     hooks:
     -   id: check-added-large-files          # Prevent giant files from being committed.
     -   id: check-ast                        # Simply check whether files parse as valid python.
@@ -36,6 +36,7 @@ repos:
     -   id: check-json                       # Attempts to load all json files to verify syntax.
     -   id: check-merge-conflict             # Check for files that contain merge conflict strings.
     -   id: check-symlinks                   # Checks for symlinks which do not point to anything.
+    -   id: check-toml                       # Attempts to load all toml files to verify syntax.
     -   id: check-vcs-permalinks             # Ensures that links to vcs websites are permalinks.
     -   id: check-xml                        # Attempts to load all xml files to verify syntax.
     -   id: check-yaml                       # Attempts to load all yaml files to verify syntax.
@@ -43,16 +44,20 @@ repos:
     -   id: detect-private-key               # Checks for the existence of private keys.
     -   id: double-quote-string-fixer        # This hook replaces double quoted strings with single quoted strings.
     -   id: end-of-file-fixer                # Makes sure files end in a newline and only a newline.
-    -   id: flake8                           # Run flake8 on your Python files
-        additional_dependencies:
-          -   'flake8-docstrings>=1.5.0'
-          -   'flake8-import-order'
-          -   'pycodestyle>=2.5.0'
-          -   'pydocstyle>=4.0.0'
     -   id: forbid-new-submodules            # Prevent addition of new git submodules.
     -   id: mixed-line-ending                # Replaces or checks mixed line ending.
     -   id: pretty-format-json               # Checks that all your JSON files have keys that are sorted and indented.
     -   id: trailing-whitespace              # Trims trailing whitespace.
+
+-   repo: https://gitlab.com/pycqa/flake8
+    rev: 3.8.3
+    hooks:
+      - id: flake8                           # Run flake8 on your Python files
+        additional_dependencies:
+         - 'flake8-docstrings>=1.5.0'
+         - 'flake8-import-order'
+         - 'pycodestyle>=2.5.0'
+         - 'pydocstyle>=4.0.0'
 
 -   repo: https://github.com/markdownlint/markdownlint
     rev: v0.9.0
@@ -66,7 +71,7 @@ repos:
 
 # First pass: check format
 -   repo: https://github.com/pre-commit/mirrors-yapf
-    rev: v0.28.0
+    rev: v0.30.0
     hooks:
     -   id: yapf
         name: Check format with yapf
@@ -74,7 +79,7 @@ repos:
 
 # Second pass: format in-place
 -   repo: https://github.com/pre-commit/mirrors-yapf
-    rev: v0.28.0
+    rev: v0.30.0
     hooks:
     -   id: yapf
         name: Format in-place with yapf
