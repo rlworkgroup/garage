@@ -12,6 +12,7 @@ from garage.sampler import LocalSampler
 from garage.tf.algos import TD3
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
+
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
 

@@ -4,8 +4,7 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GarageEnv, normalize
-from garage.experiment import deterministic
-from garage.experiment import LocalTFRunner
+from garage.experiment import deterministic, LocalTFRunner
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DDPG

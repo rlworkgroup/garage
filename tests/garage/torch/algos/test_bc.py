@@ -1,3 +1,4 @@
+# yapf: disable
 import numpy as np
 import ray
 
@@ -6,10 +7,13 @@ from garage.envs import GarageEnv, PointEnv
 from garage.experiment import deterministic, LocalRunner
 from garage.sampler import LocalSampler, WorkerFactory
 from garage.torch.algos import BC
-from garage.torch.policies import DeterministicMLPPolicy, GaussianMLPPolicy, \
-    Policy
+from garage.torch.policies import (DeterministicMLPPolicy,
+                                   GaussianMLPPolicy,
+                                   Policy)
+
 from tests.fixtures import snapshot_config
-from tests.fixtures.sampler import ray_local_session_fixture  # NOQA
+
+# yapf: enable
 
 
 class OptimalPolicy(Policy):

@@ -9,6 +9,7 @@ import tensorflow as tf
 
 from garage.experiment import deterministic
 from garage.experiment.snapshotter import SnapshotConfig
+
 from tests.fixtures.logger import NullOutput
 
 path = os.path.join(os.getcwd(), 'data/local/experiment')

@@ -9,6 +9,7 @@ from garage.sampler import LocalSampler
 from garage.torch.algos import TRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
+
 from tests.fixtures import snapshot_config
 
 

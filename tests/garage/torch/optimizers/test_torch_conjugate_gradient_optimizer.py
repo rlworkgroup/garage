@@ -1,4 +1,5 @@
 """Tests for garage.torch.optimizers.conjugateGradientOptimizer."""
+# yapf: disable
 import pickle
 
 import numpy as np
@@ -6,8 +7,13 @@ import pytest
 import torch
 
 from garage.torch.optimizers.conjugate_gradient_optimizer import (
-    _build_hessian_vector_product, _conjugate_gradient,
-    ConjugateGradientOptimizer)
+    ConjugateGradientOptimizer)  # noqa: E501
+from garage.torch.optimizers.conjugate_gradient_optimizer import (
+    _build_hessian_vector_product)  # noqa: E501
+from garage.torch.optimizers.conjugate_gradient_optimizer import (
+    _conjugate_gradient)  # noqa: E501
+
+# yapf: enable
 
 # pylint: disable=not-callable  #https://github.com/pytorch/pytorch/issues/24807  # noqa: E501
 

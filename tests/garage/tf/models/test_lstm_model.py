@@ -5,6 +5,7 @@ import pytest
 import tensorflow as tf
 
 from garage.tf.models import LSTMModel
+
 from tests.fixtures import TfGraphTestCase
 
 

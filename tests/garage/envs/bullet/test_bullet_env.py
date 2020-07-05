@@ -2,11 +2,11 @@
 import pickle
 
 import gym
+import pybullet_envs
+from pybullet_utils.bullet_client import BulletClient
 import pytest
 
 from garage.envs.bullet import BulletEnv
-import pybullet_envs
-from pybullet_utils.bullet_client import BulletClient
 
 from tests.helpers import step_env
 

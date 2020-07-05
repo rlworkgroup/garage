@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.regressors import StochasticRegressor
+
 from tests.fixtures.models import SimpleGaussianCNNModel
 
 

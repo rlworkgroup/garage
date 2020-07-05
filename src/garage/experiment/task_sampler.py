@@ -1,12 +1,16 @@
 """Efficient and general interfaces for sampling tasks for Meta-RL."""
+# yapf: disable
 import abc
 import copy
 import math
 
 import numpy as np
 
-from garage.sampler.env_update import (ExistingEnvUpdate, NewEnvUpdate,
+from garage.sampler.env_update import (ExistingEnvUpdate,
+                                       NewEnvUpdate,
                                        SetTaskUpdate)
+
+# yapf: enable
 
 
 def _sample_indices(n_to_sample, n_available_tasks, with_replacement):

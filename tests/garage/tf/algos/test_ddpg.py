@@ -12,6 +12,7 @@ from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DDPG
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
+
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
 

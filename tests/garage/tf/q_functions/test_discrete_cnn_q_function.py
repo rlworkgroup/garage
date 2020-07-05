@@ -8,12 +8,12 @@ import tensorflow as tf
 from garage.envs import GarageEnv
 from garage.tf.models import CNNModel
 from garage.tf.q_functions import DiscreteCNNQFunction
+
 from tests.fixtures import TfGraphTestCase
-from tests.fixtures.envs.dummy import DummyDiscreteEnv
-from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
-from tests.fixtures.models import SimpleCNNModel
-from tests.fixtures.models import SimpleCNNModelWithMaxPooling
-from tests.fixtures.models import SimpleMLPModel
+from tests.fixtures.envs.dummy import DummyDiscreteEnv, DummyDiscretePixelEnv
+from tests.fixtures.models import (SimpleCNNModel,
+                                   SimpleCNNModelWithMaxPooling,
+                                   SimpleMLPModel)
 
 
 class TestDiscreteCNNQFunction(TfGraphTestCase):

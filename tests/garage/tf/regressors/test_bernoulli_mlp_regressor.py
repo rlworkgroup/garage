@@ -7,6 +7,7 @@ import tensorflow as tf
 
 from garage.tf.optimizers import ConjugateGradientOptimizer, LbfgsOptimizer
 from garage.tf.regressors import BernoulliMLPRegressor
+
 from tests.fixtures import TfGraphTestCase
 
 

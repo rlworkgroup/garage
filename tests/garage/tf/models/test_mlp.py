@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.models.mlp import mlp
+
 from tests.fixtures import TfGraphTestCase
 
 

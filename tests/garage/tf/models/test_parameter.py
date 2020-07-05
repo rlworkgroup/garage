@@ -1,8 +1,8 @@
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.models.parameter import parameter
-from garage.tf.models.parameter import recurrent_parameter
+from garage.tf.models.parameter import parameter, recurrent_parameter
+
 from tests.fixtures import TfGraphTestCase
 
 

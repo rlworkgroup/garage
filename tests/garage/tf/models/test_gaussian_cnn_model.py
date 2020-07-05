@@ -6,6 +6,7 @@ import pytest
 import tensorflow as tf
 
 from garage.tf.models import GaussianCNNModel
+
 from tests.fixtures import TfGraphTestCase
 
 

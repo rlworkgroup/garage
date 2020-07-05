@@ -11,7 +11,7 @@ from garage import log_performance, TrajectoryBatch
 from garage.misc import tensor_utils as tu
 from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.sampler import RaySampler
-from garage.torch import (compute_advantages, filter_valids, pad_to_last)
+from garage.torch import compute_advantages, filter_valids, pad_to_last
 from garage.torch.optimizers import OptimizerWrapper
 
 
@@ -55,22 +55,22 @@ class VPG(RLAlgorithm):
     """
 
     def __init__(
-            self,
-            env_spec,
-            policy,
-            value_function,
-            policy_optimizer=None,
-            vf_optimizer=None,
-            max_path_length=500,
-            num_train_per_epoch=1,
-            discount=0.99,
-            gae_lambda=1,
-            center_adv=True,
-            positive_adv=False,
-            policy_ent_coeff=0.0,
-            use_softplus_entropy=False,
-            stop_entropy_gradient=False,
-            entropy_method='no_entropy',
+        self,
+        env_spec,
+        policy,
+        value_function,
+        policy_optimizer=None,
+        vf_optimizer=None,
+        max_path_length=500,
+        num_train_per_epoch=1,
+        discount=0.99,
+        gae_lambda=1,
+        center_adv=True,
+        positive_adv=False,
+        policy_ent_coeff=0.0,
+        use_softplus_entropy=False,
+        stop_entropy_gradient=False,
+        entropy_method='no_entropy',
     ):
         self.discount = discount
         self.policy = policy

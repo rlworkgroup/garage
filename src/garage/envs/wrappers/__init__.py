@@ -15,7 +15,7 @@ from garage.envs.wrappers.fire_reset import FireReset
 from garage.envs.wrappers.grayscale import Grayscale
 from garage.envs.wrappers.max_and_skip import MaxAndSkip
 from garage.envs.wrappers.noop import Noop
-from garage.envs.wrappers.pixel_observation import (PixelObservationWrapper)
+from garage.envs.wrappers.pixel_observation import PixelObservationWrapper
 from garage.envs.wrappers.resize import Resize
 from garage.envs.wrappers.stack_frames import StackFrames
 

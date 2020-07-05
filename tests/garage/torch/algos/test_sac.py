@@ -15,6 +15,7 @@ from garage.torch import set_gpu_mode
 from garage.torch.algos import SAC
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
+
 from tests.fixtures import snapshot_config
 
 

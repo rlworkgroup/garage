@@ -1,4 +1,5 @@
 """Tests for garage.tf.optimizers.conjugateGradientOptimizer"""
+# yapf: disable
 import pickle
 
 import numpy as np
@@ -7,9 +8,16 @@ import tensorflow as tf
 
 from garage.tf.models import Module
 from garage.tf.optimizers.conjugate_gradient_optimizer import (
-    cg, ConjugateGradientOptimizer, FiniteDifferenceHvp, PearlmutterHvp)
+    ConjugateGradientOptimizer)  # noqa: E501
+from garage.tf.optimizers.conjugate_gradient_optimizer import (
+    FiniteDifferenceHvp)  # noqa: E501
+from garage.tf.optimizers.conjugate_gradient_optimizer import (cg,
+                                                               PearlmutterHvp)
 from garage.tf.policies import Policy
+
 from tests.fixtures import TfGraphTestCase
+
+# yapf: enable
 
 
 class HelperPolicy(Module, Policy):

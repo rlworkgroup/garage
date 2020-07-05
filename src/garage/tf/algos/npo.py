@@ -1,25 +1,27 @@
 """Natural Policy Gradient Optimization."""
 # pylint: disable=wrong-import-order
+# yapf: disable
 import collections
 
 from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
 
-from garage import log_performance, TrajectoryBatch
-from garage import make_optimizer
+from garage import log_performance, make_optimizer, TrajectoryBatch
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
 from garage.tf import paths_to_tensors
-from garage.tf.misc.tensor_utils import center_advs
-from garage.tf.misc.tensor_utils import compile_function
-from garage.tf.misc.tensor_utils import compute_advantages
-from garage.tf.misc.tensor_utils import discounted_returns
-from garage.tf.misc.tensor_utils import flatten_inputs
-from garage.tf.misc.tensor_utils import graph_inputs
-from garage.tf.misc.tensor_utils import positive_advs
+from garage.tf.misc.tensor_utils import (center_advs,
+                                         compile_function,
+                                         compute_advantages,
+                                         discounted_returns,
+                                         flatten_inputs,
+                                         graph_inputs,
+                                         positive_advs)
 from garage.tf.optimizers import LbfgsOptimizer
+
+# yapf: enable
 
 
 class NPO(RLAlgorithm):

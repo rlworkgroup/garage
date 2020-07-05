@@ -2,8 +2,8 @@
 import torch
 
 from garage.torch.algos import VPG
-from garage.torch.optimizers import ConjugateGradientOptimizer
-from garage.torch.optimizers import OptimizerWrapper
+from garage.torch.optimizers import (ConjugateGradientOptimizer,
+                                     OptimizerWrapper)
 
 
 class TRPO(VPG):

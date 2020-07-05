@@ -6,6 +6,7 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 
 from garage.tf.models import CategoricalLSTMModel
+
 from tests.fixtures import TfGraphTestCase
 
 

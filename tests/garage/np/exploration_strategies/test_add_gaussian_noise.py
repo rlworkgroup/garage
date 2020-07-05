@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from garage.np.exploration_policies import AddGaussianNoise
+
 from tests.fixtures.envs.dummy import DummyBoxEnv
 
 

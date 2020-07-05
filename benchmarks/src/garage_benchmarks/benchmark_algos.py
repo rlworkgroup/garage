@@ -1,15 +1,18 @@
 """Benchmarking for algorithms."""
-from garage_benchmarks.experiments.algos import ddpg_garage_tf
-from garage_benchmarks.experiments.algos import her_garage_tf
-from garage_benchmarks.experiments.algos import ppo_garage_pytorch
-from garage_benchmarks.experiments.algos import ppo_garage_tf
-from garage_benchmarks.experiments.algos import td3_garage_tf
-from garage_benchmarks.experiments.algos import trpo_garage_pytorch
-from garage_benchmarks.experiments.algos import trpo_garage_tf
-from garage_benchmarks.experiments.algos import vpg_garage_pytorch
-from garage_benchmarks.experiments.algos import vpg_garage_tf
+# yapf: disable
+from garage_benchmarks.experiments.algos import (ddpg_garage_tf,
+                                                 her_garage_tf,
+                                                 ppo_garage_pytorch,
+                                                 ppo_garage_tf,
+                                                 td3_garage_tf,
+                                                 trpo_garage_pytorch,
+                                                 trpo_garage_tf,
+                                                 vpg_garage_pytorch,
+                                                 vpg_garage_tf)
 from garage_benchmarks.helper import benchmark, iterate_experiments
 from garage_benchmarks.parameters import Fetch1M_ENV_SET, MuJoCo1M_ENV_SET
+
+# yapf: enable
 
 
 @benchmark

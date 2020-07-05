@@ -6,10 +6,10 @@ pipelines data between sampler and algorithm during training.
 from dowel import logger
 import psutil
 
-# pylint: disable=no-name-in-module
-
 from garage.experiment import LocalRunner
 from garage.sampler import DefaultWorker
+
+# pylint: disable=no-name-in-module
 
 tf = False
 TFWorkerClassWrapper = False

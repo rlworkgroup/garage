@@ -7,6 +7,7 @@ import tensorflow as tf
 
 from garage.envs import GarageEnv
 from garage.tf.q_functions import ContinuousMLPQFunction
+
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv, DummyDictEnv
 from tests.fixtures.models import SimpleMLPMergeModel

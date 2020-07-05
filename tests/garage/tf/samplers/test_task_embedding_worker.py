@@ -4,6 +4,7 @@ import numpy as np
 
 from garage.envs import GarageEnv
 from garage.tf.algos.te import TaskEmbeddingWorker
+
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 

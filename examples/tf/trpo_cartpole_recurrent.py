@@ -18,8 +18,8 @@ from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
-from garage.tf.optimizers import ConjugateGradientOptimizer
-from garage.tf.optimizers import FiniteDifferenceHvp
+from garage.tf.optimizers import (ConjugateGradientOptimizer,
+                                  FiniteDifferenceHvp)
 from garage.tf.policies import CategoricalLSTMPolicy
 
 

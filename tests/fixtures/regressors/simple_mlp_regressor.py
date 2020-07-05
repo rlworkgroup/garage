@@ -2,6 +2,7 @@
 import tensorflow as tf
 
 from garage.tf.regressors import Regressor
+
 from tests.fixtures.models import SimpleMLPModel
 
 

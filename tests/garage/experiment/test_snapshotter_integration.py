@@ -6,6 +6,7 @@ from garage.envs import GarageEnv
 from garage.experiment import SnapshotConfig, Snapshotter
 from garage.tf.algos import VPG
 from garage.tf.policies import CategoricalMLPPolicy
+
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.experiment import fixture_exp
 

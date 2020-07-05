@@ -17,8 +17,7 @@ from garage.tf.models.mlp_merge_model import MLPMergeModel
 from garage.tf.models.mlp_model import MLPModel
 from garage.tf.models.model import BaseModel, Model
 from garage.tf.models.module import Module, StochasticModule
-from garage.tf.models.normalized_input_mlp_model import (
-    NormalizedInputMLPModel)
+from garage.tf.models.normalized_input_mlp_model import NormalizedInputMLPModel
 from garage.tf.models.sequential import Sequential
 
 __all__ = [

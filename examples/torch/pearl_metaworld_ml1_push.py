@@ -13,8 +13,8 @@ from garage.torch import set_gpu_mode
 from garage.torch.algos import PEARL
 from garage.torch.algos.pearl import PEARLWorker
 from garage.torch.embeddings import MLPEncoder
-from garage.torch.policies import ContextConditionedPolicy
-from garage.torch.policies import TanhGaussianMLPPolicy
+from garage.torch.policies import (ContextConditionedPolicy,
+                                   TanhGaussianMLPPolicy)
 from garage.torch.q_functions import ContinuousMLPQFunction
 
 

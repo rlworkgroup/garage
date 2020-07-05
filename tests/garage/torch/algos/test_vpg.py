@@ -4,12 +4,12 @@ import pytest
 import torch
 
 from garage.envs import GarageEnv
-from garage.experiment import deterministic
-from garage.experiment import LocalRunner
+from garage.experiment import deterministic, LocalRunner
 from garage.sampler import LocalSampler
 from garage.torch.algos import VPG
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
+
 from tests.fixtures import snapshot_config
 
 # yapf: disable

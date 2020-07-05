@@ -3,6 +3,7 @@ import pytest
 import tensorflow as tf
 
 from garage.tf.models.mlp import mlp
+
 from tests.fixtures import TfGraphTestCase
 
 

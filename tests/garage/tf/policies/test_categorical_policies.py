@@ -2,6 +2,7 @@
 This script creates a unittest that tests Categorical policies in
 garage.tf.policies.
 """
+# yapf: disable
 import gym
 import pytest
 
@@ -10,12 +11,15 @@ from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
-from garage.tf.optimizers import ConjugateGradientOptimizer
-from garage.tf.optimizers import FiniteDifferenceHvp
-from garage.tf.policies import CategoricalGRUPolicy
-from garage.tf.policies import CategoricalLSTMPolicy
-from garage.tf.policies import CategoricalMLPPolicy
+from garage.tf.optimizers import (ConjugateGradientOptimizer,
+                                  FiniteDifferenceHvp)
+from garage.tf.policies import (CategoricalGRUPolicy,
+                                CategoricalLSTMPolicy,
+                                CategoricalMLPPolicy)
+
 from tests.fixtures import snapshot_config, TfGraphTestCase
+
+# yapf: enable
 
 policies = [CategoricalGRUPolicy, CategoricalLSTMPolicy, CategoricalMLPPolicy]
 

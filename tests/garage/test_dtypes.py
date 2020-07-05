@@ -3,9 +3,7 @@ import gym.spaces
 import numpy as np
 import pytest
 
-from garage import TimeStep
-from garage import TimeStepBatch
-from garage import TrajectoryBatch
+from garage import TimeStep, TimeStepBatch, TrajectoryBatch
 from garage.envs import EnvSpec
 
 

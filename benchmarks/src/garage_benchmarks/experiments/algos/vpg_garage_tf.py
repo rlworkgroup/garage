@@ -4,8 +4,7 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GarageEnv, normalize
-from garage.experiment import deterministic
-from garage.experiment import LocalTFRunner
+from garage.experiment import deterministic, LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import VPG as TF_VPG
 from garage.tf.policies import GaussianMLPPolicy as TF_GMP

@@ -4,6 +4,7 @@ import tensorflow as tf
 
 from garage.envs import GarageEnv
 from garage.tf.policies import DiscreteQfDerivedPolicy
+
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
 from tests.fixtures.q_functions import SimpleQFunction

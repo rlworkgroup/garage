@@ -2,8 +2,7 @@ import pprint
 
 import pytest
 
-from garage.envs import GarageEnv
-from garage.envs import GridWorldEnv
+from garage.envs import GarageEnv, GridWorldEnv
 from garage.experiment.task_sampler import EnvPoolSampler
 from garage.np.policies import ScriptedPolicy
 from garage.sampler import LocalSampler, VecWorker, WorkerFactory

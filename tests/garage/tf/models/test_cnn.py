@@ -2,11 +2,10 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.models.cnn import cnn
-from garage.tf.models.cnn import cnn_with_max_pooling
+from garage.tf.models.cnn import cnn, cnn_with_max_pooling
+
 from tests.fixtures import TfGraphTestCase
-from tests.helpers import convolve
-from tests.helpers import max_pooling
+from tests.helpers import convolve, max_pooling
 
 
 class TestCNN(TfGraphTestCase):

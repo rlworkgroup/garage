@@ -2,6 +2,7 @@
 This script creates a test that fails when garage.tf.algos.TRPO performance is
 too low.
 """
+# yapf: disable
 import gym
 import pytest
 import tensorflow as tf

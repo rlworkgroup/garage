@@ -4,8 +4,7 @@ import warnings
 import gym
 import gym.spaces
 import numpy as np
-from skimage import color
-from skimage import img_as_ubyte
+from skimage import color, img_as_ubyte
 
 
 class Grayscale(gym.Wrapper):
@@ -22,7 +21,7 @@ class Grayscale(gym.Wrapper):
         # env.observation_space = (100, 100)
 
     Args:
-        env: gym.Env to wrap.
+        env (gym.Env): Environment to wrap.
 
     Raises:
         ValueError: If observation space shape is not 3
@@ -52,27 +51,54 @@ class Grayscale(gym.Wrapper):
 
     @property
     def observation_space(self):
-        """gym.Env observation space."""
+        """gym.Env: Observation space."""
         return self._observation_space
 
     @observation_space.setter
     def observation_space(self, observation_space):
         self._observation_space = observation_space
 
-    def _observation(self, obs):
-        with warnings.catch_warnings():
-            """
-            Suppressing warning for possible precision loss
-            when converting from float64 to uint8
-            """
-            warnings.simplefilter('ignore')
-            return img_as_ubyte(color.rgb2gray((obs)))
+    def reset(self, **kwargs):
+        """gym.Env reset function.
 
-    def reset(self):
-        """gym.Env reset function."""
-        return self._observation(self.env.reset())
+        Args:
+            **kwargs: Unused.
+
+        Returns:
+            np.ndarray: Observation conforming to observation_space
+        """
+        del kwargs
+        return _color_to_grayscale(self.env.reset())
 
     def step(self, action):
-        """gym.Env step function."""
+        """See gym.Env.
+
+        Args:
+            action (np.ndarray): Action conforming to action_space
+
+        Returns:
+            np.ndarray: Observation conforming to observation_space
+            float: Reward for this step
+            bool: Termination signal
+            dict: Extra information from the environment.
+
+        """
         obs, reward, done, info = self.env.step(action)
-        return self._observation(obs), reward, done, info
+        return _color_to_grayscale(obs), reward, done, info
+
+
+def _color_to_grayscale(obs):
+    """Convert a 3-channel color observation image to grayscale and uint8.
+
+    Args:
+       obs (np.ndarray): Observation array, conforming to observation_space
+
+    Returns:
+       np.ndarray: 1-channel grayscale version of obs, represented as uint8
+
+    """
+    with warnings.catch_warnings():
+        # Suppressing warning for possible precision loss when converting
+        # from float64 to uint8
+        warnings.simplefilter('ignore')
+        return img_as_ubyte(color.rgb2gray((obs)))

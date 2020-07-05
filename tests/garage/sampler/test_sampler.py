@@ -2,6 +2,7 @@ from dowel import logger
 import numpy as np
 
 from garage.sampler.utils import truncate_paths
+
 from tests.fixtures.logger import NullOutput
 
 

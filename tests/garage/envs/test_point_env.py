@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 
 from garage.envs.point_env import PointEnv
+
 from tests.helpers import step_env
 
 

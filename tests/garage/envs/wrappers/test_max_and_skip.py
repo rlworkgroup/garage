@@ -1,10 +1,12 @@
 import numpy as np
 
 from garage.envs.wrappers import MaxAndSkip
+
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
 class TestMaxAndSkip:
+
     def setup_method(self):
         self.env = DummyDiscretePixelEnv(random=False)
         self.env_wrap = MaxAndSkip(DummyDiscretePixelEnv(random=False), skip=4)
@@ -21,7 +23,7 @@ class TestMaxAndSkip:
         self.env_wrap.reset()
         obs_wrap, reward_wrap, _, _ = self.env_wrap.step(1)
         reward = 0
-        for i in range(4):
+        for _ in range(4):
             obs, r, _, _ = self.env.step(1)
             reward += r
 

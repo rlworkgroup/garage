@@ -5,12 +5,12 @@ import numpy as np
 import pytest
 import ray
 
-from garage.envs import GarageEnv
-from garage.envs import PointEnv
+from garage.envs import GarageEnv, PointEnv
 from garage.envs.grid_world_env import GridWorldEnv
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.np.policies import FixedPolicy, ScriptedPolicy
 from garage.sampler import LocalSampler, RaySampler, WorkerFactory
+
 from tests.fixtures.sampler import ray_local_session_fixture
 
 

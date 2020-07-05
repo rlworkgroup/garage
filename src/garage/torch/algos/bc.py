@@ -1,17 +1,23 @@
 """Implementation of Behavioral Cloning in PyTorch."""
+# yapf: disable
 import itertools
 
 from dowel import tabular
 import numpy as np
 import torch
 
-from garage import _Default, log_performance, make_optimizer, TimeStepBatch, \
-    TrajectoryBatch
+from garage import (_Default,
+                    log_performance,
+                    make_optimizer,
+                    TimeStepBatch,
+                    TrajectoryBatch)
 from garage.np import obtain_evaluation_samples
 from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.np.policies import Policy
 from garage.sampler import RaySampler
 from garage.torch import np_to_torch
+
+# yapf: enable
 
 
 class BC(RLAlgorithm):
@@ -48,18 +54,18 @@ class BC(RLAlgorithm):
     # pylint: disable=too-few-public-methods
 
     def __init__(
-            self,
-            env_spec,
-            learner,
-            *,
-            batch_size,
-            source=None,
-            max_path_length=None,
-            policy_optimizer=torch.optim.Adam,
-            policy_lr=_Default(1e-3),
-            loss='log_prob',
-            minibatches_per_epoch=16,
-            name='BC',
+        self,
+        env_spec,
+        learner,
+        *,
+        batch_size,
+        source=None,
+        max_path_length=None,
+        policy_optimizer=torch.optim.Adam,
+        policy_lr=_Default(1e-3),
+        loss='log_prob',
+        minibatches_per_epoch=16,
+        name='BC',
     ):
         self._source = source
         self.learner = learner

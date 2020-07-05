@@ -1,3 +1,4 @@
+# yapf: disable
 import gym
 import pytest
 
@@ -6,12 +7,15 @@ from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
-from garage.tf.optimizers import ConjugateGradientOptimizer
-from garage.tf.optimizers import FiniteDifferenceHvp
-from garage.tf.policies import GaussianGRUPolicy
-from garage.tf.policies import GaussianLSTMPolicy
-from garage.tf.policies import GaussianMLPPolicy
+from garage.tf.optimizers import (ConjugateGradientOptimizer,
+                                  FiniteDifferenceHvp)
+from garage.tf.policies import (GaussianGRUPolicy,
+                                GaussianLSTMPolicy,
+                                GaussianMLPPolicy)
+
 from tests.fixtures import snapshot_config, TfGraphTestCase
+
+# yapf: enable
 
 policies = [GaussianGRUPolicy, GaussianLSTMPolicy, GaussianMLPPolicy]
 
