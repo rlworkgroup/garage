@@ -13,10 +13,7 @@ class DummyPolicy(Policy):
 
     """
 
-    def __init__(
-            self,
-            env_spec,
-    ):
+    def __init__(self, env_spec):
         # pylint: disable=super-init-not-called
         self._env_spec = env_spec
         self._param = []
