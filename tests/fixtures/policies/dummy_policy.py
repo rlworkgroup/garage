@@ -13,11 +13,9 @@ class DummyPolicy(Policy):
 
     """
 
-    def __init__(
-            self,
-            env_spec,
-    ):
-        super().__init__(env_spec=env_spec)
+    def __init__(self, env_spec):
+        # pylint: disable=super-init-not-called
+        self._env_spec = env_spec
         self._param = []
         self._param_values = np.random.uniform(-1, 1, 1000)
 
@@ -32,7 +30,7 @@ class DummyPolicy(Policy):
             dict: Distribution parameters.
 
         """
-        return self.action_space.sample(), dict(dummy='dummy')
+        return self.action_space.sample(), dict(dummy='dummy', mean=0.)
 
     def get_actions(self, observations):
         """Get multiple actions from this policy for the input observations.
@@ -56,7 +54,6 @@ class DummyPolicy(Policy):
             list: Policy parameters.
 
         """
-
         return self._param
 
     def get_param_values(self):
@@ -90,7 +87,7 @@ class DummyPolicy(Policy):
 
 
 class DummyPolicyWithoutVectorized(DummyPolicy):
-    """Dummy Policy without vectorized
+    """Dummy Policy without vectorized.
 
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
