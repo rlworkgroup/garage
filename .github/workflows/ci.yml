@@ -4,6 +4,7 @@ env:
   GARAGE_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   TRAVIS_COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
   DOCKER_TAG: garage-ci-${{ github.run_id }}
+  DOCKER_CACHE_REPO: "rlworkgroup/garage-ci"
 
 on:
   push:
@@ -20,10 +21,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Login to GitHub Package Registry
-      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
-    # Not enough disk space to pull and build :-/
-    # - name: Pull from cache (GitHub Package Registry)
-    #   run: docker pull docker.pkg.github.com/$GITHUB_REPOSITORY/ci-docker-cache
+      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
     - name: Build Docker container
       run: |
         docker build . \
@@ -31,11 +29,11 @@ jobs:
           --target garage-dev-18.04 \
           -t "${DOCKER_TAG}" \
           --build-arg GARAGE_GH_TOKEN \
-          --cache-from="docker.pkg.github.com/${GITHUB_REPOSITORY}/${DOCKER_TAG}"
+          --cache-from="docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Push to cache (GitHub Package Registry)
       run: |
-        docker tag "${DOCKER_TAG}" "docker.pkg.github.com/${GITHUB_REPOSITORY}/${DOCKER_TAG}"
-        docker push "docker.pkg.github.com/${GITHUB_REPOSITORY}/${DOCKER_TAG}"
+        docker tag "${DOCKER_TAG}" "docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+        docker push "docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
 
 
   check_pre_commit:
@@ -47,11 +45,11 @@ jobs:
       with:
         fetch-depth: 0
     - name: Login to GitHub Package Registry
-      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
+      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
     - name: Pull from cache (GitHub Package Registry)
-      run: docker pull "docker.pkg.github.com/${GITHUB_REPOSITORY}/${DOCKER_TAG}"
+      run: docker pull "docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Rename docker image
-      run: docker tag docker.pkg.github.com/${GITHUB_REPOSITORY}/${DOCKER_TAG} ${DOCKER_TAG}
+      run: docker tag docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Check pre-commit
       run: |
         docker run \
