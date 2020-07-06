@@ -1,6 +1,7 @@
 """Test module for BulletEnv"""
 import pickle
 
+import gym
 import pybullet_envs
 from pybullet_utils.bullet_client import BulletClient
 import pytest
@@ -87,14 +88,14 @@ def test_pickle_creates_new_server(env_ids):
 def test_time_limit_env():
     """Test BulletEnv emits done signal when time limit expiration occurs.
 
-    MinitaurBulletEnv-v0 has max_episode_steps=1000, thus
-    info['BulletEnv.TimeLimitTerminated'] is expected to be True after 1000
-    steps.
+    After setting max_episode_steps=50, info['BulletEnv.TimeLimitTerminated']
+    is expected to be True after 50 steps.
 
     """
-    env = BulletEnv(env_name='MinitaurBulletEnv-v0')
+    env = BulletEnv(gym.make('MinitaurBulletEnv-v0'))
+    env.env._max_episode_steps = 50
     env.reset()
-    for _ in range(1000):
+    for _ in range(50):
         _, _, done, info = env.step(env.spec.action_space.sample())
     assert not done and info['TimeLimit.truncated']
     assert info['BulletEnv.TimeLimitTerminated']
