@@ -61,7 +61,7 @@ def rollout(env,
     while path_length < (max_path_length or np.inf):
         o = env.observation_space.flatten(o)
         a, agent_info = agent.get_action(o)
-        if deterministic and 'mean' in agent_infos:
+        if deterministic and 'mean' in agent_info:
             a = agent_info['mean']
         next_o, r, d, env_info = env.step(a)
         observations.append(o)
