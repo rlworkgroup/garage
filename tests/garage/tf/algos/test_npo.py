@@ -12,6 +12,7 @@ from garage.sampler import LocalSampler
 from garage.tf.algos import NPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.policies import GaussianMLPPolicy
+
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
 
