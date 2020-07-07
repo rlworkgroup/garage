@@ -30,6 +30,13 @@ class TestRollout:
                              deterministic=True)
         assert (path['actions'] == 0.).all()
 
+    def test_deterministic_action(self):
+        path = utils.rollout(self.env,
+                             self.policy,
+                             max_path_length=5,
+                             deterministic=True)
+        assert (path['actions'] == 0.).all()
+
 
 class TestTruncatePaths:
 
