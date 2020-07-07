@@ -180,7 +180,7 @@ Sampling  [####################################]  100%
 ---------------------------------------  --------------
 Evaluation/AverageDiscountedReturn         19.045
 Evaluation/AverageReturn                   21.5054
-Evaluation/CompletionRate                   1
+Evaluation/TerminationRate                  1
 Evaluation/Iteration                        0
 Evaluation/MaxReturn                       58
 Evaluation/MinReturn                        8

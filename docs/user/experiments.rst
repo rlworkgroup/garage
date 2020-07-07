@@ -112,7 +112,7 @@ Running the above should produce output like:
   EnvExecTime                                 0.0628054
   Evaluation/AverageDiscountedReturn         17.8993
   Evaluation/AverageReturn                   20.1095
-  Evaluation/CompletionRate                   1
+  Evaluation/TerminationRate                  1
   Evaluation/Iteration                        0
   Evaluation/MaxReturn                       61
   Evaluation/MinReturn                        9

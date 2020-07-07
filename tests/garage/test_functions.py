@@ -61,7 +61,7 @@ def test_log_performance():
     assert res['test_log_performance/Iteration'] == 7
     assert res['test_log_performance/NumTrajs'] == 4
     assert math.isclose(res['test_log_performance/SuccessRate'], 0.75)
-    assert math.isclose(res['test_log_performance/CompletionRate'], 0.5)
+    assert math.isclose(res['test_log_performance/TerminationRate'], 0.5)
     assert math.isclose(res['test_log_performance/AverageDiscountedReturn'],
                         1.1131040640673113)
     assert math.isclose(res['test_log_performance/AverageReturn'],

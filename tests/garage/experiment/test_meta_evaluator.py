@@ -92,7 +92,8 @@ def test_meta_evaluator():
         with open(log_file.name, 'r') as file:
             rows = list(csv.DictReader(file))
         assert len(rows) == 2
-        assert float(rows[0]['MetaTest/__unnamed_task__/CompletionRate']) < 1.0
+        assert float(
+            rows[0]['MetaTest/__unnamed_task__/TerminationRate']) < 1.0
         assert float(rows[0]['MetaTest/__unnamed_task__/Iteration']) == 0
         assert (float(rows[0]['MetaTest/__unnamed_task__/MaxReturn']) >= float(
             rows[0]['MetaTest/__unnamed_task__/AverageReturn']))

@@ -113,7 +113,7 @@ def log_multitask_performance(itr, batch, discount, name_map=None):
                 tabular.record('StdReturn', np.nan)
                 tabular.record('MaxReturn', np.nan)
                 tabular.record('MinReturn', np.nan)
-                tabular.record('CompletionRate', np.nan)
+                tabular.record('TerminationRate', np.nan)
                 tabular.record('SuccessRate', np.nan)
 
     return log_performance(itr, batch, discount=discount, prefix='Average')
@@ -154,7 +154,7 @@ def log_performance(itr, batch, discount, prefix='Evaluation'):
         tabular.record('StdReturn', np.std(undiscounted_returns))
         tabular.record('MaxReturn', np.max(undiscounted_returns))
         tabular.record('MinReturn', np.min(undiscounted_returns))
-        tabular.record('CompletionRate', np.mean(completion))
+        tabular.record('TerminationRate', np.mean(completion))
         if success:
             tabular.record('SuccessRate', np.mean(success))
 
