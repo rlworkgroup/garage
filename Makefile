@@ -53,6 +53,7 @@ ci-job-normal: assert-docker
 	for i in {1..5}; do \
 		bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
 			|| (echo 'Retrying...' && sleep 30); \
+		exit 1; \
 	done
 
 ci-job-large: assert-docker
@@ -61,6 +62,7 @@ ci-job-large: assert-docker
 	for i in {1..5}; do \
 		bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
 			|| (echo 'Retrying...' && sleep 30); \
+		exit 1; \
 	done
 
 ci-job-mujoco: assert-docker
@@ -68,6 +70,7 @@ ci-job-mujoco: assert-docker
 	for i in {1..5}; do \
 		bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
 			|| (echo 'Retrying...' && sleep 30); \
+		exit 1; \
 	done
 
 ci-job-mujoco-long: assert-docker
@@ -75,6 +78,7 @@ ci-job-mujoco-long: assert-docker
 	for i in {1..5}; do \
 		bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
 			|| (echo 'Retrying...' && sleep 30); \
+		exit 1; \
 	done
 
 ci-job-nightly: assert-docker
