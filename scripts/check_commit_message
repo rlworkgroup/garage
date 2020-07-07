@@ -12,7 +12,7 @@ lines = list((line.rstrip() for line in open(commit_msg_filepath, 'r')))
 lines = [line for line in lines if len(line) == 0 or line[0] != '#']
 
 # Skip if this is an automated backport
-if 'cherry picked from commit' in lines[-2]:
+if len(lines) >= 2 and 'cherry picked from commit' in lines[-2]:
     sys.exit(0)
 
 exit_code = 0
