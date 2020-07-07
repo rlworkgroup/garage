@@ -12,6 +12,7 @@ from garage.torch.policies import (DeterministicMLPPolicy,
                                    Policy)
 
 from tests.fixtures import snapshot_config
+from tests.fixtures.sampler import ray_local_session_fixture  # NOQA
 
 # yapf: enable
 

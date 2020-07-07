@@ -3,7 +3,6 @@ import pytest
 import torch
 
 from garage.envs import GarageEnv, normalize
-from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import deterministic, LocalRunner
 from garage.sampler import LocalSampler
 from garage.torch.algos import MAMLPPO
@@ -23,6 +22,8 @@ except Exception:  # pylint: disable=broad-except
         'Skipping tests, failed to import mujoco. Do you have a '
         'valid mujoco key installed?',
         allow_module_level=True)
+
+from garage.envs.mujoco import HalfCheetahDirEnv  # isort:skip
 
 
 @pytest.mark.mujoco

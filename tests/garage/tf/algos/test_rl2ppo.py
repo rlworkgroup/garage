@@ -7,7 +7,6 @@ import numpy as np
 import pytest
 
 from garage.envs import normalize
-from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import LocalTFRunner, task_sampler
 from garage.experiment.meta_evaluator import MetaEvaluator
 from garage.np.baselines import LinearFeatureBaseline
@@ -31,6 +30,8 @@ except Exception:  # pylint: disable=broad-except
         'Skipping tests, failed to import mujoco. Do you have a '
         'valid mujoco key installed?',
         allow_module_level=True)
+
+from garage.envs.mujoco import HalfCheetahDirEnv  # isort:skip
 
 
 @pytest.mark.mujoco
