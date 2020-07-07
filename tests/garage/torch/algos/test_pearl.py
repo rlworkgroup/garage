@@ -3,19 +3,6 @@ import pickle
 
 import pytest
 
-try:
-    # pylint: disable=unused-import
-    import mujoco_py  # noqa: F401
-except ImportError:
-    pytest.skip('To use mujoco-based features, please install garage[mujoco].',
-                allow_module_level=True)
-except Exception:  # pylint: disable=broad-except
-    pytest.skip(
-        'Skipping tests, failed to import mujoco. Do you have a '
-        'valid mujoco key installed?',
-        allow_module_level=True)
-from metaworld.benchmarks import ML1  # noqa: I100, I202
-
 from garage.envs import GarageEnv, normalize, PointEnv
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
@@ -28,7 +15,21 @@ from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import (ContextConditionedPolicy,
                                    TanhGaussianMLPPolicy)
 from garage.torch.q_functions import ContinuousMLPQFunction
+
 from tests.fixtures import snapshot_config
+
+try:
+    # pylint: disable=unused-import
+    import mujoco_py  # noqa: F401
+except ImportError:
+    pytest.skip('To use mujoco-based features, please install garage[mujoco].',
+                allow_module_level=True)
+except Exception:  # pylint: disable=broad-except
+    pytest.skip(
+        'Skipping tests, failed to import mujoco. Do you have a '
+        'valid mujoco key installed?',
+        allow_module_level=True)
+from metaworld.benchmarks import ML1  # isort:skip
 
 
 @pytest.mark.mujoco

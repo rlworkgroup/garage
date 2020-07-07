@@ -15,7 +15,7 @@ import dateutil.tz
 import dowel
 from dowel import logger
 
-import __main__ as main  # noqa: I100
+import __main__ as main
 
 exp_count = 0
 now = datetime.datetime.now(dateutil.tz.tzlocal())

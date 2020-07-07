@@ -1,8 +1,8 @@
 """Q-Functions for TensorFlow-based algorithms."""
-# noqa: I100
+# isort:skip_file
 
 from garage.tf.q_functions.q_function import QFunction
-from garage.tf.q_functions.continuous_cnn_q_function import (  # noqa: I100
+from garage.tf.q_functions.continuous_cnn_q_function import (
     ContinuousCNNQFunction)
 from garage.tf.q_functions.continuous_mlp_q_function import (
     ContinuousMLPQFunction)
