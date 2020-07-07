@@ -6,21 +6,22 @@ import gym
 import pytest
 import tensorflow as tf
 
+# yapf: disable
 from garage.envs import GarageEnv, normalize
-from garage.experiment import deterministic
-from garage.experiment import LocalTFRunner
-from garage.experiment import snapshotter
+from garage.experiment import deterministic, LocalTFRunner, snapshotter
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
-from garage.tf.baselines import GaussianCNNBaseline
-from garage.tf.baselines import GaussianMLPBaseline
+from garage.tf.baselines import GaussianCNNBaseline, GaussianMLPBaseline
 from garage.tf.optimizers import FiniteDifferenceHvp
-from garage.tf.policies import CategoricalCNNPolicy
-from garage.tf.policies import CategoricalGRUPolicy
-from garage.tf.policies import CategoricalLSTMPolicy
-from garage.tf.policies import GaussianMLPPolicy
+from garage.tf.policies import (CategoricalCNNPolicy,
+                                CategoricalGRUPolicy,
+                                CategoricalLSTMPolicy,
+                                GaussianMLPPolicy)
+
 from tests.fixtures import snapshot_config, TfGraphTestCase
+
+# yapf: enable
 
 
 class TestTRPO(TfGraphTestCase):

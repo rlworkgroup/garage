@@ -6,19 +6,22 @@ import gym
 import pytest
 import tensorflow as tf
 
+# yapf: disable
 from garage.envs import GarageEnv, normalize
 from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import PPO
-from garage.tf.baselines import ContinuousMLPBaseline
-from garage.tf.baselines import GaussianMLPBaseline
-from garage.tf.policies import CategoricalMLPPolicy
-from garage.tf.policies import GaussianGRUPolicy
-from garage.tf.policies import GaussianLSTMPolicy
-from garage.tf.policies import GaussianMLPPolicy
+from garage.tf.baselines import ContinuousMLPBaseline, GaussianMLPBaseline
+from garage.tf.policies import (CategoricalMLPPolicy,
+                                GaussianGRUPolicy,
+                                GaussianLSTMPolicy,
+                                GaussianMLPPolicy)
+
 from tests.fixtures import snapshot_config, TfGraphTestCase
 from tests.fixtures.envs.wrappers import ReshapeObservation
+
+# yapf: enable
 
 
 class TestPPO(TfGraphTestCase):
