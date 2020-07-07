@@ -12,6 +12,7 @@ from garage.sampler import LocalSampler
 from garage.tf.algos import NPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.policies import GaussianMLPPolicy
+
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
 
@@ -28,7 +29,7 @@ class TestNPO(TfGraphTestCase):
         )
         self.baseline = GaussianMLPBaseline(
             env_spec=self.env.spec,
-            regressor_args=dict(hidden_sizes=(32, 32)),
+            hidden_sizes=(32, 32),
         )
 
     @pytest.mark.flaky

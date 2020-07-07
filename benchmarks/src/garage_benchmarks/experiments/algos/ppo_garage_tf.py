@@ -4,8 +4,7 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GarageEnv, normalize
-from garage.experiment import deterministic
-from garage.experiment import LocalTFRunner
+from garage.experiment import deterministic, LocalTFRunner
 from garage.tf.algos import PPO as TF_PPO
 from garage.tf.baselines import GaussianMLPBaseline as TF_GMB
 from garage.tf.optimizers import FirstOrderOptimizer
@@ -44,15 +43,13 @@ def ppo_garage_tf(ctxt, env_id, seed):
 
         baseline = TF_GMB(
             env_spec=env.spec,
-            regressor_args=dict(
-                hidden_sizes=(32, 32),
-                use_trust_region=False,
-                optimizer=FirstOrderOptimizer,
-                optimizer_args=dict(
-                    batch_size=32,
-                    max_epochs=10,
-                    learning_rate=3e-4,
-                ),
+            hidden_sizes=(32, 32),
+            use_trust_region=False,
+            optimizer=FirstOrderOptimizer,
+            optimizer_args=dict(
+                batch_size=32,
+                max_epochs=10,
+                learning_rate=3e-4,
             ),
         )
 

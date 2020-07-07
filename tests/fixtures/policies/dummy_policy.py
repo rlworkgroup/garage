@@ -2,6 +2,7 @@
 import numpy as np
 
 from garage.np.policies import Policy
+
 from tests.fixtures.distributions import DummyDistribution
 
 
