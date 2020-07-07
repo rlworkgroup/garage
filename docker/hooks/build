@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# https://docs.docker.com/docker-cloud/builds/advanced/
+# DockerHub starts this script in the /docker directory
+
+set -e
+
+echo DOCKERFILE_PATH="$DOCKERFILE_PATH"
+echo DOCKER_REPO="$DOCKER_REPO"
+echo IMAGE_NAME="$IMAGE_NAME"
+
+if [[ "$DOCKER_REPO" = *"rlworkgroup/garage-headless" ]]; then
+  echo "Building target garage-dev-18.04"
+  docker build \
+		-f "../$DOCKERFILE_PATH" \
+		--target garage-dev-18.04 \
+		-t "$IMAGE_NAME" \
+		..
+elif [[ "$DOCKER_REPO" = *"rlworkgroup/garage-nvidia" ]]; then
+  echo "Building target garage-nvidia-18.04"
+  docker build \
+		-f "../$DOCKERFILE_PATH" \
+		--target garage-nvidia-18.04 \
+		-t "$IMAGE_NAME" \
+		--build-arg PARENT_IMAGE="nvidia/cuda:10.2-runtime-ubuntu18.04" \
+		..
+fi
