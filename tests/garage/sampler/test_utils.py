@@ -3,6 +3,7 @@ import pytest
 
 from garage.envs import GarageEnv
 from garage.sampler import utils
+
 from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.policies import DummyPolicy
 

@@ -4,8 +4,7 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GarageEnv, normalize
-from garage.experiment import deterministic
-from garage.experiment import LocalTFRunner
+from garage.experiment import deterministic, LocalTFRunner
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.optimizers import FirstOrderOptimizer
