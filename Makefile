@@ -110,6 +110,7 @@ run-ci: ## Run the CI Docker container (only used in TravisCI)
 run-ci: TAG ?= rlworkgroup/garage-ci
 run-ci:
 	docker run \
+		-e CODECOV_TOKEN \
 		-e TRAVIS_BRANCH \
 		-e TRAVIS_PULL_REQUEST \
 		-e TRAVIS_COMMIT_RANGE \
