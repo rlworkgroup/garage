@@ -103,3 +103,25 @@ class TanhGaussianMLPPolicy(StochasticPolicy):
         ret_mean = dist.mean.cpu()
         ret_log_std = (dist.variance.sqrt()).log().cpu()
         return dist, dict(mean=ret_mean, log_std=ret_log_std)
+
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        if not hasattr(self, '_module'):
+            module = GaussianMLPTwoHeadedModule(
+                input_dim=self._obs_dim,
+                output_dim=self._action_dim,
+                hidden_sizes=self._hidden_sizes,
+                hidden_nonlinearity=self._hidden_nonlinearity,
+                hidden_w_init=self._hidden_w_init,
+                hidden_b_init=self._hidden_b_init,
+                output_nonlinearity=self._output_nonlinearity,
+                output_w_init=self._output_w_init,
+                output_b_init=self._output_b_init,
+                init_std=self._init_std,
+                min_std=self._min_std,
+                max_std=self._max_std,
+                std_parameterization=self._std_parameterization,
+                layer_normalization=self._layer_normalization,
+                normal_distribution_cls=TanhNormal)
+            module.load_state_dict(self.state_dict())
+            self._module = module
