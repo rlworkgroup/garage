@@ -24,11 +24,11 @@ class PointEnv(gym.Env):
     """
 
     def __init__(
-            self,
-            goal=np.array((1., 1.), dtype=np.float32),
-            arena_size=5.,
-            done_bonus=0.,
-            never_done=False,
+        self,
+        goal=np.array((1., 1.), dtype=np.float32),
+        arena_size=5.,
+        done_bonus=0.,
+        never_done=False,
     ):
         goal = np.array(goal, dtype=np.float32)
         self._goal = goal

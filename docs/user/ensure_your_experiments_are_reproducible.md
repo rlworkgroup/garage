@@ -96,5 +96,7 @@ experiment's environment between training epochs.
 For examples of how to write a launcher file for your experiment, refer to the
 launcher files under the `examples` directory.
 
-*This page was authored by Avnish Narayan
-([@avnishn](https://github.com/avnishn)).*
+----
+
+*This page was authored by Avnish Narayan*
+*([@avnishn](https://github.com/avnishn))*
