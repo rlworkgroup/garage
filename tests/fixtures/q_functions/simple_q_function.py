@@ -2,6 +2,7 @@
 import tensorflow as tf
 
 from garage.tf.q_functions import QFunction
+
 from tests.fixtures.models import SimpleMLPModel
 
 

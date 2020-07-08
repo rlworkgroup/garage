@@ -1,10 +1,12 @@
 import pickle
 
 from garage.envs.grid_world_env import GridWorldEnv
+
 from tests.helpers import step_env
 
 
 class TestGridWorldEnv:
+
     def test_pickleable(self):
         env = GridWorldEnv(desc='8x8')
         round_trip = pickle.loads(pickle.dumps(env))

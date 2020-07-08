@@ -1,7 +1,8 @@
 """Variant of the HalfCheetahEnv with different target velocity."""
 import numpy as np
 
-from garage.envs.mujoco.half_cheetah_env_meta_base import HalfCheetahEnvMetaBase  # noqa: E501
+from garage.envs.mujoco.half_cheetah_env_meta_base import (
+    HalfCheetahEnvMetaBase)  # noqa: E501
 
 
 class HalfCheetahVelEnv(HalfCheetahEnvMetaBase):

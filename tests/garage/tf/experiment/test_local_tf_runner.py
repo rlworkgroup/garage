@@ -9,6 +9,7 @@ from garage.sampler import LocalSampler, MultiprocessingSampler, RaySampler
 from garage.tf.algos import VPG
 from garage.tf.plotter import Plotter
 from garage.tf.policies import CategoricalMLPPolicy
+
 from tests.fixtures import snapshot_config, TfGraphTestCase
 from tests.fixtures.sampler import ray_session_fixture
 

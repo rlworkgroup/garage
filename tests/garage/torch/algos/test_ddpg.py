@@ -11,6 +11,7 @@ from garage.replay_buffer import PathBuffer
 from garage.torch.algos import DDPG
 from garage.torch.policies import DeterministicMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
+
 from tests.fixtures import snapshot_config
 
 

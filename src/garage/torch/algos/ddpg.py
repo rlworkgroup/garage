@@ -5,8 +5,7 @@ from dowel import logger, tabular
 import numpy as np
 import torch
 
-from garage import _Default, make_optimizer
-from garage import log_performance
+from garage import _Default, log_performance, make_optimizer
 from garage.np import obtain_evaluation_samples
 from garage.np.algos import RLAlgorithm
 from garage.sampler import LocalSampler

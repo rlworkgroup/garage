@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 
 from garage.replay_buffer import PathBuffer
+
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
 
 

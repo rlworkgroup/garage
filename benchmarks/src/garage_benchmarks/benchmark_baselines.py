@@ -1,9 +1,9 @@
 """Benchmarking for baselines."""
 import random
 
-from garage_benchmarks.experiments.baselines import continuous_mlp_baseline
-from garage_benchmarks.experiments.baselines import gaussian_cnn_baseline
-from garage_benchmarks.experiments.baselines import gaussian_mlp_baseline
+from garage_benchmarks.experiments.baselines import (continuous_mlp_baseline,
+                                                     gaussian_cnn_baseline,
+                                                     gaussian_mlp_baseline)
 from garage_benchmarks.helper import benchmark, iterate_experiments
 from garage_benchmarks.parameters import MuJoCo1M_ENV_SET, PIXEL_ENV_SET
 

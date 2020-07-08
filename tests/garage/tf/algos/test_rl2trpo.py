@@ -2,7 +2,24 @@
 This script creates a test that fails when garage.tf.algos.RL2TRPO
 performance is too low.
 """
+# yapf: disable
 import pytest
+
+from garage.envs import normalize
+from garage.experiment import LocalTFRunner, task_sampler
+from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import LocalSampler
+from garage.tf.algos import RL2TRPO
+from garage.tf.algos.rl2 import RL2Env, RL2Worker
+from garage.tf.optimizers import (ConjugateGradientOptimizer,
+                                  FiniteDifferenceHvp,
+                                  PenaltyLbfgsOptimizer)
+from garage.tf.policies import GaussianGRUPolicy
+
+from tests.fixtures import snapshot_config, TfGraphTestCase
+
+# yapf: enable
+
 try:
     # pylint: disable=unused-import
     import mujoco_py  # noqa: F401
@@ -15,20 +32,7 @@ except Exception:  # pylint: disable=broad-except
         'valid mujoco key installed?',
         allow_module_level=True)
 
-from garage.envs import normalize
-from garage.envs.mujoco import HalfCheetahDirEnv
-from garage.experiment import LocalTFRunner
-from garage.experiment import task_sampler
-from garage.np.baselines import LinearFeatureBaseline
-from garage.sampler import LocalSampler
-from garage.tf.algos import RL2TRPO
-from garage.tf.algos.rl2 import RL2Env
-from garage.tf.algos.rl2 import RL2Worker
-from garage.tf.optimizers import ConjugateGradientOptimizer
-from garage.tf.optimizers import FiniteDifferenceHvp
-from garage.tf.optimizers import PenaltyLbfgsOptimizer
-from garage.tf.policies import GaussianGRUPolicy
-from tests.fixtures import snapshot_config, TfGraphTestCase
+from garage.envs.mujoco import HalfCheetahDirEnv  # isort:skip
 
 
 @pytest.mark.mujoco

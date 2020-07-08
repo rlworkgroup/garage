@@ -2,6 +2,14 @@
 from functools import partial
 
 import pytest
+import torch
+
+from garage.envs import GarageEnv, normalize
+from garage.sampler import LocalSampler, WorkerFactory
+from garage.torch.algos import MAMLPPO
+from garage.torch.policies import GaussianMLPPolicy
+from garage.torch.value_functions import GaussianMLPValueFunction
+
 try:
     # pylint: disable=unused-import
     import mujoco_py  # noqa: F401
@@ -13,14 +21,8 @@ except Exception:  # pylint: disable=broad-except
         'Skipping tests, failed to import mujoco. Do you have a '
         'valid mujoco key installed?',
         allow_module_level=True)
-import torch
 
-from garage.envs import GarageEnv, normalize
-from garage.envs.mujoco import HalfCheetahDirEnv
-from garage.sampler import LocalSampler, WorkerFactory
-from garage.torch.algos import MAMLPPO
-from garage.torch.policies import GaussianMLPPolicy
-from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.envs.mujoco import HalfCheetahDirEnv  # isort:skip
 
 
 @pytest.mark.mujoco

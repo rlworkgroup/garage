@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.misc.tensor_utils import compute_advantages, get_target_ops
+
 from tests.fixtures import TfGraphTestCase
 
 

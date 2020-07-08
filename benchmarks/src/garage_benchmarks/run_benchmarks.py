@@ -9,14 +9,18 @@ Examples:
     benchmark run b_1 b_2 ...
 
 """
+# yapf: disable
 import inspect
 
 import click
-from garage_benchmarks import benchmark_algos
-from garage_benchmarks import benchmark_auto
-from garage_benchmarks import benchmark_baselines
-from garage_benchmarks import benchmark_policies
-from garage_benchmarks import benchmark_q_functions
+
+from garage_benchmarks import (benchmark_algos,
+                               benchmark_auto,
+                               benchmark_baselines,
+                               benchmark_policies,
+                               benchmark_q_functions)
+
+# yapf: enable
 
 
 @click.group()

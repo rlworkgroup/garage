@@ -10,6 +10,7 @@ import tensorflow as tf
 from garage import InOutSpec
 from garage.envs import GarageEnv
 from garage.tf.embeddings import GaussianMLPEncoder
+
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.models import SimpleGaussianMLPModel

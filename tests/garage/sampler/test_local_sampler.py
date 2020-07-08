@@ -1,8 +1,7 @@
 import numpy as np
 import pytest
 
-from garage.envs import GarageEnv
-from garage.envs import PointEnv
+from garage.envs import GarageEnv, PointEnv
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.np.policies import FixedPolicy, ScriptedPolicy
 from garage.sampler import LocalSampler, WorkerFactory

@@ -1,17 +1,20 @@
 """
 This script creates a test that tests functions in garage.misc.tensor_utils.
 """
-
+# yapf: disable
 import numpy as np
 
 from garage.envs import GarageEnv
-from garage.misc.tensor_utils import concat_tensor_dict_list
-from garage.misc.tensor_utils import explained_variance_1d
-from garage.misc.tensor_utils import normalize_pixel_batch
-from garage.misc.tensor_utils import pad_tensor
-from garage.misc.tensor_utils import stack_and_pad_tensor_dict_list
-from garage.misc.tensor_utils import stack_tensor_dict_list
+from garage.misc.tensor_utils import (concat_tensor_dict_list,
+                                      explained_variance_1d,
+                                      normalize_pixel_batch,
+                                      pad_tensor,
+                                      stack_and_pad_tensor_dict_list,
+                                      stack_tensor_dict_list)
+
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
+
+# yapf: enable
 
 
 class TestTensorUtil:

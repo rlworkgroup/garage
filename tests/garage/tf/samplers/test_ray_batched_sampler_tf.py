@@ -10,10 +10,11 @@ from unittest.mock import Mock
 
 import ray
 
+# pylint: disable=unused-import
 from garage.envs import GarageEnv, GridWorldEnv
 from garage.np.policies import ScriptedPolicy
 from garage.sampler import RaySampler, WorkerFactory
-# pylint: disable=unused-import
+
 from tests.fixtures.sampler import ray_local_session_fixture
 
 

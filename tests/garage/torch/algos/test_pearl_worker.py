@@ -5,12 +5,12 @@ import numpy as np
 import torch.nn as nn
 from torch.nn import functional as F  # NOQA
 
-from garage.envs import EnvSpec
-from garage.envs import GarageEnv
+from garage.envs import EnvSpec, GarageEnv
 from garage.torch.algos.pearl import PEARLWorker
 from garage.torch.embeddings import MLPEncoder
-from garage.torch.policies import ContextConditionedPolicy
-from garage.torch.policies import TanhGaussianMLPPolicy
+from garage.torch.policies import (ContextConditionedPolicy,
+                                   TanhGaussianMLPPolicy)
+
 from tests.fixtures.envs.dummy import DummyBoxEnv
 
 

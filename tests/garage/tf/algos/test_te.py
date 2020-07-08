@@ -13,6 +13,7 @@ from garage.tf.algos import TEPPO
 from garage.tf.algos.te import TaskEmbeddingWorker
 from garage.tf.embeddings import GaussianMLPEncoder
 from garage.tf.policies import GaussianMLPTaskEmbeddingPolicy
+
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
 

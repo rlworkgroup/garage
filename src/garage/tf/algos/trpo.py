@@ -1,7 +1,7 @@
 """Trust Region Policy Optimization."""
 from garage.tf.algos.npo import NPO
-from garage.tf.optimizers import ConjugateGradientOptimizer
-from garage.tf.optimizers import PenaltyLbfgsOptimizer
+from garage.tf.optimizers import (ConjugateGradientOptimizer,
+                                  PenaltyLbfgsOptimizer)
 
 
 class TRPO(NPO):

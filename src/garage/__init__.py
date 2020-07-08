@@ -1,13 +1,13 @@
 """Garage Base."""
-from garage._dtypes import InOutSpec
-from garage._dtypes import TimeStep
-from garage._dtypes import TimeStepBatch
-from garage._dtypes import TrajectoryBatch
-from garage._functions import _Default
-from garage._functions import log_multitask_performance
-from garage._functions import log_performance
-from garage._functions import make_optimizer
+# yapf: disable
+from garage._dtypes import InOutSpec, TimeStep, TimeStepBatch, TrajectoryBatch
+from garage._functions import (_Default,
+                               log_multitask_performance,
+                               log_performance,
+                               make_optimizer)
 from garage.experiment.experiment import wrap_experiment
+
+# yapf: enable
 
 __all__ = [
     '_Default', 'make_optimizer', 'wrap_experiment', 'TimeStep',

@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.models import CNNModel
-from garage.tf.models import CNNModelWithMaxPooling
+from garage.tf.models import CNNModel, CNNModelWithMaxPooling
+
 from tests.fixtures import TfGraphTestCase
 
 

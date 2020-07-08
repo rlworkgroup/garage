@@ -7,6 +7,7 @@ from torch import nn
 
 from garage.envs import GarageEnv
 from garage.torch.policies import DeterministicMLPPolicy
+
 from tests.fixtures.envs.dummy import DummyBoxEnv
 
 

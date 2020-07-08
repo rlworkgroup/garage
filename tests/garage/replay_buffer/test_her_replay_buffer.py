@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from garage.replay_buffer import HERReplayBuffer
+
 from tests.fixtures.envs.dummy import DummyDictEnv
 
 

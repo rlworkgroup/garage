@@ -4,9 +4,8 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.models import MLPDuelingModel
-from garage.tf.models import MLPMergeModel
-from garage.tf.models import MLPModel
+from garage.tf.models import MLPDuelingModel, MLPMergeModel, MLPModel
+
 from tests.fixtures import TfGraphTestCase
 
 

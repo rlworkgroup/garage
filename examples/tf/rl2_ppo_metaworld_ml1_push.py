@@ -5,14 +5,12 @@ import click
 import metaworld.benchmarks as mwb
 
 from garage import wrap_experiment
-from garage.experiment import LocalTFRunner
-from garage.experiment import task_sampler
+from garage.experiment import LocalTFRunner, task_sampler
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import RL2PPO
-from garage.tf.algos.rl2 import RL2Env
-from garage.tf.algos.rl2 import RL2Worker
+from garage.tf.algos.rl2 import RL2Env, RL2Worker
 from garage.tf.policies import GaussianGRUPolicy
 
 

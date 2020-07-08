@@ -6,9 +6,9 @@ import tensorflow as tf
 
 from garage.envs import GarageEnv
 from garage.tf.policies import GaussianLSTMPolicy
+
 from tests.fixtures import TfGraphTestCase
-from tests.fixtures.envs.dummy import DummyBoxEnv
-from tests.fixtures.envs.dummy import DummyDiscreteEnv
+from tests.fixtures.envs.dummy import DummyBoxEnv, DummyDiscreteEnv
 
 
 class TestGaussianLSTMPolicy(TfGraphTestCase):

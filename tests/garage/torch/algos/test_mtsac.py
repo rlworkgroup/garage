@@ -13,6 +13,7 @@ from garage.torch import global_device, set_gpu_mode
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
+
 from tests.fixtures import snapshot_config
 
 

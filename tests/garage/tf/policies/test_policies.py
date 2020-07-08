@@ -1,15 +1,19 @@
+# yapf: disable
 import tensorflow as tf
 
 from garage.envs import GarageEnv
-from garage.tf.policies import CategoricalGRUPolicy
-from garage.tf.policies import CategoricalLSTMPolicy
-from garage.tf.policies import CategoricalMLPPolicy
-from garage.tf.policies import ContinuousMLPPolicy
-from garage.tf.policies import GaussianGRUPolicy
-from garage.tf.policies import GaussianLSTMPolicy
-from garage.tf.policies import GaussianMLPPolicy
+from garage.tf.policies import (CategoricalGRUPolicy,
+                                CategoricalLSTMPolicy,
+                                CategoricalMLPPolicy,
+                                ContinuousMLPPolicy,
+                                GaussianGRUPolicy,
+                                GaussianLSTMPolicy,
+                                GaussianMLPPolicy)
+
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv, DummyDiscreteEnv
+
+# yapf: enable
 
 
 class TestDiscretePolicies(TfGraphTestCase):

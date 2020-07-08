@@ -8,6 +8,7 @@ from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
 from garage.tf.policies import GaussianMLPPolicy
+
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
 

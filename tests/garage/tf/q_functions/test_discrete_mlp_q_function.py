@@ -7,6 +7,7 @@ import tensorflow as tf
 
 from garage.envs import GarageEnv
 from garage.tf.q_functions.discrete_mlp_q_function import DiscreteMLPQFunction
+
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
 from tests.fixtures.models import SimpleMLPModel

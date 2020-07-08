@@ -1,13 +1,16 @@
 """Discrete CNN QFunction with CNN-MLP structure."""
+# yapf: disable
 import akro
 import tensorflow as tf
 
-from garage.tf.models import CNNModel
-from garage.tf.models import CNNModelWithMaxPooling
-from garage.tf.models import MLPDuelingModel
-from garage.tf.models import MLPModel
-from garage.tf.models import Sequential
+from garage.tf.models import (CNNModel,
+                              CNNModelWithMaxPooling,
+                              MLPDuelingModel,
+                              MLPModel,
+                              Sequential)
 from garage.tf.q_functions.q_function import QFunction
+
+# yapf: enable
 
 
 class DiscreteCNNQFunction(QFunction):

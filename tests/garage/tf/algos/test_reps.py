@@ -11,6 +11,7 @@ from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import REPS
 from garage.tf.policies import CategoricalMLPPolicy
+
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
 

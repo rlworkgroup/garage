@@ -5,8 +5,8 @@ garage.tf.baselines failed to initialize.
 import tensorflow as tf
 
 from garage.envs import GarageEnv
-from garage.tf.baselines import ContinuousMLPBaseline
-from garage.tf.baselines import GaussianMLPBaseline
+from garage.tf.baselines import ContinuousMLPBaseline, GaussianMLPBaseline
+
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 

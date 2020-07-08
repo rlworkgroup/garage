@@ -1,17 +1,21 @@
 """Benchmarking for policies."""
+# yapf: disable
 import random
 
-from garage_benchmarks.experiments.policies import categorical_cnn_policy
-from garage_benchmarks.experiments.policies import categorical_gru_policy
-from garage_benchmarks.experiments.policies import categorical_lstm_policy
-from garage_benchmarks.experiments.policies import categorical_mlp_policy
-from garage_benchmarks.experiments.policies import continuous_mlp_policy
-from garage_benchmarks.experiments.policies import gaussian_gru_policy
-from garage_benchmarks.experiments.policies import gaussian_lstm_policy
-from garage_benchmarks.experiments.policies import gaussian_mlp_policy
+from garage_benchmarks.experiments.policies import (categorical_cnn_policy,
+                                                    categorical_gru_policy,
+                                                    categorical_lstm_policy,
+                                                    categorical_mlp_policy,
+                                                    continuous_mlp_policy,
+                                                    gaussian_gru_policy,
+                                                    gaussian_lstm_policy,
+                                                    gaussian_mlp_policy)
 from garage_benchmarks.helper import benchmark, iterate_experiments
-from garage_benchmarks.parameters import (MuJoCo1M_ENV_SET, PIXEL_ENV_SET,
+from garage_benchmarks.parameters import (MuJoCo1M_ENV_SET,
+                                          PIXEL_ENV_SET,
                                           STATE_ENV_SET)
+
+# yapf: enable
 
 _seeds = random.sample(range(100), 3)
 

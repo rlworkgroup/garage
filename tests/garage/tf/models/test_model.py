@@ -6,6 +6,7 @@ import tensorflow as tf
 
 from garage.tf.models.mlp import mlp
 from garage.tf.models.model import Model
+
 from tests.fixtures import TfGraphTestCase
 
 

@@ -4,6 +4,7 @@ import pickle
 import numpy as np
 
 from garage.np.exploration_policies import EpsilonGreedyPolicy
+
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
 
 

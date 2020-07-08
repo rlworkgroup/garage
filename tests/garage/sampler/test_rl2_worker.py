@@ -1,5 +1,6 @@
 from garage.envs import GarageEnv
 from garage.tf.algos.rl2 import RL2Worker
+
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.policies import DummyPolicy

@@ -1,5 +1,6 @@
 """Natural Policy Optimization with Task Embeddings."""
 # pylint: disable=too-many-lines
+# yapf: disable
 import akro
 from dowel import Histogram, logger, tabular
 import numpy as np
@@ -12,20 +13,22 @@ from garage.np.algos import RLAlgorithm
 from garage.sampler import LocalSampler
 from garage.tf import paths_to_tensors
 from garage.tf.embeddings import StochasticEncoder
-from garage.tf.misc.tensor_utils import center_advs
-from garage.tf.misc.tensor_utils import compile_function
-from garage.tf.misc.tensor_utils import compute_advantages
-from garage.tf.misc.tensor_utils import concat_tensor_list
-from garage.tf.misc.tensor_utils import discounted_returns
-from garage.tf.misc.tensor_utils import flatten_inputs
-from garage.tf.misc.tensor_utils import graph_inputs
-from garage.tf.misc.tensor_utils import pad_tensor
-from garage.tf.misc.tensor_utils import pad_tensor_dict
-from garage.tf.misc.tensor_utils import pad_tensor_n
-from garage.tf.misc.tensor_utils import positive_advs
-from garage.tf.misc.tensor_utils import stack_tensor_dict_list
+from garage.tf.misc.tensor_utils import (center_advs,
+                                         compile_function,
+                                         compute_advantages,
+                                         concat_tensor_list,
+                                         discounted_returns,
+                                         flatten_inputs,
+                                         graph_inputs,
+                                         pad_tensor,
+                                         pad_tensor_dict,
+                                         pad_tensor_n,
+                                         positive_advs,
+                                         stack_tensor_dict_list)
 from garage.tf.optimizers import LbfgsOptimizer
 from garage.tf.policies import TaskEmbeddingPolicy
+
+# yapf: enable
 
 
 class TENPO(RLAlgorithm):

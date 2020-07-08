@@ -8,6 +8,7 @@ import tensorflow_probability as tfp
 
 from garage.tf.optimizers import ConjugateGradientOptimizer, LbfgsOptimizer
 from garage.tf.regressors import CategoricalMLPRegressor
+
 from tests.fixtures import TfGraphTestCase
 
 

@@ -9,6 +9,7 @@ import tensorflow as tf
 from garage.envs.env_spec import EnvSpec
 from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.optimizers import LbfgsOptimizer
+
 from tests.fixtures import TfGraphTestCase
 
 

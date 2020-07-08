@@ -3,6 +3,7 @@ import akro
 import numpy as np
 
 from garage.envs import EnvSpec
+
 from tests.fixtures.envs.dummy import DummyEnv
 
 
@@ -25,9 +26,7 @@ class DummyDictEnv(DummyEnv):
 
         Returns:
             akro.Dict: Observation space.
-
         """
-
         return akro.Dict({
             'achieved_goal':
             akro.Box(low=-200., high=200., shape=(3, ), dtype=np.float32),

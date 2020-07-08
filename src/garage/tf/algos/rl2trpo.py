@@ -1,7 +1,7 @@
 """Trust Region Policy Optimization for RL2."""
 from garage.tf.algos import RL2
-from garage.tf.optimizers import ConjugateGradientOptimizer
-from garage.tf.optimizers import PenaltyLbfgsOptimizer
+from garage.tf.optimizers import (ConjugateGradientOptimizer,
+                                  PenaltyLbfgsOptimizer)
 
 
 class RL2TRPO(RL2):

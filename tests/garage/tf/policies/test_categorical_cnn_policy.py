@@ -7,6 +7,7 @@ import tensorflow as tf
 
 from garage.envs import GarageEnv
 from garage.tf.policies import CategoricalCNNPolicy
+
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 

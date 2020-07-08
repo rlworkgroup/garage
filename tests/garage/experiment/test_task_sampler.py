@@ -1,8 +1,14 @@
+# yapf: disable
 import functools
 import unittest.mock
 
 import numpy as np
 import pytest
+
+from garage.experiment import task_sampler
+
+# yapf: enable
+
 try:
     # pylint: disable=unused-import
     import mujoco_py  # noqa: F401
@@ -15,8 +21,7 @@ except Exception:  # pylint: disable=broad-except
         'valid mujoco key installed?',
         allow_module_level=True)
 
-from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv
-from garage.experiment import task_sampler
+from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv  # isort:skip # noqa: E501
 
 
 @pytest.mark.mujoco

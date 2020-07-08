@@ -1,3 +1,4 @@
+# yapf: disable
 import pickle
 from unittest import mock
 
@@ -7,13 +8,16 @@ import tensorflow as tf
 
 from garage.envs import GarageEnv
 from garage.tf.q_functions import ContinuousCNNQFunction
+
 from tests.fixtures import TfGraphTestCase
-from tests.fixtures.envs.dummy import DummyDictEnv
-from tests.fixtures.envs.dummy import DummyDiscreteEnv
-from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
-from tests.fixtures.models import SimpleCNNModel
-from tests.fixtures.models import SimpleCNNModelWithMaxPooling
-from tests.fixtures.models import SimpleMLPMergeModel
+from tests.fixtures.envs.dummy import (DummyDictEnv,
+                                       DummyDiscreteEnv,
+                                       DummyDiscretePixelEnv)
+from tests.fixtures.models import (SimpleCNNModel,
+                                   SimpleCNNModelWithMaxPooling,
+                                   SimpleMLPMergeModel)
+
+# yapf: enable
 
 
 class TestContinuousCNNQFunction(TfGraphTestCase):

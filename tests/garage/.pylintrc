@@ -21,6 +21,7 @@ disable =
     bad-continuation,
     invalid-name,
     line-too-long,
+    ungrouped-imports,
     wrong-import-order,
     # Algorithms and neural networks generally have a lot of variables
     too-many-instance-attributes,

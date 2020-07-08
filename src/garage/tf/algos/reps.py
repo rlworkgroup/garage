@@ -6,14 +6,12 @@ import numpy as np
 import scipy.optimize
 import tensorflow as tf
 
-from garage import _Default, make_optimizer
-from garage import log_performance, TrajectoryBatch
+from garage import _Default, log_performance, make_optimizer, TrajectoryBatch
 from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
 from garage.tf import paths_to_tensors
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import flatten_inputs
-from garage.tf.misc.tensor_utils import graph_inputs
+from garage.tf.misc.tensor_utils import flatten_inputs, graph_inputs
 from garage.tf.optimizers import LbfgsOptimizer
 
 

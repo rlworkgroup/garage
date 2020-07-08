@@ -1,6 +1,7 @@
 import pickle
 
 import pytest
+
 try:
     # pylint: disable=unused-import
     import mujoco_py  # noqa: F401
@@ -13,8 +14,8 @@ except Exception:  # pylint: disable=broad-except
         'valid mujoco key installed?',
         allow_module_level=True)
 
-from garage.envs.mujoco.half_cheetah_dir_env import HalfCheetahDirEnv
-from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv
+from garage.envs.mujoco.half_cheetah_dir_env import HalfCheetahDirEnv  # isort:skip # noqa: E501
+from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv  # isort:skip # noqa: E501
 
 
 @pytest.mark.mujoco
