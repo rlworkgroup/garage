@@ -87,6 +87,13 @@ Then, from the root directory of the repo, run the script.
 
     ./scripts/setup_macos.sh --mjkey path-to-your-mjkey.txt
 
+Please note that the setup script for macOS relies on homebrew to install dependencies.
+If you don't already have homebrew, the script will attempt to install it. If
+you do have homebrew, make sure that your user has permission to install things
+with it. Sometimes npm and brew compete for control over folders, and it's easy
+to mess up folder permissions when trying to resolve those conflicts. If you
+run into these issues, a clean install of homebrew usually solves them.
+
 If all of the system dependencies were installed correctly, then the exact
 version of common RL environments that work with garage can be installed via
 pip:
@@ -98,36 +105,7 @@ pip:
 Extra Steps for Garage Developers
 ---------------------------------
 
-If you plan on developing the garage repository, as opposed to simply using it as a library, you will probably prefer to install your copy of the garage repository as an editable library instead. After installing the pre-requisites using the instructions in `Install Environment Dependencies (Optional)`_, you should install garage in your environment as below.
-If you would like to contribute changes back to garage, please also read :code:`CONTRIBUTING.md`.
-
-- pipenv
-
-.. code-block:: bash
-
-    cd path/to/garage/repo
-    pipenv --three
-    pipenv install --pre -e '.[all,dev]'
-
-
-- conda
-
-.. code-block:: bash
-
-    conda activate myenv
-    pip uninstall garage  # To ensure no existing install gets in the way.
-    cd path/to/garage/repo
-    pip install -e '.[all,dev]'
-
-
-- virtualenv
-
-.. code-block:: bash
-
-    source myenv/bin/activate
-    pip uninstall garage  # To ensure no existing install gets in the way.
-    cd path/to/garage/repo
-    pip install -e '.[all,dev]'
+See `here <setting_up_your_development_environment.md#installing-garage-as-an-editable-package>`_
 
 ----
 
