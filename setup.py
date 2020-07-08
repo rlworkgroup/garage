@@ -28,8 +28,8 @@ REQUIRED = [
     'setproctitle>=1.0',
     'tensorflow>=1.14',
     'tensorflow-probability',
-    'torch>=1.0.0,<1.5.0',
-    'torchvision>=0.2.1,<0.6.0',
+    'torch>=1.0.0,!=1.5.0',
+    'torchvision>=0.2.1',
 ]
 
 # Dependencies for optional features
