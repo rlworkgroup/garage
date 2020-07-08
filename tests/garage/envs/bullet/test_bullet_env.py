@@ -12,6 +12,7 @@ from tests.helpers import step_env
 
 
 @pytest.mark.parametrize('env_ids', [pybullet_envs.getList()])
+@pytest.mark.flaky
 def test_can_step(env_ids):
     """Test Bullet environments can step"""
 
@@ -38,6 +39,7 @@ def test_can_step(env_ids):
 
 
 @pytest.mark.parametrize('env_ids', [pybullet_envs.getList()])
+@pytest.mark.flaky
 def test_pickleable(env_ids):
     """Test Bullet environments are pickle-able"""
     for env_id in env_ids:
@@ -50,6 +52,7 @@ def test_pickleable(env_ids):
 
 
 @pytest.mark.parametrize('env_ids', [pybullet_envs.getList()])
+@pytest.mark.flaky
 def test_pickle_creates_new_server(env_ids):
     """Test pickling a Bullet environment creates a new connection.
 
