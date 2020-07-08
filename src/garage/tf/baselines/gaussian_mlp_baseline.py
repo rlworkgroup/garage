@@ -253,7 +253,7 @@ class GaussianMLPBaseline(GaussianMLPBaselineModel, Baseline):
         return self._f_predict(paths['observations']).flatten()
 
     def clone_model(self, name):
-        """Return a clone of the GaussianMLPRegressorModel.
+        """Return a clone of the GaussianMLPBaselineModel.
 
         It only copies the configuration of the primitive,
         not the parameters.
