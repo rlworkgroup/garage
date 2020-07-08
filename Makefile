@@ -228,7 +228,7 @@ ifndef TRAVIS
 endif
 
 ensure-data-path-exists:
-	mkdir -p $(DATA_PATH)/$(CONTAINER_NAME) || exit 1
+	mkdir -p $(DATA_PATH)/$(CONTAINER_NAME) || { echo "Cannot create directory $(DATA_PATH)/$(CONTAINER_NAME)"; exit 1; }
 
 # Help target
 # See https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
