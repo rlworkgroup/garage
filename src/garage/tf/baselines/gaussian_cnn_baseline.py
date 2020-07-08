@@ -7,14 +7,14 @@ import tensorflow as tf
 from garage import make_optimizer
 from garage.misc.tensor_utils import normalize_pixel_batch
 from garage.np.baselines.baseline import Baseline
-from garage.tf.baselines.gaussian_cnn_regressor_model import (
-    GaussianCNNRegressorModel)
+from garage.tf.baselines.gaussian_cnn_baseline_model import (
+    GaussianCNNBaselineModel)
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers import LbfgsOptimizer, PenaltyLbfgsOptimizer
 
 
 # pylint: disable=too-many-ancestors
-class GaussianCNNBaseline(GaussianCNNRegressorModel, Baseline):
+class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
     """Fits a Gaussian distribution to the outputs of a CNN.
 
     Args:

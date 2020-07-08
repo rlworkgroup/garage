@@ -5,14 +5,14 @@ import tensorflow as tf
 
 from garage import make_optimizer
 from garage.np.baselines import Baseline
-from garage.tf.baselines.gaussian_mlp_regressor_model import (
-    GaussianMLPRegressorModel)
+from garage.tf.baselines.gaussian_mlp_baseline_model import (
+    GaussianMLPBaselineModel)
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers import LbfgsOptimizer, PenaltyLbfgsOptimizer
 
 
 # pylint: disable=too-many-ancestors
-class GaussianMLPBaseline(GaussianMLPRegressorModel, Baseline):
+class GaussianMLPBaseline(GaussianMLPBaselineModel, Baseline):
     """Gaussian MLP Baseline with Model.
 
     It fits the input data to a gaussian distribution estimated by
@@ -264,10 +264,10 @@ class GaussianMLPBaseline(GaussianMLPRegressorModel, Baseline):
                 computational graph.
 
         Returns:
-            garage.tf.baselines.GaussianMLPRegressorModel: Newly cloned model.
+            garage.tf.baselines.GaussianMLPBaselineModel: Newly cloned model.
 
         """
-        return GaussianMLPRegressorModel(
+        return GaussianMLPBaselineModel(
             name=name,
             input_shape=(self._env_spec.observation_space.flat_dim *
                          self._num_seq_inputs, ),
