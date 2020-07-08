@@ -6,27 +6,36 @@
 
 # garage
 
-garage is a toolkit for developing and evaluating reinforcement learning algorithms, and an accompanying library of state-of-the-art implementations built using that toolkit.
+garage is a toolkit for developing and evaluating reinforcement learning
+algorithms, and an accompanying library of state-of-the-art implementations
+built using that toolkit.
 
-The toolkit provides wide range of modular tools for implementing RL algorithms, including:
+The toolkit provides wide range of modular tools for implementing RL algorithms,
+including:
+
 * Composable neural network models
 * Replay buffers
 * High-performance samplers
 * An expressive experiment definition interface
-* Tools for reproducibility (e.g. set a global random seed which all components respect)
+* Tools for reproducibility (e.g. set a global random seed which all components
+  respect)
 * Logging to many outputs, including TensorBoard
 * Reliable experiment checkpointing and resuming
 * Environment interfaces for many popular benchmark suites
-* Supporting for running garage in diverse environments, including always up-to-date Docker containers
+* Supporting for running garage in diverse environments, including always
+  up-to-date Docker containers
 
-See the [latest documentation](https://garage.readthedocs.org/en/latest/) for getting started instructions and detailed APIs.
+See the [latest documentation](https://garage.readthedocs.org/en/latest/) for
+getting started instructions and detailed APIs.
 
 ## Installation
+
 ```
 pip install --user garage
 ```
 
 ## Algorithms
+
 The table below summarizes the algorithms available in garage.
 
 | Algorithm              | Framework(s)        |
@@ -55,39 +64,71 @@ The table below summarizes the algorithms available in garage.
 | Behavioral Cloning     | PyTorch             |
 
 ## Supported Tools and Frameworks
-Starting from version 2020.09, garage supports Python 3.6+. 2020.06 was the last version of garage that supports Python 3.5.
 
-The package is tested on Ubuntu 18.04. It is also known to run on recent versions of macOS, using Homebrew to install some dependencies. Windows users can install garage via WSL, or by making use of the Docker containers.
+garage requires Python 3.6+. If you need Python 3.5 support, the last garage
+release to support Python 3.5 was
+[v2020.06](https://github.com/rlworkgroup/garage/releases/tag/v2020.06.0).
 
-We currently support [PyTorch](https://pytorch.org/) and [TensorFlow](https://www.tensorflow.org/) for implementing the neural network portions of RL algorithms, and additions of new framework support are always welcome. PyTorch modules can be found in the package [`garage.torch`](https://github.com/rlworkgroup/garage/tree/master/src/garage/torch) and TensorFlow modules can be found in the package [`garage.tf`](https://github.com/rlworkgroup/garage/tree/master/src/garage/tf). Algorithms which do not require neural networks are found in the package [`garage.np`](https://github.com/rlworkgroup/garage/tree/master/src/garage/np).
+The package is tested on Ubuntu 18.04. It is also known to run on Ubuntu 16.04,
+18.04, and 20.04, and recent versions of macOS using Homebrew. Windows users can
+install garage via WSL, or by making use of the Docker containers.
 
-The package is available for download on PyPI, and we ensure that it installs successfully into environments defined using [conda](https://docs.conda.io/en/latest/), [Pipenv](https://pipenv.readthedocs.io/en/latest/), and [virtualenv](https://virtualenv.pypa.io/en/latest/).
+We currently support [PyTorch](https://pytorch.org/) and
+[TensorFlow](https://www.tensorflow.org/) for implementing the neural network
+portions of RL algorithms, and additions of new framework support are always
+welcome. PyTorch modules can be found in the package
+[`garage.torch`](https://github.com/rlworkgroup/garage/tree/master/src/garage/torch)
+and TensorFlow modules can be found in the package
+[`garage.tf`](https://github.com/rlworkgroup/garage/tree/master/src/garage/tf).
+Algorithms which do not require neural networks are found in the package
+[`garage.np`](https://github.com/rlworkgroup/garage/tree/master/src/garage/np).
 
-All components use the popular [`gym.Env`](https://github.com/openai/gym) interface for RL environments.
+The package is available for download on PyPI, and we ensure that it installs
+successfully into environments defined using
+[conda](https://docs.conda.io/en/latest/),
+[Pipenv](https://pipenv.readthedocs.io/en/latest/), and
+[virtualenv](https://virtualenv.pypa.io/en/latest/).
+
+All components use the popular [`gym.Env`](https://github.com/openai/gym)
+interface for RL environments.
 
 ## Testing
-The most important feature of garage is its comprehensive automated unit test and benchmarking suite, which helps ensure that the algorithms and modules in garage maintain state-of-the-art performance as the software changes.
+
+The most important feature of garage is its comprehensive automated unit test
+and benchmarking suite, which helps ensure that the algorithms and modules in
+garage maintain state-of-the-art performance as the software changes.
 
 Our testing strategy has three pillars:
 
 * **Automation:**
-  We use continuous integration to test all modules and algorithms in garage before adding any change. The full installation and test suite is also run nightly, to detect regressions.
+  We use continuous integration to test all modules and algorithms in garage
+  before adding any change. The full installation and test suite is also run
+  nightly, to detect regressions.
 * **Acceptance Testing:**
-  Any commit which might change the performance of an algorithm is subjected to comprehensive benchmarks on the relevant algorithms before it is merged
+  Any commit which might change the performance of an algorithm is subjected to
+  comprehensive benchmarks on the relevant algorithms before it is merged
 * **Benchmarks and Monitoring:**
-  We benchmark the full suite of algorithms against their relevant benchmarks and widely-used implementations regularly, to detect regressions and improvements we may have missed.
+  We benchmark the full suite of algorithms against their relevant benchmarks
+  and widely-used implementations regularly, to detect regressions and
+  improvements we may have missed.
 
 ## Supported Releases
+
 | Release | Build Status | Last date of support |
 | ------- | ------------ | -------------------- |
 | [v2020.06](https://github.com/rlworkgroup/garage/releases/tag/v2020.06.0) | [![Build Status](https://travis-ci.com/rlworkgroup/garage.svg?branch=release-2020.06)](https://travis-ci.com/rlworkgroup/garage) | February 28th, 2021 |
 | [v2019.10](https://github.com/rlworkgroup/garage/releases/tag/v2019.10.0) | [![Build Status](https://travis-ci.com/rlworkgroup/garage.svg?branch=release-2019.10)](https://travis-ci.com/rlworkgroup/garage) | October 31st, 2020 |
 
-Garage releases a new stable version approximately every 4 months, in February, June, and October. Maintenance releases have a stable API and dependency tree, and receive bug fixes and critical improvements but not new features. We currently support each release for a window of 8 months.
+Garage releases a new stable version approximately every 4 months, in February,
+June, and October. Maintenance releases have a stable API and dependency tree,
+and receive bug fixes and critical improvements but not new features. We
+currently support each release for a window of 8 months.
 
 ## Citing garage
 
-If you use garage for academic research, please cite the repository using the following BibTeX entry. You should update the `commit` field with the commit or release tag your publication uses.
+If you use garage for academic research, please cite the repository using the
+following BibTeX entry. You should update the `commit` field with the commit or
+release tag your publication uses.
 
 ```latex
 @misc{garage,
@@ -102,6 +143,12 @@ If you use garage for academic research, please cite the repository using the fo
 ```
 
 ## Credits
-The original code for garage was adopted from predecessor project called [rllab](https://github.com/rll/rllab). The garage project is grateful for the contributions of the original rllab authors, and hopes to continue advancing the state of reproducibility in RL research in the same spirit.
 
-rllab was developed by Rocky Duan (UC Berkeley/OpenAI), Peter Chen (UC Berkeley), Rein Houthooft (UC Berkeley/OpenAI), John Schulman (UC Berkeley/OpenAI), and Pieter Abbeel (UC Berkeley/OpenAI).
+The original code for garage was adopted from predecessor project called
+[rllab](https://github.com/rll/rllab). The garage project is grateful for the
+contributions of the original rllab authors, and hopes to continue advancing the
+state of reproducibility in RL research in the same spirit.
+
+rllab was developed by Rocky Duan (UC Berkeley/Covariant), Peter Chen
+(UC Berkeley/Covariant), Rein Houthooft (UC Berkeley/Happy Elements), John
+Schulman (UC Berkeley/OpenAI), and Pieter Abbeel (UC Berkeley/Covariant).
