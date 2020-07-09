@@ -25,8 +25,11 @@ of code:
 ```python
 # Load the policy
 from garage.experiment import Snapshotter
+import tensorflow as tf # optional, only for TensorFlow as we need a tf.Session
+
 snapshotter = Snapshotter()
-data = snapshotter.load('path/to/snapshot/dir')
+with tf.compat.v1.Session(): # optional, only for TensorFlow
+    data = snapshotter.load('path/to/snapshot/dir')
 policy = data['algo'].policy
 
 # You can also access other components of the experiment
@@ -66,8 +69,11 @@ This logic is bundled up in a more robust way in the `rollout()` function from
 ```python
 # Load the policy and the env in which it was trained
 from garage.experiment import Snapshotter
+import tensorflow as tf # optional, only for TensorFlow as we need a tf.Session
+
 snapshotter = Snapshotter()
-data = snapshotter.load('path/to/snapshot/dir')
+with tf.compat.v1.Session(): # optional, only for TensorFlow
+    data = snapshotter.load('path/to/snapshot/dir')
 policy = data['algo'].policy
 env = data['env']
 
