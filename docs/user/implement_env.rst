@@ -1,15 +1,55 @@
 .. _implement_mdp:
 
 ===========================
-Implement a New Environment
+Adding a New Environment
 ===========================
 
-Garage uses an environment API based on the very popular OpenAI Gym interface. The main difference is that garage uses :code:`akro` to describe input and output spaces, which are an extension of the :code:`gym.Space` API.
+Garage uses an environment API based on the very popular OpenAI Gym interface. The main difference is that garage uses
+:code:`akro` to describe input and output spaces, which are an extension of the :code:`gym.Space` API.
 
-If you have an OpenAI Gym compatible environment, you can wrap it in :code:`garage.envs.GarageEnv` to use it with garage.
+If you have an OpenAI Gym compatible environment, you can wrap it in :code:`garage.envs.GarageEnv` to use it with
+garage.
 
-Garage also has a wrapper which supports Deepmind's :code:`dm_control` API, :code:`garage.envs.dm_control.DmControlEnv`.
+.. code-block:: python
 
+    import gym
+    from garage.envs import GarageEnv
+
+    myEnv = GarageEnv(gym.make('CartPole-v1'))  # Wraps a CartPole-v1 environment
+
++++++++++++++++++++++++++++
+Add a Environment Wrapper
++++++++++++++++++++++++++++
+
+If you would like to add an existing environment to garage, you will probably need an environment wrapper to handle
+environment-specific logic.
+
+Available environment wrappers in garage are:
+
+* :code:`garage.envs.dm_control.DmControlEnv`, which supports Deepmind's :code:`dm_control` API.
+* :code:`garage.envs.bullet.BulletEnv`, which supports the :code:`pybullet` API.
+
+To-do list for adding a new environment wrapper:
+
+* **Specify** :code:`observation_space` and :code:`action_space`
+These state the set of valid observations and the set of valid actions. Find a detailed example in the next section.
+
+* **Implement** :code:`reset` and :code:`step`
+Allow the environment to reset and step. Find a detailed example in the next section.
+
+* (Optional) **Implement** :code:`__getstate__` and :code:`__setstate__`
+Garage pickles the environment to save snapshots, whereas some attributes of your environment might not be pickle-able
+(e.g. a client-server connection). If needed, provide your own implementation to make sure your environment is
+pickle-able.
+
+* (Optional) **Unit Tests**
+If you would like to contribute your own environment back to garage, make sure to add unit
+tests under the directory :code:`tests/garage/envs`. You can find examples of environment tests here as well.
+
+
++++++++++++++++++++++++++++
+Implement a New Environment
++++++++++++++++++++++++++++
 
 In the rest of this section, we will walk through an example of implementing a
 point robot environment using our framework. A more complete version of this
@@ -173,4 +213,4 @@ Assume that the file is :code:`examples/tf/trpo_point.py`. You can then run the 
 
 ----
 
-This page was authored by K.R. Zentner (`@krzentner <https://github.com/krzentner>`_), with contributions from Ryan Julian (`@ryanjulian <https://github.com/ryanjulian>`_), Jonathon Shen (`@jonashen <https://github.com/jonashen>`_), and Rocky Duan (`@dementrock <https://github.com/dementrock>`_).
+This page was authored by K.R. Zentner (`@krzentner <https://github.com/krzentner>`_), with contributions from Ryan Julian (`@ryanjulian <https://github.com/ryanjulian>`_), Jonathon Shen (`@jonashen <https://github.com/jonashen>`_), Rocky Duan (`@dementrock <https://github.com/dementrock>`_), Eric Yihan Chen (`@AiRuiChen <https://github.com/AiRuiChen>`_).
