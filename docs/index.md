@@ -42,6 +42,7 @@ and how to implement new MDPs and new algorithms.
    :maxdepth: 2
    :caption: Development Guide
 
+   user/setting_up_your_development_environment
    user/testing
    user/benchmarking
    user/writing_documentation
