@@ -900,7 +900,7 @@ class TENPO(RLAlgorithm):
             pct_completed = np.mean(completed)
             tabular.record('Tasks/EpisodeLength/t={}'.format(t),
                            np.mean(lengths))
-            tabular.record('Tasks/CompletionRate/t={}'.format(t),
+            tabular.record('Tasks/TerminationRate/t={}'.format(t),
                            pct_completed)
             tabular.record('Tasks/Entropy/t={}'.format(t), task_ents[t])
 

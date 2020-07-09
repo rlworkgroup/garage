@@ -182,7 +182,7 @@ and start training from that epoch 10 in the example.
 EnvExecTime                                   0.263958
 Evaluation/AverageDiscountedReturn           85.0247
 Evaluation/AverageReturn                    192.377
-Evaluation/CompletionRate                     0.113208
+Evaluation/TerminationRate                    0.113208
 Evaluation/Iteration                         10
 Evaluation/MaxReturn                        200
 Evaluation/MinReturn                         96
