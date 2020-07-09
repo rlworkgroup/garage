@@ -52,7 +52,7 @@ ci-job-normal: assert-docker
 	    'not nightly and not huge and not flaky and not large and not mujoco and not mujoco_long' --durations=20
 	for i in {1..5}; do \
 		bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
-			|| (echo 'Retrying...' && sleep 30); \
+			|| (echo 'Retrying...' && sleep 30 && continue); \
 		exit 1; \
 	done
 
@@ -61,7 +61,7 @@ ci-job-large: assert-docker
 	pytest --cov=garage --cov-report=xml -m 'large and not flaky' --durations=20
 	for i in {1..5}; do \
 		bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
-			|| (echo 'Retrying...' && sleep 30); \
+			|| (echo 'Retrying...' && sleep 30 && continue); \
 		exit 1; \
 	done
 
@@ -69,7 +69,7 @@ ci-job-mujoco: assert-docker
 	pytest --cov=garage --cov-report=xml -m 'mujoco and not flaky' --durations=20
 	for i in {1..5}; do \
 		bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
-			|| (echo 'Retrying...' && sleep 30); \
+			|| (echo 'Retrying...' && sleep 30 && continue); \
 		exit 1; \
 	done
 
@@ -77,7 +77,7 @@ ci-job-mujoco-long: assert-docker
 	pytest --cov=garage --cov-report=xml -m 'mujoco_long and not flaky' --durations=20
 	for i in {1..5}; do \
 		bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
-			|| (echo 'Retrying...' && sleep 30); \
+			|| (echo 'Retrying...' && sleep 30 && continue); \
 		exit 1; \
 	done
 
