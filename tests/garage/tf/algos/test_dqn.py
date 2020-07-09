@@ -138,7 +138,7 @@ class TestDQN(TfGraphTestCase):
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=n_epochs,
                                         batch_size=sampler_batch_size)
-            assert last_avg_ret > 15
+            assert last_avg_ret > 13
 
             env.close()
 
