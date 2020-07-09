@@ -98,25 +98,8 @@ class GaussianMLPBaseline(GaussianMLPBaselineModel, Baseline):
                  subsample_factor=1.0):
         self._env_spec = env_spec
         self._num_seq_inputs = num_seq_inputs
-
-        self._hidden_sizes = hidden_sizes
-        self._hidden_nonlinearity = hidden_nonlinearity
-        self._hidden_w_init = hidden_w_init
-        self._hidden_b_init = hidden_b_init
-        self._output_nonlinearity = output_nonlinearity
-        self._output_w_init = output_w_init
-        self._output_b_init = output_b_init
-        self._optimizer = optimizer
-        self._optimizer_args = optimizer_args
         self._use_trust_region = use_trust_region
         self._max_kl_step = max_kl_step
-        self._learn_std = learn_std
-        self._init_std = init_std
-        self._adaptive_std = adaptive_std
-        self._std_share_network = std_share_network
-        self._std_hidden_sizes = std_hidden_sizes
-        self._std_nonlinearity = std_nonlinearity
-        self._layer_normalization = layer_normalization
         self._normalize_inputs = normalize_inputs
         self._normalize_outputs = normalize_outputs
         self._subsample_factor = subsample_factor
@@ -286,7 +269,7 @@ class GaussianMLPBaseline(GaussianMLPBaselineModel, Baseline):
             min_std=None,
             max_std=None,
             std_hidden_sizes=self._std_hidden_sizes,
-            std_hidden_nonlinearity=self._std_nonlinearity,
+            std_hidden_nonlinearity=self._std_hidden_nonlinearity,
             std_output_nonlinearity=None,
             std_parameterization='exp',
             layer_normalization=self._layer_normalization)
