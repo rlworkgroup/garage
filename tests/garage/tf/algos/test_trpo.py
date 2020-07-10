@@ -133,7 +133,7 @@ class TestTRPO(TfGraphTestCase):
 
             runner.setup(algo, env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 80
+            assert last_avg_ret > 64
 
             env.close()
 
