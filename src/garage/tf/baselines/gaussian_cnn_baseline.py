@@ -184,6 +184,10 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
                          std_parameterization='exp',
                          layer_normalization=layer_normalization,
                          name=name)
+        # model for old distribution, used when trusted region is on
+        self._old_model = self.clone_model(name=name + '_old_model')
+        self._old_network = None
+
         self._x_mean = None
         self._x_std = None
         self._y_mean = None
@@ -199,54 +203,30 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
         ys_var = tf.compat.v1.placeholder(dtype=tf.float32,
                                           name='ys',
                                           shape=(None, self._output_dim))
-        old_means_var = tf.compat.v1.placeholder(dtype=tf.float32,
-                                                 name='old_means',
-                                                 shape=(None,
-                                                        self._output_dim))
-        old_log_stds_var = tf.compat.v1.placeholder(dtype=tf.float32,
-                                                    name='old_log_stds',
-                                                    shape=(None,
-                                                           self._output_dim))
 
-        (_, means, log_stds, _, norm_means, norm_log_stds, self._x_mean,
-         self._x_std, self._y_mean, self._y_std,
-         dist) = self.build(input_var).outputs
+        self._old_network = self._old_model.build(input_var)
+        (_, _, norm_dist, norm_mean, norm_log_std, _, mean, _, self._x_mean,
+         self._x_std, self._y_mean,
+         self._y_std) = self.build(input_var).outputs
+        self._old_model.parameters = self.parameters
 
         normalized_ys_var = (ys_var - self._y_mean) / self._y_std
+        old_normalized_dist = self._old_network.normalized_dist
 
-        normalized_old_means_var = (old_means_var - self._y_mean) / self._y_std
-        normalized_old_log_stds_var = (old_log_stds_var -
-                                       tf.math.log(self._y_std))
+        mean_k1 = tf.reduce_mean(old_normalized_dist.kl_divergence(norm_dist))
+        loss = -tf.reduce_mean(norm_dist.log_prob(normalized_ys_var))
 
-        normalized_dist_info_vars = dict(mean=norm_means,
-                                         log_std=norm_log_stds)
-
-        mean_kl = tf.reduce_mean(
-            dist.kl_sym(
-                dict(mean=normalized_old_means_var,
-                     log_std=normalized_old_log_stds_var),
-                normalized_dist_info_vars,
-            ))
-
-        loss = -tf.reduce_mean(
-            dist.log_likelihood_sym(normalized_ys_var,
-                                    normalized_dist_info_vars))
-
-        self._f_predict = tensor_utils.compile_function([input_var], means)
-        self._f_pdists = tensor_utils.compile_function([input_var],
-                                                       [means, log_stds])
+        self._f_predict = tensor_utils.compile_function([input_var], mean)
 
         optimizer_args = dict(
             loss=loss,
             target=self,
-            network_outputs=[norm_means, norm_log_stds],
+            network_outputs=[norm_mean, norm_log_std],
         )
 
         if self._use_trust_region:
-            optimizer_args['leq_constraint'] = (mean_kl, self._max_kl_step)
-            optimizer_args['inputs'] = [
-                input_var, ys_var, old_means_var, old_log_stds_var
-            ]
+            optimizer_args['leq_constraint'] = (mean_k1, self._max_kl_step)
+            optimizer_args['inputs'] = [input_var, ys_var]
         else:
             optimizer_args['inputs'] = [input_var, ys_var]
 
@@ -278,15 +258,17 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
             # recompute normalizing constants for inputs
             self._x_mean.load(np.mean(xs, axis=0, keepdims=True))
             self._x_std.load(np.std(xs, axis=0, keepdims=True) + 1e-8)
+            self._old_network.x_mean.load(np.mean(xs, axis=0, keepdims=True))
+            self._old_network.x_std.load(
+                np.std(xs, axis=0, keepdims=True) + 1e-8)
         if self._normalize_outputs:
             # recompute normalizing constants for outputs
             self._y_mean.load(np.mean(ys, axis=0, keepdims=True))
             self._y_std.load(np.std(ys, axis=0, keepdims=True) + 1e-8)
-        if self._use_trust_region:
-            old_means, old_log_stds = self._f_pdists(xs)
-            inputs = [xs, ys, old_means, old_log_stds]
-        else:
-            inputs = [xs, ys]
+            self._old_network.y_mean.load(np.mean(ys, axis=0, keepdims=True))
+            self._old_network.y_std.load(
+                np.std(ys, axis=0, keepdims=True) + 1e-8)
+        inputs = [xs, ys]
         loss_before = self._optimizer.loss(inputs)
         tabular.record('{}/LossBefore'.format(self._name), loss_before)
         self._optimizer.optimize(inputs)
@@ -296,6 +278,7 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
             tabular.record('{}/MeanKL'.format(self._name),
                            self._optimizer.constraint_val(inputs))
         tabular.record('{}/dLoss'.format(self._name), loss_before - loss_after)
+        self._old_model.parameters = self.parameters
 
     def predict(self, paths):
         """Predict ys based on input xs.
@@ -312,6 +295,50 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
             xs = normalize_pixel_batch(xs)
 
         return self._f_predict(xs).flatten()
+
+    def clone_model(self, name):
+        """Return a clone of the GaussianCNNBaselineModel.
+
+        It only copies the configuration of the primitive,
+        not the parameters.
+
+        Args:
+            name (str): Name of the newly created model. It has to be
+                different from source policy if cloned under the same
+                computational graph.
+
+        Returns:
+            garage.tf.baselines.GaussianCNNBaselineModel: Newly cloned model.
+
+        """
+        return GaussianCNNBaselineModel(
+            name=name,
+            input_shape=self._env_spec.observation_space.shape,
+            output_dim=1,
+            filters=self._filters,
+            strides=self._strides,
+            padding=self._padding,
+            hidden_sizes=self._hidden_sizes,
+            hidden_nonlinearity=self._hidden_nonlinearity,
+            hidden_w_init=self._hidden_w_init,
+            hidden_b_init=self._hidden_b_init,
+            output_nonlinearity=self._output_nonlinearity,
+            output_w_init=self._output_w_init,
+            output_b_init=self._output_b_init,
+            learn_std=self._learn_std,
+            adaptive_std=self._adaptive_std,
+            std_share_network=self._std_share_network,
+            init_std=self._init_std,
+            min_std=None,
+            max_std=None,
+            std_filters=self._std_filters,
+            std_strides=self._std_strides,
+            std_padding=self._std_padding,
+            std_hidden_sizes=self._std_hidden_sizes,
+            std_hidden_nonlinearity=self._std_hidden_nonlinearity,
+            std_output_nonlinearity=None,
+            std_parameterization='exp',
+            layer_normalization=self._layer_normalization)
 
     @property
     def recurrent(self):
@@ -337,7 +364,7 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
         """
         new_dict = super().__getstate__()
         del new_dict['_f_predict']
-        del new_dict['_f_pdists']
+        del new_dict['_old_network']
         del new_dict['_x_mean']
         del new_dict['_x_std']
         del new_dict['_y_mean']

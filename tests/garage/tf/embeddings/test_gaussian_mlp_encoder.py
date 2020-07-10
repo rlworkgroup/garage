@@ -13,7 +13,6 @@ from garage.tf.embeddings import GaussianMLPEncoder
 
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
-from tests.fixtures.models import SimpleGaussianMLPModel
 
 
 class TestGaussianMLPEncoder(TfGraphTestCase):

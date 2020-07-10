@@ -5,7 +5,7 @@ from garage.tf.models import Model
 
 
 class SimpleMLPMergeModel(Model):
-    """Simple SimpleGaussianMLPModel for testing.
+    """Simple SimpleMLPMergeModel for testing.
 
     Args:
         output_dim (int): Dimension of the network output.

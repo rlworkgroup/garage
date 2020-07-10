@@ -52,7 +52,7 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
 
         train_data, test_data = get_train_test_data()
         train_paths, observations, returns = train_data
-        for _ in range(20):
+        for _ in range(30):
             gcr.fit(train_paths)
 
         test_paths, expected = test_data
@@ -94,7 +94,7 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
         train_data, test_data = get_train_test_data()
         train_paths, _, _ = train_data
 
-        for _ in range(20):
+        for _ in range(30):
             gcr.fit(train_paths)
 
         test_paths, expected = test_data
@@ -133,7 +133,7 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
         train_data, test_data = get_train_test_data()
         train_paths, _, _ = train_data
 
-        for _ in range(20):
+        for _ in range(30):
             gcr.fit(train_paths)
 
         test_paths, expected = test_data
@@ -241,16 +241,3 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
         new_gcb.set_param_values(old_param_values)
         new_param_values = new_gcb.get_param_values()
         assert np.array_equal(old_param_values, new_param_values)
-
-    def test_get_params(self):
-        gcb = GaussianCNNBaseline(env_spec=test_env_spec,
-                                  filters=((3, (3, 3)), (6, (3, 3))),
-                                  strides=(1, 1),
-                                  padding='SAME',
-                                  hidden_sizes=(32, ),
-                                  adaptive_std=False,
-                                  use_trust_region=False)
-        params_interal = gcb.get_params()
-        trainable_params = tf.compat.v1.trainable_variables(
-            scope='GaussianCNNBaseline')
-        assert np.array_equal(params_interal, trainable_params)

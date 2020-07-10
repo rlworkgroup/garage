@@ -46,7 +46,7 @@ class TaskEmbeddingPolicy(Policy):
 
     @property
     def encoder_distribution(self):
-        """garage.tf.distributions.DiagonalGaussian: Encoder distribution."""
+        """tfp.Distribution.MultivariateNormalDiag: Encoder distribution."""
         return self.encoder.distribution
 
     @abc.abstractmethod
