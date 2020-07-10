@@ -4,6 +4,7 @@ import sys
 import warnings
 
 import numpy as np
+import tensorflow_probability as tfp
 
 seed_ = None
 
@@ -42,3 +43,13 @@ def get_seed():
 
     """
     return seed_
+
+
+def get_tf_seed_stream():
+    """Get the pseudo-random number generator (PRNG) for TensorFlow ops.
+
+    Returns:
+        tfp.util.SeedStream: The PRNG for TensorFlow ops.
+
+    """
+    return tfp.util.SeedStream(seed_, salt='garage')
