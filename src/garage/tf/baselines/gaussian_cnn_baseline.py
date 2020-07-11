@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage import make_optimizer
+from garage.experiment import deterministic
 from garage.misc.tensor_utils import normalize_pixel_batch
 from garage.np.baselines.baseline import Baseline
 from garage.tf.baselines.gaussian_cnn_baseline_model import (
@@ -103,10 +104,12 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
                  padding,
                  hidden_sizes,
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  name='GaussianCNNBaseline',
                  learn_std=True,

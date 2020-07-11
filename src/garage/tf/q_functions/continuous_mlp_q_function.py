@@ -1,6 +1,7 @@
 """Continuous MLP QFunction."""
 import tensorflow as tf
 
+from garage.experiment import deterministic
 from garage.tf.models import MLPMergeModel
 
 
@@ -50,10 +51,12 @@ class ContinuousMLPQFunction(MLPMergeModel):
                  hidden_sizes=(32, 32),
                  action_merge_layer=-2,
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
 

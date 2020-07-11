@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
 
+from garage.experiment import deterministic
 from garage.tf.models import GaussianCNNModel
 
 
@@ -100,10 +101,12 @@ class GaussianCNNBaselineModel(GaussianCNNModel):
                  hidden_sizes,
                  name='GaussianCNNRegressorModel',
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  learn_std=True,
                  adaptive_std=False,
@@ -116,10 +119,12 @@ class GaussianCNNBaselineModel(GaussianCNNModel):
                  std_padding='SAME',
                  std_hidden_sizes=(32, 32),
                  std_hidden_nonlinearity=tf.nn.tanh,
-                 std_hidden_w_init=tf.initializers.glorot_uniform(),
+                 std_hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  std_hidden_b_init=tf.zeros_initializer(),
                  std_output_nonlinearity=None,
-                 std_output_w_init=tf.initializers.glorot_uniform(),
+                 std_output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  std_parameterization='exp',
                  layer_normalization=False):
         super().__init__(output_dim=output_dim,

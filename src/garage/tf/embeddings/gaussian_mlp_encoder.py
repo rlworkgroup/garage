@@ -2,6 +2,7 @@
 import numpy as np
 import tensorflow as tf
 
+from garage.experiment import deterministic
 from garage.tf.embeddings import StochasticEncoder
 from garage.tf.models import GaussianMLPModel, StochasticModule
 
@@ -70,10 +71,12 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
                  name='GaussianMLPEncoder',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  learn_std=True,
                  adaptive_std=False,
@@ -147,8 +150,9 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
             self._network = self.model.build(embedding_input)
             self._f_dist = tf.compat.v1.get_default_session().make_callable(
                 [
-                    self._network.dist.sample(), self._network.mean,
-                    self._network.log_std
+                    self._network.dist.sample(
+                        seed=deterministic.get_tf_seed_stream()),
+                    self._network.mean, self._network.log_std
                 ],
                 feed_list=[embedding_input])
 

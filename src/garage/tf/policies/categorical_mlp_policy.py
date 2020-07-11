@@ -8,6 +8,7 @@ import akro
 import numpy as np
 import tensorflow as tf
 
+from garage.experiment import deterministic
 from garage.tf.models import CategoricalMLPModel
 from garage.tf.policies.policy import Policy
 
@@ -54,10 +55,12 @@ class CategoricalMLPPolicy(CategoricalMLPModel, Policy):
                  name='CategoricalMLPPolicy',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=tf.nn.softmax,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         if not isinstance(env_spec.action_space, akro.Discrete):
@@ -99,7 +102,10 @@ class CategoricalMLPPolicy(CategoricalMLPModel, Policy):
                                                       self._obs_dim))
         dist = self.build(state_input).outputs
         self._f_prob = tf.compat.v1.get_default_session().make_callable(
-            [tf.argmax(dist.sample(), -1), dist.probs],
+            [
+                tf.argmax(dist.sample(seed=deterministic.get_tf_seed_stream()),
+                          -1), dist.probs
+            ],
             feed_list=[state_input])
 
     @property

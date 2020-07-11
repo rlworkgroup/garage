@@ -3,6 +3,7 @@
 import akro
 import tensorflow as tf
 
+from garage.experiment import deterministic
 from garage.tf.models import (CNNModel,
                               CNNModelWithMaxPooling,
                               MLPDuelingModel,
@@ -80,10 +81,12 @@ class DiscreteCNNQFunction(Sequential):
                  pool_shapes=(2, 2),
                  cnn_hidden_nonlinearity=tf.nn.relu,
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  dueling=False,
                  layer_normalization=False):

@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage import make_optimizer
+from garage.experiment import deterministic
 from garage.np.baselines import Baseline
 from garage.tf.baselines.gaussian_mlp_baseline_model import (
     GaussianMLPBaselineModel)
@@ -77,10 +78,12 @@ class GaussianMLPBaseline(GaussianMLPBaselineModel, Baseline):
                  name='GaussianMLPBaseline',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  optimizer=None,
                  optimizer_args=None,
@@ -179,6 +182,7 @@ class GaussianMLPBaseline(GaussianMLPBaselineModel, Baseline):
         with tf.name_scope('update_opt'):
             self._optimizer.update_opt(**optimizer_args)
 
+    # pylint: disable=unsubscriptable-object
     def fit(self, paths):
         """Fit regressor based on paths.
 

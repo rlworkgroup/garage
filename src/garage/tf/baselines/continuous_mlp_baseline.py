@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage import make_optimizer
+from garage.experiment import deterministic
 from garage.np.baselines import Baseline
 from garage.tf.misc import tensor_utils
 from garage.tf.models import NormalizedInputMLPModel
@@ -57,10 +58,12 @@ class ContinuousMLPBaseline(NormalizedInputMLPModel, Baseline):
                  name='ContinuousMLPBaseline',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  optimizer=None,
                  optimizer_args=None,

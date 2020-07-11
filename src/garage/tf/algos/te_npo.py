@@ -8,6 +8,7 @@ import scipy.stats
 import tensorflow as tf
 
 from garage import InOutSpec, log_performance, TrajectoryBatch
+from garage.experiment import deterministic
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
 from garage.sampler import LocalSampler
@@ -646,8 +647,9 @@ class TENPO(RLAlgorithm):
             with tf.name_scope('inference_ce'):
                 # Build inference with trajectory windows
 
-                traj_ll = infer_dist.log_prob(enc_dist.sample(),
-                                              name='traj_ll')
+                traj_ll = infer_dist.log_prob(
+                    enc_dist.sample(seed=deterministic.get_tf_seed_stream()),
+                    name='traj_ll')
 
                 inference_ce_raw = -traj_ll
                 inference_ce = tf.clip_by_value(inference_ce_raw, -3, 3)

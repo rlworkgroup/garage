@@ -6,6 +6,7 @@ continuous action.
 """
 import tensorflow as tf
 
+from garage.experiment import deterministic
 from garage.tf.models import MLPModel
 from garage.tf.policies.policy import Policy
 
@@ -50,10 +51,12 @@ class ContinuousMLPPolicy(MLPModel, Policy):
                  name='ContinuousMLPPolicy',
                  hidden_sizes=(64, 64),
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=tf.nn.tanh,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         self._env_spec = env_spec
