@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2020.06.1
+- Fixed
+  * Pipenv fails to resolve a stable dependency set because of excessively-narrow dependencies in tensorflow-probability ([#1721](https://github.com/rlworkgroup/garage/pull/1721))
+  * Bug which prevented `rollout` from running policies deterministically ([#1714](https://github.com/rlworkgroup/garage/pull/1714))
+
 ## 2020.06.0
 
 ### Added
