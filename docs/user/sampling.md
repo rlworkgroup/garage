@@ -44,13 +44,24 @@ regarding multiple environments to reduce of overhead of sampling.
 ## Setup Sampler and Worker for a LocalRunner
 
 Setup the sampler and worker for a `LocalRunner` is easy. Just passing
-`sampler_cls` and `worker_class` to `runner.setup()` when setup `LocalRunner`,
-for example:
+`sampler_cls` and `worker_class` to `runner.setup()` when setup `LocalRunner`.
+You can also specify the number of workers by the parameter `n_workers`. For
+example:
 
 ```py
 from garage.sampler import RaySampler, VecWorker
 
 ...
-runner.setup(algo, env, sampler_cls=RaySampler, worker_class=VecWorker)
+runner.setup(
+    algo=algo,
+    env=env,
+    sampler_cls=RaySampler,
+    n_workers=4,
+    worker_class=VecWorker
+)
 ...
 ```
+
+----
+
+*This page was authored by Ruofu Wang ([@yeukfu](https://github.com/yeukfu)).*
