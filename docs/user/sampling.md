@@ -18,7 +18,7 @@ the default sampler, which runs workers in the main process in serial style.
 With this sampler, all the sampling tasks will run in the same thread.
 
 - [`RaySampler`](https://github.com/rlworkgroup/garage/blob/master/src/garage/sampler/ray_sampler.py),
-the sampler using [ray](https://github.com/ray-project/ray) framework to run
+the sampler using [Ray](https://github.com/ray-project/ray) framework to run
 distributed workers in parallel style. `RaySampler` can not only run workers in
 different CPUs, but also in different machines across network.
 
