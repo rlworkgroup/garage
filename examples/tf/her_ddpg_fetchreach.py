@@ -2,10 +2,6 @@
 """This is an example to train a task with DDPG + HER algorithm.
 
 Here it creates a gym environment FetchReach.
-
-Results (may vary by seed):
-    AverageSuccessRate: 0.9
-    RiseTime: epoch 8
 """
 import gym
 import tensorflow as tf
@@ -67,11 +63,11 @@ def her_ddpg_fetchreach(ctxt=None, seed=1):
             qf_lr=1e-3,
             qf=qf,
             replay_buffer=replay_buffer,
-            target_update_tau=0.05,
-            steps_per_epoch=20,
-            max_path_length=100,
+            target_update_tau=0.01,
+            steps_per_epoch=50,
+            max_path_length=250,
             n_train_steps=40,
-            discount=0.9,
+            discount=0.95,
             exploration_policy=exploration_policy,
             policy_optimizer=tf.compat.v1.train.AdamOptimizer,
             qf_optimizer=tf.compat.v1.train.AdamOptimizer,
@@ -80,7 +76,7 @@ def her_ddpg_fetchreach(ctxt=None, seed=1):
 
         runner.setup(algo=ddpg, env=env)
 
-        runner.train(n_epochs=50, batch_size=100)
+        runner.train(n_epochs=50, batch_size=256)
 
 
 her_ddpg_fetchreach()
