@@ -38,6 +38,34 @@ def test_deterministic_tensorflow():
     assert np.allclose(rand_tensor, deterministic_tensor)
 
 
+def test_deterministic_tfp_seed_stream():
+    """Test deterministic behavior of TFP SeedStream"""
+    deterministic.set_seed(0)
+    with tf.compat.v1.Session() as sess:
+        rand_tensor = sess.run(
+            tf.random.uniform((5, 5), seed=deterministic.get_tf_seed_stream()))
+        sess.run(tf.random.uniform((5, 5)))
+        rand_tensor2 = sess.run(
+            tf.random.uniform((5, 5), seed=deterministic.get_tf_seed_stream()))
+    deterministic_tensor = np.array(
+        [[0.10550332, 0.14218152, 0.5544759, 0.3720839, 0.6899766],
+         [0.47086394, 0.5401237, 0.21653509, 0.42823565, 0.6927656],
+         [0.16598761, 0.48356044, 0.36901915, 0.97140956, 0.07564807],
+         [0.6694747, 0.21241283, 0.72315156, 0.631876, 0.34476352],
+         [0.8718543, 0.4879316, 0.76272845, 0.04737151, 0.39661574]],
+        dtype=np.float32)
+    deterministic_tensor2 = np.array(
+        [[0.9950017, 0.52794397, 0.7703887, 0.8688295, 0.78926384],
+         [0.6301824, 0.45042813, 0.6257613, 0.7717335, 0.8412994],
+         [0.30846167, 0.71520185, 0.13243473, 0.8455602, 0.01623428],
+         [0.01353145, 0.23445582, 0.36002636, 0.3576231, 0.61981404],
+         [0.47964382, 0.55043316, 0.3270856, 0.7003857, 0.53755534]],
+        dtype=np.float32)
+
+    assert np.allclose(rand_tensor, deterministic_tensor)
+    assert np.allclose(rand_tensor2, deterministic_tensor2)
+
+
 def test_deterministic_numpy():
     """Test deterministic behavior of numpy"""
     deterministic.set_seed(22)
