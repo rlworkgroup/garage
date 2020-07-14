@@ -4,6 +4,8 @@ import copy
 import torch
 import torch.nn as nn
 
+from garage.torch import NonLinearity
+
 
 class MultiHeadedMLPModule(nn.Module):
     """MultiHeadedMLPModule Model.
@@ -84,7 +86,7 @@ class MultiHeadedMLPModule(nn.Module):
 
             if hidden_nonlinearity:
                 hidden_layers.add_module('non_linearity',
-                                         _NonLinearity(hidden_nonlinearity))
+                                         NonLinearity(hidden_nonlinearity))
 
             self._layers.append(hidden_layers)
             prev_size = size
@@ -98,8 +100,8 @@ class MultiHeadedMLPModule(nn.Module):
             output_layer.add_module('linear', linear_layer)
 
             if output_nonlinearities[i]:
-                output_layer.add_module(
-                    'non_linearity', _NonLinearity(output_nonlinearities[i]))
+                output_layer.add_module('non_linearity',
+                                        NonLinearity(output_nonlinearities[i]))
 
             self._output_layers.append(output_layer)
 
@@ -147,41 +149,3 @@ class MultiHeadedMLPModule(nn.Module):
             x = layer(x)
 
         return [output_layer(x) for output_layer in self._output_layers]
-
-
-class _NonLinearity(nn.Module):
-    """Wrapper class for non linear function or module.
-
-    Args:
-        non_linear (callable or type): Non-linear function or type to be
-            wrapped.
-
-    """
-
-    def __init__(self, non_linear):
-        super().__init__()
-
-        if isinstance(non_linear, type):
-            self.module = non_linear()
-        elif callable(non_linear):
-            self.module = copy.deepcopy(non_linear)
-        else:
-            raise ValueError(
-                'Non linear function {} is not supported'.format(non_linear))
-
-    # pylint: disable=arguments-differ
-    def forward(self, input_value):
-        """Forward method.
-
-        Args:
-            input_value (torch.Tensor): Input values
-
-        Returns:
-            torch.Tensor: Output value
-
-        """
-        return self.module(input_value)
-
-    # pylint: disable=missing-return-doc, missing-return-type-doc
-    def __repr__(self):
-        return repr(self.module)

@@ -1,6 +1,7 @@
 """Base Stochastic Policy."""
 import abc
 
+import akro
 import torch
 
 from garage.torch import global_device
@@ -30,6 +31,8 @@ class StochasticPolicy(Policy, abc.ABC):
             if not isinstance(observation, torch.Tensor):
                 observation = torch.as_tensor(observation).float().to(
                     global_device())
+            if isinstance(self._env_spec.observation_space, akro.Image):
+                observation /= 255.0  # scale image
             observation = observation.unsqueeze(0)
             dist, info = self.forward(observation)
             return dist.sample().squeeze(0).cpu().numpy(), {
@@ -57,6 +60,8 @@ class StochasticPolicy(Policy, abc.ABC):
             if not isinstance(observations, torch.Tensor):
                 observations = torch.as_tensor(observations).float().to(
                     global_device())
+            if isinstance(self._env_spec.observation_space, akro.Image):
+                observations /= 255.0  # scale image
             dist, info = self.forward(observations)
             return dist.sample().cpu().numpy(), {
                 k: v.detach().cpu().numpy()

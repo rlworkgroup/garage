@@ -3,8 +3,9 @@ import cloudpickle
 import pytest
 
 from garage.envs import GarageEnv
-from garage.torch._functions import TransposeImage
+from garage.torch import TransposeImage
 from garage.torch.policies import CategoricalCNNPolicy
+
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
@@ -43,7 +44,7 @@ class TestCategoricalCNNPolicy:
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        action = policy.get_action(obs)
+        action, _ = policy.get_action(obs)
         assert env.action_space.contains(action)
 
     @pytest.mark.parametrize(
@@ -65,7 +66,7 @@ class TestCategoricalCNNPolicy:
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        action = policy.get_action(obs)
+        action, _ = policy.get_action(obs)
         assert env.action_space.contains(action)
 
     @pytest.mark.parametrize(
@@ -87,7 +88,7 @@ class TestCategoricalCNNPolicy:
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        actions = policy.get_actions([obs, obs, obs])
+        actions, _ = policy.get_actions([obs, obs, obs])
         for action in actions:
             assert env.action_space.contains(action)
 
@@ -110,11 +111,11 @@ class TestCategoricalCNNPolicy:
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        output_action_1 = policy.get_action(obs)
+        output_action_1, _ = policy.get_action(obs)
 
         p = cloudpickle.dumps(policy)
         policy_pickled = cloudpickle.loads(p)
-        output_action_2 = policy_pickled.get_action(obs)
+        output_action_2, _ = policy_pickled.get_action(obs)
 
         assert env.action_space.contains(output_action_1)
         assert env.action_space.contains(output_action_2)

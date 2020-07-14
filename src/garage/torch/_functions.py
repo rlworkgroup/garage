@@ -9,8 +9,11 @@ This collection of functions can be used to manage the following:
         - Converting Tensors into `numpy.ndarray` format and vice versa
     - Updating model parameters
 """
+import copy
+
 import gym
 import torch
+from torch import nn
 import torch.nn.functional as F
 
 _USE_GPU = False
@@ -292,6 +295,45 @@ def product_of_gaussians(mus, sigmas_squared):
     return mu, sigma_squared
 
 
+class NonLinearity(nn.Module):
+    """Wrapper class for non linear function or module.
+
+    Args:
+        non_linear (callable or type): Non-linear function or type to be
+            wrapped.
+
+    """
+
+    def __init__(self, non_linear):
+        super().__init__()
+
+        if isinstance(non_linear, type):
+            self.module = non_linear()
+        elif callable(non_linear):
+            self.module = copy.deepcopy(non_linear)
+        else:
+            raise ValueError(
+                'Non linear function {} is not supported'.format(non_linear))
+
+    # pylint: disable=arguments-differ
+    def forward(self, input_value):
+        """Forward method.
+
+        Args:
+            input_value (torch.Tensor): Input values
+
+        Returns:
+            torch.Tensor: Output value
+
+        """
+        return self.module(input_value)
+
+    # pylint: disable=missing-return-doc, missing-return-type-doc
+    def __repr__(self):
+        """object representation method."""
+        return repr(self.module)
+
+
 class TransposeImage(gym.ObservationWrapper):
     """Transpose observation space for image observation in PyTorch."""
 
@@ -313,7 +355,7 @@ class TransposeImage(gym.ObservationWrapper):
             dtype=self.observation_space.dtype)
 
     def observation(self, observation):
-        """observation function.
+        """Transpose image observation.
 
         Args:
             observation (tensor): observation.

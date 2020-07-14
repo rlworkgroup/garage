@@ -3,7 +3,7 @@ import copy
 
 from torch import nn
 
-from garage.torch._functions import flatten_to_single_vector
+from garage.torch import flatten_to_single_vector, NonLinearity
 
 
 # pylint: disable=unused-argument
@@ -47,26 +47,26 @@ class CNNModule(nn.Module):
             example, (2, 2) means that all the pooling layers have
             strides (2, 2).
         layer_normalization (bool): Bool for using layer normalization or not.
-        n_layers (int): number of convolutional layer
+        n_layers (int): number of convolutional layer.
+        is_image (bool): Whether observations are images or not.
     """
 
-    def __init__(
-            self,
-            input_var,
-            hidden_channels,
-            kernel_sizes,
-            strides=1,
-            hidden_nonlinearity=nn.ReLU,
-            hidden_w_init=nn.init.xavier_uniform_,
-            hidden_b_init=nn.init.zeros_,
-            paddings=0,
-            padding_mode='zeros',
-            max_pool=False,
-            pool_shape=None,
-            pool_stride=1,
-            layer_normalization=False,
-            n_layers=None,
-    ):
+    def __init__(self,
+                 input_var,
+                 hidden_channels,
+                 kernel_sizes,
+                 strides=1,
+                 hidden_nonlinearity=nn.ReLU,
+                 hidden_w_init=nn.init.xavier_uniform_,
+                 hidden_b_init=nn.init.zeros_,
+                 paddings=0,
+                 padding_mode='zeros',
+                 max_pool=False,
+                 pool_shape=None,
+                 pool_stride=1,
+                 layer_normalization=False,
+                 n_layers=None,
+                 is_image=True):
         super().__init__()
         self._hidden_channels = hidden_channels
         self._kernel_sizes = kernel_sizes
@@ -80,6 +80,7 @@ class CNNModule(nn.Module):
         self._pool_shape = pool_shape
         self._pool_stride = pool_stride
         self._layer_normalization = layer_normalization
+        self._is_image = is_image
 
         self._cnn_layers = nn.ModuleList()
         self._in_channel = input_var.shape[1]  # read in N, C, H, W
@@ -123,6 +124,8 @@ class CNNModule(nn.Module):
             List[torch.Tensor]: Output values
 
         """
+        if self._is_image:
+            input_val /= 255.0
         x = input_val
         for layer in self._cnn_layers:
             x = layer(x)
@@ -159,7 +162,7 @@ class CNNModule(nn.Module):
             # non-linear function
             if self._hidden_nonlinearity:
                 hidden_layers.add_module(
-                    'non_linearity', _NonLinearity(self._hidden_nonlinearity))
+                    'non_linearity', NonLinearity(self._hidden_nonlinearity))
 
             # max-pooling
             if self._max_pool:
@@ -212,41 +215,3 @@ def _conv(in_channels,
                      padding_mode=padding_mode,
                      dilation=dilation,
                      bias=bias)
-
-
-class _NonLinearity(nn.Module):
-    """Wrapper class for non linear function or module.
-
-    Args:
-        non_linear (callable or type): Non-linear function or type to be
-            wrapped.
-
-    """
-
-    def __init__(self, non_linear):
-        super().__init__()
-
-        if isinstance(non_linear, type):
-            self.module = non_linear()
-        elif callable(non_linear):
-            self.module = copy.deepcopy(non_linear)
-        else:
-            raise ValueError(
-                'Non linear function {} is not supported'.format(non_linear))
-
-    # pylint: disable=arguments-differ
-    def forward(self, input_value):
-        """Forward method.
-
-        Args:
-            input_value (torch.Tensor): Input values
-
-        Returns:
-            torch.Tensor: Output value
-
-        """
-        return self.module(input_value)
-
-    # pylint: disable=missing-return-doc, missing-return-type-doc
-    def __repr__(self):
-        return repr(self.module)

@@ -8,14 +8,15 @@ import torch.nn.functional as F
 from garage.envs import GarageEnv
 from garage.torch import (compute_advantages,
                           dict_np_to_torch,
-                          flatten_to_single_vector
+                          flatten_to_single_vector,
                           global_device,
                           pad_to_last,
                           product_of_gaussians,
                           set_gpu_mode,
-                          torch_to_np.
+                          torch_to_np,
                           TransposeImage)
 import garage.torch._functions as tu
+
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 

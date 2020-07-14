@@ -64,30 +64,29 @@ class CategoricalCNNModule(nn.Module):
             of output dense layer(s). The function should return a
             torch.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
-
+        is_image (bool): Whether observations are images or not.
     """
 
-    def __init__(
-            self,
-            input_var,
-            output_dim,
-            kernel_sizes,
-            hidden_channels,
-            strides=1,
-            hidden_sizes=(32, 32),
-            hidden_nonlinearity=torch.tanh,
-            hidden_w_init=nn.init.xavier_uniform_,
-            hidden_b_init=nn.init.zeros_,
-            paddings=0,
-            padding_mode='zeros',
-            max_pool=False,
-            pool_shape=None,
-            pool_stride=1,
-            output_nonlinearity=None,
-            output_w_init=nn.init.xavier_uniform_,
-            output_b_init=nn.init.zeros_,
-            layer_normalization=False,
-    ):
+    def __init__(self,
+                 input_var,
+                 output_dim,
+                 kernel_sizes,
+                 hidden_channels,
+                 strides=1,
+                 hidden_sizes=(32, 32),
+                 hidden_nonlinearity=torch.tanh,
+                 hidden_w_init=nn.init.xavier_uniform_,
+                 hidden_b_init=nn.init.zeros_,
+                 paddings=0,
+                 padding_mode='zeros',
+                 max_pool=False,
+                 pool_shape=None,
+                 pool_stride=1,
+                 output_nonlinearity=None,
+                 output_w_init=nn.init.xavier_uniform_,
+                 output_b_init=nn.init.zeros_,
+                 layer_normalization=False,
+                 is_image=True):
         super().__init__()
         self._input_var = input_var
         self._action_dim = output_dim
@@ -107,6 +106,7 @@ class CategoricalCNNModule(nn.Module):
         self._output_w_init = output_w_init
         self._output_b_init = output_b_init
         self._layer_normalization = layer_normalization
+        self._is_image = is_image
 
         self._cnn_module = CNNModule(
             input_var=self._input_var,
@@ -119,7 +119,7 @@ class CategoricalCNNModule(nn.Module):
             max_pool=self._max_pool,
             pool_shape=self._pool_shape,
             pool_stride=self._pool_stride,
-        )
+            is_image=self._is_image)
 
     def forward(self, *inputs):
         """Forward method.

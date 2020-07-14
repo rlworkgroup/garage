@@ -77,8 +77,12 @@ class TestCNNModule:
                 stride) + 1  # conv formula = ((W - F + 2P) / S) + 1
         flatten_shape = current_size * current_size * hidden_channels[-1]
 
-        assert output1.shape == (self.batch_size, flatten_shape)
-        assert output2.shape == (self.batch_size, flatten_shape)
+        expected_output = torch.zeros((self.batch_size, flatten_shape))
+
+        assert np.array_equal(torch.all(torch.eq(output1, expected_output)),
+                              True)
+        assert np.array_equal(torch.all(torch.eq(output2, expected_output)),
+                              True)
 
     @pytest.mark.parametrize(
         'kernel_sizes, hidden_channels, strides, paddings', [
@@ -114,7 +118,9 @@ class TestCNNModule:
                 stride) + 1  # conv formula = ((W - F + 2P) / S) + 1
         flatten_shape = current_size * current_size * hidden_channels[-1]
 
-        assert output.shape == (self.batch_size, flatten_shape)
+        expected_output = torch.zeros((self.batch_size, flatten_shape))
+        assert np.array_equal(torch.all(torch.eq(output, expected_output)),
+                              True)
 
     @pytest.mark.parametrize('hidden_channels, kernel_sizes, strides',
                              [((32, ), (1, ), (1, )), ((32, ), (3, ), (1, )),
