@@ -15,7 +15,7 @@ two types of `Sampler`s:
 
 - [`LocalSampler`](https://github.com/rlworkgroup/garage/blob/a767dcb95988abc14165a2a320ee39932a1c85ca/src/garage/sampler/local_sampler.py),
 the default sampler, which runs workers in the main process in serial style.
-With this sampler, all the sampling tasks will be run in the same thread.
+With this sampler, all the sampling tasks will run in the same thread.
 
 - [`RaySampler`](https://github.com/rlworkgroup/garage/blob/master/src/garage/sampler/ray_sampler.py),
 the sampler using [ray](https://github.com/ray-project/ray) framework to run
@@ -43,8 +43,8 @@ forward a neural network).
 ## Setup Sampler and Worker for a LocalRunner
 
 Setup the sampler and worker for a `LocalRunner` is easy. Just passing
-`sampler_cls` and `worker_class` to `runner.setup()` when setup `LocalRunner`.
-The number of workers in the sampler can be set by the parameter `n_workers`.
+`sampler_cls` and `worker_class` to `runner.setup()`. The number of workers in
+the sampler can be set by the parameter `n_workers`.
 
 For `VecWorker`, you can set the level of vectorization (i.e. the number of
 environments simulated in one step) by setting `n_envs` in `worker_args`.
