@@ -60,9 +60,6 @@ class TD3(RLAlgorithm):
         exploration_policy_sigma (float): Action noise sigma.
         exploration_policy_clip (float): Action noise clip.
         actor_update_period (int): Action update period.
-        smooth_return (bool):
-            If True, do statistics on all samples collection.
-            Otherwise do statistics on one batch.
         exploration_policy (garage.np.exploration_policies.ExplorationPolicy):
             Exploration strategy.
 
@@ -98,7 +95,6 @@ class TD3(RLAlgorithm):
             exploration_policy_sigma=0.2,
             actor_update_period=2,
             exploration_policy_clip=0.5,
-            smooth_return=True,
             exploration_policy=None):
         action_bound = env_spec.action_space.high
         self._max_action = action_bound if max_action is None else max_action
@@ -109,7 +105,6 @@ class TD3(RLAlgorithm):
         self._clip_pos_returns = clip_pos_returns
         self._clip_return = clip_return
 
-        self._episode_rewards = []
         self._episode_policy_losses = []
         self._episode_qf_losses = []
         self._epoch_ys = []
@@ -142,7 +137,6 @@ class TD3(RLAlgorithm):
         self._buffer_batch_size = buffer_batch_size
         self._discount = discount
         self._reward_scale = reward_scale
-        self._smooth_return = smooth_return
         self.max_path_length = max_path_length
         self._max_eval_path_length = max_eval_path_length
         self._eval_env = None
@@ -304,24 +298,24 @@ class TD3(RLAlgorithm):
         """
         if not self._eval_env:
             self._eval_env = runner.get_env_copy()
-        last_return = None
+        last_returns = [float('nan')]
         runner.enable_logging = False
 
         for _ in runner.step_epochs():
             for cycle in range(self._steps_per_epoch):
                 runner.step_path = runner.obtain_trajectories(runner.step_itr)
-                last_return = self.train_once(runner.step_itr,
-                                              runner.step_path)
+                self.train_once(runner.step_itr, runner.step_path)
                 if (cycle == 0 and self.replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
                     runner.enable_logging = True
-                    log_performance(runner.step_itr,
-                                    obtain_evaluation_samples(
-                                        self.policy, self._eval_env),
-                                    discount=self._discount)
+                    eval_samples = obtain_evaluation_samples(
+                        self.policy, self._eval_env)
+                    last_returns = log_performance(runner.step_itr,
+                                                   eval_samples,
+                                                   discount=self._discount)
                 runner.step_itr += 1
 
-        return last_return
+        return np.mean(last_returns)
 
     def train_once(self, itr, trajectories):
         """Perform one step of policy optimization given one batch of samples.
@@ -330,24 +324,10 @@ class TD3(RLAlgorithm):
             itr (int): Iteration number.
             trajectories (TrajectoryBatch): Batch of trajectories.
 
-        Returns:
-            np.float64: Average return.
-
         """
         self.replay_buffer.add_trajectory_batch(trajectories)
 
         epoch = itr / self._steps_per_epoch
-
-        self._episode_rewards.extend(
-            [traj.rewards.sum() for traj in trajectories.split()])
-
-        # Avoid calculating the mean of an empty list in cases where
-        # all paths were non-terminal.
-
-        last_average_return = np.NaN
-
-        if self._episode_rewards:
-            last_average_return = np.mean(self._episode_rewards)
 
         for _ in range(self._n_train_steps):
             if (self.replay_buffer.n_transitions_stored >=
@@ -377,15 +357,6 @@ class TD3(RLAlgorithm):
                 tabular.record('QFunction/MaxY', np.max(self._epoch_ys))
                 tabular.record('QFunction/AverageAbsY',
                                np.mean(np.abs(self._epoch_ys)))
-
-            if not self._smooth_return:
-                self._episode_rewards = []
-                self._episode_policy_losses = []
-                self._episode_qf_losses = []
-                self._epoch_ys = []
-                self._epoch_qs = []
-
-        return last_average_return
 
     def optimize_policy(self, itr):
         """Perform algorithm optimizing.

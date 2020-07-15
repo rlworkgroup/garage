@@ -47,7 +47,6 @@ class DQN(RLAlgorithm):
             docstring for tf.clip_by_norm.
         double_q (bool): Bool for using double q-network.
         reward_scale (float): Reward scale.
-        smooth_return (bool): Whether to smooth the return.
         name (str): Name of the algorithm.
 
     """
@@ -71,7 +70,6 @@ class DQN(RLAlgorithm):
                  grad_norm_clipping=None,
                  double_q=False,
                  reward_scale=1.,
-                 smooth_return=True,
                  name='DQN'):
         self._qf_optimizer = qf_optimizer
         self._qf_lr = qf_lr
@@ -90,7 +88,6 @@ class DQN(RLAlgorithm):
         self._buffer_batch_size = buffer_batch_size
         self._discount = discount
         self._reward_scale = reward_scale
-        self._smooth_return = smooth_return
         self.max_path_length = max_path_length
         self._max_eval_path_length = max_eval_path_length
         self._eval_env = None
@@ -111,9 +108,6 @@ class DQN(RLAlgorithm):
         will always be action_space.n
         """
         action_dim = self.env_spec.action_space.n
-
-        self.episode_rewards = []
-        self.episode_qf_losses = []
 
         # build q networks
         with tf.name_scope(self._name):
@@ -208,24 +202,28 @@ class DQN(RLAlgorithm):
         """
         if not self._eval_env:
             self._eval_env = runner.get_env_copy()
-        last_return = None
+        last_returns = [float('nan')]
         runner.enable_logging = False
 
+        qf_losses = []
         for _ in runner.step_epochs():
             for cycle in range(self._steps_per_epoch):
                 runner.step_path = runner.obtain_trajectories(runner.step_itr)
-                last_return = self.train_once(runner.step_itr,
-                                              runner.step_path)
+                qf_losses.extend(
+                    self.train_once(runner.step_itr, runner.step_path))
                 if (cycle == 0 and self.replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
                     runner.enable_logging = True
-                    log_performance(runner.step_itr,
-                                    obtain_evaluation_samples(
-                                        self.policy, self._eval_env),
-                                    discount=self._discount)
+                    eval_samples = obtain_evaluation_samples(
+                        self.policy, self._eval_env)
+                    last_returns = log_performance(runner.step_itr,
+                                                   eval_samples,
+                                                   discount=self._discount)
                 runner.step_itr += 1
+            tabular.record('DQN/QFLossMean', np.mean(qf_losses))
+            tabular.record('DQN/QFLossStd', np.std(qf_losses))
 
-        return last_return
+        return np.mean(last_returns)
 
     def train_once(self, itr, trajectories):
         """Perform one step of policy optimization given one batch of samples.
@@ -235,48 +233,28 @@ class DQN(RLAlgorithm):
             trajectories (TrajectoryBatch): Batch of trajectories.
 
         Returns:
-            numpy.float64: Average return.
+            list[float]: Q function losses
 
         """
-        epoch = itr / self._steps_per_epoch
-
-        self.episode_rewards.extend(
-            [traj.rewards.sum() for traj in trajectories.split()])
-        last_average_return = np.mean(self.episode_rewards)
+        self.replay_buffer.add_trajectory_batch(trajectories)
+        qf_losses = []
         for _ in range(self._n_train_steps):
             if (self.replay_buffer.n_transitions_stored >=
                     self._min_buffer_size):
-                qf_loss = self.optimize_policy(None)
-                self.episode_qf_losses.append(qf_loss)
+                qf_losses.append(self.optimize_policy())
 
         if self.replay_buffer.n_transitions_stored >= self._min_buffer_size:
             if itr % self._target_network_update_freq == 0:
                 self._qf_update_ops()
+        return qf_losses
 
-        if itr % self._steps_per_epoch == 0:
-            if (self.replay_buffer.n_transitions_stored >=
-                    self._min_buffer_size):
-                mean100ep_rewards = round(np.mean(self.episode_rewards[-100:]),
-                                          1)
-                mean100ep_qf_loss = np.mean(self.episode_qf_losses[-100:])
-                tabular.record('Epoch', epoch)
-                tabular.record('Episode100RewardMean', mean100ep_rewards)
-                tabular.record('{}/Episode100LossMean'.format(self._qf.name),
-                               mean100ep_qf_loss)
-        return last_average_return
-
-    def optimize_policy(self, samples_data):
+    def optimize_policy(self):
         """Optimize network using experiences from replay buffer.
-
-        Args:
-            samples_data (list): Processed batch data.
 
         Returns:
             numpy.float64: Loss of policy.
 
         """
-        del samples_data
-
         transitions = self.replay_buffer.sample_transitions(
             self._buffer_batch_size)
 

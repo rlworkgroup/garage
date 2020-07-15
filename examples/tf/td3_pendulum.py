@@ -72,7 +72,6 @@ def td3_pendulum(ctxt=None, seed=1):
                   target_update_tau=1e-2,
                   steps_per_epoch=20,
                   n_train_steps=1,
-                  smooth_return=False,
                   discount=0.99,
                   buffer_batch_size=100,
                   min_buffer_size=1e4,

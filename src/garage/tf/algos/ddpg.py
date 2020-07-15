@@ -54,7 +54,6 @@ class DDPG(RLAlgorithm):
             clip_return].
         max_action (float): Maximum action magnitude.
         reward_scale (float): Reward scale.
-        smooth_return (bool): Whether to smooth the return.
         name (str): Name of the algorithm shown in computation graph.
 
     """
@@ -85,7 +84,6 @@ class DDPG(RLAlgorithm):
             clip_return=np.inf,
             max_action=None,
             reward_scale=1.,
-            smooth_return=True,
             name='DDPG'):
         action_bound = env_spec.action_space.high
         self._max_action = action_bound if max_action is None else max_action
@@ -96,7 +94,6 @@ class DDPG(RLAlgorithm):
         self._clip_pos_returns = clip_pos_returns
         self._clip_return = clip_return
 
-        self._episode_rewards = []
         self._episode_policy_losses = []
         self._episode_qf_losses = []
         self._epoch_ys = []
@@ -116,7 +113,6 @@ class DDPG(RLAlgorithm):
         self._buffer_batch_size = buffer_batch_size
         self._discount = discount
         self._reward_scale = reward_scale
-        self._smooth_return = smooth_return
         self.max_path_length = max_path_length
         self._max_eval_path_length = max_eval_path_length
         self._eval_env = None
@@ -281,24 +277,24 @@ class DDPG(RLAlgorithm):
         """
         if not self._eval_env:
             self._eval_env = runner.get_env_copy()
-        last_return = None
+        last_returns = [float('nan')]
         runner.enable_logging = False
 
         for _ in runner.step_epochs():
             for cycle in range(self._steps_per_epoch):
                 runner.step_path = runner.obtain_trajectories(runner.step_itr)
-                last_return = self.train_once(runner.step_itr,
-                                              runner.step_path)
+                self.train_once(runner.step_itr, runner.step_path)
                 if (cycle == 0 and self.replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
                     runner.enable_logging = True
-                    log_performance(runner.step_itr,
-                                    obtain_evaluation_samples(
-                                        self.policy, self._eval_env),
-                                    discount=self._discount)
+                    eval_samples = obtain_evaluation_samples(
+                        self.policy, self._eval_env)
+                    last_returns = log_performance(runner.step_itr,
+                                                   eval_samples,
+                                                   discount=self._discount)
                 runner.step_itr += 1
 
-        return last_return
+        return np.mean(last_returns)
 
     def train_once(self, itr, trajectories):
         """Perform one step of policy optimization given one batch of samples.
@@ -307,23 +303,9 @@ class DDPG(RLAlgorithm):
             itr (int): Iteration number.
             trajectories (TrajectoryBatch): Batch of trajectories.
 
-        Returns:
-            np.float64: Average return.
-
         """
         self.replay_buffer.add_trajectory_batch(trajectories)
         epoch = itr / self._steps_per_epoch
-
-        self._episode_rewards.extend(
-            [traj.rewards.sum() for traj in trajectories.split()])
-
-        # Avoid calculating the mean of an empty list in cases where
-        # all paths were non-terminal.
-
-        last_average_return = np.NaN
-
-        if self._episode_rewards:
-            last_average_return = np.mean(self._episode_rewards)
 
         for _ in range(self._n_train_steps):
             if (self.replay_buffer.n_transitions_stored >=
@@ -353,15 +335,6 @@ class DDPG(RLAlgorithm):
                 tabular.record('QFunction/MaxY', np.max(self._epoch_ys))
                 tabular.record('QFunction/AverageAbsY',
                                np.mean(np.abs(self._epoch_ys)))
-
-            if not self._smooth_return:
-                self._episode_rewards = []
-                self._episode_policy_losses = []
-                self._episode_qf_losses = []
-                self._epoch_ys = []
-                self._epoch_qs = []
-
-        return last_average_return
 
     def optimize_policy(self):
         """Perform algorithm optimizing.
