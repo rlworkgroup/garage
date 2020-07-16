@@ -107,9 +107,21 @@ make run-headless BUILD_ARGS="--build-arg MY_VAR=123" RUN_ARGS="-e MY_VAR=123"
 
 ## NVIDIA image
 
-The garage nvidia images come with CUDA 10.2.
+The garage NVIDIA images come with CUDA 10.2. If your installation
+of CUDA is a lower, then you can specify it using the make flag called
+`PARENT_IMAGE`.
 
-### Prerequisites for nvidia image
+For example, if you have CUDA 10.1 on Ubuntu 18.04, then you can run the
+following command to build the Garage NVIDIA docker image for your machine:
+
+```
+make run-nvidia-headless PARENT_IMAGE=nvidia/cuda:10.1-runtime-ubuntu18.04
+```
+
+You can find the correct `PARENT_IMAGE` for your machine at
+[NVIDIA docker hub](https://hub.docker.com/r/nvidia/cuda/tags)
+
+### Prerequisites for NVIDIA image
 
 Additional to the prerequisites for the headless image, make sure to have:
 
@@ -131,13 +143,21 @@ For example, to execute a launcher file:
 docker run -it --rm rlworkgroup/garage-nvidia python examples/tf/trpo_cartpole.py
 ```
 
-### Build and run the nvidia image
+### Build and run the NVIDIA image
 
 The same rules for the headless image apply here, except that the target name
 is:
 
 ```
 make run-nvidia
+```
+
+This make command builds the NVIDIA image and runs it in a non-headless mode.
+It will not work on headless machines. You can run the NVIDIA in a headless
+state using the following target:
+
+```
+make run-nvidia-headless
 ```
 
 ### Expose GPUs for use
