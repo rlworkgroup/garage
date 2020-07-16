@@ -1,10 +1,13 @@
 """Data types for agent-based learning."""
 import collections
+import enum
 
 import akro
 import numpy as np
 
 from garage.misc import tensor_utils
+
+# pylint: disable=too-many-lines
 
 
 class TrajectoryBatch(
@@ -428,22 +431,29 @@ class TrajectoryBatch(
             ]))
 
 
+class StepType(enum.IntEnum):
+    """Defines the status of a `TimeStep` within a sequence."""
+    # Denotes the first `TimeStep` in a sequence.
+    FIRST = 0
+    # Denotes any `TimeStep` in a sequence that is not FIRST or LAST.
+    MID = 1
+    # Denotes the last `TimeStep` in a sequence.
+    LAST = 2
+    # Denotes the `TimeStep` truncated by time limit
+    TIMEOUT = 3
+
+
 class TimeStep(
         collections.namedtuple('TimeStep', [
-            'env_spec',
-            'observation',
-            'action',
-            'reward',
-            'next_observation',
-            'terminal',
-            'env_info',
-            'agent_info',
+            'env_spec', 'observation', 'action', 'reward', 'next_observation',
+            'terminal', 'env_info', 'agent_info', 'step_type'
         ])):
     # pylint: disable=missing-return-doc, missing-return-type-doc, missing-param-doc, missing-type-doc  # noqa: E501
     r"""A tuple representing a single TimeStep.
 
     A :class:`TimeStep` represents a single sample when an agent interacts with
-        an environment.
+        an environment. It describes as SARS (State–action–reward–state) tuple
+        that characterizes the evolution of a MDP.
 
     Attributes:
         env_spec (garage.envs.EnvSpec): Specification for the environment from
@@ -452,16 +462,30 @@ class TimeStep(
             containing the observation for the this time step in the
             environment. These must conform to
             :obj:`env_spec.observation_space`.
+            The observation before applying the action.
+            `None` if `step_type` is `StepType.FIRST`, i.e. at the start of a
+            sequence.
         action (numpy.ndarray): A numpy array of shape :math:`(A^*)`
             containing the action for the this time step. These must conform
             to :obj:`env_spec.action_space`.
+            `None` if `step_type` is `StepType.FIRST`, i.e. at the start of a
+            sequence.
         reward (float): A float representing the reward for taking the action
             given the observation, at the this time step.
-        terminals (bool): The termination signal for the this time step.
+            `None` if `step_type` is `StepType.FIRST`, i.e. at the start of a
+            sequence.
+        next_observation (numpy.ndarray): A numpy array of shape :math:`(O^*)`
+            containing the observation for the this time step in the
+            environment. These must conform to
+            :obj:`env_spec.observation_space`.
+            The observation after applying the action.
+        terminal (bool): The termination signal for the this time step.
         env_info (dict): A dict arbitrary environment state information.
         agent_info (numpy.ndarray): A dict of arbitrary agent
             state information. For example, this may contain the hidden states
             from an RNN policy.
+        step_type (garage.StepType): a `StepType` enum value. Can either be
+            StepType.FIRST, StepType.MID, StepType.LAST, StepType.TIMEOUT.
 
 
     Raises:
@@ -471,7 +495,7 @@ class TimeStep(
     """
 
     def __new__(cls, env_spec, observation, action, reward, next_observation,
-                terminal, env_info, agent_info):  # noqa: D102
+                terminal, env_info, agent_info, step_type):  # noqa: D102
         # pylint: disable=too-many-branches
         # observation
         if not env_spec.observation_space.contains(observation):
@@ -542,9 +566,46 @@ class TimeStep(
                 'terminal must be dtype bool, but got dtype {} instead.'.
                 format(type(terminal)))
 
+        if not isinstance(step_type, StepType):
+            raise ValueError(
+                'step_type must be dtype garage.StepType, but got dtype {} '
+                'instead.'.format(type(step_type)))
+
         return super().__new__(TimeStep, env_spec, observation, action, reward,
                                next_observation, terminal, env_info,
-                               agent_info)
+                               agent_info, step_type)
+
+    def first(self):
+        """Checks if the `TimeStep` is the first one in a sequence.
+
+        Returns:
+            bool: True if it is a FIRST `TimeStep`.
+        """
+        return self.step_type is StepType.FIRST
+
+    def mid(self):
+        """Checks if the `TimeStep` is the mid one in a sequence.
+
+        Returns:
+          bool: True if it is a MID `TimeStep`.
+        """
+        return self.step_type is StepType.MID
+
+    def last(self):
+        """Checks if the `TimeStep` is the last one in a successful sequence.
+
+        Returns:
+          bool: True if it is a LAST `TimeStep`.
+        """
+        return self.step_type is StepType.LAST
+
+    def timeout(self):
+        """Checks if the `TimeStep` is terminated by time out.
+
+        Returns:
+          bool: True if it is a TIMEOUT `TimeStep`.
+        """
+        return self.step_type is StepType.TIMEOUT
 
 
 class InOutSpec:
