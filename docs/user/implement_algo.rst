@@ -73,7 +73,7 @@ logging, will only have new results once per epoch.
 The current epoch is constrolled by the algorithm using
 :code:`LocalRunner.step_epochs()`.
 
-.. code-block:: python
+.. testcode::
 
     class MyAlgorithm:
 
@@ -88,7 +88,7 @@ The current epoch is constrolled by the algorithm using
 In practice, it's used in a loop like this:
 
 
-.. code-block:: python
+.. testcode::
 
     class MyAlgorithm:
 
@@ -111,13 +111,13 @@ This can be done manually, but for this tutorial we'll use the
 
 We'll also want an environment to test our algorithm with.
 
-.. code-block:: python
+.. testcode::
 
     from garage import wrap_experiment
     from garage.envs import PointEnv
     from garage.experiment import LocalRunner
 
-    @wrap_experiment(log_dir='my_algorithm_logs', use_existing_dir=True)
+    @wrap_experiment(use_existing_dir=True)
     def debug_my_algorithm(ctxt):
         runner = LocalRunner(ctxt)
         env = PointEnv()
@@ -127,6 +127,15 @@ We'll also want an environment to test our algorithm with.
 
     debug_my_algorithm()
 
+.. testoutput::
+   :hide:
+
+   ...
+
+.. testcleanup::
+
+	import shutil
+	shutil.rmtree('data/local/')
 
 With the above file and the :code:`MyAlgorithm` definition above, it should be
 possible to run :code:`MyAlgorithm`, and get it to print an output like the
@@ -134,7 +143,7 @@ following:
 
 .. code-block:: text
 
-  2020-05-18 14:11:49 | [debug_my_algorithm] Logging to my_algorithm_logs
+  2020-05-18 14:11:49 | [debug_my_algorithm] Logging to /data/local/experiment/debug_my_algorithm
   2020-05-18 14:11:49 | [debug_my_algorithm] Obtaining samples...
   It is epoch 0
   2020-05-18 14:11:49 | [debug_my_algorithm] epoch #0 | Saving snapshot...
@@ -266,9 +275,9 @@ We can add a little logging to the :code:`train()` method.
 
     from garage import log_performance, TrajectoryBatch
 
-    ...
+    # ...
 
-        def train(self, runner):
+		def train(self, runner):
             for epoch in runner.step_epochs():
                 samples = runner.obtain_samples(epoch)
                 log_performance(epoch,

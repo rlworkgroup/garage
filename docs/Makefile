@@ -7,6 +7,8 @@ SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
 APIDOCDIR     = _apidoc
+AUTOAPIDIR    = _autoapi
+DATADIR       = data
 
 # User-friendly check for sphinx-build
 ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
@@ -52,6 +54,8 @@ help:
 clean:
 	rm -rf $(BUILDDIR)/*
 	rm -rf $(APIDOCDIR)/*
+	rm -rf $(AUTOAPIDIR)/*
+	rm -rf $(DATADIR)/*
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html

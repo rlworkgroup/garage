@@ -45,6 +45,8 @@ docs:
 
 ci-job-precommit: assert-docker
 	scripts/travisci/check_precommit.sh
+	@pushd docs && make doctest && popd
+	echo " "
 
 ci-job-normal: assert-docker
 	[ ! -f $(MJKEY_PATH) ] || mv $(MJKEY_PATH) $(MJKEY_PATH).bak

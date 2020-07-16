@@ -1,4 +1,4 @@
-"""Utiliy functions for tensors."""
+"""Utility functions for tensors."""
 import numpy as np
 import scipy.signal
 
@@ -16,6 +16,7 @@ def discount_cumsum(x, discount):
 
     Returns:
         np.ndarrary: Discounted cumulative sum.
+
 
     """
     return scipy.signal.lfilter([1], [1, float(-discount)], x[::-1],
@@ -61,6 +62,15 @@ def flatten_tensors(tensors):
 
     Returns:
         numpy.ndarray: Flattened tensors.
+
+    Example:
+
+    .. testsetup::
+
+        from garage.misc.tensor_utils import flatten_tensors
+
+    >>> flatten_tensors([np.ndarray([1]), np.ndarray([1])])
+    array(...)
 
     """
     if tensors:

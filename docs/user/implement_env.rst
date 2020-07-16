@@ -81,9 +81,15 @@ For each environment, we will need to specify the set of valid observations and 
 set of valid actions. This is done by implementing the following
 property methods:
 
-.. code-block:: python
+.. testsetup::
 
-    class PointEnv(Env):
+    import akro
+    import gym
+    import numpy as np
+
+.. testcode::
+
+    class PointEnv(gym.Env):
 
         # ...
 
@@ -107,7 +113,7 @@ simple, we will just sample the coordinates from a uniform distribution. The
 method should also return the initial observation. In our case, it will be the
 same as its state.
 
-.. code-block:: python
+.. testcode::
 
     class PointEnv(gym.Env):
 
@@ -126,9 +132,9 @@ extra keyword arguments (whose values should be vectors only) for diagnostic pur
 The procedure that interfaces with the environment is responsible for calling
 :code:`reset` after seeing that the episode is terminated.
 
-.. code-block:: python
+.. testcode::
 
-    class PointEnv(Env):
+    class PointEnv(gym.Env):
 
         # ...
 
@@ -143,14 +149,14 @@ The procedure that interfaces with the environment is responsible for calling
 Finally, we can implement some plotting to visualize what the MDP is doing. For
 simplicity, let's just print the current state of the MDP on the terminal:
 
-.. code-block:: python
+.. testcode::
 
     class PointEnv(gym.Env):
 
         # ...
 
         def render(self):
-            print 'current state:', self._state
+            print ('current state:', self._state)
 
 And we're done! We can now simulate the environment using the following diagnostic
 script:
