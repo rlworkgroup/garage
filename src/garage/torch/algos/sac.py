@@ -210,6 +210,9 @@ class SAC(RLAlgorithm):
                 self.episode_rewards.append(np.mean(path_returns))
                 for _ in range(self._gradient_steps):
                     policy_loss, qf1_loss, qf2_loss = self.train_once()
+            rewards = [step['rewards'][0] for step in trainer.step_path]
+            tabular.record('Average/MaxReward', max(rewards))
+            tabular.record('Average/MinReward', min(rewards))
             last_return = self._evaluate_policy(trainer.step_itr)
             self._log_statistics(policy_loss, qf1_loss, qf2_loss)
             tabular.record('TotalEnvSteps', trainer.total_env_steps)

@@ -200,6 +200,7 @@ class Trainer:
         if max_episode_length is None:
             raise ValueError('If `sampler_cls` is specified in trainer.setup, '
                              'the algorithm must specify `max_episode_length`')
+
         if worker_class is None:
             worker_class = getattr(self._algo, 'worker_cls', DefaultWorker)
         if seed is None:
