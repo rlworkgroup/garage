@@ -236,6 +236,24 @@ run-nvidia-headless: ensure-data-path-exists build-nvidia
 		${RUN_ARGS} \
 		rlworkgroup/garage-nvidia ${RUN_CMD}
 
+run-nvidia-headless: ## Run the Docker container for machines with NVIDIA GPUs
+run-nvidia-headless: ## Requires https://github.com/NVIDIA/nvidia-container-runtime and NVIDIA driver 440+
+run-nvidia-headless: CONTAINER_NAME ?= ''
+run-nvidia-headless: user ?= $$USER
+run-nvidia-headless: GPUS ?= "all"
+run-nvidia-headless: ensure-data-path-exists build-nvidia
+	docker run \
+		-it \
+		--rm \
+		--gpus $(GPUS) \
+		-v $(DATA_PATH)/$(CONTAINER_NAME):/home/$(user)/code/garage/data \
+		-e DISPLAY=$(DISPLAY) \
+		-e QT_X11_NO_MITSHM=1 \
+		-e MJKEY="$$(cat $(MJKEY_PATH))" \
+		--name $(CONTAINER_NAME) \
+		${RUN_ARGS} \
+		rlworkgroup/garage-nvidia ${RUN_CMD}
+
 # Checks that we are in a docker container
 assert-docker:
 	@test -f /proc/1/cgroup && /bin/grep -qa docker /proc/1/cgroup \
