@@ -164,6 +164,7 @@ else
 	sudo make -j"$(nproc)"
 	sudo make install
 	cd "${GARAGE_DIR}"
+fi
 
 # Leave a note in ~/.bashrc for the added environment variables
 if [[ "${_arg_modify_bashrc}" = on ]]; then
