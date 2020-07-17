@@ -19,7 +19,6 @@
      - `garage/torch/algos/bc.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/torch/algos/bc.py>`_
    * - **Examples**
      - :ref:`bc_point`, :ref:`bc_point_deterministic_policy`
-
 ```
 
 Behavioral cloning is a simple immitation learning algorithm which maxmizes the likelhood of an expert demonstration's actions under the apprentice policy using direct policy optimization. Garage's implementation may use either a policy or dataset as the expert.
@@ -45,20 +44,7 @@ batch_size = 1000
 
 #### Experiment Results
 
-<img src="https://github.com/rlworkgroup/garage/blob/master/docs/user/images/bc_meanLoss.png" width=45%> <img src="https://github.com/rlworkgroup/garage/blob/master/docs/user/images/bc_stdLoss.png" width=45%>
-=======
-minibatches_per_epoch = 16
-```
-
-## Examples
-
-### bc_point
-
-```eval_rst
-.. literalinclude:: ../../examples/torch/bc_point.py
-```
-
-### bc_point_deterministic_policy
+![BC Mean Loss](images/bc_meanLoss.png) ![BC Mean Loss](images/bc_stdLoss.png)
 
 ```eval_rst
 .. literalinclude:: ../../examples/torch/bc_point_deterministic_policy.py
@@ -75,4 +61,3 @@ minibatches_per_epoch = 16
 ----
 
 *This page was authored by Iris Liu ([@irisliucy](https://github.com/irisliucy) with contributions from Ryan Julian ([@ryanjulian](https://github.com/ryanjulian).*
-=======
