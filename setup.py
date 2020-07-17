@@ -73,6 +73,7 @@ EXTRAS['dev'] = [
     'sphinx',
     'sphinx-autoapi>=1.4.0',
     'sphinx_rtd_theme',
+    'sphinxcontrib-bibtex',
     'yapf==0.30.0',
 ]  # yapf: disable
 
