@@ -65,6 +65,7 @@ def ddpg_garage_tf(ctxt, env_id, seed):
                     qf=qf,
                     max_episode_length=hyper_parameters['max_episode_length'],
                     replay_buffer=replay_buffer,
+                    max_path_length=100,
                     steps_per_epoch=hyper_parameters['steps_per_epoch'],
                     policy_lr=hyper_parameters['policy_lr'],
                     qf_lr=hyper_parameters['qf_lr'],
