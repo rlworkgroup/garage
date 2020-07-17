@@ -11,6 +11,7 @@ class Environment(abc.ABC):
         step
         reset
         render
+        visualize
         close
 
     And set the following attributes:
@@ -18,6 +19,13 @@ class Environment(abc.ABC):
         action_space: The Space object corresponding to valid actions
         observation_space: The Space object corresponding to valid observations
         reward_range: A tuple corresponding to the min and max possible rewards
+
+    Make sure your environment is pickle-able:
+        Garage pickles the environment via the `pickle` or `cloudpickle` module
+        to save snapshots of the experiment. However, some environments may
+        contain attributes that are not pickle-able (e.g. a client-server
+        connection). In such cases, override `__getstate__()` and
+        `__setstate()__` to add your custom pickle logic.
 
     Note: a default reward range set to [-inf,+inf] already exists. Set it if
         you want a narrower range.
@@ -102,12 +110,9 @@ class Environment(abc.ABC):
     def render(self, mode):
         """Renders the environment.
 
-        The set of supported modes varies per environment. (And some
-        environments do not support rendering at all.) By convention,
+        The set of supported modes varies per environment. By convention,
         if mode is:
 
-        * display: render to the current display or terminal and
-          return nothing. Usually for human consumption.
         * rgb_array: Return an numpy.ndarray with shape (x, y, 3),
           representing RGB values for an x-by-y pixel image, suitable
           for turning into a video.
@@ -122,6 +127,9 @@ class Environment(abc.ABC):
             mode (str): the mode to render with. The string must be present in
             self.metadata['render.modes'].
 
+        Raises:
+            NotImplementedError: If the mode is not implemented.
+
         For example:
 
         class MyEnv(Env):
@@ -130,12 +138,17 @@ class Environment(abc.ABC):
             def render(self, mode):
                 if mode == 'rgb_array':
                     return np.array(...) # return RGB frame suitable for video
-                elif mode == 'display':
-                    ... # pop up a window and render
+                elif mode == 'ansi':
+                    ... # return text output
                 else:
                     super(MyEnv, self).render(mode=mode) # just raise an
                     exception
         """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def visualize(self):
+        """Displays the environment visualization."""
 
     @abc.abstractmethod
     def close(self):
