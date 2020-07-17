@@ -24,7 +24,6 @@ hyper_parameters = {
     'tau': 0.005,
     'replay_buffer_size': int(1e6),
     'sigma': 0.1,
-    'smooth_return': False,
     'buffer_batch_size': 100,
     'min_buffer_size': int(1e4)
 }
@@ -87,7 +86,6 @@ def td3_garage_tf(ctxt, env_id, seed):
                   target_update_tau=hyper_parameters['tau'],
                   n_train_steps=hyper_parameters['n_train_steps'],
                   discount=hyper_parameters['discount'],
-                  smooth_return=hyper_parameters['smooth_return'],
                   min_buffer_size=hyper_parameters['min_buffer_size'],
                   buffer_batch_size=hyper_parameters['buffer_batch_size'],
                   exploration_policy=exploration_policy,
