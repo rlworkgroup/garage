@@ -9,16 +9,21 @@
    * - **Paper**
      - Model-Free Imitation Learning with Policy Optimization :cite:`ho2016model`
    * - **Framework(s)**
-     - PyTorch
+     - .. figure:: ./images/pytorch.png
+        :scale: 10%
+
+
+        PyTorch
    * - **API Reference**
      - `garage.torch.algos.BC <../_autoapi/garage/torch/algos/index.html#garage.torch.algos.BC>`_
    * - **Code**
-     - `garage/torch/algos/bc.py <../_modules/garage/torch/algos/bc.html#BC>`_
+     - `garage/torch/algos/bc.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/torch/algos/bc.py>`_
    * - **Examples**
      - :ref:`bc_point`, :ref:`bc_point_deterministic_policy`
+
 ```
 
-Behavioral cloning is a simple immitation learning algorithm which maxmizes the likelhood of an expert demonstration's actions under the apprentice policy using direct policy optimization. garage's implementation may use either a policy or dataset as the expert.
+Behavioral cloning is a simple immitation learning algorithm which maxmizes the likelhood of an expert demonstration's actions under the apprentice policy using direct policy optimization. Garage's implementation may use either a policy or dataset as the expert.
 
 
 ## Default Parameters
@@ -27,7 +32,7 @@ Behavioral cloning is a simple immitation learning algorithm which maxmizes the 
 policy_optimizer = torch.optim.Adam
 policy_lr = 1e-3
 loss = 'log_prob'
-minibatches_per_epoch = 16
+batch_size = 1000
 ```
 
 ## Examples
@@ -40,6 +45,10 @@ minibatches_per_epoch = 16
 
 ### bc_point_deterministic_policy
 
+#### Experiment Results
+
+<img src="https://github.com/rlworkgroup/garage/blob/master/docs/user/images/bc_meanLoss.png" width=45%> <img src="https://github.com/rlworkgroup/garage/blob/master/docs/user/images/bc_stdLoss.png" width=45%>
+
 ```eval_rst
 .. literalinclude:: ../../examples/torch/bc_point_deterministic_policy.py
 ```
@@ -50,3 +59,7 @@ minibatches_per_epoch = 16
    :style: unsrt
    :filter: docname in docnames
 ```
+
+----
+
+*This page was authored by Iris Liu ([@irisliucy](https://github.com/irisliucy) with contributions from Ryan Julian ([@ryanjulian](https://github.com/ryanjulian).*
