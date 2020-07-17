@@ -53,7 +53,6 @@ help:
 
 clean:
 	rm -rf $(BUILDDIR)/*
-	rm -rf $(APIDOCDIR)/*
 	rm -rf $(AUTOAPIDIR)/*
 	rm -rf $(DATADIR)/*
 
@@ -179,6 +178,8 @@ linkcheck:
 
 doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
+	rm -rf data/local/
+	@echo
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
 

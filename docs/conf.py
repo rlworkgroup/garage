@@ -334,6 +334,8 @@ todo_include_todos = True
 doctest_global_setup = '''
 try:
     import numpy as np
+    import akro
+    import gym
 except ImportError:
     np = None
 '''

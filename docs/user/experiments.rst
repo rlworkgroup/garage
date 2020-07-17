@@ -79,11 +79,6 @@ simple one, :code:`examples/tf/trpo_cartpole.py`, is also pasted below:
 
    ...
 
-.. testcleanup::
-
-	import shutil
-	shutil.rmtree('data/local/')
-
 Running the above should produce output like:
 
 .. code-block:: text

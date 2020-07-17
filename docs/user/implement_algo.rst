@@ -132,11 +132,6 @@ We'll also want an environment to test our algorithm with.
 
    ...
 
-.. testcleanup::
-
-	import shutil
-	shutil.rmtree('data/local/')
-
 With the above file and the :code:`MyAlgorithm` definition above, it should be
 possible to run :code:`MyAlgorithm`, and get it to print an output like the
 following:

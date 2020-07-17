@@ -81,12 +81,6 @@ For each environment, we will need to specify the set of valid observations and 
 set of valid actions. This is done by implementing the following
 property methods:
 
-.. testsetup::
-
-    import akro
-    import gym
-    import numpy as np
-
 .. testcode::
 
     class PointEnv(gym.Env):
