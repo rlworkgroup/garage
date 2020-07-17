@@ -68,8 +68,17 @@ def run(names):
         options[name]()
 
 
+@click.command()
+def auto():
+    """Start continuous benchmarking."""
+    benchmark_functions = _get_runs_dict(benchmark_auto).values()
+    for function in benchmark_functions:
+        function()
+
+
 cli.add_command(list)
 cli.add_command(run)
+cli.add_command(auto)
 
 
 def _get_all_options():
