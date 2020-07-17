@@ -6,7 +6,6 @@ SPHINXOPTS    = -j auto
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
-APIDOCDIR     = _apidoc
 AUTOAPIDIR    = _autoapi
 DATADIR       = data
 
@@ -178,7 +177,6 @@ linkcheck:
 
 doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
-	rm -rf data/local/
 	@echo
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."

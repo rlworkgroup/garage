@@ -272,7 +272,7 @@ We can add a little logging to the :code:`train()` method.
 
     # ...
 
-		def train(self, runner):
+        def train(self, runner):
             for epoch in runner.step_epochs():
                 samples = runner.obtain_samples(epoch)
                 log_performance(epoch,
