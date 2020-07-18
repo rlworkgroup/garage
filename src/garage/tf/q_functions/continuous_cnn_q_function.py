@@ -153,7 +153,6 @@ class ContinuousCNNQFunction(CNNMLPMergeModel, QFunction):
                                               (None, ) + self._obs_dim,
                                               name='state')
             augmented_obs_ph = obs_ph
-        print(action_ph)
         outputs = super().build(augmented_obs_ph, action_ph).outputs
         self._f_qval = tf.compat.v1.get_default_session().make_callable(
             outputs, feed_list=[obs_ph, action_ph])
