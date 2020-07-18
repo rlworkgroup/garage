@@ -4,6 +4,28 @@ import collections
 import numpy as np
 
 
+class PathBufferIter:
+
+    def __init__(self, path_buffer):
+        self._buffer = path_buffer
+        self._index = 0
+
+    def __iter__(self):
+        return PathBufferIter(self._buffer)
+
+    def __next__(self):
+        path_idx, self._index = self._index, self._index + 1
+        if path_idx >= len(self._buffer._path_segments):
+            raise StopIteration()
+        first_seg, second_seg = self._buffer._path_segments[path_idx]
+        first_seg_indices = np.arange(first_seg.start, first_seg.stop)
+        second_seg_indices = np.arange(second_seg.start, second_seg.stop)
+        indices = np.concatenate([first_seg_indices, second_seg_indices])
+        path = {key: buf_arr[indices]
+                for key, buf_arr in self._buffer._buffer.items()}
+        return path
+
+
 class PathBuffer:
     """A replay buffer that stores and can sample whole paths.
 
@@ -220,3 +242,6 @@ class PathBuffer:
 
         """
         return int(self._transitions_stored)
+
+    def paths(self):
+        return PathBufferIter(self)
