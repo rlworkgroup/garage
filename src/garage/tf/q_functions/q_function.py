@@ -15,10 +15,6 @@ class QFunction(abc.ABC):
             input_phs (list[tf.Tensor]): Recommended to be positional
                 arguments, e.g. def get_qval_sym(self, state_input,
                 action_input).
-
-        Return:
-            tf.Tensor: The tf.Tensor output of the QFunction.
-
         """
 
     @abc.abstractmethod

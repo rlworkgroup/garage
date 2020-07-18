@@ -6,7 +6,7 @@ from garage.tf.q_functions import QFunction
 from tests.fixtures.models import SimpleMLPModel
 
 
-class SimpleQFunction(QFunction):
+class SimpleQFunction(SimpleMLPModel, QFunction):
     """Simple QFunction for testing.
 
     Args:
@@ -16,10 +16,9 @@ class SimpleQFunction(QFunction):
     """
 
     def __init__(self, env_spec, name='SimpleQFunction'):
-        super().__init__(name)
         self.obs_dim = env_spec.observation_space.shape
         action_dim = env_spec.observation_space.flat_dim
-        self.model = SimpleMLPModel(output_dim=action_dim)
+        super().__init__(output_dim=action_dim, name=name)
 
         self._q_val = None
 
@@ -30,9 +29,7 @@ class SimpleQFunction(QFunction):
         obs_ph = tf.compat.v1.placeholder(tf.float32, (None, ) + self.obs_dim,
                                           name='obs')
 
-        with tf.compat.v1.variable_scope(self.name, reuse=False) as vs:
-            self._variable_scope = vs
-            self._q_val = self.model.build(obs_ph).outputs
+        self._q_val = super().build(obs_ph).outputs
 
     @property
     def q_vals(self):
@@ -44,6 +41,22 @@ class SimpleQFunction(QFunction):
         """
         return self._q_val
 
+    def get_qval_sym(self, *input_phs):
+        """Intantiate abstract method.
+
+        Args:
+            input_phs (list[tf.Tensor]): Recommended to be positional
+                arguments, e.g. def get_qval_sym(self, state_input,
+                action_input).
+        """
+
+    def clone(self, name):
+        """Intantiate abstract method.
+
+        Args:
+            name (str): Name of the newly created q-function.
+        """
+
     def __setstate__(self, state):
         """Object.__setstate__.
 
@@ -51,7 +64,7 @@ class SimpleQFunction(QFunction):
             state (dict): Unpickled state.
 
         """
-        self.__dict__.update(state)
+        super().__setstate__(state)
         self._initialize()
 
     def __getstate__(self):
@@ -61,6 +74,6 @@ class SimpleQFunction(QFunction):
             dict: the state to be pickled for the instance.
 
         """
-        new_dict = self.__dict__.copy()
+        new_dict = super().__getstate__()
         del new_dict['_q_val']
         return new_dict
