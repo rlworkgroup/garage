@@ -1,4 +1,5 @@
 """Utility functions for NumPy-based Reinforcement learning algorithms."""
+import click
 import numpy as np
 
 from garage._dtypes import TrajectoryBatch
@@ -50,12 +51,13 @@ def obtain_evaluation_samples(policy, env, max_path_length=1000,
     paths = []
     # Use a finite length rollout for evaluation.
 
-    for _ in range(num_trajs):
-        path = rollout(env,
-                       policy,
-                       max_path_length=max_path_length,
-                       deterministic=True)
-        paths.append(path)
+    with click.progressbar(range(num_trajs), label='Evaluating') as bar:
+        for _ in bar:
+            path = rollout(env,
+                           policy,
+                           max_path_length=max_path_length,
+                           deterministic=True)
+            paths.append(path)
     return TrajectoryBatch.from_trajectory_list(env.spec, paths)
 
 
