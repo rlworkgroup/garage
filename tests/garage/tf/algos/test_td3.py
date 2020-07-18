@@ -71,4 +71,4 @@ class TestTD3(TfGraphTestCase):
 
             runner.setup(algo, env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=250)
-            assert last_avg_ret > 300
+            assert last_avg_ret > 100
