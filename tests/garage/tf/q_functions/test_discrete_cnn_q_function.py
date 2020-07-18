@@ -237,8 +237,8 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
                                           filters=filters,
                                           strides=strides,
                                           dueling=False)
-        with tf.compat.v1.variable_scope(
-                'DiscreteCNNQFunction/Sequential/SimpleMLPModel', reuse=True):
+        with tf.compat.v1.variable_scope('DiscreteCNNQFunction/SimpleMLPModel',
+                                         reuse=True):
             return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())

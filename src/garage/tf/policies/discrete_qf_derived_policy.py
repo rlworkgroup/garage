@@ -32,7 +32,7 @@ class DiscreteQfDerivedPolicy(Module, Policy):
         with tf.compat.v1.variable_scope(self.name, reuse=False) as vs:
             self._variable_scope = vs
             self._f_qval = tf.compat.v1.get_default_session().make_callable(
-                self._qf.q_vals, feed_list=[self._qf.model.input])
+                self._qf.q_vals, feed_list=[self._qf.input])
 
     def get_action(self, observation):
         """Get action from this policy for the input observation.

@@ -86,6 +86,20 @@ class Module(abc.ABC):
         """
         return self._variable_scope.global_variables()
 
+    def get_regularizable_vars(self):
+        """Get all network weight variables in the current scope.
+
+        Returns:
+            List[tf.Variable]: A list of network weight variables in the
+                current variable scope.
+
+        """
+        trainable = self._variable_scope.global_variables()
+        return [
+            var for var in trainable
+            if 'hidden' in var.name and 'kernel' in var.name
+        ]
+
     def get_params(self):
         """Get the trainable variables.
 

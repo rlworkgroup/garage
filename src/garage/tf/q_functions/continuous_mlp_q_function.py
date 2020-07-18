@@ -5,7 +5,7 @@ from garage.tf.models import MLPMergeModel
 from garage.tf.q_functions.q_function import QFunction
 
 
-class ContinuousMLPQFunction(QFunction):
+class ContinuousMLPQFunction(MLPMergeModel, QFunction):
     """Continuous MLP QFunction.
 
     This class implements a q value network to predict q based on the input
@@ -57,7 +57,6 @@ class ContinuousMLPQFunction(QFunction):
                  output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
-        super().__init__(name)
 
         self._env_spec = env_spec
         self._hidden_sizes = hidden_sizes
@@ -73,16 +72,17 @@ class ContinuousMLPQFunction(QFunction):
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
 
-        self.model = MLPMergeModel(output_dim=1,
-                                   hidden_sizes=hidden_sizes,
-                                   concat_layer=self._action_merge_layer,
-                                   hidden_nonlinearity=hidden_nonlinearity,
-                                   hidden_w_init=hidden_w_init,
-                                   hidden_b_init=hidden_b_init,
-                                   output_nonlinearity=output_nonlinearity,
-                                   output_w_init=output_w_init,
-                                   output_b_init=output_b_init,
-                                   layer_normalization=layer_normalization)
+        super().__init__(name=name,
+                         output_dim=1,
+                         hidden_sizes=hidden_sizes,
+                         concat_layer=self._action_merge_layer,
+                         hidden_nonlinearity=hidden_nonlinearity,
+                         hidden_w_init=hidden_w_init,
+                         hidden_b_init=hidden_b_init,
+                         output_nonlinearity=output_nonlinearity,
+                         output_w_init=output_w_init,
+                         output_b_init=output_b_init,
+                         layer_normalization=layer_normalization)
         self._network = None
 
         self._initialize()
@@ -94,9 +94,7 @@ class ContinuousMLPQFunction(QFunction):
                                              (None, self._action_dim),
                                              name='act')
 
-        with tf.compat.v1.variable_scope(self.name) as vs:
-            self._variable_scope = vs
-            self._network = self.model.build(obs_ph, action_ph)
+        self._network = super().build(obs_ph, action_ph)
 
         self._f_qval = tf.compat.v1.get_default_session().make_callable(
             self._network.outputs, feed_list=[obs_ph, action_ph])
@@ -138,9 +136,7 @@ class ContinuousMLPQFunction(QFunction):
             tf.Tensor: The output of Continuous MLP QFunction.
 
         """
-        with tf.compat.v1.variable_scope(self._variable_scope):
-            return self.model.build(state_input, action_input,
-                                    name=name).outputs
+        return super().build(state_input, action_input, name=name).outputs
 
     def clone(self, name):
         """Return a clone of the Q-function.
@@ -174,7 +170,7 @@ class ContinuousMLPQFunction(QFunction):
             dict: The state.
 
         """
-        new_dict = self.__dict__.copy()
+        new_dict = super().__getstate__()
         del new_dict['_f_qval']
         del new_dict['_network']
         return new_dict
@@ -186,5 +182,5 @@ class ContinuousMLPQFunction(QFunction):
             state (dict): Unpickled state of this object.
 
         """
-        self.__dict__.update(state)
+        super().__setstate__(state)
         self._initialize()

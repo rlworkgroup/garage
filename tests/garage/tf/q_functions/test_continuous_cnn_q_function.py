@@ -306,8 +306,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
         _, _ = qf.inputs
 
         with tf.compat.v1.variable_scope(
-                'ContinuousCNNQFunction/CNNMLPMergeModel/SimpleMLPMergeModel',
-                reuse=True):
+                'ContinuousCNNQFunction/SimpleMLPMergeModel', reuse=True):
             return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())

@@ -5,13 +5,13 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import GarageEnv
-from garage.tf.q_functions import DiscreteMLPQFunction
+from garage.tf.q_functions import DiscreteMLPDuelingQFunction
 
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
 
 
-class TestDiscreteMLPQFunction(TfGraphTestCase):
+class TestDiscreteMLPDuelingQFunction(TfGraphTestCase):
 
     @pytest.mark.parametrize('obs_dim, action_dim, hidden_sizes', [
         ((1, ), 1, (3, )),
@@ -22,10 +22,10 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
     def test_get_action(self, obs_dim, action_dim, hidden_sizes):
         env = GarageEnv(
             DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
-        qf = DiscreteMLPQFunction(env_spec=env.spec,
-                                  hidden_sizes=hidden_sizes,
-                                  hidden_w_init=tf.ones_initializer(),
-                                  output_w_init=tf.ones_initializer())
+        qf = DiscreteMLPDuelingQFunction(env_spec=env.spec,
+                                         hidden_sizes=hidden_sizes,
+                                         hidden_w_init=tf.ones_initializer(),
+                                         output_w_init=tf.ones_initializer())
         obs = np.full(obs_dim, 1)
 
         expected_output = np.full(action_dim,
@@ -46,7 +46,7 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
     def test_output_shape(self, obs_dim, action_dim):
         env = GarageEnv(
             DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
-        qf = DiscreteMLPQFunction(env_spec=env.spec)
+        qf = DiscreteMLPDuelingQFunction(env_spec=env.spec)
         env.reset()
         obs, _, _, _ = env.step(1)
 
@@ -62,7 +62,7 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
     def test_get_qval_sym(self, obs_dim, action_dim):
         env = GarageEnv(
             DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
-        qf = DiscreteMLPQFunction(env_spec=env.spec)
+        qf = DiscreteMLPDuelingQFunction(env_spec=env.spec)
         env.reset()
         obs, _, _, _ = env.step(1)
 
@@ -84,12 +84,13 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
     def test_is_pickleable(self, obs_dim, action_dim):
         env = GarageEnv(
             DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
-        qf = DiscreteMLPQFunction(env_spec=env.spec)
+        qf = DiscreteMLPDuelingQFunction(env_spec=env.spec)
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        with tf.compat.v1.variable_scope('DiscreteMLPQFunction', reuse=True):
-            bias = tf.compat.v1.get_variable('mlp/hidden_0/bias')
+        with tf.compat.v1.variable_scope('DiscreteMLPDuelingQFunction',
+                                         reuse=True):
+            bias = tf.compat.v1.get_variable('state_value/hidden_0/bias')
         # assign it to all one
         bias.load(tf.ones_like(bias).eval())
 
@@ -112,6 +113,7 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
     def test_clone(self, obs_dim, action_dim, hidden_sizes):
         env = GarageEnv(
             DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
-        qf = DiscreteMLPQFunction(env_spec=env.spec, hidden_sizes=hidden_sizes)
+        qf = DiscreteMLPDuelingQFunction(env_spec=env.spec,
+                                         hidden_sizes=hidden_sizes)
         qf_clone = qf.clone('another_qf')
         assert qf_clone._hidden_sizes == qf._hidden_sizes
