@@ -1,6 +1,7 @@
 """Functions exposed directly in the garage namespace."""
 from collections import defaultdict
 
+import click
 from dowel import tabular
 import numpy as np
 
@@ -160,12 +161,13 @@ def obtain_evaluation_episodes(policy,
     episodes = []
     # Use a finite length rollout for evaluation.
 
-    for _ in range(num_eps):
-        eps = rollout(env,
-                      policy,
-                      max_episode_length=max_episode_length,
-                      deterministic=deterministic)
-        episodes.append(eps)
+    with click.progressbar(range(num_eps), label='Evaluating') as bar:
+        for _ in bar:
+            eps = rollout(env,
+                          policy,
+                          max_episode_length=max_episode_length,
+                          deterministic=deterministic)
+            episodes.append(eps)
     return EpisodeBatch.from_list(env.spec, episodes)
 
 
