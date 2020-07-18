@@ -1,12 +1,10 @@
 """Simple QFunction for testing."""
 import tensorflow as tf
 
-from garage.tf.q_functions import QFunction
-
 from tests.fixtures.models import SimpleMLPModel
 
 
-class SimpleQFunction(SimpleMLPModel, QFunction):
+class SimpleQFunction(SimpleMLPModel):
     """Simple QFunction for testing.
 
     Args:
@@ -40,22 +38,6 @@ class SimpleQFunction(SimpleMLPModel, QFunction):
 
         """
         return self._q_val
-
-    def get_qval_sym(self, *input_phs):
-        """Intantiate abstract method.
-
-        Args:
-            input_phs (list[tf.Tensor]): Recommended to be positional
-                arguments, e.g. def get_qval_sym(self, state_input,
-                action_input).
-        """
-
-    def clone(self, name):
-        """Intantiate abstract method.
-
-        Args:
-            name (str): Name of the newly created q-function.
-        """
 
     def __setstate__(self, state):
         """Object.__setstate__.

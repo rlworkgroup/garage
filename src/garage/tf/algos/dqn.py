@@ -139,7 +139,7 @@ class DQN(RLAlgorithm):
 
                 # r + Q'(s', argmax_a(Q(s', _)) - Q(s, a)
                 if self._double_q:
-                    target_qval_with_online_q = self._qf.get_qval_sym(
+                    target_qval_with_online_q = self._qf.build(
                         self._target_qf.input, self._qf.name)
                     future_best_q_val_action = tf.argmax(
                         target_qval_with_online_q, 1)

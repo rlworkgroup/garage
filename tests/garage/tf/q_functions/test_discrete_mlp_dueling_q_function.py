@@ -59,7 +59,7 @@ class TestDiscreteMLPDuelingQFunction(TfGraphTestCase):
         ((1, 1), 1),
         ((2, 2), 2),
     ])
-    def test_get_qval_sym(self, obs_dim, action_dim):
+    def test_build(self, obs_dim, action_dim):
         env = GarageEnv(
             DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         qf = DiscreteMLPDuelingQFunction(env_spec=env.spec)
@@ -70,7 +70,7 @@ class TestDiscreteMLPDuelingQFunction(TfGraphTestCase):
 
         input_var = tf.compat.v1.placeholder(tf.float32,
                                              shape=(None, ) + obs_dim)
-        q_vals = qf.get_qval_sym(input_var, 'another')
+        q_vals = qf.build(input_var, 'another')
         output2 = self.sess.run(q_vals, feed_dict={input_var: [obs]})
 
         assert np.array_equal(output1, output2)

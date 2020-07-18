@@ -8,12 +8,11 @@ from garage.tf.models import (CNNModel,
                               MLPDuelingModel,
                               MLPModel,
                               Sequential)
-from garage.tf.q_functions.q_function import QFunction
 
 # yapf: enable
 
 
-class DiscreteCNNQFunction(Sequential, QFunction):
+class DiscreteCNNQFunction(Sequential):
     """Q function based on a CNN-MLP structure for discrete action space.
 
     This class implements a Q value network to predict Q based on the
@@ -198,8 +197,8 @@ class DiscreteCNNQFunction(Sequential, QFunction):
         return self._obs_input
 
     # pylint: disable=arguments-differ
-    def get_qval_sym(self, state_input, name):
-        """Symbolic graph for q-network.
+    def build(self, state_input, name):
+        """Build the symbolic graph for q-network.
 
         Args:
             state_input (tf.Tensor): The state input tf.Tensor to the network.

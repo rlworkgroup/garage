@@ -3,10 +3,9 @@ import akro
 import tensorflow as tf
 
 from garage.tf.models import CNNMLPMergeModel
-from garage.tf.q_functions import QFunction
 
 
-class ContinuousCNNQFunction(CNNMLPMergeModel, QFunction):
+class ContinuousCNNQFunction(CNNMLPMergeModel):
     """Q function based on a CNN-MLP structure for continuous action space.
 
     This class implements a Q value network to predict Q based on the
@@ -190,8 +189,8 @@ class ContinuousCNNQFunction(CNNMLPMergeModel, QFunction):
         return self._f_qval(observation, action)
 
     # pylint: disable=arguments-differ
-    def get_qval_sym(self, state_input, action_input, name):
-        """Symbolic graph for q-network.
+    def build(self, state_input, action_input, name):
+        """Build the symbolic graph for q-network.
 
         Args:
             state_input (tf.Tensor): The state input tf.Tensor of shape

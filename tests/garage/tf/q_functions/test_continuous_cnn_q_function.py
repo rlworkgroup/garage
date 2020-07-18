@@ -175,7 +175,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                                             shape=(None, ) +
                                                             act_dim)
 
-                    qf.get_qval_sym(state_input, action_input, name='another')
+                    qf.build(state_input, action_input, name='another')
                     normalized_obs = build.call_args_list[1][0][1]
 
                     assert (self.sess.run(normalized_obs,
@@ -213,8 +213,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                           feed_dict={qf.inputs[0]:
                                                      fake_obs}) == 255.).all()
 
-                    # ensure non-image obses are not normalized
-                    # in get_qval_sym()
+                    # ensure non-image obses are not normalized in build()
 
                     obs_dim = env.spec.observation_space.shape
                     state_input = tf.compat.v1.placeholder(tf.float32,
@@ -226,7 +225,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                                             shape=(None, ) +
                                                             act_dim)
 
-                    qf.get_qval_sym(state_input, action_input, name='another')
+                    qf.build(state_input, action_input, name='another')
                     normalized_obs = build.call_args_list[1][0][1]
 
                     assert (self.sess.run(normalized_obs,
@@ -240,7 +239,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
         (((5, (3, 3)), (5, (3, 3))), (1, 1))
     ])
     # yapf: enable
-    def test_get_qval_sym(self, filters, strides):
+    def test_build(self, filters, strides):
         env = GarageEnv(DummyDiscretePixelEnv())
         obs = env.reset()
 
@@ -264,7 +263,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                               shape=(None, ) + obs.shape)
         input_var2 = tf.compat.v1.placeholder(tf.float32,
                                               shape=(None, ) + act.shape)
-        q_vals = qf.get_qval_sym(input_var1, input_var2, 'another')
+        q_vals = qf.build(input_var1, input_var2, 'another')
 
         output2 = self.sess.run(q_vals,
                                 feed_dict={

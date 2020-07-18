@@ -2,10 +2,9 @@
 import tensorflow as tf
 
 from garage.tf.models import MLPDuelingModel
-from garage.tf.q_functions.q_function import QFunction
 
 
-class DiscreteMLPDuelingQFunction(MLPDuelingModel, QFunction):
+class DiscreteMLPDuelingQFunction(MLPDuelingModel):
     """Discrete MLP Q Function.
 
     This class implements a Q-value network. It predicts Q-value based on the
@@ -107,8 +106,8 @@ class DiscreteMLPDuelingQFunction(MLPDuelingModel, QFunction):
         return self._network.input
 
     # pylint: disable=arguments-differ
-    def get_qval_sym(self, state_input, name):
-        """Symbolic graph for q-network.
+    def build(self, state_input, name):
+        """Build the symbolic graph for q-network.
 
         Args:
             state_input (tf.Tensor): The state input tf.Tensor to the network.

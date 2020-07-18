@@ -60,7 +60,7 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
         ((1, 1), (1, )),
         ((2, 2), (2, )),
     ])
-    def test_get_qval_sym(self, obs_dim, action_dim):
+    def test_build(self, obs_dim, action_dim):
         env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         qf = ContinuousMLPQFunction(env_spec=env.spec,
                                     action_merge_layer=0,
@@ -77,7 +77,7 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
                                               shape=(None, obs.shape[0]))
         input_var2 = tf.compat.v1.placeholder(tf.float32,
                                               shape=(None, act.shape[0]))
-        q_vals = qf.get_qval_sym(input_var1, input_var2, 'another')
+        q_vals = qf.build(input_var1, input_var2, 'another')
         output2 = self.sess.run(q_vals,
                                 feed_dict={
                                     input_var1: [obs],
