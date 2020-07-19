@@ -3,10 +3,9 @@ import akro
 import tensorflow as tf
 
 from garage.tf.models import CNNMLPMergeModel
-from garage.tf.q_functions import QFunction
 
 
-class ContinuousCNNQFunction(QFunction):
+class ContinuousCNNQFunction(CNNMLPMergeModel):
     """Q function based on a CNN-MLP structure for continuous action space.
 
     This class implements a Q value network to predict Q based on the
@@ -97,7 +96,6 @@ class ContinuousCNNQFunction(QFunction):
                     type(env_spec.observation_space).__name__,
                     env_spec.observation_space.shape))
 
-        super().__init__(name)
         self._env_spec = env_spec
         self._filters = filters
         self._strides = strides
@@ -119,23 +117,23 @@ class ContinuousCNNQFunction(QFunction):
         self._obs_dim = self._env_spec.observation_space.shape
         self._action_dim = self._env_spec.action_space.shape
 
-        self.model = CNNMLPMergeModel(
-            filters=self._filters,
-            strides=self._strides,
-            hidden_sizes=self._hidden_sizes,
-            action_merge_layer=self._action_merge_layer,
-            padding=self._padding,
-            max_pooling=self._max_pooling,
-            pool_strides=self._pool_strides,
-            pool_shapes=self._pool_shapes,
-            cnn_hidden_nonlinearity=self._cnn_hidden_nonlinearity,
-            hidden_nonlinearity=self._hidden_nonlinearity,
-            hidden_w_init=self._hidden_w_init,
-            hidden_b_init=self._hidden_b_init,
-            output_nonlinearity=self._output_nonlinearity,
-            output_w_init=self._output_w_init,
-            output_b_init=self._output_b_init,
-            layer_normalization=self._layer_normalization)
+        super().__init__(name=name,
+                         filters=self._filters,
+                         strides=self._strides,
+                         hidden_sizes=self._hidden_sizes,
+                         action_merge_layer=self._action_merge_layer,
+                         padding=self._padding,
+                         max_pooling=self._max_pooling,
+                         pool_strides=self._pool_strides,
+                         pool_shapes=self._pool_shapes,
+                         cnn_hidden_nonlinearity=self._cnn_hidden_nonlinearity,
+                         hidden_nonlinearity=self._hidden_nonlinearity,
+                         hidden_w_init=self._hidden_w_init,
+                         hidden_b_init=self._hidden_b_init,
+                         output_nonlinearity=self._output_nonlinearity,
+                         output_w_init=self._output_w_init,
+                         output_b_init=self._output_b_init,
+                         layer_normalization=self._layer_normalization)
 
         self._initialize()
 
@@ -154,9 +152,7 @@ class ContinuousCNNQFunction(QFunction):
                                               (None, ) + self._obs_dim,
                                               name='state')
             augmented_obs_ph = obs_ph
-        with tf.compat.v1.variable_scope(self.name) as vs:
-            self._variable_scope = vs
-            outputs = self.model.build(augmented_obs_ph, action_ph).outputs
+        outputs = super().build(augmented_obs_ph, action_ph).outputs
         self._f_qval = tf.compat.v1.get_default_session().make_callable(
             outputs, feed_list=[obs_ph, action_ph])
 
@@ -193,8 +189,8 @@ class ContinuousCNNQFunction(QFunction):
         return self._f_qval(observation, action)
 
     # pylint: disable=arguments-differ
-    def get_qval_sym(self, state_input, action_input, name):
-        """Symbolic graph for q-network.
+    def build(self, state_input, action_input, name):
+        """Build the symbolic graph for q-network.
 
         Args:
             state_input (tf.Tensor): The state input tf.Tensor of shape
@@ -207,14 +203,11 @@ class ContinuousCNNQFunction(QFunction):
             tf.Tensor: The output Q value tensor of shape :math:`(N, )`.
 
         """
-        with tf.compat.v1.variable_scope(self._variable_scope):
-            augmented_state_input = state_input
-            if isinstance(self._env_spec.observation_space, akro.Image):
-                augmented_state_input = tf.cast(state_input,
-                                                tf.float32) / 255.0
-            return self.model.build(augmented_state_input,
-                                    action_input,
-                                    name=name).outputs
+        augmented_state_input = state_input
+        if isinstance(self._env_spec.observation_space, akro.Image):
+            augmented_state_input = tf.cast(state_input, tf.float32) / 255.0
+        return super().build(augmented_state_input, action_input,
+                             name=name).outputs
 
     def clone(self, name):
         """Return a clone of the Q-function.
@@ -256,7 +249,7 @@ class ContinuousCNNQFunction(QFunction):
             dict: The state.
 
         """
-        new_dict = self.__dict__.copy()
+        new_dict = super().__getstate__()
         del new_dict['_f_qval']
         del new_dict['_obs_input']
         del new_dict['_act_input']
@@ -269,5 +262,5 @@ class ContinuousCNNQFunction(QFunction):
             state (dict): Unpickled state of this object.
 
         """
-        self.__dict__.update(state)
+        super().__setstate__(state)
         self._initialize()

@@ -84,7 +84,7 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
             state_input = tf.compat.v1.placeholder(tf.uint8,
                                                    shape=(None, ) + obs_dim)
 
-            qf.get_qval_sym(state_input, name='another')
+            qf.build(state_input, name='another')
             normalized_obs = build.call_args_list[1][0][1]
 
             fake_obs = [np.full(image_env.spec.observation_space.shape, 255)]
@@ -117,7 +117,7 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
             state_input = tf.compat.v1.placeholder(tf.float32,
                                                    shape=(None, ) + obs_dim)
 
-            qf.get_qval_sym(state_input, name='another')
+            qf.build(state_input, name='another')
             normalized_obs = build.call_args_list[1][0][1]
 
             fake_obs = [np.full(env.spec.observation_space.shape, 255)]
@@ -193,7 +193,7 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
         (((5, (3, 3)), (5, (3, 3))), (1, 1)),
     ])
     # yapf: enable
-    def test_get_qval_sym(self, filters, strides):
+    def test_build(self, filters, strides):
         with mock.patch(('garage.tf.q_functions.'
                          'discrete_cnn_q_function.CNNModel'),
                         new=SimpleCNNModel):
@@ -211,7 +211,7 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
 
         input_var = tf.compat.v1.placeholder(tf.float32,
                                              shape=(None, ) + obs_dim)
-        q_vals = qf.get_qval_sym(input_var, 'another')
+        q_vals = qf.build(input_var, 'another')
         output2 = self.sess.run(q_vals, feed_dict={input_var: [self.obs]})
 
         expected_output = np.full(action_dim, 0.5)
@@ -237,8 +237,8 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
                                           filters=filters,
                                           strides=strides,
                                           dueling=False)
-        with tf.compat.v1.variable_scope(
-                'DiscreteCNNQFunction/Sequential/SimpleMLPModel', reuse=True):
+        with tf.compat.v1.variable_scope('DiscreteCNNQFunction/SimpleMLPModel',
+                                         reuse=True):
             return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())

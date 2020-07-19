@@ -169,12 +169,10 @@ class TD3(RLAlgorithm):
 
             policy_network_outputs = self._target_policy.build(obs,
                                                                name='policy')
-            target_qf_outputs = self._target_qf.get_qval_sym(obs,
-                                                             actions,
-                                                             name='qf')
-            target_qf2_outputs = self._target_qf2.get_qval_sym(obs,
-                                                               actions,
-                                                               name='qf')
+            target_qf_outputs = self._target_qf.build(obs, actions, name='qf')
+            target_qf2_outputs = self._target_qf2.build(obs,
+                                                        actions,
+                                                        name='qf')
 
             self.target_policy_f_prob_online = tensor_utils.compile_function(
                 inputs=[obs], outputs=policy_network_outputs)
@@ -207,9 +205,9 @@ class TD3(RLAlgorithm):
 
             # Set up policy training function
             next_action = self.policy.build(obs, name='policy_action')
-            next_qval = self.qf.get_qval_sym(obs,
-                                             next_action,
-                                             name='policy_action_qval')
+            next_qval = self.qf.build(obs,
+                                      next_action,
+                                      name='policy_action_qval')
             with tf.name_scope('action_loss'):
                 action_loss = -tf.reduce_mean(next_qval)
 
@@ -225,8 +223,8 @@ class TD3(RLAlgorithm):
                 inputs=[obs], outputs=[policy_train_op, action_loss])
 
             # Set up qf training function
-            qval = self.qf.get_qval_sym(obs, actions, name='q_value')
-            q2val = self.qf2.get_qval_sym(obs, actions, name='q2_value')
+            qval = self.qf.build(obs, actions, name='q_value')
+            q2val = self.qf2.build(obs, actions, name='q2_value')
             with tf.name_scope('qval1_loss'):
                 qval1_loss = tf.reduce_mean(tf.math.squared_difference(
                     y, qval))

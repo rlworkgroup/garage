@@ -30,8 +30,7 @@ class TestQfDerivedPolicy(TfGraphTestCase):
             assert self.env.action_space.contains(action)
 
     def test_is_pickleable(self):
-        with tf.compat.v1.variable_scope('SimpleQFunction/SimpleMLPModel',
-                                         reuse=True):
+        with tf.compat.v1.variable_scope('SimpleQFunction', reuse=True):
             return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())

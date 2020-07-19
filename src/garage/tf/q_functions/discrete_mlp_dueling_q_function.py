@@ -1,11 +1,11 @@
 """Discrete MLP QFunction."""
 import tensorflow as tf
 
-from garage.tf.models import MLPModel
+from garage.tf.models import MLPDuelingModel
 
 
-class DiscreteMLPQFunction(MLPModel):
-    """Discrete MLP Q Function.
+class DiscreteMLPDuelingQFunction(MLPDuelingModel):
+    """Discrete Q Function with dualing MLP network.
 
     This class implements a Q-value network. It predicts Q-value based on the
     input state and action. It uses an MLP to fit the function Q(s, a).

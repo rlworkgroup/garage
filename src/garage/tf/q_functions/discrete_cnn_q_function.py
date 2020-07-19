@@ -8,12 +8,11 @@ from garage.tf.models import (CNNModel,
                               MLPDuelingModel,
                               MLPModel,
                               Sequential)
-from garage.tf.q_functions.q_function import QFunction
 
 # yapf: enable
 
 
-class DiscreteCNNQFunction(QFunction):
+class DiscreteCNNQFunction(Sequential):
     """Q function based on a CNN-MLP structure for discrete action space.
 
     This class implements a Q value network to predict Q based on the
@@ -98,7 +97,6 @@ class DiscreteCNNQFunction(QFunction):
                     type(env_spec.observation_space).__name__,
                     env_spec.observation_space.shape))
 
-        super().__init__(name)
         self._env_spec = env_spec
         self._action_dim = env_spec.action_space.n
         self._filters = filters
@@ -156,7 +154,7 @@ class DiscreteCNNQFunction(QFunction):
                 output_b_init=output_b_init,
                 layer_normalization=layer_normalization)
 
-        self.model = Sequential(cnn_model, output_model)
+        super().__init__(cnn_model, output_model, name=name)
         self._network = None
 
         self._initialize()
@@ -174,9 +172,7 @@ class DiscreteCNNQFunction(QFunction):
                                               name='obs')
             augmented_obs_ph = obs_ph
 
-        with tf.compat.v1.variable_scope(self.name) as vs:
-            self._variable_scope = vs
-            self._network = self.model.build(augmented_obs_ph)
+        self._network = super().build(augmented_obs_ph)
 
         self._obs_input = obs_ph
 
@@ -201,8 +197,8 @@ class DiscreteCNNQFunction(QFunction):
         return self._obs_input
 
     # pylint: disable=arguments-differ
-    def get_qval_sym(self, state_input, name):
-        """Symbolic graph for q-network.
+    def build(self, state_input, name):
+        """Build the symbolic graph for q-network.
 
         Args:
             state_input (tf.Tensor): The state input tf.Tensor to the network.
@@ -212,12 +208,10 @@ class DiscreteCNNQFunction(QFunction):
             tf.Tensor: The tf.Tensor output of Discrete CNN QFunction.
 
         """
-        with tf.compat.v1.variable_scope(self._variable_scope):
-            augmented_state_input = state_input
-            if isinstance(self._env_spec.observation_space, akro.Image):
-                augmented_state_input = tf.cast(state_input,
-                                                tf.float32) / 255.0
-            return self.model.build(augmented_state_input, name=name).outputs
+        augmented_state_input = state_input
+        if isinstance(self._env_spec.observation_space, akro.Image):
+            augmented_state_input = tf.cast(state_input, tf.float32) / 255.0
+        return super().build(augmented_state_input, name=name).outputs
 
     def clone(self, name):
         """Return a clone of the Q-function.
@@ -257,7 +251,7 @@ class DiscreteCNNQFunction(QFunction):
             state (dict): Unpickled state.
 
         """
-        self.__dict__.update(state)
+        super().__setstate__(state)
         self._initialize()
 
     def __getstate__(self):
@@ -267,7 +261,7 @@ class DiscreteCNNQFunction(QFunction):
             dict: The state.
 
         """
-        new_dict = self.__dict__.copy()
+        new_dict = super().__getstate__()
         del new_dict['_obs_input']
         del new_dict['_network']
         return new_dict
