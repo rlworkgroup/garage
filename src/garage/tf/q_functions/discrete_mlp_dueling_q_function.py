@@ -5,7 +5,7 @@ from garage.tf.models import MLPDuelingModel
 
 
 class DiscreteMLPDuelingQFunction(MLPDuelingModel):
-    """Discrete MLP Q Function.
+    """Discrete Q Function with dualing MLP network.
 
     This class implements a Q-value network. It predicts Q-value based on the
     input state and action. It uses an MLP to fit the function Q(s, a).
