@@ -29,6 +29,7 @@ and how to implement new MDPs and new algorithms.
    user/training_a_policy
    user/save_load_resume_exp
    user/reuse_garage_policy
+   user/use_pretrained_network_to_start_new_experiment
    user/docker
    user/ensure_your_experiments_are_reproducible
    user/meta_multi_task_rl_exp.md
