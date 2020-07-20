@@ -105,7 +105,7 @@ pip:
 Extra Steps for Garage Developers
 ---------------------------------
 
-See `here <setting_up_your_development_environment.md#installing-garage-as-an-editable-package>`_
+See `here <setting_up_your_development_environment.html#installing-garage-as-an-editable-package>`_
 
 ----
 
