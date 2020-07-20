@@ -49,7 +49,7 @@ class TanhNormal(torch.distributions.Distribution):
         """
         # pylint: disable=arguments-differ
         if pre_tanh_value is None:
-            pre_tanh_value = torch.log((1 + value) / (1 - value)) / 2
+            pre_tanh_value = torch.log((1 + epsilon + value) / (1 + epsilon - value)) / 2
         norm_lp = self._normal.log_prob(pre_tanh_value)
         ret = (norm_lp - torch.sum(
             torch.log(self._clip_but_pass_gradient((1. - value**2)) + epsilon),
