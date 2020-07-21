@@ -3,7 +3,7 @@ import gym.spaces
 import numpy as np
 import pytest
 
-from garage import TimeStep, TimeStepBatch, TrajectoryBatch
+from garage import StepType, TimeStep, TimeStepBatch, TrajectoryBatch
 from garage.envs import EnvSpec
 
 
@@ -24,8 +24,6 @@ def traj_data():
     last_obs = np.stack([obs_space.low] * len(lens))
     act = np.stack([[1, 3]] * n_t)
     rew = np.arange(n_t)
-    terms = np.zeros(n_t, dtype=np.bool)
-    terms[np.cumsum(lens) - 1] = True  # set terminal bits
 
     # env_infos
     env_infos = dict()
@@ -37,16 +35,23 @@ def traj_data():
     agent_infos['prev_action'] = act
     agent_infos['hidden'] = np.arange(n_t)
 
+    # step_types
+    step_types = []
+    for size in lens:
+        step_types.extend([StepType.FIRST] + [StepType.MID] * (size - 2) +
+                          [StepType.TERMINAL])
+    step_types = np.array(step_types, dtype=StepType)
+
     return {
         'env_spec': env_spec,
         'observations': obs,
         'last_observations': last_obs,
         'actions': act,
         'rewards': rew,
-        'terminals': terms,
         'env_infos': env_infos,
         'agent_infos': agent_infos,
-        'lengths': lens,
+        'step_types': step_types,
+        'lengths': lens
     }
 
 
@@ -57,9 +62,9 @@ def test_new_traj(traj_data):
     assert t.last_observations is traj_data['last_observations']
     assert t.actions is traj_data['actions']
     assert t.rewards is traj_data['rewards']
-    assert t.terminals is traj_data['terminals']
     assert t.env_infos is traj_data['env_infos']
     assert t.agent_infos is traj_data['agent_infos']
+    assert t.step_types is traj_data['step_types']
     assert t.lengths is traj_data['lengths']
 
 
@@ -140,20 +145,6 @@ def test_rewards_shape_mismatch_traj(traj_data):
         del t
 
 
-def test_terminals_shape_mismatch_traj(traj_data):
-    with pytest.raises(ValueError, match='terminals tensor must have shape'):
-        traj_data['terminals'] = traj_data['terminals'].reshape((2, -1))
-        t = TrajectoryBatch(**traj_data)
-        del t
-
-
-def test_terminals_dtype_mismatch_traj(traj_data):
-    with pytest.raises(ValueError, match='terminals tensor must be dtype'):
-        traj_data['terminals'] = traj_data['terminals'].astype(np.float32)
-        t = TrajectoryBatch(**traj_data)
-        del t
-
-
 def test_env_infos_not_ndarray_traj(traj_data):
     with pytest.raises(ValueError,
                        match='entry in env_infos must be a numpy array'):
@@ -188,6 +179,20 @@ def test_agent_infos_batch_mismatch_traj(traj_data):
         del t
 
 
+def test_step_types_shape_mismatch_traj(traj_data):
+    with pytest.raises(ValueError, match='step_types tensor must have shape'):
+        traj_data['step_types'] = traj_data['step_types'].reshape((2, -1))
+        t = TrajectoryBatch(**traj_data)
+        del t
+
+
+def test_step_types_dtype_mismatch_traj(traj_data):
+    with pytest.raises(ValueError, match='step_types tensor must be dtype'):
+        traj_data['step_types'] = traj_data['step_types'].astype(np.float32)
+        t = TrajectoryBatch(**traj_data)
+        del t
+
+
 def test_to_trajectory_list(traj_data):
     t = TrajectoryBatch(**traj_data)
     t_list = t.to_trajectory_list()
@@ -202,7 +207,7 @@ def test_to_trajectory_list(traj_data):
             (traj_data['observations'][start + 1:stop], [last_obs]))).all()
         assert (s['actions'] == traj_data['actions'][start:stop]).all()
         assert (s['rewards'] == traj_data['rewards'][start:stop]).all()
-        assert (s['dones'] == traj_data['terminals'][start:stop]).all()
+        assert (s['step_types'] == traj_data['step_types'][start:stop]).all()
         start = stop
     assert start == len(traj_data['rewards'])
 
@@ -222,12 +227,12 @@ def sample_data():
     next_obs = obs_space.sample()
     act = act_space.sample()
     rew = 10.0
-    terms = False
+    step_type = StepType.FIRST
 
     # env_infos
     env_infos = dict()
     env_infos['goal'] = np.array([[1, 1]])
-    env_infos['TimeLimit.truncated'] = not terms
+    env_infos['TimeLimit.truncated'] = (step_type == StepType.TIMEOUT)
 
     # agent_infos
     agent_infos = dict()
@@ -239,9 +244,9 @@ def sample_data():
         'next_observation': next_obs,
         'action': act,
         'reward': rew,
-        'terminal': terms,
         'env_info': env_infos,
         'agent_info': agent_infos,
+        'step_type': step_type
     }
 
 
@@ -251,7 +256,7 @@ def test_new_time_step(sample_data):
     assert s.observation is sample_data['observation']
     assert s.action is sample_data['action']
     assert s.reward is sample_data['reward']
-    assert s.terminal is sample_data['terminal']
+    assert s.step_type is sample_data['step_type']
     assert s.env_info is sample_data['env_info']
     assert s.agent_info is sample_data['agent_info']
     del s
@@ -344,13 +349,6 @@ def test_reward_dtype_mismatch_time_step(sample_data):
         del s
 
 
-def test_terminal_dtype_mismatch_time_step(sample_data):
-    with pytest.raises(ValueError, match='terminal must be dtype bool'):
-        sample_data['terminal'] = []
-        s = TimeStep(**sample_data)
-        del s
-
-
 def test_agent_info_dtype_mismatch_time_step(sample_data):
     with pytest.raises(ValueError, match='agent_info must be type'):
         sample_data['agent_info'] = []
@@ -361,6 +359,13 @@ def test_agent_info_dtype_mismatch_time_step(sample_data):
 def test_env_info_dtype_mismatch_time_step(sample_data):
     with pytest.raises(ValueError, match='env_info must be type'):
         sample_data['env_info'] = []
+        s = TimeStep(**sample_data)
+        del s
+
+
+def test_step_type_dtype_mismatch_time_step(sample_data):
+    with pytest.raises(ValueError, match='step_type must be dtype'):
+        sample_data['step_type'] = []
         s = TimeStep(**sample_data)
         del s
 
@@ -381,8 +386,7 @@ def batch_data():
     next_obs = np.stack([obs_space.low] * batch_size)
     act = np.stack([[1, 3]] * batch_size)
     rew = np.arange(batch_size)
-    terms = np.zeros(batch_size, dtype=np.bool)
-    terms[np.cumsum(batch_size) - 1] = True  # set terminal bits
+    step_types = np.array([StepType.FIRST, StepType.TERMINAL], dtype=StepType)
 
     # env_infos
     env_infos = dict()
@@ -400,9 +404,9 @@ def batch_data():
         'next_observations': next_obs,
         'actions': act,
         'rewards': rew,
-        'terminals': terms,
         'env_infos': env_infos,
         'agent_infos': agent_infos,
+        'step_types': step_types
     }
 
 
@@ -413,9 +417,9 @@ def test_new_ts_batch(batch_data):
     assert s.next_observations is batch_data['next_observations']
     assert s.actions is batch_data['actions']
     assert s.rewards is batch_data['rewards']
-    assert s.terminals is batch_data['terminals']
     assert s.env_infos is batch_data['env_infos']
     assert s.agent_infos is batch_data['agent_infos']
+    assert s.step_types is batch_data['step_types']
 
 
 def test_observations_env_spec_mismatch_batch(batch_data):
@@ -481,13 +485,6 @@ def test_actions_batch_mismatch_batch(batch_data):
         del s
 
 
-def test_rewards_batch_mismatch_batch(batch_data):
-    with pytest.raises(ValueError, match='batch dimension of rewards'):
-        batch_data['rewards'] = batch_data['rewards'][:-1]
-        s = TimeStepBatch(**batch_data)
-        del s
-
-
 def test_act_env_spec_mismatch_batch(batch_data):
     with pytest.raises(ValueError, match='actions must conform'):
         batch_data['actions'] = batch_data['actions'][:, 0]
@@ -501,20 +498,6 @@ def test_act_box_env_spec_mismatch_batch(batch_data):
                                                        high=np.inf,
                                                        shape=(4, 3, 2),
                                                        dtype=np.float32)
-        s = TimeStepBatch(**batch_data)
-        del s
-
-
-def test_empty_terminals__batch(batch_data):
-    with pytest.raises(ValueError, match='batch dimension of terminals'):
-        batch_data['terminals'] = []
-        s = TimeStepBatch(**batch_data)
-        del s
-
-
-def test_terminals_dtype_mismatch_batch(batch_data):
-    with pytest.raises(ValueError, match='terminals tensor must be dtype'):
-        batch_data['terminals'] = batch_data['terminals'].astype(np.float32)
         s = TimeStepBatch(**batch_data)
         del s
 
@@ -553,6 +536,20 @@ def test_agent_infos_batch_mismatch_batch(batch_data):
         del s
 
 
+def test_step_types_batch_mismatch_batch(batch_data):
+    with pytest.raises(ValueError, match='batch dimension of step_types'):
+        batch_data['step_types'] = np.array([])
+        s = TimeStepBatch(**batch_data)
+        del s
+
+
+def test_step_types_dtype_mismatch_batch(batch_data):
+    with pytest.raises(ValueError, match='step_types must be a StepType'):
+        batch_data['step_types'] = batch_data['step_types'].astype(np.float32)
+        s = TimeStepBatch(**batch_data)
+        del s
+
+
 def test_concatenate_batch(batch_data):
     single_batch = TimeStepBatch(**batch_data)
     batches = [single_batch, single_batch]
@@ -566,8 +563,8 @@ def test_concatenate_batch(batch_data):
         [batch_data['actions'], batch_data['actions']])
     new_rewards = np.concatenate(
         [batch_data['rewards'], batch_data['rewards']])
-    new_terminals = np.concatenate(
-        [batch_data['terminals'], batch_data['terminals']])
+    new_step_types = np.concatenate(
+        [batch_data['step_types'], batch_data['step_types']])
     new_env_infos = {
         k: np.concatenate([b.env_infos[k] for b in batches])
         for k in batches[0].env_infos.keys()
@@ -582,7 +579,7 @@ def test_concatenate_batch(batch_data):
     assert np.array_equal(s.next_observations, new_next_obs)
     assert np.array_equal(s.actions, new_actions)
     assert np.array_equal(s.rewards, new_rewards)
-    assert np.array_equal(s.terminals, new_terminals)
+    assert np.array_equal(s.step_types, new_step_types)
     for key in new_env_infos:
         assert key in s.env_infos
         assert np.array_equal(new_env_infos[key], s.env_infos[key])
@@ -605,7 +602,7 @@ def test_split_batch(batch_data):
         actions=batch_data['actions'],
         rewards=batch_data['rewards'],
         next_observations=batch_data['next_observations'],
-        terminals=batch_data['terminals'],
+        step_types=batch_data['step_types'],
         env_infos=batch_data['env_infos'],
         agent_infos=batch_data['agent_infos'],
     )
@@ -620,7 +617,7 @@ def test_split_batch(batch_data):
                               [batch_data['next_observations'][i]])
         assert np.array_equal(batch.actions, [batch_data['actions'][i]])
         assert np.array_equal(batch.rewards, [batch_data['rewards'][i]])
-        assert np.array_equal(batch.terminals, [batch_data['terminals'][i]])
+        assert np.array_equal(batch.step_types, [batch_data['step_types'][i]])
         for key in batch.env_infos:
             assert key in batch_data['env_infos']
             assert np.array_equal(batch.env_infos[key],
@@ -638,7 +635,7 @@ def test_to_time_step_list_batch(batch_data):
         actions=batch_data['actions'],
         rewards=batch_data['rewards'],
         next_observations=batch_data['next_observations'],
-        terminals=batch_data['terminals'],
+        step_types=batch_data['step_types'],
         env_infos=batch_data['env_infos'],
         agent_infos=batch_data['agent_infos'],
     )
@@ -652,7 +649,8 @@ def test_to_time_step_list_batch(batch_data):
                               [batch_data['next_observations'][i]])
         assert np.array_equal(batch['actions'], [batch_data['actions'][i]])
         assert np.array_equal(batch['rewards'], [batch_data['rewards'][i]])
-        assert np.array_equal(batch['terminals'], [batch_data['terminals'][i]])
+        assert np.array_equal(batch['step_types'],
+                              [batch_data['step_types'][i]])
         for key in batch['env_infos']:
             assert key in batch_data['env_infos']
             assert np.array_equal(batch['env_infos'][key],
@@ -682,8 +680,8 @@ def test_from_time_step_list_batch(batch_data):
         [batch_data['actions'], batch_data['actions']])
     new_rewards = np.concatenate(
         [batch_data['rewards'], batch_data['rewards']])
-    new_terminals = np.concatenate(
-        [batch_data['terminals'], batch_data['terminals']])
+    new_step_types = np.concatenate(
+        [batch_data['step_types'], batch_data['step_types']])
     new_env_infos = {
         k: np.concatenate([b['env_infos'][k] for b in batches])
         for k in batches[0]['env_infos'].keys()
@@ -698,7 +696,7 @@ def test_from_time_step_list_batch(batch_data):
     assert np.array_equal(s.next_observations, new_next_obs)
     assert np.array_equal(s.actions, new_actions)
     assert np.array_equal(s.rewards, new_rewards)
-    assert np.array_equal(s.terminals, new_terminals)
+    assert np.array_equal(s.step_types, new_step_types)
     for key in new_env_infos:
         assert key in s.env_infos
         assert np.array_equal(new_env_infos[key], s.env_infos[key])

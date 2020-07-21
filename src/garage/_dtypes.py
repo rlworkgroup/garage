@@ -1,10 +1,13 @@
 """Data types for agent-based learning."""
 import collections
+import enum
 
 import akro
 import numpy as np
 
 from garage.misc import tensor_utils
+
+# pylint: disable=too-many-lines
 
 
 class TrajectoryBatch(
@@ -14,9 +17,9 @@ class TrajectoryBatch(
             'last_observations',
             'actions',
             'rewards',
-            'terminals',
             'env_infos',
             'agent_infos',
+            'step_types',
             'lengths',
         ])):
     # pylint: disable=missing-return-doc, missing-return-type-doc, missing-param-doc, missing-type-doc  # noqa: E501
@@ -61,9 +64,6 @@ class TrajectoryBatch(
         rewards (numpy.ndarray): A numpy array of shape
             :math:`(N \bullet [T])` containing the rewards for all time steps
             in this batch.
-        terminals (numpy.ndarray): A boolean numpy array of shape
-            :math:`(N \bullet [T])` containing the termination signals for all
-            time steps in this batch.
         env_infos (dict): A dict of numpy arrays arbitrary environment state
             information. Each value of this dict should be a numpy array of
             shape :math:`(N \bullet [T])` or :math:`(N \bullet [T], S^*)`.
@@ -71,6 +71,9 @@ class TrajectoryBatch(
             state information. Each value of this dict should be a numpy array
             of shape :math:`(N \bullet [T])` or :math:`(N \bullet [T], S^*)`.
             For example, this may contain the hidden states from an RNN policy.
+        step_types (numpy.ndarray): A numpy array of `StepType with shape
+            :math:`(N,)` containing the time step types for all transitions in
+            this batch.
         lengths (numpy.ndarray): An integer numpy array of shape :math:`(N,)`
             containing the length of each trajectory in this batch. This may be
             used to reconstruct the individual trajectories.
@@ -83,7 +86,7 @@ class TrajectoryBatch(
     __slots__ = ()
 
     def __new__(cls, env_spec, observations, last_observations, actions,
-                rewards, terminals, env_infos, agent_infos,
+                rewards, env_infos, agent_infos, step_types,
                 lengths):  # noqa: D102
         # pylint: disable=too-many-branches
 
@@ -186,17 +189,6 @@ class TrajectoryBatch(
                 'Rewards tensor must have shape {}, but got shape {} '
                 'instead.'.format(inferred_batch_size, rewards.shape))
 
-        # terminals
-        if terminals.shape != (inferred_batch_size, ):
-            raise ValueError(
-                'terminals tensor must have shape {}, but got shape {} '
-                'instead.'.format(inferred_batch_size, terminals.shape))
-
-        if terminals.dtype != np.bool:
-            raise ValueError(
-                'terminals tensor must be dtype np.bool, but got tensor '
-                'of dtype {} instead.'.format(terminals.dtype))
-
         # env_infos
         for key, val in env_infos.items():
             if not isinstance(val, (dict, np.ndarray)):
@@ -227,9 +219,20 @@ class TrajectoryBatch(
                     'length {}, but got key {} with batch size {} instead.'.
                     format(inferred_batch_size, key, val.shape[0]))
 
+        # step_types
+        if step_types.shape != (inferred_batch_size, ):
+            raise ValueError(
+                'step_types tensor must have shape {}, but got shape {} '
+                'instead.'.format(inferred_batch_size, step_types.shape))
+
+        if step_types.dtype != StepType:
+            raise ValueError(
+                'step_types tensor must be dtype `StepType`, but got tensor '
+                'of dtype {} instead.'.format(step_types.dtype))
+
         return super().__new__(TrajectoryBatch, env_spec, observations,
-                               last_observations, actions, rewards, terminals,
-                               env_infos, agent_infos, lengths)
+                               last_observations, actions, rewards, env_infos,
+                               agent_infos, step_types, lengths)
 
     @classmethod
     def concatenate(cls, *batches):
@@ -257,13 +260,17 @@ class TrajectoryBatch(
             for k in batches[0].agent_infos.keys()
         }
         return cls(
-            batches[0].env_spec,
-            np.concatenate([batch.observations for batch in batches]),
-            np.concatenate([batch.last_observations for batch in batches]),
-            np.concatenate([batch.actions for batch in batches]),
-            np.concatenate([batch.rewards for batch in batches]),
-            np.concatenate([batch.terminals for batch in batches]), env_infos,
-            agent_infos, np.concatenate([batch.lengths for batch in batches]))
+            env_spec=batches[0].env_spec,
+            observations=np.concatenate(
+                [batch.observations for batch in batches]),
+            last_observations=np.concatenate(
+                [batch.last_observations for batch in batches]),
+            actions=np.concatenate([batch.actions for batch in batches]),
+            rewards=np.concatenate([batch.rewards for batch in batches]),
+            env_infos=env_infos,
+            agent_infos=agent_infos,
+            step_types=np.concatenate([batch.step_types for batch in batches]),
+            lengths=np.concatenate([batch.lengths for batch in batches]))
 
     def split(self):
         """Split a TrajectoryBatch into a list of TrajectoryBatches.
@@ -285,11 +292,11 @@ class TrajectoryBatch(
                                        [self.last_observations[i]]),
                                    actions=self.actions[start:stop],
                                    rewards=self.rewards[start:stop],
-                                   terminals=self.terminals[start:stop],
                                    env_infos=tensor_utils.slice_nested_dict(
                                        self.env_infos, start, stop),
                                    agent_infos=tensor_utils.slice_nested_dict(
                                        self.agent_infos, start, stop),
+                                   step_types=self.step_types[start:stop],
                                    lengths=np.asarray([length]))
             trajectories.append(traj)
             start = stop
@@ -312,12 +319,13 @@ class TrajectoryBatch(
                     current environment).
                 * rewards (np.ndarray): Array of rewards of shape (T,) (1D
                     array of length timesteps).
-                * dones (np.ndarray): Array of dones of shape (T,) (1D array
-                    of length timesteps).
                 * agent_infos (dict[str, np.ndarray]): Dictionary of stacked,
                     non-flattened `agent_info` arrays.
                 * env_infos (dict[str, np.ndarray]): Dictionary of stacked,
                     non-flattened `env_info` arrays.
+                * step_types (numpy.ndarray): A numpy array of `StepType with
+                    shape (T,) containing the time step types for all
+                    transitions in this batch.
 
         """
         start = 0
@@ -340,8 +348,8 @@ class TrajectoryBatch(
                 'agent_infos':
                 {k: v[start:stop]
                  for (k, v) in self.agent_infos.items()},
-                'dones':
-                self.terminals[start:stop]
+                'step_types':
+                self.step_types[start:stop]
             })
             start = stop
         return trajectories
@@ -372,12 +380,13 @@ class TrajectoryBatch(
                     current environment).
                 * rewards (np.ndarray): Array of rewards of shape (T,) (1D
                     array of length timesteps).
-                * dones (np.ndarray): Array of rewards of shape (T,) (1D array
-                    of length timesteps).
                 * agent_infos (dict[str, np.ndarray]): Dictionary of stacked,
                     non-flattened `agent_info` arrays.
                 * env_infos (dict[str, np.ndarray]): Dictionary of stacked,
                     non-flattened `env_info` arrays.
+                * step_types (numpy.ndarray): A numpy array of `StepType with
+                    shape (T,) containing the time step types for all
+                    transitions in this batch.
 
         """
         lengths = np.asarray([len(p['rewards']) for p in paths])
@@ -404,9 +413,9 @@ class TrajectoryBatch(
                    last_observations=last_observations,
                    actions=stacked_paths['actions'],
                    rewards=stacked_paths['rewards'],
-                   terminals=stacked_paths['dones'],
                    env_infos=stacked_paths['env_infos'],
                    agent_infos=stacked_paths['agent_infos'],
+                   step_types=stacked_paths['step_types'],
                    lengths=lengths)
 
     @property
@@ -428,22 +437,42 @@ class TrajectoryBatch(
             ]))
 
 
+class StepType(enum.IntEnum):
+    """Defines the status of a `TimeStep` within a sequence.
+
+    Note that the last `TimeStep` in a sequence can either be TERMINAL or
+    TIMEOUT.
+
+    Suppose max_path_length = 5:
+    * A success sequence terminated at step 4 will look like:
+        FIRST, MID, MID, TERMINAL
+    * A success sequence terminated at step 5 will look like:
+        FIRST, MID, MID, MID, TERMINAL
+    * An unsuccessful sequence truncated by time limit will look like:
+        FIRST, MID, MID, MID, TIMEOUT
+    """
+    # Denotes the first `TimeStep` in a sequence.
+    FIRST = 0
+    # Denotes any `TimeStep` in the middle of a sequence (i.e. not the first or
+    # last one).
+    MID = 1
+    # Denotes the last `TimeStep` in a sequence that terminates successfully.
+    TERMINAL = 2
+    # Denotes the last `TimeStep` in a sequence truncated by time limit.
+    TIMEOUT = 3
+
+
 class TimeStep(
         collections.namedtuple('TimeStep', [
-            'env_spec',
-            'observation',
-            'action',
-            'reward',
-            'next_observation',
-            'terminal',
-            'env_info',
-            'agent_info',
+            'env_spec', 'observation', 'action', 'reward', 'next_observation',
+            'env_info', 'agent_info', 'step_type'
         ])):
     # pylint: disable=missing-return-doc, missing-return-type-doc, missing-param-doc, missing-type-doc  # noqa: E501
     r"""A tuple representing a single TimeStep.
 
     A :class:`TimeStep` represents a single sample when an agent interacts with
-        an environment.
+        an environment. It describes as SARS (State–action–reward–state) tuple
+        that characterizes the evolution of a MDP.
 
     Attributes:
         env_spec (garage.envs.EnvSpec): Specification for the environment from
@@ -452,16 +481,29 @@ class TimeStep(
             containing the observation for the this time step in the
             environment. These must conform to
             :obj:`env_spec.observation_space`.
+            The observation before applying the action.
+            `None` if `step_type` is `StepType.FIRST`, i.e. at the start of a
+            sequence.
         action (numpy.ndarray): A numpy array of shape :math:`(A^*)`
             containing the action for the this time step. These must conform
             to :obj:`env_spec.action_space`.
+            `None` if `step_type` is `StepType.FIRST`, i.e. at the start of a
+            sequence.
         reward (float): A float representing the reward for taking the action
             given the observation, at the this time step.
-        terminals (bool): The termination signal for the this time step.
+            `None` if `step_type` is `StepType.FIRST`, i.e. at the start of a
+            sequence.
+        next_observation (numpy.ndarray): A numpy array of shape :math:`(O^*)`
+            containing the observation for the this time step in the
+            environment. These must conform to
+            :obj:`env_spec.observation_space`.
+            The observation after applying the action.
         env_info (dict): A dict arbitrary environment state information.
         agent_info (numpy.ndarray): A dict of arbitrary agent
             state information. For example, this may contain the hidden states
             from an RNN policy.
+        step_type (garage.StepType): a `StepType` enum value. Can either be
+            StepType.FIRST, StepType.MID, StepType.TERMINAL, StepType.TIMEOUT.
 
 
     Raises:
@@ -471,7 +513,7 @@ class TimeStep(
     """
 
     def __new__(cls, env_spec, observation, action, reward, next_observation,
-                terminal, env_info, agent_info):  # noqa: D102
+                env_info, agent_info, step_type):  # noqa: D102
         # pylint: disable=too-many-branches
         # observation
         if not env_spec.observation_space.contains(observation):
@@ -532,19 +574,44 @@ class TimeStep(
             raise ValueError('env_info must be type {}, but got type {} '
                              'instead.'.format(dict, type(env_info)))
 
-        # rewards
         if not isinstance(reward, float):
             raise ValueError('reward must be type {}, but got type {} '
                              'instead.'.format(float, type(reward)))
 
-        if not isinstance(terminal, bool):
+        if not isinstance(step_type, StepType):
             raise ValueError(
-                'terminal must be dtype bool, but got dtype {} instead.'.
-                format(type(terminal)))
+                'step_type must be dtype garage.StepType, but got dtype {} '
+                'instead.'.format(type(step_type)))
 
         return super().__new__(TimeStep, env_spec, observation, action, reward,
-                               next_observation, terminal, env_info,
-                               agent_info)
+                               next_observation, env_info, agent_info,
+                               step_type)
+
+    @property
+    def first(self):
+        """bool: Whether this `TimeStep` is the first of a sequence."""
+        return self.step_type is StepType.FIRST
+
+    @property
+    def mid(self):
+        """bool: Whether this `TimeStep` is in the mid of a sequence."""
+        return self.step_type is StepType.MID
+
+    @property
+    def terminal(self):
+        """bool: Whether this `TimeStep` records a termination condition."""
+        return self.step_type is StepType.TERMINAL
+
+    @property
+    def timeout(self):
+        """bool: Whether this `TimeStep` records a time out condition."""
+        return self.step_type is StepType.TIMEOUT
+
+    @property
+    def last(self):
+        """bool: Whether this `TimeStep` is the last of a sequence."""
+        return self.step_type is StepType.TERMINAL or self.step_type \
+            is StepType.TIMEOUT
 
 
 class InOutSpec:
@@ -583,14 +650,8 @@ class InOutSpec:
 
 class TimeStepBatch(
         collections.namedtuple('TimeStepBatch', [
-            'env_spec',
-            'observations',
-            'actions',
-            'rewards',
-            'next_observations',
-            'terminals',
-            'env_infos',
-            'agent_infos',
+            'env_spec', 'observations', 'actions', 'rewards',
+            'next_observations', 'env_infos', 'agent_infos', 'step_types'
         ])):
     # pylint: disable=missing-param-doc, missing-type-doc
     """A tuple representing a batch of TimeSteps.
@@ -611,13 +672,13 @@ class TimeStepBatch(
         next_observation (numpy.ndarray): Non-flattened array of next
             observations. Has shape (batch_size, S^*). next_observations[i] was
             observed by the agent after taking actions[i].
-        terminals (numpy.ndarray): A boolean numpy array of shape
-            shape (batch_size,) containing the termination signals for all
-            transitions in this batch.
         env_infos (dict): A dict arbitrary environment state
             information.
         agent_infos (dict): A dict of arbitrary agent state information. For
             example, this may contain the hidden states from an RNN policy.
+        step_types (numpy.ndarray): A numpy array of `StepType with shape (
+            batch_size,) containing the time step types for all transitions in
+            this batch.
 
     Raises:
         ValueError: If any of the above attributes do not conform to their
@@ -627,12 +688,12 @@ class TimeStepBatch(
     __slots__ = ()
 
     def __new__(cls, env_spec, observations, actions, rewards,
-                next_observations, terminals, env_infos,
-                agent_infos):  # noqa: D102
+                next_observations, env_infos, agent_infos,
+                step_types):  # noqa: D102
         # pylint: disable=missing-return-doc, missing-return-type-doc,
         # pylint: disable=too-many-branches
 
-        inferred_batch_size = len(terminals)
+        inferred_batch_size = len(rewards)
         if inferred_batch_size < 1:
             raise ValueError(
                 'Expected batch dimension of terminals to be greater than 1, '
@@ -711,18 +772,19 @@ class TimeStepBatch(
                 'length {} instead.'.format(inferred_batch_size,
                                             actions.shape[0]))
 
-        # rewards
-        if rewards.shape[0] != inferred_batch_size:
+        # step_types
+        if step_types.shape[0] != inferred_batch_size:
             raise ValueError(
-                'Expected batch dimension of rewards to be length {}, but got '
+                'Expected batch dimension of step_types to be length {}, '
+                'but got '
                 'length {} instead.'.format(inferred_batch_size,
                                             rewards.shape[0]))
 
-        # terminals
-        if terminals.dtype != np.bool:
-            raise ValueError(
-                'terminals tensor must be dtype np.bool, but got tensor '
-                'of dtype {} instead.'.format(terminals.dtype))
+        for step_type in step_types:
+            if not isinstance(step_type, StepType):
+                raise ValueError(
+                    'Each entry in step_types must be a StepType, but got'
+                    ' value type {} instead.'.format(type(step_type)))
 
         # env_infos
         for key, val in env_infos.items():
@@ -757,8 +819,8 @@ class TimeStepBatch(
                     format(inferred_batch_size, key, val.shape[0]))
 
         return super().__new__(TimeStepBatch, env_spec, observations, actions,
-                               rewards, next_observations, terminals,
-                               env_infos, agent_infos)
+                               rewards, next_observations, env_infos,
+                               agent_infos, step_types)
 
     @classmethod
     def concatenate(cls, *batches):
@@ -787,13 +849,16 @@ class TimeStepBatch(
             for k in batches[0].agent_infos.keys()
         }
         return cls(
-            batches[0].env_spec,
-            np.concatenate([batch.observations for batch in batches]),
-            np.concatenate([batch.actions for batch in batches]),
-            np.concatenate([batch.rewards for batch in batches]),
-            np.concatenate([batch.next_observations for batch in batches]),
-            np.concatenate([batch.terminals for batch in batches]), env_infos,
-            agent_infos)
+            env_spec=batches[0].env_spec,
+            observations=np.concatenate(
+                [batch.observations for batch in batches]),
+            actions=np.concatenate([batch.actions for batch in batches]),
+            rewards=np.concatenate([batch.rewards for batch in batches]),
+            next_observations=np.concatenate(
+                [batch.next_observations for batch in batches]),
+            env_infos=env_infos,
+            agent_infos=agent_infos,
+            step_types=np.concatenate([batch.step_types for batch in batches]))
 
     def split(self):
         """Split a TimeStepBatch into a list of TimeStepBatches.
@@ -807,14 +872,13 @@ class TimeStepBatch(
         """
         time_steps = []
 
-        for i in range(len(self.terminals)):
+        for i in range(len(self.rewards)):
             time_step = TimeStepBatch(
                 env_spec=self.env_spec,
                 observations=np.asarray([self.observations[i]]),
                 actions=np.asarray([self.actions[i]]),
                 rewards=np.asarray([self.rewards[i]]),
                 next_observations=np.asarray([self.next_observations[i]]),
-                terminals=np.asarray([self.terminals[i]]),
                 env_infos={
                     k: np.asarray([v[i]])
                     for (k, v) in self.env_infos.items()
@@ -823,7 +887,7 @@ class TimeStepBatch(
                     k: np.asarray([v[i]])
                     for (k, v) in self.agent_infos.items()
                 },
-            )
+                step_types=np.asarray([self.step_types[i]], dtype=StepType))
             time_steps.append(time_step)
         return time_steps
 
@@ -852,19 +916,18 @@ class TimeStepBatch(
                     observations. Has shape (batch_size, S^*).
                     next_observations[i] was
                     observed by the agent after taking actions[i].
-                terminals (numpy.ndarray): A boolean numpy array of shape
-                    shape (batch_size,) containing the termination signals
-                    for all
-                    transitions in this batch.
                 env_infos (dict): A dict arbitrary environment state
                     information.
                 agent_infos (dict): A dict of arbitrary agent state
                     information. For example, this may contain the
                     hidden states from an RNN policy.
+                step_types (numpy.ndarray): A numpy array of `StepType with
+                        shape (batch_size,) containing the time step types for
+                        all transitions in this batch.
 
         """
         samples = []
-        for i in range(len(self.terminals)):
+        for i in range(len(self.rewards)):
             samples.append({
                 'observations':
                 np.asarray([self.observations[i]]),
@@ -874,14 +937,14 @@ class TimeStepBatch(
                 np.asarray([self.rewards[i]]),
                 'next_observations':
                 np.asarray([self.next_observations[i]]),
-                'terminals':
-                np.asarray([self.terminals[i]]),
                 'env_infos':
                 {k: np.asarray([v[i]])
                  for (k, v) in self.env_infos.items()},
                 'agent_infos':
                 {k: np.asarray([v[i]])
                  for (k, v) in self.agent_infos.items()},
+                'step_types':
+                np.asarray([self.step_types[i]]),
             })
         return samples
 
@@ -907,14 +970,15 @@ class TimeStepBatch(
                     observations. Has shape (batch_size, S^*).
                     next_observations[i] was observed by the agent after
                     taking actions[i].
-                * terminals (numpy.ndarray): A boolean numpy array of shape
-                    shape (batch_size,) containing the termination signals
-                    for all transitions in this batch.
                 * env_infos (dict): A dict arbitrary environment state
                     information.
                 * agent_infos (dict): A dict of arbitrary agent
                     state information. For example, this may contain the
                     hidden states from an RNN policy.
+                * step_types (numpy.ndarray): A numpy array of `StepType with
+                shape (batch_size,) containing the time step types for all
+                    transitions in this batch.
+
 
         Returns:
             TimeStepBatch: The concatenation of samples.
@@ -932,9 +996,9 @@ class TimeStepBatch(
                           actions=sample['actions'],
                           rewards=sample['rewards'],
                           next_observations=sample['next_observations'],
-                          terminals=sample['terminals'],
                           env_infos=sample['env_infos'],
-                          agent_infos=sample['agent_infos'])
+                          agent_infos=sample['agent_infos'],
+                          step_types=sample['step_types'])
             for sample in ts_samples
         ]
 
@@ -961,6 +1025,6 @@ class TimeStepBatch(
                    actions=batch.actions,
                    rewards=batch.rewards,
                    next_observations=next_observations,
-                   terminals=batch.terminals,
                    env_infos=batch.env_infos,
-                   agent_infos=batch.agent_infos)
+                   agent_infos=batch.agent_infos,
+                   step_types=batch.step_types)
