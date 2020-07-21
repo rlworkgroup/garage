@@ -68,3 +68,12 @@ class ExplorationPolicy(abc.ABC):
 
         """
         self.policy.set_param_values(params)
+
+    def update(self, trajectory_batch):
+        """Update the exploration policy using a batch of trajectories.
+
+        Args:
+            trajectory_batch (TrajectoryBatch): A batch of trajectories which
+                were sampled with this policy active.
+
+        """

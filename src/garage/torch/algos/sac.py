@@ -163,7 +163,6 @@ class SAC(RLAlgorithm):
                                               lr=self._policy_lr)
         else:
             self._log_alpha = torch.Tensor([self._fixed_alpha]).log()
-        self.episode_rewards = deque(maxlen=30)
 
     def train(self, runner):
         """Obtain samplers and start actual training for each epoch.
@@ -180,26 +179,23 @@ class SAC(RLAlgorithm):
         if not self._eval_env:
             self._eval_env = runner.get_env_copy()
         last_return = None
-        for _ in runner.step_epochs():
+        for epoch in runner.step_epochs():
             for _ in range(self._steps_per_epoch):
                 if not (self.replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
                     batch_size = int(self._min_buffer_size)
                 else:
                     batch_size = None
-                runner.step_path = runner.obtain_samples(
+                new_trajectories = runner.obtain_trajectories(
                     runner.step_itr, batch_size)
-                path_returns = []
-                for path in runner.step_path:
-                    self.replay_buffer.add_path(
-                        dict(observation=path['observations'],
-                             action=path['actions'],
-                             reward=path['rewards'].reshape(-1, 1),
-                             next_observation=path['next_observations'],
-                             terminal=path['dones'].reshape(-1, 1)))
-                    path_returns.append(sum(path['rewards']))
-                assert len(path_returns) is len(runner.step_path)
-                self.episode_rewards.append(np.mean(path_returns))
+                log_performance(epoch, new_trajectories,
+                                discount=self._discount,
+                                prefix='Training')
+
+                runner.step_path = new_trajectories
+                self.replay_buffer.add_trajectory_batch(new_trajectories)
+                if hasattr(self.policy, 'update'):
+                    self.policy.update(new_trajectories)
                 for _ in range(self._gradient_steps):
                     policy_loss, qf1_loss, qf2_loss = self.train_once()
             last_return = self._evaluate_policy(runner.step_itr)
@@ -239,8 +235,8 @@ class SAC(RLAlgorithm):
 
         Args:
             samples_data (dict): Transitions(S,A,R,S') that are sampled from
-                the replay buffer. It should have the keys 'observation',
-                'action', 'reward', 'terminal', and 'next_observations'.
+                the replay buffer. It should have the keys 'observations',
+                'actions', 'rewards', 'terminals', and 'next_observations'.
 
         This function exists in case there are versions of sac that need
         access to a modified log_alpha, such as multi_task sac.
@@ -269,8 +265,8 @@ class SAC(RLAlgorithm):
             log_pi(torch.Tensor): log probability of actions that are sampled
                 from the replay buffer. Shape is (1, buffer_batch_size).
             samples_data (dict): Transitions(S,A,R,S') that are sampled from
-                the replay buffer. It should have the keys 'observation',
-                'action', 'reward', 'terminal', and 'next_observations'.
+                the replay buffer. It should have the keys 'observations',
+                'actions', 'rewards', 'terminals', and 'next_observations'.
 
         Note:
             samples_data's entries should be torch.Tensor's with the following
@@ -296,8 +292,8 @@ class SAC(RLAlgorithm):
 
         Args:
             samples_data (dict): Transitions(S,A,R,S') that are sampled from
-                the replay buffer. It should have the keys 'observation',
-                'action', 'reward', 'terminal', and 'next_observations'.
+                the replay buffer. It should have the keys 'observations',
+                'actions', 'rewards', 'terminals', and 'next_observations'.
             new_actions(torch.Tensor): Actions resampled from the policy based
                 based on the Observations, obs, which were sampled from the
                 replay buffer. Shape is (action_dim, buffer_batch_size).
@@ -318,7 +314,7 @@ class SAC(RLAlgorithm):
             torch.Tensor: loss from the Policy/Actor.
 
         """
-        obs = samples_data['observation']
+        obs = samples_data['observations']
         with torch.no_grad():
             alpha = self._get_log_alpha(samples_data).exp()
         min_q_new_actions = torch.min(self._qf1(obs, new_actions),
@@ -332,8 +328,8 @@ class SAC(RLAlgorithm):
 
         Args:
             samples_data (dict): Transitions(S,A,R,S') that are sampled from
-                the replay buffer. It should have the keys 'observation',
-                'action', 'reward', 'terminal', and 'next_observations'.
+                the replay buffer. It should have the keys 'observations',
+                'actions', 'rewards', 'terminals', and 'next_observations'.
 
         Note:
             samples_data's entries should be torch.Tensor's with the following
@@ -349,11 +345,11 @@ class SAC(RLAlgorithm):
             torch.Tensor: loss from 2nd q-function after optimization.
 
         """
-        obs = samples_data['observation']
-        actions = samples_data['action']
-        rewards = samples_data['reward'].flatten()
-        terminals = samples_data['terminal'].flatten()
-        next_obs = samples_data['next_observation']
+        obs = samples_data['observations']
+        actions = samples_data['actions']
+        rewards = samples_data['rewards'].flatten()
+        terminals = samples_data['terminals'].flatten()
+        next_obs = samples_data['next_observations']
         with torch.no_grad():
             alpha = self._get_log_alpha(samples_data).exp()
 
@@ -392,8 +388,8 @@ class SAC(RLAlgorithm):
 
         Args:
             samples_data (dict): Transitions(S,A,R,S') that are sampled from
-                the replay buffer. It should have the keys 'observation',
-                'action', 'reward', 'terminal', and 'next_observations'.
+                the replay buffer. It should have the keys 'observations',
+                'actions', 'rewards', 'terminals', and 'next_observations'.
 
         Note:
             samples_data's entries should be torch.Tensor's with the following
@@ -410,7 +406,7 @@ class SAC(RLAlgorithm):
             torch.Tensor: loss from 2nd q-function after optimization.
 
         """
-        obs = samples_data['observation']
+        obs = samples_data['observations']
         qf1_loss, qf2_loss = self._critic_objective(samples_data)
 
         self._qf1_optimizer.zero_grad()
@@ -460,6 +456,7 @@ class SAC(RLAlgorithm):
         eval_trajectories = obtain_evaluation_samples(
             self.policy,
             self._eval_env,
+            max_path_length=self._max_eval_path_length,
             num_trajs=self._num_evaluation_trajectories)
         last_return = log_performance(epoch,
                                       eval_trajectories,
@@ -483,8 +480,6 @@ class SAC(RLAlgorithm):
         tabular.record('QF/{}'.format('Qf2Loss'), float(qf2_loss))
         tabular.record('ReplayBuffer/buffer_size',
                        self.replay_buffer.n_transitions_stored)
-        tabular.record('Average/TrainAverageReturn',
-                       np.mean(self.episode_rewards))
 
     @property
     def networks(self):
