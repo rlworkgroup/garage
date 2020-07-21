@@ -107,7 +107,8 @@ class BC(RLAlgorithm):
             if self._eval_env is not None:
                 log_performance(epoch,
                                 obtain_evaluation_samples(
-                                    self.learner, self._eval_env),
+                                    self.learner, self._eval_env,
+                                    num_trajs=10),
                                 discount=1.0)
             losses = self._train_once(runner, epoch)
             with tabular.prefix(self._name + '/'):
