@@ -377,7 +377,6 @@ computation graph and the :code:`train_once()` function.
     from garage.sampler import RaySampler
     from garage.misc import tensor_utils
 
-
     class MyAlgorithm():
 
         sampler_cls = RaySampler
