@@ -189,7 +189,7 @@ class BC(RLAlgorithm):
                 # We must have a deterministic policy as the learner.
                 learner_actions = learner_output
             else:
-                # We must have a StochasticPolicyas the learner.
+                # We must have a StochasticPolicy as the learner.
                 action_dist, _ = learner_output
                 learner_actions = action_dist.rsample()
             return torch.mean((expert_actions - learner_actions)**2)

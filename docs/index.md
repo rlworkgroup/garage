@@ -41,6 +41,12 @@ and how to implement new MDPs and new algorithms.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Algorithms and Methods
+
+   user/algo_bc
+
+.. toctree::
+   :maxdepth: 2
    :caption: Development Guide
 
    user/setting_up_your_development_environment
