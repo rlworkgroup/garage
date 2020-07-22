@@ -1,5 +1,7 @@
 """EnvSpec class."""
 
+import math
+
 from garage import InOutSpec
 
 
@@ -9,10 +11,16 @@ class EnvSpec(InOutSpec):
     Args:
         observation_space (akro.Space): The observation space of the env.
         action_space (akro.Space): The action space of the env.
+        max_episode_length (int): The maximum number of steps allowed in an
+            episode.
 
     """
 
-    def __init__(self, observation_space, action_space):
+    def __init__(self,
+                 observation_space,
+                 action_space,
+                 max_episode_length=math.inf):
+        self._max_episode_length = max_episode_length
         super().__init__(action_space, observation_space)
 
     @property
@@ -54,3 +62,13 @@ class EnvSpec(InOutSpec):
 
         """
         self._output_space = observation_space
+
+    @property
+    def max_episode_length(self):
+        """Get max episode steps.
+
+        Returns:
+            int: The maximum number of steps that an episode
+
+        """
+        return self._max_episode_length
