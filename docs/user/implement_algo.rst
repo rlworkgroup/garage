@@ -216,10 +216,18 @@ generators used for the experiment.
     debug_my_algorithm()
 
 
-Of course, we'll need to actually use the resulting samples to train our
-policy. For the purposes of this tutorial, we'll implement an extremely simple
-form of REINFORCE [1]_ (a.k.a. Vanilla Policy Gradient) using PyTorch.
+Trainning the Policy with Samples
+=================================
 
+Of course, we'll need to actually use the resulting samples to train our
+policy with PyTorch, TensorFlow or NumPy. For the purposes of this tutorial,
+we'll implement an extremely simple form of REINFORCE [1]_ (a.k.a. Vanilla
+Policy Gradient) using PyTorch and TensorFlow. If you want to use NumPy, you
+can refer `cem.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/np/algos/cem.py>`_,
+which implements a simple Cross Entropy Method algorithm.
+
+PyTorch
+-------
 
 .. code-block:: python
 
@@ -253,7 +261,8 @@ form of REINFORCE [1]_ (a.k.a. Vanilla Policy Gradient) using PyTorch.
                 returns = torch.Tensor(returns_numpy.copy())
                 obs = torch.Tensor(path['observations'])
                 actions = torch.Tensor(path['actions'])
-                log_likelihoods = self.policy.log_likelihood(obs, actions)
+                dist = self.policy(obs)[0]
+                log_likelihoods = dist.log_prob(actions)
                 loss = (-log_likelihoods * returns).mean()
                 loss.backward()
                 losses.append(loss.item())
@@ -326,7 +335,8 @@ For completeness, the full experiment file is repeated below:
                 returns = torch.Tensor(returns_numpy.copy())
                 obs = torch.Tensor(path['observations'])
                 actions = torch.Tensor(path['actions'])
-                log_likelihoods = self.policy.log_likelihood(obs, actions)
+                dist = self.policy(obs)[0]
+                log_likelihoods = dist.log_prob(actions)
                 loss = (-log_likelihoods * returns).mean()
                 loss.backward()
                 losses.append(loss.item())
@@ -352,9 +362,108 @@ For completeness, the full experiment file is repeated below:
 
     debug_my_algorithm()
 
+TensorFlow
+----------
+
+The TensorFlow version is similar to PyTorch except for building the
+computation graph and the :code:`train_once()` function.
+
+.. code-block:: python
+
+    import tensorflow as tf
+    import numpy as np
+
+    from garage import log_performance, TrajectoryBatch
+    from garage.sampler import RaySampler
+    from garage.misc import tensor_utils
+
+
+    class MyAlgorithm():
+
+        sampler_cls = RaySampler
+
+        def __init__(self, env_spec, policy):
+            self.env_spec = env_spec
+            self.policy = policy
+            self.max_path_length = 200
+            self._lr = 1e-3
+            self._discount = 0.99
+
+            obs_space = self.policy.observation_space
+            action_space = self.policy.action_space
+            with tf.name_scope('inputs'):
+                self._obs = obs_space.to_tf_placeholder(name='obs', batch_dims=2)
+                self._action = action_space.to_tf_placeholder(name='action',
+                                                              batch_dims=2)
+                self._returns = tf.compat.v1.placeholder(tf.float32,
+                                                         shape=[None, None],
+                                                         name='return')
+            policy_dist = self.policy.build(self._obs, name='policy').dist
+            with tf.name_scope('loss'):
+                ll = policy_dist.log_prob(self._action, name='log_likelihood')
+                loss = -tf.reduce_mean(ll * self._returns)
+            with tf.name_scope('train'):
+                self._train_op = tf.compat.v1.train.AdamOptimizer(
+                    self._lr).minimize(loss)
+
+        def train(self, runner):
+            for epoch in runner.step_epochs():
+                samples = runner.obtain_samples(epoch)
+                log_performance(epoch,
+                                TrajectoryBatch.from_trajectory_list(self.env_spec,
+                                                                     samples),
+                                self._discount)
+                self.train_once(samples)
+
+        def train_once(self, paths):
+            obs = [path['observations'] for path in paths]
+            obs = tensor_utils.pad_tensor_n(obs, self.max_path_length)
+            actions = [path['actions'] for path in paths]
+            actions = tensor_utils.pad_tensor_n(actions, self.max_path_length)
+            returns = []
+            for path in paths:
+                returns.append(tensor_utils.discount_cumsum(path['rewards'],
+                                                           self._discount))
+            returns = tensor_utils.pad_tensor_n(returns, self.max_path_length)
+            sess = tf.compat.v1.get_default_session()
+            sess.run(self._train_op, feed_dict={
+                 self._obs: np.stack(obs, axis=0),
+                 self._action: np.stack(actions, axis=0),
+                 self._returns: np.stack(returns, axis=0),
+            })
+            return np.mean(returns)
+
+        # For pickling
+        def __getstate__(self):
+            data = self.__dict__.copy()
+            del data['_obs']
+            del data['_action']
+            del data['_train_op']
+            del data['_returns']
+            return data
+
+    from garage import wrap_experiment
+    from garage.envs import PointEnv, GarageEnv
+    from garage.experiment import LocalTFRunner
+    from garage.experiment.deterministic import set_seed
+    from garage.tf.policies import GaussianMLPPolicy
+
+    @wrap_experiment(log_dir='my_algorithm_logs', use_existing_dir=True, archive_launch_repo=False)
+    def debug_my_algorithm(ctxt):
+        set_seed(100)
+        with LocalTFRunner(ctxt) as runner:
+            env = GarageEnv(PointEnv())
+            policy = GaussianMLPPolicy(env.spec)
+            algo = MyAlgorithm(env.spec, policy)
+            runner.setup(algo, env)
+            runner.train(n_epochs=500, batch_size=4000)
+
+    debug_my_algorithm()
+
 
 .. [1] Williams, Ronald J. "Simple statistical gradient-following algorithms for connectionist reinforcement learning." Machine learning 8.3-4 (1992): 229-256.
 
 ----
 
-This page was authored by K.R. Zentner (`@krzentner <https://github.com/krzentner>`_).
+This page was authored by K.R. Zentner (`@krzentner <https://github.com/krzentner>`_)
+and Ruofu Wang (`@yeukfu <https://github.com/yeukfu>`_).
