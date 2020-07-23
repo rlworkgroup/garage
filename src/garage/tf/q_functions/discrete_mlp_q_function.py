@@ -1,6 +1,7 @@
 """Discrete MLP QFunction."""
 import tensorflow as tf
 
+from garage.experiment import deterministic
 from garage.tf.models import MLPModel
 
 
