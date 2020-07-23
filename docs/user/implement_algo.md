@@ -521,7 +521,7 @@ def debug_my_algorithm(ctxt=None):
 
 When training the policy, we use `policy.get_param_values()` method to get the
 initial parameters of the policy, and use `policy.set_param_values()` to update
-parameters of the policy in training.
+parameters of the policy.
 
 ```py
 class SimpleCEM:
