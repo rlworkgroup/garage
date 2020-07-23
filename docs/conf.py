@@ -329,6 +329,17 @@ todo_include_todos = True
 #     'dm_control', 'glfw', 'mujoco_py', 'ray', 'torch', 'torchvision'
 # ]
 
+# -- Options for doctest extension --------------------------------------------
+#Global library imports for doctest
+doctest_global_setup = '''
+try:
+    import numpy as np
+    import akro
+    import gym
+except ImportError:
+    np = None
+'''
+trim_doctest_flags = True
 # -- Options for autoapi extension --------------------------------------------
 autoapi_root = '_autoapi'
 autoapi_dirs = ['../src']

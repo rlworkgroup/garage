@@ -29,7 +29,7 @@ Finally, the launcher calls :code:`runner.setup` and :code:`runner.train` which 
 The garage repository contains several example experiment launchers. A fairly
 simple one, :code:`examples/tf/trpo_cartpole.py`, is also pasted below:
 
-.. code-block:: python
+.. testcode::
 
   from garage import wrap_experiment
   from garage.envs import GarageEnv
@@ -74,6 +74,10 @@ simple one, :code:`examples/tf/trpo_cartpole.py`, is also pasted below:
 
   trpo_cartpole()
 
+.. testoutput::
+   :hide:
+
+   ...
 
 Running the above should produce output like:
 
@@ -217,7 +221,7 @@ In order to enable the GPU for PyTorch, add the following code snippets to the e
   import torch
   from garage.torch import set_gpu_mode
 
-  ...
+  # ...
 
     if torch.cuda.is_available():
         set_gpu_mode(True)

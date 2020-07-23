@@ -6,7 +6,8 @@ SPHINXOPTS    = -j auto
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
-APIDOCDIR     = _apidoc
+AUTOAPIDIR    = _autoapi
+DATADIR       = data
 
 # User-friendly check for sphinx-build
 ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
@@ -51,7 +52,8 @@ help:
 
 clean:
 	rm -rf $(BUILDDIR)/*
-	rm -rf $(APIDOCDIR)/*
+	rm -rf $(AUTOAPIDIR)/*
+	rm -rf $(DATADIR)/*
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
@@ -175,6 +177,7 @@ linkcheck:
 
 doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
+	@echo
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
