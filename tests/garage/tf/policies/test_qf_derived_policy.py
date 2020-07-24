@@ -29,6 +29,11 @@ class TestQfDerivedPolicy(TfGraphTestCase):
         for action in actions:
             assert self.env.action_space.contains(action)
 
+    def test_get_param(self):
+        with tf.compat.v1.variable_scope('SimpleQFunction', reuse=True):
+            return_var = tf.compat.v1.get_variable('return_var')
+        assert self.policy.get_param_values() == return_var.eval()
+
     def test_is_pickleable(self):
         with tf.compat.v1.variable_scope('SimpleQFunction', reuse=True):
             return_var = tf.compat.v1.get_variable('return_var')
