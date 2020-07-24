@@ -516,7 +516,7 @@ def debug_my_algorithm(ctxt=None):
         policy = CategoricalMLPPolicy(env.spec)
         algo = SimpleCEM(env.spec, policy)
         runner.setup(algo, env)
-        runner.train(n_epochs=500, batch_size=4000, plot=True)
+        runner.train(n_epochs=500, batch_size=1000, plot=True)
 ```
 
 When training the policy, we use `policy.get_param_values()` method to get the
