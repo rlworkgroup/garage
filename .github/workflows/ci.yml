@@ -5,6 +5,7 @@ env:
   TRAVIS_COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
   DOCKER_TAG: garage-ci-${{ github.run_id }}
   DOCKER_CACHE_REPO: "rlworkgroup/garage-ci"
+  OWNER: 'rlworkgroup'
 
 on:
   push:
@@ -70,3 +71,19 @@ jobs:
         repo: ${DOCKER_CACHE_REPO}
         package-name: ${DOCKER_TAG}
         token: ${{ secrets.CI_REGISTRY_TOKEN }}
+    - name: Fetch releases
+      run: |
+        curl -X POST \
+          -s \
+          -H "Accept: application/vnd.github.package-deletes-preview+json" \
+          -H "Authorization: bearer ${{ secrets.CI_REGISTRY_TOKEN }}" \
+          -d '{"query":"query {repository(owner:\"${{ OWNER }}\", name:\"${{ DOCKER_CACHE_REPO }}\") \
+          {registryPackages(last:1) {edges{node{id, name, versions(last:100)\
+          {edges {node {id, updatedAt, version}}}}}}}}"}' \
+          -o /tmp/response.json \
+          --url https://api.github.com/graphql
+    - name: Filter Releases
+      run: "cat /tmp/response.json | jq -r 'def daysAgo(days): (now | floor) - (days * 86400); [.data.repository.registryPackages.edges[0].node.versions.edges | sort_by(.node.updatedAt|fromdate) | reverse | .[] | select( .node.version != \"docker-base-layer\" ) | .value[].node.id] | unique_by(.) | @csv'  | cut -d, -f1  | sed -e 's/^\"//' -e 's/\"$//' > /tmp/release.json"
+    - name: Show Release
+      id: release
+      run: printf "::set-output name=id::%s" $(cat /tmp/release.json)
