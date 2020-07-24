@@ -107,7 +107,7 @@ from garage import wrap_experiment
 from garage.envs import PointEnv, GarageEnv
 from garage.experiment import LocalRunner
 
-@wrap_experiment()
+@wrap_experiment
 def debug_my_algorithm(ctxt):
     runner = LocalRunner(ctxt)
     env = GarageEnv(PointEnv())
@@ -184,7 +184,7 @@ from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.torch.policies import GaussianMLPPolicy
 
-@wrap_experiment()
+@wrap_experiment
 def debug_my_algorithm(ctxt):
     set_seed(100)
     runner = LocalRunner(ctxt)
@@ -324,7 +324,7 @@ policy when training, you can solve an Gym environment, for example
 
 ```py
 ...
-@wrap_experiment()
+@wrap_experiment
 def debug_my_algorithm(ctxt=None):
     set_seed(100)
     runner = LocalRunner(ctxt)
@@ -349,7 +349,7 @@ from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.tf.policies import GaussianMLPPolicy
 
-@wrap_experiment()
+@wrap_experiment
 def debug_my_algorithm(ctxt=None):
     set_seed(100)
     with LocalTFRunner(ctxt) as runner:
@@ -414,11 +414,11 @@ the inputs with sample data.
                 self._discount)
             self._train_once(samples)
 
-    def _train_once(self, paths):
-        obs = np.concatenate([path['observations'] for path in paths])
-        actions = np.concatenate([path['actions'] for path in paths])
+    def _train_once(self, samples):
+        obs = np.concatenate([path['observations'] for path in samples])
+        actions = np.concatenate([path['actions'] for path in samples])
         returns = []
-        for path in paths:
+        for path in samples:
             returns.append(
                 tensor_utils.discount_cumsum(path['rewards'], self._discount))
         returns = np.concatenate(returns)
@@ -508,7 +508,7 @@ with NumPy, and train the `CategoricalMLPPolicy` to solve `CartPole-v1`. The
 debug function is similar to that of TensorFlow:
 
 ```py
-@wrap_experiment()
+@wrap_experiment
 def debug_my_algorithm(ctxt=None):
     set_seed(100)
     with LocalTFRunner(ctxt) as runner:
