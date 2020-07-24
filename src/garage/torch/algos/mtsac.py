@@ -33,7 +33,7 @@ class MTSAC(SAC):
             environment that the agent is being trained in. Usually accessable
             by calling env.spec.
         num_tasks (int): The number of tasks being learned.
-        max_path_length (int): The max path length of the algorithm.
+        max_episode_length (int): The max path length of the algorithm.
         eval_env (garage.envs.GarageEnv): The environment used for collecting
             evaluation trajectories.
         gradient_steps_per_itr (int): Number of optimization steps that should
@@ -71,29 +71,29 @@ class MTSAC(SAC):
     """
 
     def __init__(
-            self,
-            policy,
-            qf1,
-            qf2,
-            replay_buffer,
-            env_spec,
-            num_tasks,
-            max_path_length,
-            eval_env,
-            gradient_steps_per_itr,
-            fixed_alpha=None,
-            target_entropy=None,
-            initial_log_entropy=0.,
-            discount=0.99,
-            buffer_batch_size=64,
-            min_buffer_size=int(1e4),
-            target_update_tau=5e-3,
-            policy_lr=3e-4,
-            qf_lr=3e-4,
-            reward_scale=1.0,
-            optimizer=torch.optim.Adam,
-            steps_per_epoch=1,
-            num_evaluation_trajectories=5,
+        self,
+        policy,
+        qf1,
+        qf2,
+        replay_buffer,
+        env_spec,
+        num_tasks,
+        max_episode_length,
+        eval_env,
+        gradient_steps_per_itr,
+        fixed_alpha=None,
+        target_entropy=None,
+        initial_log_entropy=0.,
+        discount=0.99,
+        buffer_batch_size=64,
+        min_buffer_size=int(1e4),
+        target_update_tau=5e-3,
+        policy_lr=3e-4,
+        qf_lr=3e-4,
+        reward_scale=1.0,
+        optimizer=torch.optim.Adam,
+        steps_per_epoch=1,
+        num_evaluation_trajectories=5,
     ):
 
         super().__init__(
@@ -102,7 +102,7 @@ class MTSAC(SAC):
             qf2=qf2,
             replay_buffer=replay_buffer,
             env_spec=env_spec,
-            max_path_length=max_path_length,
+            max_episode_length=max_episode_length,
             gradient_steps_per_itr=gradient_steps_per_itr,
             fixed_alpha=fixed_alpha,
             target_entropy=target_entropy,

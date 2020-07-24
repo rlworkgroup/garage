@@ -16,7 +16,7 @@ class TNPG(NPO):
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -56,7 +56,7 @@ class TNPG(NPO):
                  policy,
                  baseline,
                  scope=None,
-                 max_path_length=500,
+                 max_episode_length=500,
                  discount=0.99,
                  gae_lambda=0.98,
                  center_adv=True,
@@ -83,7 +83,7 @@ class TNPG(NPO):
                          policy=policy,
                          baseline=baseline,
                          scope=scope,
-                         max_path_length=max_path_length,
+                         max_episode_length=max_episode_length,
                          discount=discount,
                          gae_lambda=gae_lambda,
                          center_adv=center_adv,

@@ -18,12 +18,12 @@ from garage.tf.policies import GaussianGRUPolicy
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--max_path_length', default=100)
+@click.option('--max_episode_length', default=100)
 @click.option('--meta_batch_size', default=10)
 @click.option('--n_epochs', default=10)
 @click.option('--episode_per_task', default=4)
 @wrap_experiment
-def rl2_trpo_halfcheetah(ctxt, seed, max_path_length, meta_batch_size,
+def rl2_trpo_halfcheetah(ctxt, seed, max_episode_length, meta_batch_size,
                          n_epochs, episode_per_task):
     """Train TRPO with HalfCheetah environment.
 
@@ -32,7 +32,7 @@ def rl2_trpo_halfcheetah(ctxt, seed, max_path_length, meta_batch_size,
             configuration used by LocalRunner to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         meta_batch_size (int): Meta batch size.
         n_epochs (int): Total number of epochs for training.
         episode_per_task (int): Number of training episode per task.
@@ -51,13 +51,14 @@ def rl2_trpo_halfcheetah(ctxt, seed, max_path_length, meta_batch_size,
 
         baseline = LinearFeatureBaseline(env_spec=env_spec)
 
-        algo = RL2TRPO(rl2_max_path_length=max_path_length,
+        algo = RL2TRPO(rl2_max_episode_length=max_episode_length,
                        meta_batch_size=meta_batch_size,
                        task_sampler=tasks,
                        env_spec=env_spec,
                        policy=policy,
                        baseline=baseline,
-                       max_path_length=max_path_length * episode_per_task,
+                       max_episode_length=max_episode_length *
+                       episode_per_task,
                        discount=0.99,
                        max_kl_step=0.01,
                        optimizer=ConjugateGradientOptimizer,
@@ -72,7 +73,7 @@ def rl2_trpo_halfcheetah(ctxt, seed, max_path_length, meta_batch_size,
                      worker_args=dict(n_paths_per_trial=episode_per_task))
 
         runner.train(n_epochs=n_epochs,
-                     batch_size=episode_per_task * max_path_length *
+                     batch_size=episode_per_task * max_episode_length *
                      meta_batch_size)
 
 

@@ -39,7 +39,7 @@ class TestLocalRunner:
         algo = PPO(env_spec=self.env.spec,
                    policy=self.policy,
                    value_function=self.value_function,
-                   max_path_length=100,
+                   max_episode_length=100,
                    discount=0.99,
                    gae_lambda=0.97,
                    lr_clip_range=2e-1)
@@ -78,7 +78,7 @@ class CrashingAlgo:
 def test_setup_no_sampler_cls():
     runner = LocalRunner(snapshot_config)
     algo = CrashingAlgo()
-    algo.max_path_length = 100
+    algo.max_episode_length = 100
     runner.setup(algo, None)
     with pytest.raises(ValueError, match='sampler_cls'):
         runner.train(n_epochs=5)
@@ -90,9 +90,9 @@ def test_setup_no_policy():
         runner.setup(CrashingAlgo(), None, sampler_cls=LocalSampler)
 
 
-def test_setup_no_max_path_length():
+def test_setup_no_max_episode_length():
     runner = LocalRunner(snapshot_config)
     algo = CrashingAlgo()
     algo.policy = ()
-    with pytest.raises(ValueError, match='max_path_length'):
+    with pytest.raises(ValueError, match='max_episode_length'):
         runner.setup(algo, None, sampler_cls=LocalSampler)

@@ -55,7 +55,7 @@ class LocalTFRunner(LocalRunner):
                 env=env,
                 policy=policy,
                 baseline=baseline,
-                max_path_length=100,
+                max_episode_length=100,
                 discount=0.99,
                 max_kl_step=0.01)
             runner.setup(algo, env)
@@ -109,7 +109,7 @@ class LocalTFRunner(LocalRunner):
                      *,
                      seed=None,
                      n_workers=psutil.cpu_count(logical=False),
-                     max_path_length=None,
+                     max_episode_length=None,
                      worker_class=None,
                      sampler_args=None,
                      worker_args=None):
@@ -118,7 +118,7 @@ class LocalTFRunner(LocalRunner):
         Args:
             sampler_cls (type): The type of sampler to construct.
             seed (int): Seed to use in sampler workers.
-            max_path_length (int): Maximum path length to be sampled by the
+            max_episode_length (int): Maximum path length to be sampled by the
                 sampler. Paths longer than this will be truncated.
             n_workers (int): The number of workers the sampler should use.
             worker_class (type): Type of worker the sampler should use.
@@ -138,7 +138,7 @@ class LocalTFRunner(LocalRunner):
             sampler_cls,
             seed=seed,
             n_workers=n_workers,
-            max_path_length=max_path_length,
+            max_episode_length=max_episode_length,
             worker_class=TFWorkerClassWrapper(worker_class),
             sampler_args=sampler_args,
             worker_args=worker_args)

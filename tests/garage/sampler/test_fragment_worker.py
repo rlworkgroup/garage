@@ -13,7 +13,7 @@ from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
 
 SEED = 100
 N_TRAJ = 5
-MAX_PATH_LENGTH = 9
+MAX_EPISODE_LENGTH = 9
 
 
 @pytest.fixture
@@ -84,13 +84,13 @@ def slice_trajectories(trajectories, slice_size):
 @pytest.mark.parametrize('timesteps_per_call', [1, 2])
 def test_rollout(env, policy, timesteps_per_call):
     worker = FragmentWorker(seed=SEED,
-                            max_path_length=MAX_PATH_LENGTH,
+                            max_episode_length=MAX_EPISODE_LENGTH,
                             worker_number=0,
                             n_envs=N_TRAJ,
                             timesteps_per_call=timesteps_per_call)
     worker.update_agent(policy)
     worker.update_env(env)
-    n_calls = math.ceil(MAX_PATH_LENGTH / timesteps_per_call)
+    n_calls = math.ceil(MAX_EPISODE_LENGTH / timesteps_per_call)
     for i in range(n_calls):
         traj = worker.rollout()
         assert sum(traj.lengths) == timesteps_per_call * N_TRAJ
@@ -104,14 +104,14 @@ def test_rollout(env, policy, timesteps_per_call):
 def test_in_local_sampler(policy, envs, other_envs, timesteps_per_call):
     true_workers = WorkerFactory(seed=100,
                                  n_workers=N_TRAJ,
-                                 max_path_length=MAX_PATH_LENGTH)
+                                 max_episode_length=MAX_EPISODE_LENGTH)
     true_sampler = LocalSampler.from_worker_factory(true_workers, policy, envs)
     worker_args = dict(n_envs=N_TRAJ, timesteps_per_call=timesteps_per_call)
     vec_workers = WorkerFactory(seed=100,
                                 n_workers=1,
                                 worker_class=FragmentWorker,
                                 worker_args=worker_args,
-                                max_path_length=MAX_PATH_LENGTH)
+                                max_episode_length=MAX_EPISODE_LENGTH)
     vec_sampler = LocalSampler.from_worker_factory(vec_workers, policy, [envs])
     n_samples = 400
 

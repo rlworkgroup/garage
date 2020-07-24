@@ -42,7 +42,7 @@ def cma_es_cartpole(ctxt=None, seed=1):
         algo = CMAES(env_spec=env.spec,
                      policy=policy,
                      baseline=baseline,
-                     max_path_length=100,
+                     max_episode_length=100,
                      n_samples=n_samples)
 
         runner.setup(algo, env)

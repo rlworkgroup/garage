@@ -29,7 +29,7 @@ class VPG(RLAlgorithm):
             for policy.
         vf_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer for
             value function.
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         num_train_per_epoch (int): Number of train_once calls per epoch.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
@@ -61,7 +61,7 @@ class VPG(RLAlgorithm):
         value_function,
         policy_optimizer=None,
         vf_optimizer=None,
-        max_path_length=500,
+        max_episode_length=500,
         num_train_per_epoch=1,
         discount=0.99,
         gae_lambda=1,
@@ -74,7 +74,7 @@ class VPG(RLAlgorithm):
     ):
         self.discount = discount
         self.policy = policy
-        self.max_path_length = max_path_length
+        self.max_episode_length = max_episode_length
 
         self._value_function = value_function
         self._gae_lambda = gae_lambda
@@ -281,7 +281,7 @@ class VPG(RLAlgorithm):
     def _compute_loss(self, obs, actions, rewards, valids, baselines):
         r"""Compute mean value of loss.
 
-        Notes: P is the maximum path length (self.max_path_length)
+        Notes: P is the maximum path length (self.max_episode_length)
 
         Args:
             obs (torch.Tensor): Observation from the environment
@@ -335,7 +335,7 @@ class VPG(RLAlgorithm):
     def _compute_advantage(self, rewards, valids, baselines):
         r"""Compute mean value of loss.
 
-        Notes: P is the maximum path length (self.max_path_length)
+        Notes: P is the maximum path length (self.max_episode_length)
 
         Args:
             rewards (torch.Tensor): Acquired rewards
@@ -350,7 +350,7 @@ class VPG(RLAlgorithm):
 
         """
         advantages = compute_advantages(self.discount, self._gae_lambda,
-                                        self.max_path_length, baselines,
+                                        self.max_episode_length, baselines,
                                         rewards)
         advantage_flat = torch.cat(filter_valids(advantages, valids))
 
@@ -370,7 +370,7 @@ class VPG(RLAlgorithm):
         Compute the KL divergence between the old policy distribution and
         current policy distribution.
 
-        Notes: P is the maximum path length (self.max_path_length)
+        Notes: P is the maximum path length (self.max_episode_length)
 
         Args:
             obs (torch.Tensor): Observation from the environment
@@ -394,7 +394,7 @@ class VPG(RLAlgorithm):
     def _compute_policy_entropy(self, obs):
         r"""Compute entropy value of probability distribution.
 
-        Notes: P is the maximum path length (self.max_path_length)
+        Notes: P is the maximum path length (self.max_episode_length)
 
         Args:
             obs (torch.Tensor): Observation from the environment
@@ -443,7 +443,7 @@ class VPG(RLAlgorithm):
     def process_samples(self, paths):
         r"""Process sample data based on the collected paths.
 
-        Notes: P is the maximum path length (self.max_path_length)
+        Notes: P is the maximum path length (self.max_episode_length)
 
         Args:
             paths (list[dict]): A list of collected paths
@@ -462,22 +462,22 @@ class VPG(RLAlgorithm):
         valids = torch.Tensor([len(path['actions']) for path in paths]).int()
         obs = torch.stack([
             pad_to_last(path['observations'],
-                        total_length=self.max_path_length,
+                        total_length=self.max_episode_length,
                         axis=0) for path in paths
         ])
         actions = torch.stack([
             pad_to_last(path['actions'],
-                        total_length=self.max_path_length,
+                        total_length=self.max_episode_length,
                         axis=0) for path in paths
         ])
         rewards = torch.stack([
-            pad_to_last(path['rewards'], total_length=self.max_path_length)
+            pad_to_last(path['rewards'], total_length=self.max_episode_length)
             for path in paths
         ])
         returns = torch.stack([
             pad_to_last(tu.discount_cumsum(path['rewards'],
                                            self.discount).copy(),
-                        total_length=self.max_path_length) for path in paths
+                        total_length=self.max_episode_length) for path in paths
         ])
         with torch.no_grad():
             baselines = self._value_function(obs)

@@ -12,7 +12,7 @@ from garage.torch.value_functions import GaussianMLPValueFunction
 
 hyper_parameters = {
     'n_epochs': 500,
-    'max_path_length': 100,
+    'max_episode_length': 100,
     'batch_size': 1024,
 }
 
@@ -55,16 +55,17 @@ def ppo_garage_pytorch(ctxt, env_id, seed):
                                     max_optimization_epochs=10,
                                     minibatch_size=64)
 
-    algo = PyTorch_PPO(env_spec=env.spec,
-                       policy=policy,
-                       value_function=value_function,
-                       policy_optimizer=policy_optimizer,
-                       vf_optimizer=vf_optimizer,
-                       max_path_length=hyper_parameters['max_path_length'],
-                       discount=0.99,
-                       gae_lambda=0.95,
-                       center_adv=True,
-                       lr_clip_range=0.2)
+    algo = PyTorch_PPO(
+        env_spec=env.spec,
+        policy=policy,
+        value_function=value_function,
+        policy_optimizer=policy_optimizer,
+        vf_optimizer=vf_optimizer,
+        max_episode_length=hyper_parameters['max_episode_length'],
+        discount=0.99,
+        gae_lambda=0.95,
+        center_adv=True,
+        lr_clip_range=0.2)
 
     runner.setup(algo, env)
     runner.train(n_epochs=hyper_parameters['n_epochs'],

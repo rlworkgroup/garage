@@ -100,7 +100,7 @@ class RL2Worker(DefaultWorker):
 
     Args:
         seed(int): The seed to use to intialize random number generators.
-        max_path_length(int or float): The maximum length paths which will
+        max_episode_length(int or float): The maximum length paths which will
             be sampled. Can be (floating point) infinity.
         worker_number(int): The number of the worker where this update is
             occurring. This argument is used to set a different seed for each
@@ -119,12 +119,12 @@ class RL2Worker(DefaultWorker):
             self,
             *,  # Require passing by keyword, since everything's an int.
             seed,
-            max_path_length,
+            max_episode_length,
             worker_number,
             n_paths_per_trial=2):
         self._n_paths_per_trial = n_paths_per_trial
         super().__init__(seed=seed,
-                         max_path_length=max_path_length,
+                         max_episode_length=max_episode_length,
                          worker_number=worker_number)
 
     def start_rollout(self):
@@ -275,9 +275,9 @@ class RL2(MetaRLAlgorithm, abc.ABC):
     garage/tf/algos/rl2ppo.py and garage/tf/algos/rl2trpo.py.
 
     Args:
-        rl2_max_path_length (int): Maximum length for trajectories with respect
-            to RL^2. Notice that it is different from the maximum path length
-            for the inner algorithm.
+        rl2_max_episode_length (int): Maximum length for trajectories with
+            respect to RL^2. Notice that it is different from the maximum
+            path length for the inner algorithm.
         meta_batch_size (int): Meta batch size.
         task_sampler (garage.experiment.TaskSampler): Task sampler.
         meta_evaluator (garage.experiment.MetaEvaluator): Evaluator for meta-RL
@@ -288,10 +288,10 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
     """
 
-    def __init__(self, rl2_max_path_length, meta_batch_size, task_sampler,
+    def __init__(self, rl2_max_episode_length, meta_batch_size, task_sampler,
                  meta_evaluator, n_epochs_per_eval, **inner_algo_args):
         self._inner_algo = RL2NPO(**inner_algo_args)
-        self._rl2_max_path_length = rl2_max_path_length
+        self._rl2_max_episode_length = rl2_max_episode_length
         self.env_spec = self._inner_algo._env_spec
         self._n_epochs_per_eval = n_epochs_per_eval
         self._policy = self._inner_algo.policy
@@ -429,10 +429,10 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
         # stack and pad to max path length of the concatenated
         # path, which will be fed to inner algo
-        # i.e. max_path_length * episode_per_task
+        # i.e. max_episode_length * episode_per_task
         concatenated_paths_stacked = (
             np_tensor_utils.stack_and_pad_tensor_dict_list(
-                concatenated_paths, self._inner_algo.max_path_length))
+                concatenated_paths, self._inner_algo.max_episode_length))
 
         name_map = None
         if hasattr(self._task_sampler, '_envs') and hasattr(
@@ -467,10 +467,10 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
         Returns:
             dict: Concatenated paths from the same task/environment. Shape of
-                values: :math:`[max_path_length * episode_per_task, S^*]`
+                values: :math:`[max_episode_length * episode_per_task, S^*]`
             list[dict]: Original input paths. Length of the list is
                 :math:`episode_per_task` and each path in the list has
-                values of shape :math:`[max_path_length, S^*]`
+                values of shape :math:`[max_episode_length, S^*]`
 
         """
         observations = np.concatenate([path['observations'] for path in paths])
@@ -502,11 +502,11 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         return self._inner_algo.policy
 
     @property
-    def max_path_length(self):
+    def max_episode_length(self):
         """Max path length.
 
         Returns:
             int: Maximum path length in a trajectory.
 
         """
-        return self._rl2_max_path_length
+        return self._rl2_max_episode_length

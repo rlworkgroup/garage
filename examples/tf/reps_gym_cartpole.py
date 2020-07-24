@@ -42,7 +42,7 @@ def reps_gym_cartpole(ctxt=None, seed=1):
         algo = REPS(env_spec=env.spec,
                     policy=policy,
                     baseline=baseline,
-                    max_path_length=100,
+                    max_episode_length=100,
                     discount=0.99)
 
         runner.setup(algo, env)

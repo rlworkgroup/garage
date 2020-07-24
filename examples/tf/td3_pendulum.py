@@ -67,7 +67,7 @@ def td3_pendulum(ctxt=None, seed=1):
                   qf_lr=1e-3,
                   qf=qf,
                   qf2=qf2,
-                  max_path_length=100,
+                  max_episode_length=100,
                   replay_buffer=replay_buffer,
                   target_update_tau=1e-2,
                   steps_per_epoch=20,

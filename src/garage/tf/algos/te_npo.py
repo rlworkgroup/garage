@@ -46,7 +46,7 @@ class TENPO(RLAlgorithm):
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -90,7 +90,7 @@ class TENPO(RLAlgorithm):
                  policy,
                  baseline,
                  scope=None,
-                 max_path_length=500,
+                 max_episode_length=500,
                  discount=0.99,
                  gae_lambda=1,
                  center_adv=True,
@@ -115,7 +115,7 @@ class TENPO(RLAlgorithm):
 
         self.policy = policy
         self.scope = scope
-        self.max_path_length = max_path_length
+        self.max_episode_length = max_episode_length
 
         self._env_spec = env_spec
         self._baseline = baseline
@@ -301,7 +301,7 @@ class TENPO(RLAlgorithm):
                 * paths: (list[dict])
 
         """
-        max_path_length = self.max_path_length
+        max_episode_length = self.max_episode_length
 
         def _extract_latent_infos(infos):
             """Extract and pack latent infos from dict.
@@ -337,7 +337,7 @@ class TENPO(RLAlgorithm):
             # - Only observation is used for a single step.
             #   Alternatively, stacked [observation, action] can be used for
             #   in harder tasks.
-            obs = pad_tensor(path['observations'], max_path_length)
+            obs = pad_tensor(path['observations'], max_episode_length)
             obs_flat = self._env_spec.observation_space.flatten_n(obs)
             steps = obs_flat
             window = self._inference.spec.input_space.shape[0]
@@ -351,22 +351,22 @@ class TENPO(RLAlgorithm):
         all_path_baselines = [self._baseline.predict(path) for path in paths]
 
         tasks = [path['tasks'] for path in paths]
-        tasks = pad_tensor_n(tasks, max_path_length)
+        tasks = pad_tensor_n(tasks, max_episode_length)
 
         trajectories = np.stack([path['trajectories'] for path in paths])
 
         latents = [path['latents'] for path in paths]
-        latents = pad_tensor_n(latents, max_path_length)
+        latents = pad_tensor_n(latents, max_episode_length)
 
         latent_infos = [path['latent_infos'] for path in paths]
         latent_infos = stack_tensor_dict_list(
-            [pad_tensor_dict(p, max_path_length) for p in latent_infos])
+            [pad_tensor_dict(p, max_episode_length) for p in latent_infos])
 
         trajectory_infos = [path['trajectory_infos'] for path in paths]
         trajectory_infos = stack_tensor_dict_list(
-            [pad_tensor_dict(p, max_path_length) for p in trajectory_infos])
+            [pad_tensor_dict(p, max_episode_length) for p in trajectory_infos])
 
-        samples_data = paths_to_tensors(paths, max_path_length,
+        samples_data = paths_to_tensors(paths, max_episode_length,
                                         all_path_baselines, self._discount,
                                         self._gae_lambda)
         samples_data['tasks'] = tasks
@@ -545,11 +545,11 @@ class TENPO(RLAlgorithm):
             with tf.name_scope('advantages'):
                 adv = compute_advantages(self._discount,
                                          self._gae_lambda,
-                                         self.max_path_length,
+                                         self.max_episode_length,
                                          i.baseline_var,
                                          rewards,
                                          name='advantages')
-                adv = tf.reshape(adv, [-1, self.max_path_length])
+                adv = tf.reshape(adv, [-1, self.max_episode_length])
 
             # Optionally normalize advantages
             eps = tf.constant(1e-8, dtype=tf.float32)
@@ -606,7 +606,7 @@ class TENPO(RLAlgorithm):
                 rewards, feed_list=flatten_inputs(self._policy_opt_inputs))
 
             returns = discounted_returns(self._discount,
-                                         self.max_path_length,
+                                         self.max_episode_length,
                                          rewards,
                                          name='returns')
             self._f_returns = tf.compat.v1.get_default_session().make_callable(
@@ -733,7 +733,7 @@ class TENPO(RLAlgorithm):
             # Calculate loss
             traj_gammas = tf.constant(float(self._discount),
                                       dtype=tf.float32,
-                                      shape=[self.max_path_length])
+                                      shape=[self.max_episode_length])
             # Pylint false alarm
             # pylint: disable=no-value-for-parameter
             traj_discounts = tf.compat.v1.cumprod(traj_gammas,
@@ -898,7 +898,7 @@ class TENPO(RLAlgorithm):
         path_lengths = np.sum(samples_data['valids'], axis=1)
         for t in range(self.policy.task_space.flat_dim):
             lengths = path_lengths[task_indices == t]
-            completed = lengths < self.max_path_length
+            completed = lengths < self.max_episode_length
             pct_completed = np.mean(completed)
             tabular.record('Tasks/EpisodeLength/t={}'.format(t),
                            np.mean(lengths))

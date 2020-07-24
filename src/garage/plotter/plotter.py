@@ -71,14 +71,14 @@ class Plotter:
                     initial_rollout = False
                     rollout(env,
                             policy,
-                            max_path_length=max_length,
+                            max_episode_length=max_length,
                             animated=True,
                             speedup=5)
                 else:
                     if max_length:
                         rollout(env,
                                 policy,
-                                max_path_length=max_length,
+                                max_episode_length=max_length,
                                 animated=True,
                                 speedup=5)
         except KeyboardInterrupt:
@@ -141,7 +141,7 @@ class Plotter:
         if 'Darwin' in platform.platform():
             rollout(env,
                     policy,
-                    max_path_length=np.inf,
+                    max_episode_length=np.inf,
                     animated=True,
                     speedup=5)
 

@@ -29,7 +29,7 @@ class CEM(RLAlgorithm):
             (Generalized Advantage Estimation).
         n_samples (int): Number of policies sampled in one epoch.
         discount (float): Environment reward discount.
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         best_frac (float): The best fraction.
         init_std (float): Initial std for policy param distribution.
         extra_std (float): Decaying std added to param distribution.
@@ -43,13 +43,13 @@ class CEM(RLAlgorithm):
                  baseline,
                  n_samples,
                  discount=0.99,
-                 max_path_length=500,
+                 max_episode_length=500,
                  init_std=1,
                  best_frac=0.05,
                  extra_std=1.,
                  extra_decay_time=100):
         self.policy = policy
-        self.max_path_length = max_path_length
+        self.max_episode_length = max_episode_length
         self.sampler_cls = RaySampler
 
         self._best_frac = best_frac
@@ -144,7 +144,7 @@ class CEM(RLAlgorithm):
             ]
 
         # -- Stage: Pre-process samples based on collected paths
-        samples_data = paths_to_tensors(paths, self.max_path_length,
+        samples_data = paths_to_tensors(paths, self.max_episode_length,
                                         baseline_predictions, self._discount)
 
         # -- Stage: Run and calculate performance of the algorithm

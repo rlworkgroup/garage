@@ -29,7 +29,7 @@ class TestCEM(TfGraphTestCase):
                        policy=policy,
                        baseline=baseline,
                        best_frac=0.1,
-                       max_path_length=100,
+                       max_episode_length=100,
                        n_samples=n_samples)
 
             runner.setup(algo, env, sampler_cls=LocalSampler)

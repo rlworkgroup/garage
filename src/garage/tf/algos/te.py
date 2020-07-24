@@ -15,7 +15,7 @@ class TaskEmbeddingWorker(DefaultWorker):
 
     Args:
         seed(int): The seed to use to intialize random number generators.
-        max_path_length(int or float): The maximum length paths which will
+        max_episode_length(int or float): The maximum length paths which will
             be sampled. Can be (floating point) infinity.
         worker_number(int): The number of the worker where this update is
             occurring. This argument is used to set a different seed for each
@@ -31,14 +31,14 @@ class TaskEmbeddingWorker(DefaultWorker):
             self,
             *,  # Require passing by keyword, since everything's an int.
             seed,
-            max_path_length,
+            max_episode_length,
             worker_number):
         self._latents = []
         self._tasks = []
         self._latent_infos = defaultdict(list)
         self._z, self._t, self._latent_info = None, None, None
         super().__init__(seed=seed,
-                         max_path_length=max_path_length,
+                         max_episode_length=max_episode_length,
                          worker_number=worker_number)
 
     def start_rollout(self):
@@ -54,10 +54,10 @@ class TaskEmbeddingWorker(DefaultWorker):
 
         Returns:
             bool: True iff the path is done, either due to the environment
-                indicating termination of due to reaching `max_path_length`.
+                indicating termination of due to reaching `max_episode_length`.
 
         """
-        if self._path_length < self._max_path_length:
+        if self._path_length < self._max_episode_length:
             a, agent_info = self.agent.get_action_given_latent(
                 self._prev_obs, self._z)
             next_o, r, d, env_info = self.env.step(a)

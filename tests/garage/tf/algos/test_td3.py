@@ -56,7 +56,7 @@ class TestTD3(TfGraphTestCase):
                        qf=qf,
                        qf2=qf2,
                        replay_buffer=replay_buffer,
-                       max_path_length=100,
+                       max_episode_length=100,
                        steps_per_epoch=20,
                        target_update_tau=0.005,
                        n_train_steps=50,

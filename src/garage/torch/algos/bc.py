@@ -33,7 +33,7 @@ class BC(RLAlgorithm):
         source (garage.Policy or Generator[garage.TimeStepBatch]): Expert to
             clone. If a policy is passed, will set `.policy` to source and use
             the runner to sample from the policy.
-        max_path_length (int or None): Required if a policy is passed as
+        max_episode_length (int or None): Required if a policy is passed as
             source.
         policy_optimizer (torch.optim.Optimizer): Optimizer to be used to
             optimize the policy.
@@ -45,9 +45,9 @@ class BC(RLAlgorithm):
         name (str): Name to use for logging.
 
     Raises:
-        ValueError: If `source` is a `garage.Policy` and `max_path_length` is
-            not passed or `learner` is not a `garage.torch.StochasticPolicy`
-            and loss is 'log_prob'.
+        ValueError: If `source` is a `garage.Policy` and `max_episode_length`
+            is not passed or `learner` is not a
+            `garage.torch.StochasticPolicy` and loss is 'log_prob'.
 
     """
 
@@ -60,7 +60,7 @@ class BC(RLAlgorithm):
         *,
         batch_size,
         source=None,
-        max_path_length=None,
+        max_episode_length=None,
         policy_optimizer=torch.optim.Adam,
         policy_lr=_Default(1e-3),
         loss='log_prob',
@@ -83,11 +83,11 @@ class BC(RLAlgorithm):
         # Public fields for sampling.
         self.env_spec = env_spec
         self.policy = None
-        self.max_path_length = max_path_length
+        self.max_episode_length = max_episode_length
         self.sampler_cls = None
         if isinstance(self._source, Policy):
-            if max_path_length is None:
-                raise ValueError('max_path_length must be passed if the '
+            if max_episode_length is None:
+                raise ValueError('max_episode_length must be passed if the '
                                  'source is a policy')
             self.policy = self._source
             self.sampler_cls = RaySampler

@@ -14,7 +14,7 @@ class DefaultWorker(Worker):
 
     Args:
         seed(int): The seed to use to intialize random number generators.
-        max_path_length(int or float): The maximum length paths which will
+        max_episode_length(int or float): The maximum length paths which will
             be sampled. Can be (floating point) infinity.
         worker_number(int): The number of the worker where this update is
             occurring. This argument is used to set a different seed for each
@@ -30,10 +30,10 @@ class DefaultWorker(Worker):
             self,
             *,  # Require passing by keyword, since everything's an int.
             seed,
-            max_path_length,
+            max_episode_length,
             worker_number):
         super().__init__(seed=seed,
-                         max_path_length=max_path_length,
+                         max_episode_length=max_episode_length,
                          worker_number=worker_number)
         self.agent = None
         self.env = None
@@ -102,10 +102,10 @@ class DefaultWorker(Worker):
 
         Returns:
             bool: True iff the path is done, either due to the environment
-            indicating termination of due to reaching `max_path_length`.
+            indicating termination of due to reaching `max_episode_length`.
 
         """
-        if self._path_length < self._max_path_length:
+        if self._path_length < self._max_episode_length:
             a, agent_info = self.agent.get_action(self._prev_obs)
             next_o, r, d, env_info = self.env.step(a)
             self._observations.append(self._prev_obs)

@@ -14,7 +14,7 @@ class VPG(NPO):
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -54,7 +54,7 @@ class VPG(NPO):
                  policy,
                  baseline,
                  scope=None,
-                 max_path_length=500,
+                 max_episode_length=500,
                  discount=0.99,
                  gae_lambda=1,
                  center_adv=True,
@@ -73,7 +73,7 @@ class VPG(NPO):
         if optimizer is None:
             default_args = dict(
                 batch_size=None,
-                max_epochs=1,
+                max_episode_length=1,
             )
             optimizer = FirstOrderOptimizer
             if optimizer_args is None:
@@ -84,7 +84,7 @@ class VPG(NPO):
                          policy=policy,
                          baseline=baseline,
                          scope=scope,
-                         max_path_length=max_path_length,
+                         max_episode_length=max_episode_length,
                          discount=discount,
                          gae_lambda=gae_lambda,
                          center_adv=center_adv,

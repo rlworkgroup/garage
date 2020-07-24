@@ -53,19 +53,19 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
-    max_path_length = 100
+    max_episode_length = 100
 
     test_sampler = SetTaskSampler(lambda: GarageEnv(
         normalize(mwb.ML1.get_test_tasks('push-v1'))))
 
     meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
-                                   max_path_length=max_path_length)
+                                   max_episode_length=max_episode_length)
 
     runner = LocalRunner(ctxt)
     algo = MAMLTRPO(env=env,
                     policy=policy,
                     value_function=value_function,
-                    max_path_length=max_path_length,
+                    max_episode_length=max_episode_length,
                     meta_batch_size=meta_batch_size,
                     discount=0.99,
                     gae_lambda=1.,
@@ -75,7 +75,7 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
 
     runner.setup(algo, env)
     runner.train(n_epochs=epochs,
-                 batch_size=rollouts_per_task * max_path_length)
+                 batch_size=rollouts_per_task * max_episode_length)
 
 
 maml_trpo_metaworld_ml1_push()

@@ -51,13 +51,13 @@ def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, rollouts_per_task,
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
-    max_path_length = 100
+    max_episode_length = 100
 
     task_sampler = SetTaskSampler(lambda: GarageEnv(
         normalize(HalfCheetahDirEnv(), expected_action_scale=10.)))
 
     meta_evaluator = MetaEvaluator(test_task_sampler=task_sampler,
-                                   max_path_length=max_path_length,
+                                   max_episode_length=max_episode_length,
                                    n_test_tasks=1,
                                    n_test_rollouts=10)
 
@@ -65,7 +65,7 @@ def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, rollouts_per_task,
     algo = MAMLTRPO(env=env,
                     policy=policy,
                     value_function=value_function,
-                    max_path_length=max_path_length,
+                    max_episode_length=max_episode_length,
                     meta_batch_size=meta_batch_size,
                     discount=0.99,
                     gae_lambda=1.,
@@ -75,7 +75,7 @@ def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, rollouts_per_task,
 
     runner.setup(algo, env)
     runner.train(n_epochs=epochs,
-                 batch_size=rollouts_per_task * max_path_length)
+                 batch_size=rollouts_per_task * max_episode_length)
 
 
 maml_trpo_half_cheetah_dir()

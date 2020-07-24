@@ -44,11 +44,11 @@ class SAC(RLAlgorithm):
         env_spec (garage.envs.env_spec.EnvSpec): The env_spec attribute of the
             environment that the agent is being trained in. Usually accessable
             by calling env.spec.
-        max_path_length (int): Max path length of the algorithm.
+        max_episode_length (int): Max path length of the algorithm.
         max_eval_path_length (int or None): Maximum length of paths used for
-            off-policy evaluation. If None, defaults to `max_path_length`.
+            off-policy evaluation. If None, defaults to `max_episode_length`.
         gradient_steps_per_itr (int): Number of optimization steps that should
-        max_path_length(int): Max path length of the environment.
+        max_episode_length(int): Max path length of the environment.
         gradient_steps_per_itr(int): Number of optimization steps that should
             occur before the training step is over and a new batch of
             transitions is collected by the sampler.
@@ -93,7 +93,7 @@ class SAC(RLAlgorithm):
         qf2,
         replay_buffer,
         *,  # Everything after this is numbers.
-        max_path_length,
+        max_episode_length,
         max_eval_path_length=None,
         gradient_steps_per_itr,
         fixed_alpha=None,
@@ -129,7 +129,7 @@ class SAC(RLAlgorithm):
         self._buffer_batch_size = buffer_batch_size
         self._discount = discount
         self._reward_scale = reward_scale
-        self.max_path_length = max_path_length
+        self.max_episode_length = max_episode_length
         self._max_eval_path_length = max_eval_path_length
 
         self.policy = policy

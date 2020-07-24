@@ -34,7 +34,7 @@ def multi_env_trpo(ctxt=None, seed=1):
         algo = TRPO(env_spec=env.spec,
                     policy=policy,
                     baseline=baseline,
-                    max_path_length=100,
+                    max_episode_length=100,
                     discount=0.99,
                     gae_lambda=0.95,
                     lr_clip_range=0.2,

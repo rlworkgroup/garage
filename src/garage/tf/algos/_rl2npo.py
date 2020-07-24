@@ -20,7 +20,7 @@ class RL2NPO(NPO):
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -107,9 +107,9 @@ class RL2NPO(NPO):
 
         Returns:
             np.ndarray: Baseline prediction, with shape
-                :math:`(N, max_path_length * episode_per_task)`.
+                :math:`(N, max_episode_length * episode_per_task)`.
 
         """
         paths = samples_data['paths']
         baselines = [self._baseline.predict(path) for path in paths]
-        return np_tensor_utils.pad_tensor_n(baselines, self.max_path_length)
+        return np_tensor_utils.pad_tensor_n(baselines, self.max_episode_length)

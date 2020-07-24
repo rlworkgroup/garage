@@ -29,10 +29,10 @@ class DDPG(RLAlgorithm):
         replay_buffer (garage.replay_buffer.ReplayBuffer): Replay buffer.
         steps_per_epoch (int): Number of train_once calls per epoch.
         n_train_steps (int): Training steps.
-        max_path_length (int): Maximum path length. The episode will
-            terminate when length of trajectory reaches max_path_length.
+        max_episode_length (int): Maximum path length. The episode will
+            terminate when length of trajectory reaches max_episode_length.
         max_eval_path_length (int or None): Maximum length of paths used for
-            off-policy evaluation. If None, defaults to `max_path_length`.
+            off-policy evaluation. If None, defaults to `max_episode_length`.
         buffer_batch_size (int): Batch size of replay buffer.
         min_buffer_size (int): The minimum buffer size for replay buffer.
         exploration_policy (garage.np.exploration_policies.ExplorationPolicy):
@@ -67,7 +67,7 @@ class DDPG(RLAlgorithm):
             *,  # Everything after this is numbers.
             steps_per_epoch=20,
             n_train_steps=50,
-            max_path_length=None,
+            max_episode_length=None,
             max_eval_path_length=None,
             buffer_batch_size=64,
             min_buffer_size=int(1e4),
@@ -113,7 +113,7 @@ class DDPG(RLAlgorithm):
         self._buffer_batch_size = buffer_batch_size
         self._discount = discount
         self._reward_scale = reward_scale
-        self.max_path_length = max_path_length
+        self.max_episode_length = max_episode_length
         self._max_eval_path_length = max_eval_path_length
         self._eval_env = None
 

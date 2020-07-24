@@ -16,10 +16,10 @@ def test_obtain_samples():
     env = GarageEnv(GridWorldEnv(desc='4x4'))
     policy = ScriptedPolicy(
         scripted_actions=[2, 2, 1, 0, 3, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 1])
-    algo = Mock(env_spec=env.spec, policy=policy, max_path_length=16)
+    algo = Mock(env_spec=env.spec, policy=policy, max_episode_length=16)
 
     workers = WorkerFactory(seed=100,
-                            max_path_length=algo.max_path_length,
+                            max_episode_length=algo.max_episode_length,
                             n_workers=8)
     sampler1 = MultiprocessingSampler.from_worker_factory(workers, policy, env)
     sampler2 = LocalSampler.from_worker_factory(workers, policy, env)
@@ -53,17 +53,17 @@ def test_obtain_samples():
 @pytest.mark.flaky
 @pytest.mark.timeout(10)
 def test_update_envs_env_update():
-    max_path_length = 16
+    max_episode_length = 16
     env = GarageEnv(PointEnv())
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
-                             for _ in range(max_path_length)
+                             for _ in range(max_episode_length)
                          ])
     tasks = SetTaskSampler(PointEnv)
     n_workers = 8
     workers = WorkerFactory(seed=100,
-                            max_path_length=max_path_length,
+                            max_episode_length=max_episode_length,
                             n_workers=n_workers)
     sampler = MultiprocessingSampler.from_worker_factory(workers, policy, env)
     rollouts = sampler.obtain_samples(0,
@@ -88,17 +88,17 @@ def test_update_envs_env_update():
 
 @pytest.mark.timeout(10)
 def test_init_with_env_updates():
-    max_path_length = 16
+    max_episode_length = 16
     env = GarageEnv(PointEnv())
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
-                             for _ in range(max_path_length)
+                             for _ in range(max_episode_length)
                          ])
     tasks = SetTaskSampler(lambda: GarageEnv(PointEnv()))
     n_workers = 8
     workers = WorkerFactory(seed=100,
-                            max_path_length=max_path_length,
+                            max_episode_length=max_episode_length,
                             n_workers=n_workers)
     sampler = MultiprocessingSampler.from_worker_factory(
         workers, policy, envs=tasks.sample(n_workers))
@@ -110,16 +110,16 @@ def test_init_with_env_updates():
 
 @pytest.mark.timeout(10)
 def test_obtain_exact_trajectories():
-    max_path_length = 15
+    max_episode_length = 15
     n_workers = 8
     env = GarageEnv(PointEnv())
     per_worker_actions = [env.action_space.sample() for _ in range(n_workers)]
     policies = [
-        FixedPolicy(env.spec, [action] * max_path_length)
+        FixedPolicy(env.spec, [action] * max_episode_length)
         for action in per_worker_actions
     ]
     workers = WorkerFactory(seed=100,
-                            max_path_length=max_path_length,
+                            max_episode_length=max_episode_length,
                             n_workers=n_workers)
     sampler = MultiprocessingSampler.from_worker_factory(workers,
                                                          policies,
@@ -142,17 +142,17 @@ def test_obtain_exact_trajectories():
 
 @pytest.mark.timeout(30)
 def test_init_with_crashed_worker():
-    max_path_length = 16
+    max_episode_length = 16
     env = GarageEnv(PointEnv())
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
-                             for _ in range(max_path_length)
+                             for _ in range(max_episode_length)
                          ])
     tasks = SetTaskSampler(lambda: GarageEnv(PointEnv()))
     n_workers = 2
     workers = WorkerFactory(seed=100,
-                            max_path_length=max_path_length,
+                            max_episode_length=max_episode_length,
                             n_workers=n_workers)
 
     class CrashingPolicy:
@@ -174,17 +174,17 @@ def test_init_with_crashed_worker():
 @pytest.mark.flaky
 @pytest.mark.timeout(10)
 def test_pickle():
-    max_path_length = 16
+    max_episode_length = 16
     env = GarageEnv(PointEnv())
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
-                             for _ in range(max_path_length)
+                             for _ in range(max_episode_length)
                          ])
     tasks = SetTaskSampler(PointEnv)
     n_workers = 8
     workers = WorkerFactory(seed=100,
-                            max_path_length=max_path_length,
+                            max_episode_length=max_episode_length,
                             n_workers=n_workers)
     sampler = MultiprocessingSampler.from_worker_factory(workers, policy, env)
     sampler_pickled = pickle.dumps(sampler)

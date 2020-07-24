@@ -17,7 +17,7 @@ class TEPPO(TENPO):
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -61,7 +61,7 @@ class TEPPO(TENPO):
                  policy,
                  baseline,
                  scope=None,
-                 max_path_length=500,
+                 max_episode_length=500,
                  discount=0.99,
                  gae_lambda=0.98,
                  center_adv=True,
@@ -82,17 +82,18 @@ class TEPPO(TENPO):
                  name='PPOTaskEmbedding'):
 
         optimizer = optimizer or FirstOrderOptimizer
-        optimizer_args = optimizer_args or dict(batch_size=32, max_epochs=10)
+        optimizer_args = optimizer_args or dict(batch_size=32,
+                                                max_episode_length=10)
 
         inference_optimizer = inference_optimizer or FirstOrderOptimizer
         inference_optimizer_args = inference_optimizer_args or dict(
-            batch_size=32, max_epochs=10)
+            batch_size=32, max_episode_length=10)
 
         super().__init__(env_spec=env_spec,
                          policy=policy,
                          baseline=baseline,
                          scope=scope,
-                         max_path_length=max_path_length,
+                         max_episode_length=max_episode_length,
                          discount=discount,
                          gae_lambda=gae_lambda,
                          center_adv=center_adv,

@@ -5,13 +5,13 @@ from garage.misc import tensor_utils as np_tensor_utils
 from garage.tf.misc import tensor_utils
 
 
-def paths_to_tensors(paths, max_path_length, baseline_predictions, discount,
+def paths_to_tensors(paths, max_episode_length, baseline_predictions, discount,
                      gae_lambda):
     """Return processed sample data based on the collected paths.
 
     Args:
         paths (list[dict]): A list of collected paths.
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         baseline_predictions(numpy.ndarray): : Predicted value of GAE
             (Generalized Advantage Estimation) Baseline.
         discount (float): Environment reward discount.
@@ -56,30 +56,32 @@ def paths_to_tensors(paths, max_path_length, baseline_predictions, discount,
 
     # make all paths the same length
     obs = [path['observations'] for path in paths]
-    obs = tensor_utils.pad_tensor_n(obs, max_path_length)
+    obs = tensor_utils.pad_tensor_n(obs, max_episode_length)
 
     actions = [path['actions'] for path in paths]
-    actions = tensor_utils.pad_tensor_n(actions, max_path_length)
+    actions = tensor_utils.pad_tensor_n(actions, max_episode_length)
 
     rewards = [path['rewards'] for path in paths]
-    rewards = tensor_utils.pad_tensor_n(rewards, max_path_length)
+    rewards = tensor_utils.pad_tensor_n(rewards, max_episode_length)
 
     returns = [path['returns'] for path in paths]
-    returns = tensor_utils.pad_tensor_n(returns, max_path_length)
+    returns = tensor_utils.pad_tensor_n(returns, max_episode_length)
 
-    baselines = tensor_utils.pad_tensor_n(baselines, max_path_length)
+    baselines = tensor_utils.pad_tensor_n(baselines, max_episode_length)
 
     agent_infos = [path['agent_infos'] for path in paths]
     agent_infos = tensor_utils.stack_tensor_dict_list([
-        tensor_utils.pad_tensor_dict(p, max_path_length) for p in agent_infos
+        tensor_utils.pad_tensor_dict(p, max_episode_length)
+        for p in agent_infos
     ])
 
     env_infos = [path['env_infos'] for path in paths]
-    env_infos = tensor_utils.stack_tensor_dict_list(
-        [tensor_utils.pad_tensor_dict(p, max_path_length) for p in env_infos])
+    env_infos = tensor_utils.stack_tensor_dict_list([
+        tensor_utils.pad_tensor_dict(p, max_episode_length) for p in env_infos
+    ])
 
     valids = [np.ones_like(path['returns']) for path in paths]
-    valids = tensor_utils.pad_tensor_n(valids, max_path_length)
+    valids = tensor_utils.pad_tensor_n(valids, max_episode_length)
 
     lengths = np.asarray([v.sum() for v in valids])
 

@@ -52,13 +52,13 @@ class TestMAMLPPO:
         deterministic.set_seed(0)
 
         rollouts_per_task = 5
-        max_path_length = 100
+        max_episode_length = 100
 
         runner = LocalRunner(snapshot_config)
         algo = MAMLPPO(env=self.env,
                        policy=self.policy,
                        value_function=self.value_function,
-                       max_path_length=max_path_length,
+                       max_episode_length=max_episode_length,
                        meta_batch_size=5,
                        discount=0.99,
                        gae_lambda=1.,
@@ -68,6 +68,6 @@ class TestMAMLPPO:
         runner.setup(algo, self.env, sampler_cls=LocalSampler)
         last_avg_ret = runner.train(n_epochs=10,
                                     batch_size=rollouts_per_task *
-                                    max_path_length)
+                                    max_episode_length)
 
         assert last_avg_ret > -5

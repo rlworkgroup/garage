@@ -21,7 +21,7 @@ _DEVICE = None
 _GPU_ID = 0
 
 
-def compute_advantages(discount, gae_lambda, max_path_length, baselines,
+def compute_advantages(discount, gae_lambda, max_episode_length, baselines,
                        rewards):
     """Calculate advantages.
 
@@ -33,7 +33,7 @@ def compute_advantages(discount, gae_lambda, max_path_length, baselines,
     The discounted cumulative sum can be computed using conv2d with filter.
     filter:
         [1, (discount * gae_lambda), (discount * gae_lambda) ^ 2, ...]
-        where the length is same with max_path_length.
+        where the length is same with max_episode_length.
 
     baselines and rewards are also has same shape.
         baselines:
@@ -51,7 +51,7 @@ def compute_advantages(discount, gae_lambda, max_path_length, baselines,
         discount (float): RL discount factor (i.e. gamma).
         gae_lambda (float): Lambda, as used for Generalized Advantage
             Estimation (GAE).
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         baselines (torch.Tensor): A 2D vector of value function estimates with
             shape (N, T), where N is the batch dimension (number of episodes)
             and T is the maximum path length experienced by the agent. If an
@@ -71,12 +71,13 @@ def compute_advantages(discount, gae_lambda, max_path_length, baselines,
             episode should be set to 0.
 
     """
-    adv_filter = torch.full((1, 1, 1, max_path_length - 1),
+    adv_filter = torch.full((1, 1, 1, max_episode_length - 1),
                             discount * gae_lambda)
     adv_filter = torch.cumprod(F.pad(adv_filter, (1, 0), value=1), dim=-1)
 
     deltas = (rewards + discount * F.pad(baselines, (0, 1))[:, 1:] - baselines)
-    deltas = F.pad(deltas, (0, max_path_length - 1)).unsqueeze(0).unsqueeze(0)
+    deltas = F.pad(deltas,
+                   (0, max_episode_length - 1)).unsqueeze(0).unsqueeze(0)
 
     advantages = F.conv2d(deltas, adv_filter, stride=1).reshape(rewards.shape)
     return advantages

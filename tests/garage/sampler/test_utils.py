@@ -14,9 +14,9 @@ class TestRollout:
         self.env = GarageEnv(DummyBoxEnv(obs_dim=(4, 4), action_dim=(2, 2)))
         self.policy = DummyPolicy(self.env.spec)
 
-    def test_max_path_length(self):
+    def test_max_episode_length(self):
         # pylint: disable=unsubscriptable-object
-        path = utils.rollout(self.env, self.policy, max_path_length=3)
+        path = utils.rollout(self.env, self.policy, max_episode_length=3)
         assert path['observations'].shape[0] == 3
         assert path['actions'].shape[0] == 3
         assert path['rewards'].shape[0] == 3
@@ -24,14 +24,14 @@ class TestRollout:
         assert path['env_infos']['dummy'].shape[0] == 3
 
     def test_does_flatten(self):
-        path = utils.rollout(self.env, self.policy, max_path_length=5)
+        path = utils.rollout(self.env, self.policy, max_episode_length=5)
         assert path['observations'][0].shape == (16, )
         assert path['actions'][0].shape == (2, 2)
 
     def test_deterministic_action(self):
         path = utils.rollout(self.env,
                              self.policy,
-                             max_path_length=5,
+                             max_episode_length=5,
                              deterministic=True)
         assert (path['actions'] == 0.).all()
 

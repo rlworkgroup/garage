@@ -14,7 +14,7 @@ hyper_parameters = {
     'max_kl': 0.01,
     'gae_lambda': 0.97,
     'discount': 0.99,
-    'max_path_length': 100,
+    'max_episode_length': 100,
     'n_epochs': 999,
     'batch_size': 1024,
 }
@@ -49,7 +49,7 @@ def trpo_garage_tf(ctxt, env_id, seed):
         algo = TRPO(env_spec=env.spec,
                     policy=policy,
                     baseline=baseline,
-                    max_path_length=hyper_parameters['max_path_length'],
+                    max_episode_length=hyper_parameters['max_episode_length'],
                     discount=hyper_parameters['discount'],
                     gae_lambda=hyper_parameters['gae_lambda'],
                     max_kl_step=hyper_parameters['max_kl'])

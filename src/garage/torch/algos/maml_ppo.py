@@ -18,7 +18,7 @@ class MAMLPPO(MAML):
         outer_lr (float): Meta policy learning rate.
         lr_clip_range (float): The limit on the likelihood ratio between
             policies.
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -54,7 +54,7 @@ class MAMLPPO(MAML):
                  inner_lr=_Default(1e-1),
                  outer_lr=1e-3,
                  lr_clip_range=5e-1,
-                 max_path_length=100,
+                 max_episode_length=100,
                  discount=0.99,
                  gae_lambda=1.0,
                  center_adv=True,
@@ -79,7 +79,7 @@ class MAMLPPO(MAML):
                          policy_optimizer=policy_optimizer,
                          vf_optimizer=vf_optimizer,
                          lr_clip_range=lr_clip_range,
-                         max_path_length=max_path_length,
+                         max_episode_length=max_episode_length,
                          num_train_per_epoch=1,
                          discount=discount,
                          gae_lambda=gae_lambda,

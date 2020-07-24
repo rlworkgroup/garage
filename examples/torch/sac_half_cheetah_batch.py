@@ -56,7 +56,7 @@ def sac_half_cheetah_batch(ctxt=None, seed=1):
               qf1=qf1,
               qf2=qf2,
               gradient_steps_per_itr=1000,
-              max_path_length=500,
+              max_episode_length=500,
               replay_buffer=replay_buffer,
               min_buffer_size=1e4,
               target_update_tau=5e-3,

@@ -14,7 +14,7 @@ class TestTFWorker:
         with LocalTFRunner(snapshot_config):
             tf_worker = TFWorkerWrapper()
             worker = DefaultWorker(seed=1,
-                                   max_path_length=100,
+                                   max_episode_length=100,
                                    worker_number=1)
             worker.update_env(DummyBoxEnv())
             tf_worker._inner_worker = worker
@@ -24,7 +24,7 @@ class TestTFWorker:
 
     def test_tf_worker_without_default_session(self):
         tf_worker = TFWorkerWrapper()
-        worker = DefaultWorker(seed=1, max_path_length=100, worker_number=1)
+        worker = DefaultWorker(seed=1, max_episode_length=100, worker_number=1)
         worker.update_env(DummyBoxEnv())
         tf_worker._inner_worker = worker
         tf_worker.worker_init()

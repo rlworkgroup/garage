@@ -27,7 +27,7 @@ class TestTaskEmbeddingWorker(TfGraphTestCase):
         policy.get_action_given_latent.return_value = (a, agent_info)
 
         worker = TaskEmbeddingWorker(seed=1,
-                                     max_path_length=100,
+                                     max_episode_length=100,
                                      worker_number=1)
         worker.update_agent(policy)
         worker.update_env(env)

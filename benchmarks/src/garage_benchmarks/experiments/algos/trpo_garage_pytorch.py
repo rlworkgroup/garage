@@ -14,7 +14,7 @@ hyper_parameters = {
     'max_kl': 0.01,
     'gae_lambda': 0.97,
     'discount': 0.99,
-    'max_path_length': 100,
+    'max_episode_length': 100,
     'n_epochs': 999,
     'batch_size': 1024,
 }
@@ -48,12 +48,13 @@ def trpo_garage_pytorch(ctxt, env_id, seed):
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
-    algo = PyTorch_TRPO(env_spec=env.spec,
-                        policy=policy,
-                        value_function=value_function,
-                        max_path_length=hyper_parameters['max_path_length'],
-                        discount=hyper_parameters['discount'],
-                        gae_lambda=hyper_parameters['gae_lambda'])
+    algo = PyTorch_TRPO(
+        env_spec=env.spec,
+        policy=policy,
+        value_function=value_function,
+        max_episode_length=hyper_parameters['max_episode_length'],
+        discount=hyper_parameters['discount'],
+        gae_lambda=hyper_parameters['gae_lambda'])
 
     runner.setup(algo, env)
     runner.train(n_epochs=hyper_parameters['n_epochs'],

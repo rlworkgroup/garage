@@ -131,7 +131,7 @@ class TFWorkerWrapper(Worker):
 
         Returns:
             garage.TrajectoryBatch: Batch of sampled trajectories. May be
-                truncated if max_path_length is set.
+                truncated if max_episode_length is set.
 
         """
         return self._inner_worker.rollout()
@@ -145,7 +145,7 @@ class TFWorkerWrapper(Worker):
 
         Returns:
             bool: True iff the path is done, either due to the environment
-                indicating termination of due to reaching `max_path_length`.
+                indicating termination of due to reaching `max_episode_length`.
 
         """
         return self._inner_worker.step_rollout()

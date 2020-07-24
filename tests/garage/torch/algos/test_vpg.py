@@ -52,7 +52,7 @@ class TestVPG:
             'policy': self._policy,
             'value_function':
             GaussianMLPValueFunction(env_spec=self._env.spec),
-            'max_path_length': 100,
+            'max_episode_length': 100,
             'discount': 0.99,
         }
 

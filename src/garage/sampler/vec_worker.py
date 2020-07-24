@@ -19,7 +19,7 @@ class VecWorker(DefaultWorker):
 
     Args:
         seed(int): The seed to use to intialize random number generators.
-        max_path_length(int or float): The maximum length paths which will
+        max_episode_length(int or float): The maximum length paths which will
             be sampled. Can be (floating point) infinity.
         worker_number(int): The number of the worker this update is
             occurring in. This argument is used to set a different seed for
@@ -33,11 +33,11 @@ class VecWorker(DefaultWorker):
     def __init__(self,
                  *,
                  seed,
-                 max_path_length,
+                 max_episode_length,
                  worker_number,
                  n_envs=DEFAULT_N_ENVS):
         super().__init__(seed=seed,
-                         max_path_length=max_path_length,
+                         max_episode_length=max_episode_length,
                          worker_number=worker_number)
         self._n_envs = n_envs
         self._completed_rollouts = []
@@ -122,7 +122,8 @@ class VecWorker(DefaultWorker):
             self._needs_env_reset = False
 
     def _gather_rollout(self, rollout_number, last_observation):
-        assert 0 < self._path_lengths[rollout_number] <= self._max_path_length
+        assert 0 < self._path_lengths[
+            rollout_number] <= self._max_episode_length
         traj = TrajectoryBatch(
             self._envs[rollout_number].spec,
             np.asarray(self._observations[rollout_number]),
@@ -151,7 +152,7 @@ class VecWorker(DefaultWorker):
         actions, agent_info = self.agent.get_actions(self._prev_obs)
         completes = [False] * len(self._envs)
         for i, action in enumerate(actions):
-            if self._path_lengths[i] < self._max_path_length:
+            if self._path_lengths[i] < self._max_episode_length:
                 next_o, r, d, env_info = self._envs[i].step(action)
                 self._observations[i].append(self._prev_obs[i])
                 self._rewards[i].append(r)
@@ -163,7 +164,7 @@ class VecWorker(DefaultWorker):
                 self._path_lengths[i] += 1
                 self._terminals[i].append(d)
                 self._prev_obs[i] = next_o
-            if self._path_lengths[i] >= self._max_path_length or d:
+            if self._path_lengths[i] >= self._max_episode_length or d:
                 self._gather_rollout(i, next_o)
                 completes[i] = True
                 finished = True

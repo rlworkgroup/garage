@@ -14,7 +14,7 @@ class MetaEvaluator:
         test_task_sampler (garage.experiment.TaskSampler): Sampler for test
             tasks. To demonstrate the effectiveness of a meta-learning method,
             these should be different from the training tasks.
-        max_path_length (int): Maximum path length used for evaluation
+        max_episode_length (int): Maximum path length used for evaluation
             trajectories.
         n_test_tasks (int or None): Number of test tasks to sample each time
             evaluation is performed. Note that tasks are sampled "without
@@ -42,7 +42,7 @@ class MetaEvaluator:
     def __init__(self,
                  *,
                  test_task_sampler,
-                 max_path_length,
+                 max_episode_length,
                  n_exploration_traj=10,
                  n_test_tasks=None,
                  n_test_rollouts=1,
@@ -61,7 +61,7 @@ class MetaEvaluator:
         self._n_test_tasks = n_test_tasks
         self._n_test_rollouts = n_test_rollouts
         self._n_exploration_traj = n_exploration_traj
-        self._max_path_length = max_path_length
+        self._max_episode_length = max_episode_length
         self._eval_itr = 0
         self._prefix = prefix
         self._test_task_names = test_task_names
@@ -82,7 +82,7 @@ class MetaEvaluator:
         if self._test_sampler is None:
             self._test_sampler = LocalSampler.from_worker_factory(
                 WorkerFactory(seed=get_seed(),
-                              max_path_length=self._max_path_length,
+                              max_episode_length=self._max_episode_length,
                               n_workers=1,
                               worker_class=self._worker_class,
                               worker_args=self._worker_args),
@@ -97,7 +97,8 @@ class MetaEvaluator:
             ])
             adapted_policy = algo.adapt_policy(policy, traj)
             adapted_traj = self._test_sampler.obtain_samples(
-                self._eval_itr, test_rollouts_per_task * self._max_path_length,
+                self._eval_itr,
+                test_rollouts_per_task * self._max_episode_length,
                 adapted_policy)
             adapted_trajectories.append(adapted_traj)
         logger.log('Finished meta-testing...')

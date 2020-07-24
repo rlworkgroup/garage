@@ -55,7 +55,7 @@ class TestPEARL:
                       batch_size=256,
                       embedding_batch_size=8,
                       embedding_mini_batch_size=8,
-                      max_path_length=50,
+                      max_episode_length=50,
                       reward_scale=10.,
                       use_information_bottleneck=True,
                       use_next_obs_in_context=False,
@@ -105,7 +105,7 @@ class TestPEARL:
             batch_size=params['batch_size'],
             embedding_batch_size=params['embedding_batch_size'],
             embedding_mini_batch_size=params['embedding_mini_batch_size'],
-            max_path_length=params['max_path_length'],
+            max_episode_length=params['max_episode_length'],
             reward_scale=params['reward_scale'],
         )
 
@@ -118,7 +118,7 @@ class TestPEARL:
             algo=pearl,
             env=env[0](),
             sampler_cls=LocalSampler,
-            sampler_args=dict(max_path_length=params['max_path_length']),
+            sampler_args=dict(max_episode_length=params['max_episode_length']),
             n_workers=1,
             worker_class=PEARLWorker)
 

@@ -40,7 +40,7 @@ class TestTRPO:
         algo = TRPO(env_spec=self.env.spec,
                     policy=self.policy,
                     value_function=self.value_function,
-                    max_path_length=100,
+                    max_episode_length=100,
                     discount=0.99,
                     gae_lambda=0.98)
 
