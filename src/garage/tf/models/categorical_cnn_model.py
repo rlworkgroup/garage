@@ -6,6 +6,7 @@ followed a multilayer perceptron (MLP).
 """
 import tensorflow as tf
 
+from garage.experiment import deterministic
 from garage.tf.models.categorical_mlp_model import CategoricalMLPModel
 from garage.tf.models.cnn_model import CNNModel
 from garage.tf.models.model import Model
@@ -66,10 +67,12 @@ class CategoricalCNNModel(Model):
                  is_image=True,
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=tf.nn.softmax,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         super().__init__(name)

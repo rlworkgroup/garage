@@ -6,6 +6,7 @@ which is parameterized by a Long short-term memory (LSTM).
 import tensorflow as tf
 import tensorflow_probability as tfp
 
+from garage.experiment import deterministic
 from garage.tf.models.lstm_model import LSTMModel
 
 
@@ -63,12 +64,15 @@ class CategoricalLSTMModel(LSTMModel):
                  hidden_dim,
                  name=None,
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
-                 recurrent_w_init=tf.initializers.glorot_uniform(),
+                 recurrent_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_nonlinearity=tf.nn.softmax,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
                  hidden_state_init_trainable=False,

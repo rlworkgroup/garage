@@ -4,6 +4,7 @@ A model composed only of a Gated Recurrent Unit (GRU).
 """
 import tensorflow as tf
 
+from garage.experiment import deterministic
 from garage.tf.models.gru import gru
 from garage.tf.models.model import Model
 
@@ -52,12 +53,15 @@ class GRUModel(Model):
                  hidden_dim,
                  name=None,
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
-                 recurrent_w_init=tf.initializers.glorot_uniform(),
+                 recurrent_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
                  hidden_state_init_trainable=False,
@@ -114,7 +118,10 @@ class GRUModel(Model):
         return ['all_output', 'step_output', 'step_hidden', 'init_hidden']
 
     # pylint: disable=arguments-differ
-    def _build(self, all_input_var, step_input_var, step_hidden_var,
+    def _build(self,
+               all_input_var,
+               step_input_var,
+               step_hidden_var,
                name=None):
         """Build model given input placeholder(s).
 

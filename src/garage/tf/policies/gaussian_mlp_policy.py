@@ -8,6 +8,7 @@ import akro
 import numpy as np
 import tensorflow as tf
 
+from garage.experiment import deterministic
 from garage.tf.models import GaussianMLPModel
 from garage.tf.policies.policy import Policy
 
@@ -75,10 +76,12 @@ class GaussianMLPPolicy(GaussianMLPModel, Policy):
                  name='GaussianMLPPolicy',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  learn_std=True,
                  adaptive_std=False,
@@ -151,7 +154,11 @@ class GaussianMLPPolicy(GaussianMLPModel, Policy):
                                                       self._obs_dim))
         dist, mean, log_std = self.build(state_input).outputs
         self._f_dist = tf.compat.v1.get_default_session().make_callable(
-            [dist.sample(), mean, log_std], feed_list=[state_input])
+            [
+                dist.sample(seed=deterministic.get_tf_seed_stream()), mean,
+                log_std
+            ],
+            feed_list=[state_input])
 
     @property
     def input_dim(self):
