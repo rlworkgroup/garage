@@ -13,10 +13,14 @@ from garage.torch.policies import GaussianMLPPolicy
 
 
 # pylint: disable=too-few-public-methods
-# pylint: disable=missing-return-doc, missing-return-type-doc
-# pylint: disable=missing-class-docstring, missing-function-docstring
-class SimpleVPG:  # noqa: D101
+class SimpleVPG:
+    """Simple Vanilla Policy Gradient.
 
+    Args:
+        env_spec (garage.envs.EnvSpec): Environment specification.
+        policy (garage.tf.policies.StochasticPolicy): Policy.
+
+    """
     sampler_cls = RaySampler
 
     def __init__(self, env_spec, policy):
@@ -26,7 +30,13 @@ class SimpleVPG:  # noqa: D101
         self._discount = 0.99
         self._policy_opt = torch.optim.Adam(self.policy.parameters(), lr=1e-3)
 
-    def train(self, runner):  # noqa: D102
+    def train(self, runner):
+        """Obtain samplers and start actual training for each epoch.
+
+        Args:
+            runner (LocalRunner): LocalRunner.
+
+        """
         for epoch in runner.step_epochs():
             samples = runner.obtain_samples(epoch)
             log_performance(
@@ -36,6 +46,15 @@ class SimpleVPG:  # noqa: D101
             self._train_once(samples)
 
     def _train_once(self, samples):
+        """Perform one step of policy optimization given one batch of samples.
+
+        Args:
+            samples (list[dict]): A list of collected paths.
+
+        Returns:
+            numpy.float64: Average return.
+
+        """
         losses = []
         self._policy_opt.zero_grad()
         for path in samples:
@@ -53,12 +72,18 @@ class SimpleVPG:  # noqa: D101
         return np.mean(losses)
 
 
-@wrap_experiment()
-def debug_my_algorithm(ctxt=None):  # noqa: D103
+@wrap_experiment
+def debug_my_algorithm(ctxt=None):
+    """Train VPG with PointEnv environment.
+
+    Args:
+        ctxt (garage.experiment.ExperimentContext): The experiment
+            configuration used by LocalRunner to create the snapshotter.
+
+    """
     set_seed(100)
     runner = LocalRunner(ctxt)
     env = GarageEnv(PointEnv())
-    # env = GarageEnv(env_name='LunarLanderContinuous-v2')
     policy = GaussianMLPPolicy(env.spec)
     algo = SimpleVPG(env.spec, policy)
     runner.setup(algo, env)

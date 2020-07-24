@@ -12,10 +12,14 @@ from garage.sampler import RaySampler
 from garage.tf.policies import GaussianMLPPolicy
 
 
-# pylint: disable=missing-return-doc, missing-return-type-doc
-# pylint: disable=missing-class-docstring, missing-function-docstring
-class SimpleVPG:  # noqa: D101
+class SimpleVPG:
+    """Simple Vanilla Policy Gradient.
 
+    Args:
+        env_spec (garage.envs.EnvSpec): Environment specification.
+        policy (garage.tf.policies.StochasticPolicy): Policy.
+
+    """
     sampler_cls = RaySampler
 
     def __init__(self, env_spec, policy):
@@ -25,7 +29,8 @@ class SimpleVPG:  # noqa: D101
         self._discount = 0.99
         self.init_opt()
 
-    def init_opt(self):  # noqa: D102
+    def init_opt(self):
+        """Initialize optimizer and build computation graph."""
         observation_dim = self.policy.observation_space.flat_dim
         action_dim = self.policy.action_space.flat_dim
         with tf.name_scope('inputs'):
@@ -45,7 +50,13 @@ class SimpleVPG:  # noqa: D101
             self._train_op = tf.compat.v1.train.AdamOptimizer(1e-3).minimize(
                 loss)
 
-    def train(self, runner):  # noqa: D102
+    def train(self, runner):
+        """Obtain samplers and start actual training for each epoch.
+
+        Args:
+            runner (LocalRunner): LocalRunner.
+
+        """
         for epoch in runner.step_epochs():
             samples = runner.obtain_samples(epoch)
             log_performance(
@@ -54,11 +65,20 @@ class SimpleVPG:  # noqa: D101
                 self._discount)
             self._train_once(samples)
 
-    def _train_once(self, paths):
-        obs = np.concatenate([path['observations'] for path in paths])
-        actions = np.concatenate([path['actions'] for path in paths])
+    def _train_once(self, samples):
+        """Perform one step of policy optimization given one batch of samples.
+
+        Args:
+            samples (list[dict]): A list of collected samples.
+
+        Returns:
+            numpy.float64: Average return.
+
+        """
+        obs = np.concatenate([path['observations'] for path in samples])
+        actions = np.concatenate([path['actions'] for path in samples])
         returns = []
-        for path in paths:
+        for path in samples:
             returns.append(
                 tensor_utils.discount_cumsum(path['rewards'], self._discount))
         returns = np.concatenate(returns)
@@ -71,7 +91,13 @@ class SimpleVPG:  # noqa: D101
                  })
         return np.mean(returns)
 
-    def __getstate__(self):  # noqa: D105
+    def __getstate__(self):
+        """Parameters to save in snapshot.
+
+        Returns:
+            dict: Parameters to save.
+
+        """
         data = self.__dict__.copy()
         del data['_observation']
         del data['_action']
@@ -79,13 +105,26 @@ class SimpleVPG:  # noqa: D101
         del data['_train_op']
         return data
 
-    def __setstate__(self, state):  # noqa: D105
+    def __setstate__(self, state):
+        """Parameters to restore from snapshot.
+
+        Args:
+            state (dict): Parameters to restore from.
+
+        """
         self.__dict__ = state
         self.init_opt()
 
 
-@wrap_experiment()
-def debug_my_algorithm(ctxt=None):  # noqa: D103
+@wrap_experiment
+def debug_my_algorithm(ctxt=None):
+    """Train VPG with PointEnv environment.
+
+    Args:
+        ctxt (garage.experiment.ExperimentContext): The experiment
+            configuration used by LocalRunner to create the snapshotter.
+
+    """
     set_seed(100)
     with LocalTFRunner(ctxt) as runner:
         env = GarageEnv(PointEnv())

@@ -12,9 +12,14 @@ from garage.tf.policies import CategoricalMLPPolicy
 
 
 # pylint: disable=too-few-public-methods
-# pylint: disable=missing-return-doc, missing-return-type-doc
-# pylint: disable=missing-class-docstring, missing-function-docstring
-class SimpleCEM:  # noqa: D101
+class SimpleCEM:
+    """Simple Cross Entropy Method.
+
+    Args:
+        env_spec (garage.envs.EnvSpec): Environment specification.
+        policy (garage.np.policies.Policy): Action policy.
+
+    """
 
     sampler_cls = RaySampler
 
@@ -33,7 +38,13 @@ class SimpleCEM:  # noqa: D101
         self._all_params = [self._cur_mean.copy()]
         self._cur_params = None
 
-    def train(self, runner):  # noqa: D102
+    def train(self, runner):
+        """Get samples and train the policy.
+
+        Args:
+            runner (LocalRunner): LocalRunner.
+
+        """
         for epoch in runner.step_epochs():
             samples = runner.obtain_samples(epoch)
             log_performance(
@@ -43,6 +54,16 @@ class SimpleCEM:  # noqa: D101
             self._train_once(epoch, samples)
 
     def _train_once(self, epoch, paths):
+        """Perform one step of policy optimization given one batch of samples.
+
+        Args:
+            epoch (int): Iteration number.
+            paths (list[dict]): A list of collected paths.
+
+        Returns:
+            float: The average return of epoch cycle.
+
+        """
         returns = []
         for path in paths:
             returns.append(
@@ -65,6 +86,15 @@ class SimpleCEM:  # noqa: D101
         return avg_return
 
     def _sample_params(self, epoch):
+        """Return sample parameters.
+
+        Args:
+            epoch (int): Epoch number.
+
+        Returns:
+            np.ndarray: A numpy array of parameter values.
+
+        """
         extra_var_mult = max(1.0 - epoch / self._extra_decay_time, 0)
         sample_std = np.sqrt(
             np.square(self._cur_std) +
@@ -73,8 +103,15 @@ class SimpleCEM:  # noqa: D101
             self._cur_mean)) * sample_std + self._cur_mean
 
 
-@wrap_experiment()
-def debug_my_algorithm(ctxt=None):  # noqa: D103
+@wrap_experiment
+def debug_my_algorithm(ctxt=None):
+    """Train CEM with Cartpole-v1 environment.
+
+    Args:
+        ctxt (garage.experiment.ExperimentContext): The experiment
+            configuration used by LocalRunner to create the snapshotter.
+
+    """
     set_seed(100)
     with LocalTFRunner(ctxt) as runner:
         env = GarageEnv(env_name='CartPole-v1')
