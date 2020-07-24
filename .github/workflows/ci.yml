@@ -77,7 +77,7 @@ jobs:
           -s \
           -H "Accept: application/vnd.github.package-deletes-preview+json" \
           -H "Authorization: bearer ${{ secrets.CI_REGISTRY_TOKEN }}" \
-          -d '{"query":"query {repository(owner:\"${{ OWNER }}\", name:\"${{ DOCKER_CACHE_REPO }}\") \
+          -d '{"query":"query {repository(owner:\"${OWNER}\", name:\"${DOCKER_CACHE_REPO}\") \
           {registryPackages(last:1) {edges{node{id, name, versions(last:100)\
           {edges {node {id, updatedAt, version}}}}}}}}"}' \
           -o /tmp/response.json \
