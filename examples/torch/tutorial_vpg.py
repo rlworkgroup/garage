@@ -87,7 +87,7 @@ def debug_my_algorithm(ctxt=None):
     policy = GaussianMLPPolicy(env.spec)
     algo = SimpleVPG(env.spec, policy)
     runner.setup(algo, env)
-    runner.train(n_epochs=500, batch_size=4000, plot=True)
+    runner.train(n_epochs=100, batch_size=4000, plot=True)
 
 
 debug_my_algorithm()
