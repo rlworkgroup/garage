@@ -20,7 +20,6 @@ class SimpleCEM:
         policy (garage.np.policies.Policy): Action policy.
 
     """
-
     sampler_cls = RaySampler
 
     def __init__(self, env_spec, policy):
@@ -104,7 +103,7 @@ class SimpleCEM:
 
 
 @wrap_experiment
-def debug_my_algorithm(ctxt=None):
+def tutorial_cem(ctxt=None):
     """Train CEM with Cartpole-v1 environment.
 
     Args:
@@ -118,7 +117,7 @@ def debug_my_algorithm(ctxt=None):
         policy = CategoricalMLPPolicy(env.spec)
         algo = SimpleCEM(env.spec, policy)
         runner.setup(algo, env)
-        runner.train(n_epochs=100, batch_size=1000, plot=True)
+        runner.train(n_epochs=100, batch_size=1000)
 
 
-debug_my_algorithm()
+tutorial_cem()
