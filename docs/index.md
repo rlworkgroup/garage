@@ -47,6 +47,12 @@ and how to implement new MDPs and new algorithms.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Reference Guide
+
+   user/sampling
+
+.. toctree::
+   :maxdepth: 2
    :caption: Development Guide
 
    user/setting_up_your_development_environment
