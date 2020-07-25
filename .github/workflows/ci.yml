@@ -4,8 +4,8 @@ env:
   GARAGE_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   TRAVIS_COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
   DOCKER_TAG: garage-ci-${{ github.run_id }}
+  OWNER: "rlworkgroup"
   DOCKER_CACHE_REPO: "rlworkgroup/garage-ci"
-  OWNER: 'rlworkgroup'
 
 on:
   push:
@@ -14,76 +14,60 @@ on:
     branches: [ master ]
 
 jobs:
-#  build_docker_container:
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#    - uses: actions/checkout@v2
-#      with:
-#        fetch-depth: 0
-#    - name: Login to GitHub Package Registry
-#      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
-#    - name: Build Docker container
-#      run: |
-#        docker build . \
-#          -f docker/Dockerfile \
-#          --target garage-dev-18.04 \
-#          -t "${DOCKER_TAG}" \
-#          --build-arg GARAGE_GH_TOKEN \
-#          --cache-from="docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-#    - name: Push to cache (GitHub Package Registry)
-#      run: |
-#        docker tag "${DOCKER_TAG}" "docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-#        docker push "docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-#
-#
-#  check_pre_commit:
-#    runs-on: ubuntu-latest
-#    needs: build_docker_container
-#
-#    steps:
-#    - uses: actions/checkout@v2
-#      with:
-#        fetch-depth: 0
-#    - name: Login to GitHub Package Registry
-#      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
-#    - name: Pull from cache (GitHub Package Registry)
-#      run: docker pull "docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-#    - name: Rename docker image
-#      run: docker tag docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
-#    - name: Check pre-commit
-#      run: |
-#        docker run \
-#          -e TRAVIS_COMMIT_RANGE \
-#          --memory 7500m \
-#          --memory-swap 7500m \
-#          "${DOCKER_TAG}" scripts/travisci/check_precommit.sh
+  build_docker_container:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Login to GitHub Package Registry
+      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
+    - name: Build Docker container
+      run: |
+        docker build . \
+          -f docker/Dockerfile \
+          --target garage-dev-18.04 \
+          -t "${DOCKER_TAG}" \
+          --build-arg GARAGE_GH_TOKEN \
+          --cache-from="docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+    - name: Push to cache (GitHub Package Registry)
+      run: |
+        docker tag "${DOCKER_TAG}" "docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+        docker push "docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+
+
+  check_pre_commit:
+    runs-on: ubuntu-latest
+    needs: build_docker_container
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Login to GitHub Package Registry
+      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
+    - name: Pull from cache (GitHub Package Registry)
+      run: docker pull "docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+    - name: Rename docker image
+      run: docker tag docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
+    - name: Check pre-commit
+      run: |
+        docker run \
+          -e TRAVIS_COMMIT_RANGE \
+          --memory 7500m \
+          --memory-swap 7500m \
+          "${DOCKER_TAG}" scripts/travisci/check_precommit.sh
 
 
   delete_docker_container:
     runs-on: ubuntu-latest
-#    needs: build_docker_container
+    needs: build_docker_container
 
     steps:
     - uses: actions/delete-package-versions@v1
       with:
-        owner: 'rlworkgroup'
-        repo: 'garage-ci'
-        package-name: "garage-ci-159895571"
+        owner: ${OWNER}
+        repo: "garage-ci"
+        package-name: \'${DOCKER_TAG}\'
         token: ${{ secrets.CI_REGISTRY_TOKEN }}
-    - name: Fetch releases
-      run: |
-        curl -X POST \
-          -s \
-          -H "Accept: application/vnd.github.package-deletes-preview+json" \
-          -H "Authorization: bearer ${{ secrets.CI_REGISTRY_TOKEN }}" \
-          -d '{"query":"query {repository(owner:\"${OWNER}\", name:\"${DOCKER_CACHE_REPO}\") \
-          {registryPackages(last:1) {edges{node{id, name, versions(last:100)\
-          {edges {node {id, updatedAt, version}}}}}}}}"}' \
-          -o /tmp/response.json \
-          --url https://api.github.com/graphql
-    - name: Filter Releases
-      run: "cat /tmp/response.json | jq -r 'def daysAgo(days): (now | floor) - (days * 86400); [.data.repository.registryPackages.edges[0].node.versions.edges | sort_by(.node.updatedAt|fromdate) | reverse | .[] | select( .node.version != \"docker-base-layer\" ) | .value[].node.id] | unique_by(.) | @csv'  | cut -d, -f1  | sed -e 's/^\"//' -e 's/\"$//' > /tmp/release.json"
-    - name: Show Release
-      id: release
-      run: printf "::set-output name=id::%s" $(cat /tmp/release.json)
