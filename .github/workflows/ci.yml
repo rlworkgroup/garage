@@ -67,7 +67,7 @@ jobs:
     steps:
     - uses: actions/delete-package-versions@v1
       with:
-        owner: ${OWNER}
+        owner: "rlworkgroup"
         repo: "garage-ci"
-        package-name: "garage-ci-181788470"
+        package-name: ${DOCKER_TAG}
         token: ${{ secrets.CI_REGISTRY_TOKEN }}
