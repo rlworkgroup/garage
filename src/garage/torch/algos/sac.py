@@ -11,7 +11,7 @@ from garage import log_performance
 from garage.np import obtain_evaluation_samples
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, RaySampler
-from garage.torch import dict_np_to_torch, global_device
+from garage.torch import dict_np_to_torch, global_device, np_to_torch
 
 
 class SAC(RLAlgorithm):
@@ -97,6 +97,7 @@ class SAC(RLAlgorithm):
         max_eval_path_length=None,
         gradient_steps_per_itr,
         fixed_alpha=None,
+        max_alpha=100.,
         target_entropy=None,
         initial_log_entropy=0.,
         discount=0.99,
@@ -152,6 +153,7 @@ class SAC(RLAlgorithm):
         # automatic entropy coefficient tuning
         self._use_automatic_entropy_tuning = fixed_alpha is None
         self._fixed_alpha = fixed_alpha
+        self._max_log_alpha = np_to_torch(np.array(max_alpha)).log()
         if self._use_automatic_entropy_tuning:
             if target_entropy:
                 self._target_entropy = target_entropy
@@ -437,6 +439,8 @@ class SAC(RLAlgorithm):
             self._alpha_optimizer.zero_grad()
             alpha_loss.backward()
             self._alpha_optimizer.step()
+            excessive_alphas = self._log_alpha > self._max_log_alpha
+            self._log_alpha.data[excessive_alphas] = self._max_log_alpha
 
         return policy_loss, qf1_loss, qf2_loss
 
