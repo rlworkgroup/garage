@@ -62,7 +62,7 @@ jobs:
 
   delete_docker_container:
     runs-on: ubuntu-latest
-    needs: build_docker_container
+#    needs: build_docker_container
 
     steps:
     - uses: actions/delete-package-versions@v1
