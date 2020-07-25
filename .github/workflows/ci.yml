@@ -4,7 +4,7 @@ env:
   GARAGE_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   TRAVIS_COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
   DOCKER_TAG: garage-ci-${{ github.run_id }}
-  OWNER: "rlworkgroup"
+  OWNER: rlworkgroup
   DOCKER_CACHE_REPO: "rlworkgroup/garage-ci"
 
 on:
