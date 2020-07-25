@@ -130,13 +130,18 @@ class VecWorker(DefaultWorker):
             np.asarray(self._actions[rollout_number]),
             np.asarray(self._rewards[rollout_number]),
             np.asarray(self._terminals[rollout_number]),
-            self._env_infos[rollout_number], self._agent_infos[rollout_number],
+            {k: np.asarray(v)
+             for (k, v) in self._env_infos[rollout_number].items()},
+            {k: np.asarray(v)
+             for (k, v) in self._agent_infos[rollout_number].items()},
             np.asarray([self._path_lengths[rollout_number]], dtype='l'))
         self._completed_rollouts.append(traj)
         self._observations[rollout_number] = []
         self._actions[rollout_number] = []
         self._rewards[rollout_number] = []
         self._terminals[rollout_number] = []
+        self._env_infos[rollout_number] = collections.defaultdict(list)
+        self._agent_infos[rollout_number] = collections.defaultdict(list)
         self._path_lengths[rollout_number] = 0
         self._prev_obs[rollout_number] = self._envs[rollout_number].reset()
 
