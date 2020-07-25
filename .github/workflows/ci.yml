@@ -69,7 +69,7 @@ jobs:
       with:
         owner: 'rlworkgroup'
         repo: 'garage-ci'
-        package-name: ${DOCKER_TAG}
+        package-name: "garage-ci-159895571"
         token: ${{ secrets.CI_REGISTRY_TOKEN }}
     - name: Fetch releases
       run: |
