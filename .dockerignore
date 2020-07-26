@@ -4,3 +4,4 @@ Pipfile*
 .idea
 **/dist
 __pycache__
+venv

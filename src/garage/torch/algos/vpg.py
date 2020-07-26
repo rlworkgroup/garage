@@ -8,8 +8,8 @@ import torch
 import torch.nn.functional as F
 
 from garage import EpisodeBatch, log_performance
-from garage.misc import tensor_utils as tu
-from garage.np.algos.rl_algorithm import RLAlgorithm
+from garage.np import discount_cumsum
+from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
 from garage.torch import compute_advantages, filter_valids, pad_to_last
 from garage.torch.optimizers import OptimizerWrapper
@@ -132,7 +132,7 @@ class VPG(RLAlgorithm):
         """
         return self._discount
 
-    def train_once(self, itr, paths):
+    def _train_once(self, itr, paths):
         """Train the algorithm once.
 
         Args:
@@ -144,7 +144,7 @@ class VPG(RLAlgorithm):
 
         """
         obs, actions, rewards, returns, valids, baselines = \
-            self.process_samples(paths)
+            self._process_samples(paths)
 
         if self._maximum_entropy:
             policy_entropies = self._compute_policy_entropy(obs)
@@ -214,8 +214,8 @@ class VPG(RLAlgorithm):
         for _ in runner.step_epochs():
             for _ in range(self._n_samples):
                 runner.step_path = runner.obtain_samples(runner.step_itr)
-                last_return = self.train_once(runner.step_itr,
-                                              runner.step_path)
+                last_return = self._train_once(runner.step_itr,
+                                               runner.step_path)
                 runner.step_itr += 1
 
         return last_return
@@ -447,7 +447,7 @@ class VPG(RLAlgorithm):
 
         return log_likelihoods * advantages
 
-    def process_samples(self, paths):
+    def _process_samples(self, paths):
         r"""Process sample data based on the collected paths.
 
         Notes: P is the maximum episode length (self.max_episode_length)
@@ -482,8 +482,7 @@ class VPG(RLAlgorithm):
             for path in paths
         ])
         returns = torch.stack([
-            pad_to_last(tu.discount_cumsum(path['rewards'],
-                                           self._discount).copy(),
+            pad_to_last(discount_cumsum(path['rewards'], self.discount).copy(),
                         total_length=self.max_episode_length) for path in paths
         ])
         with torch.no_grad():

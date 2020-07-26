@@ -1,15 +1,20 @@
 """This modules creates a DDPG model in PyTorch."""
+# yapf: disable
 import copy
 
 from dowel import logger, tabular
 import numpy as np
 import torch
 
-from garage import _Default, log_performance, make_optimizer
-from garage.np import obtain_evaluation_episodes
+from garage import (_Default,
+                    log_performance,
+                    make_optimizer,
+                    obtain_evaluation_episodes)
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch import dict_np_to_torch, torch_to_np
+
+# yapf: enable
 
 
 class DDPG(RLAlgorithm):

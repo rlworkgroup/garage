@@ -11,7 +11,7 @@ from garage import (_Default,
                     EpisodeBatch,
                     log_multitask_performance,
                     make_optimizer)
-from garage.misc import tensor_utils
+from garage.np import discount_cumsum
 from garage.sampler import RaySampler
 from garage.sampler.env_update import SetTaskUpdate
 from garage.torch import update_module_params
@@ -90,18 +90,18 @@ class MAML:
 
         for _ in runner.step_epochs():
             all_samples, all_params = self._obtain_samples(runner)
-            last_return = self.train_once(runner, all_samples, all_params)
+            last_return = self._train_once(runner, all_samples, all_params)
             runner.step_itr += 1
 
         return last_return
 
-    def train_once(self, runner, all_samples, all_params):
+    def _train_once(self, runner, all_samples, all_params):
         """Train the algorithm once.
 
         Args:
             runner (LocalRunner): The experiment runner.
-            all_samples (list[list[MAMLEpisodeBatch]]): A two
-                dimensional list of MAMLEpisodeBatch of size
+            all_samples (list[list[_MAMLEpisodeBatch]]): A two
+                dimensional list of _MAMLEpisodeBatch of size
                 [meta_batch_size * (num_grad_updates + 1)]
             all_params (list[dict]): A list of named parameter dictionaries.
                 Each dictionary contains key value pair of names (str) and
@@ -136,12 +136,10 @@ class MAML:
         with torch.no_grad():
             policy_entropy = self._compute_policy_entropy(
                 [task_samples[0] for task_samples in all_samples])
-            average_return = self.log_performance(itr, all_samples,
-                                                  meta_objective.item(),
-                                                  loss_after.item(),
-                                                  kl_before.item(),
-                                                  kl_after.item(),
-                                                  policy_entropy.mean().item())
+            average_return = self._log_performance(
+                itr, all_samples, meta_objective.item(), loss_after.item(),
+                kl_before.item(), kl_after.item(),
+                policy_entropy.mean().item())
 
         if self._meta_evaluator and itr % self._evaluate_every_n_epochs == 0:
             self._meta_evaluator.evaluate(self)
@@ -186,7 +184,7 @@ class MAML:
 
         Returns:
             tuple: Tuple of (all_samples, all_params).
-                all_samples (list[MAMLEpisodeBatch]): A list of size
+                all_samples (list[_MAMLEpisodeBatch]): A list of size
                     [meta_batch_size * (num_grad_updates + 1)]
                 all_params (list[dict]): A list of named parameter
                     dictionaries.
@@ -223,7 +221,7 @@ class MAML:
         """Performs one MAML inner step to update the policy.
 
         Args:
-            batch_samples (MAMLEpisodeBatch): Samples data for one
+            batch_samples (_MAMLEpisodeBatch): Samples data for one
                 task and one gradient step.
             set_grad (bool): if False, update policy parameters in-place.
                 Else, allow taking gradient of functions of updated parameters
@@ -255,8 +253,8 @@ class MAML:
         """Compute loss to meta-optimize.
 
         Args:
-            all_samples (list[list[MAMLEpisodeBatch]]): A two
-                dimensional list of MAMLEpisodeBatch of size
+            all_samples (list[list[_MAMLEpisodeBatch]]): A two
+                dimensional list of _MAMLEpisodeBatch of size
                 [meta_batch_size * (num_grad_updates + 1)]
             all_params (list[dict]): A list of named parameter dictionaries.
                 Each dictionary contains key value pair of names (str) and
@@ -295,8 +293,8 @@ class MAML:
         distribution and current policy distribution.
 
         Args:
-            all_samples (list[list[MAMLEpisodeBatch]]): Two
-                dimensional list of MAMLEpisodeBatch of size
+            all_samples (list[list[_MAMLEpisodeBatch]]): Two
+                dimensional list of _MAMLEpisodeBatch of size
                 [meta_batch_size * (num_grad_updates + 1)]
             all_params (list[dict]): A list of named parameter dictionaries.
                 Each dictionary contains key value pair of names (str) and
@@ -332,7 +330,7 @@ class MAML:
         """Compute policy entropy.
 
         Args:
-            task_samples (list[MAMLEpisodeBatch]): Samples data for
+            task_samples (list[_MAMLEpisodeBatch]): Samples data for
                 one task.
 
         Returns:
@@ -373,27 +371,27 @@ class MAML:
             paths (list[dict]): A list of collected paths.
 
         Returns:
-            MAMLEpisodeBatch: Processed samples data.
+            _MAMLEpisodeBatch: Processed samples data.
 
         """
         for path in paths:
-            path['returns'] = tensor_utils.discount_cumsum(
+            path['returns'] = discount_cumsum(
                 path['rewards'], self._inner_algo.discount).copy()
 
         self._train_value_function(paths)
-        obs, actions, rewards, _, valids, baselines \
-            = self._inner_algo.process_samples(paths)
-        return MAMLEpisodeBatch(paths, obs, actions, rewards, valids,
-                                baselines)
+        obs, actions, rewards, _, valids, baselines = self._inner_algo._process_samples(  # pylint: disable=protected-access # noqa: E501
+            paths)
+        return _MAMLEpisodeBatch(paths, obs, actions, rewards, valids,
+                                 baselines)
 
-    def log_performance(self, itr, all_samples, loss_before, loss_after,
-                        kl_before, kl, policy_entropy):
+    def _log_performance(self, itr, all_samples, loss_before, loss_after,
+                         kl_before, kl, policy_entropy):
         """Evaluate performance of this batch.
 
         Args:
             itr (int): Iteration number.
-            all_samples (list[list[MAMLEpisodeBatch]]): Two
-                dimensional list of MAMLEpisodeBatch of size
+            all_samples (list[list[_MAMLEpisodeBatch]]): Two
+                dimensional list of _MAMLEpisodeBatch of size
                 [meta_batch_size * (num_grad_updates + 1)]
             loss_before (float): Loss before optimization step.
             loss_after (float): Loss after optimization step.
@@ -477,14 +475,14 @@ class MAML:
         return exploration_policy
 
 
-class MAMLEpisodeBatch(
-        collections.namedtuple('MAMLEpisodeBatch', [
+class _MAMLEpisodeBatch(
+        collections.namedtuple('_MAMLEpisodeBatch', [
             'paths', 'observations', 'actions', 'rewards', 'valids',
             'baselines'
         ])):
     r"""A tuple representing a batch of whole episodes in MAML.
 
-    A :class:`MAMLEpisodeBatch` represents a batch of whole episodes
+    A :class:`_MAMLEpisodeBatch` represents a batch of whole episodes
     produced from one environment.
     +-----------------------+-------------------------------------------------+
     | Symbol                | Description                                     |

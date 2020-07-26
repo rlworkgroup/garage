@@ -16,7 +16,9 @@ from garage import (EnvSpec,
                     log_multitask_performance,
                     StepType,
                     Wrapper)
-from garage.misc import tensor_utils as np_tensor_utils
+from garage.np import (concat_tensor_dict_list,
+                       discount_cumsum,
+                       stack_and_pad_tensor_dict_list)
 from garage.np.algos import MetaRLAlgorithm
 from garage.sampler import DefaultWorker
 from garage.tf.algos._rl2npo import RL2NPO
@@ -431,8 +433,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
         paths_by_task = collections.defaultdict(list)
         for path in paths:
-            path['returns'] = np_tensor_utils.discount_cumsum(
-                path['rewards'], self._discount)
+            path['returns'] = discount_cumsum(path['rewards'], self._discount)
             path['lengths'] = [len(path['rewards'])]
             if 'batch_idx' in path:
                 paths_by_task[path['batch_idx']].append(path)
@@ -452,9 +453,8 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         # stack and pad to max path length of the concatenated
         # path, which will be fed to inner algo
         # i.e. max_episode_length * episode_per_task
-        concatenated_paths_stacked = (
-            np_tensor_utils.stack_and_pad_tensor_dict_list(
-                concatenated_paths, self._inner_algo.max_episode_length))
+        concatenated_paths_stacked = (stack_and_pad_tensor_dict_list(
+            concatenated_paths, self._inner_algo.max_episode_length))
 
         name_map = None
         if hasattr(self._task_sampler, '_envs') and hasattr(
@@ -505,7 +505,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         baselines = np.concatenate(
             [np.zeros_like(path['rewards']) for path in paths])
 
-        concatenated_path = np_tensor_utils.concat_tensor_dict_list(paths)
+        concatenated_path = concat_tensor_dict_list(paths)
         concatenated_path['observations'] = observations
         concatenated_path['actions'] = actions
         concatenated_path['valids'] = valids

@@ -7,7 +7,7 @@ from garage import EpisodeBatch, log_performance, wrap_experiment
 from garage.envs import PointEnv
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
-from garage.misc import tensor_utils
+from garage.np import discount_cumsum
 from garage.sampler import LocalSampler
 from garage.torch.policies import GaussianMLPPolicy
 
@@ -58,8 +58,7 @@ class SimpleVPG:
         losses = []
         self._policy_opt.zero_grad()
         for path in samples:
-            returns_numpy = tensor_utils.discount_cumsum(
-                path['rewards'], self._discount)
+            returns_numpy = discount_cumsum(path['rewards'], self._discount)
             returns = torch.Tensor(returns_numpy.copy())
             obs = torch.Tensor(path['observations'])
             actions = torch.Tensor(path['actions'])

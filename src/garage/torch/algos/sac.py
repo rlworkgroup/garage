@@ -1,4 +1,5 @@
 """This modules creates a sac model in PyTorch."""
+# yapf: disable
 from collections import deque
 import copy
 
@@ -7,11 +8,12 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from garage import log_performance, StepType
-from garage.np import obtain_evaluation_episodes
+from garage import log_performance, obtain_evaluation_episodes, StepType
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, RaySampler
 from garage.torch import dict_np_to_torch, global_device
+
+# yapf: enable
 
 
 class SAC(RLAlgorithm):

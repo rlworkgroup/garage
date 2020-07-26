@@ -6,7 +6,7 @@ from garage import EpisodeBatch, log_performance, wrap_experiment
 from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
-from garage.misc import tensor_utils
+from garage.np import discount_cumsum
 from garage.sampler import LocalSampler
 from garage.tf.policies import CategoricalMLPPolicy
 
@@ -64,10 +64,10 @@ class SimpleCEM:
         """
         returns = []
         for path in paths:
-            returns.append(
-                tensor_utils.discount_cumsum(path['rewards'], self._discount))
+            returns.append(discount_cumsum(path['rewards'], self._discount))
         avg_return = np.mean(np.concatenate(returns))
         self._all_avg_returns.append(avg_return)
+
         if (epoch + 1) % self._n_samples == 0:
             avg_rtns = np.array(self._all_avg_returns)
             best_inds = np.argsort(-avg_rtns)[:self._n_best]
@@ -78,9 +78,11 @@ class SimpleCEM:
             avg_return = max(self._all_avg_returns)
             self._all_avg_returns.clear()
             self._all_params.clear()
+
         self._cur_params = self._sample_params(epoch)
         self._all_params.append(self._cur_params.copy())
         self.policy.set_param_values(self._cur_params)
+
         return avg_return
 
     def _sample_params(self, epoch):
@@ -97,6 +99,7 @@ class SimpleCEM:
         sample_std = np.sqrt(
             np.square(self._cur_std) +
             np.square(self._extra_std) * extra_var_mult)
+
         return np.random.standard_normal(len(
             self._cur_mean)) * sample_std + self._cur_mean
 

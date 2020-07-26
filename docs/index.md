@@ -74,7 +74,6 @@ and how to implement new MDPs and new algorithms.
    _autoapi/garage/index
    _autoapi/garage/envs/index
    _autoapi/garage/experiment/index
-   _autoapi/garage/misc/index
    _autoapi/garage/np/index
    _autoapi/garage/plotter/index
    _autoapi/garage/replay_buffer/index

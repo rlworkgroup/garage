@@ -4,16 +4,20 @@ TD3, or Twin Delayed Deep Deterministic Policy Gradient, uses actor-critic
 method to optimize the policy and reward prediction. Notably, it uses the
 minimum value of two critics instead of one to limit overestimation.
 """
-
+# yapf: disable
 from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
 
-from garage import _Default, log_performance, make_optimizer
-from garage.np import obtain_evaluation_episodes
+from garage import (_Default,
+                    log_performance,
+                    make_optimizer,
+                    obtain_evaluation_episodes)
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf.misc import tensor_utils
+
+# yapf: enable
 
 
 class TD3(RLAlgorithm):
