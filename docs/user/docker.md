@@ -108,7 +108,7 @@ make run-headless BUILD_ARGS="--build-arg MY_VAR=123" RUN_ARGS="-e MY_VAR=123"
 
 ## NVIDIA image
 
-The garage NVIDIA images come with CUDA 10.2.
+The garage NVIDIA images come with CUDA 10.2 and cuDNN (required for tensorflow).
 
 ### Prerequisites for NVIDIA image
 
@@ -165,14 +165,14 @@ make run-nvidia GPUS="device=0,2"
 
 ### Using a different driver version
 
-The garage-nvidia docker image uses `nvidia/cuda:10.2-runtime-ubuntu18.04` as
-the parent image which requires NVIDIA driver version 440.33+. If you need
+The garage-nvidia docker image uses `nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04`
+as the parent image which requires NVIDIA driver version 440.33+. If you need
 to use garage with a different driver version, you might be able to build the
 garage-nvidia image from scratch using a different parent image using the
 variable `PARENT_IMAGE`.
 
 ```
-make run-nvidia PARENT_IMAGE="nvidia/cuda:10.1-runtime-ubuntu18.04"
+make run-nvidia PARENT_IMAGE="nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04"
 ```
 
 You can find the required parent images at [NVIDIA CUDA's DockerHub](https://hub.docker.com/r/nvidia/cuda/tags)
