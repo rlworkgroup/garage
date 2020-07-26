@@ -7,7 +7,7 @@ from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
 
-from garage import log_performance, make_optimizer, TrajectoryBatch
+from garage import log_performance, make_optimizer, StepType, TrajectoryBatch
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
@@ -209,7 +209,10 @@ class NPO(RLAlgorithm):
                 rewards=path['rewards'],
                 env_infos=path['env_infos'],
                 agent_infos=path['agent_infos'],
-                dones=path['dones']) for path in paths
+                dones=np.array([
+                    step_type == StepType.TERMINAL
+                    for step_type in path['step_types']
+                ])) for path in paths
         ]
 
         if hasattr(self._baseline, 'predict_n'):

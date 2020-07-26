@@ -3,6 +3,8 @@ import collections
 
 import numpy as np
 
+from garage import StepType
+
 
 class PathBuffer:
     """A replay buffer that stores and can sample whole paths.
@@ -36,13 +38,17 @@ class PathBuffer:
         env_spec = trajectories.env_spec
         obs_space = env_spec.observation_space
         for traj in trajectories.split():
+            terminals = np.array([
+                step_type == StepType.TERMINAL for step_type in traj.step_types
+            ],
+                                 dtype=bool)
             path = {
                 'observations': obs_space.flatten_n(traj.observations),
                 'next_observations':
                 obs_space.flatten_n(traj.next_observations),
                 'actions': env_spec.action_space.flatten_n(traj.actions),
                 'rewards': traj.rewards.reshape(-1, 1),
-                'terminals': traj.terminals.reshape(-1, 1),
+                'terminals': terminals.reshape(-1, 1),
             }
             self.add_path(path)
 

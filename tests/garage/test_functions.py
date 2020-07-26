@@ -16,6 +16,7 @@ from garage import (_Default,
                     log_multitask_performance,
                     log_performance,
                     make_optimizer,
+                    StepType,
                     TrajectoryBatch)
 from garage.envs import EnvSpec
 
@@ -39,8 +40,12 @@ def test_log_performance():
             0.17657714, 0.04783857, 0.73904013, 0.41364329, 0.52235551,
             0.24203526, 0.43328910
         ]),
-        terminals=np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1],
-                           dtype=bool),
+        step_types=np.array(
+            [StepType.FIRST] + [StepType.MID] * (lengths[0] - 2) +
+            [StepType.TERMINAL] + [StepType.FIRST] + [StepType.MID] *
+            (lengths[1] - 2) + [StepType.TERMINAL] + [StepType.FIRST] +
+            [StepType.FIRST],
+            dtype=StepType),
         env_infos={
             'success':
             np.array([0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
@@ -85,8 +90,7 @@ def test_log_multitask_performance_task_name():
             0.17657714, 0.04783857, 0.73904013, 0.41364329, 0.52235551,
             0.24203526, 0.43328910
         ]),
-        terminals=np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1],
-                           dtype=bool),
+        step_types=np.array([StepType.MID] * sum(lengths), dtype=StepType),
         env_infos={
             'success':
             np.array([0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
@@ -132,8 +136,7 @@ def test_log_multitask_performance_task_id():
             0.17657714, 0.04783857, 0.73904013, 0.41364329, 0.52235551,
             0.24203526, 0.43328910
         ]),
-        terminals=np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1],
-                           dtype=bool),
+        step_types=np.array([StepType.MID] * sum(lengths), dtype=StepType),
         env_infos={
             'success':
             np.array([0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],

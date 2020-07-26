@@ -6,7 +6,7 @@ import pprint
 import numpy as np
 import pytest
 
-from garage import TrajectoryBatch
+from garage import StepType, TrajectoryBatch
 from garage.envs import GarageEnv, GridWorldEnv
 from garage.np.policies import ScriptedPolicy
 from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
@@ -70,7 +70,7 @@ def slice_trajectories(trajectories, slice_size):
                 last_observations=last_obs,
                 actions=traj.actions[indices],
                 rewards=traj.rewards[indices],
-                terminals=traj.terminals[indices],
+                step_types=traj.step_types[indices],
                 env_infos={k: v[indices]
                            for (k, v) in traj.env_infos},
                 agent_infos={k: v[indices]
@@ -95,7 +95,8 @@ def test_rollout(env, policy, timesteps_per_call):
         traj = worker.rollout()
         assert sum(traj.lengths) == timesteps_per_call * N_TRAJ
         if timesteps_per_call * i < 4:
-            assert sum(traj.terminals) == 0
+            assert not any(step_type == StepType.TERMINAL
+                           for step_type in traj.step_types)
     worker.shutdown()
 
 

@@ -370,6 +370,24 @@ def test_step_type_dtype_mismatch_time_step(sample_data):
         del s
 
 
+def test_step_type_property_time_step(sample_data):
+    sample_data['step_type'] = StepType.FIRST
+    s = TimeStep(**sample_data)
+    assert s.first
+
+    sample_data['step_type'] = StepType.MID
+    s = TimeStep(**sample_data)
+    assert s.mid
+
+    sample_data['step_type'] = StepType.TERMINAL
+    s = TimeStep(**sample_data)
+    assert s.terminal and s.last
+
+    sample_data['step_type'] = StepType.TIMEOUT
+    s = TimeStep(**sample_data)
+    assert s.timeout and s.last
+
+
 @pytest.fixture
 def batch_data():
     # spaces
@@ -420,6 +438,13 @@ def test_new_ts_batch(batch_data):
     assert s.env_infos is batch_data['env_infos']
     assert s.agent_infos is batch_data['agent_infos']
     assert s.step_types is batch_data['step_types']
+
+
+def test_invalid_inferred_batch_size(batch_data):
+    with pytest.raises(ValueError, match='batch dimension of rewards'):
+        batch_data['rewards'] = []
+        s = TimeStepBatch(**batch_data)
+        del s
 
 
 def test_observations_env_spec_mismatch_batch(batch_data):

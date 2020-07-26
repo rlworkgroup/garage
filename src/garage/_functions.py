@@ -5,6 +5,7 @@ from dowel import tabular
 import numpy as np
 
 import garage
+from garage import StepType
 from garage.misc.tensor_utils import discount_cumsum
 
 
@@ -134,12 +135,15 @@ def log_performance(itr, batch, discount, prefix='Evaluation'):
     """
     returns = []
     undiscounted_returns = []
-    completion = []
+    termination = []
     success = []
     for trajectory in batch.split():
         returns.append(discount_cumsum(trajectory.rewards, discount))
         undiscounted_returns.append(sum(trajectory.rewards))
-        completion.append(float(trajectory.terminals.any()))
+        termination.append(
+            float(
+                any(step_type == StepType.TERMINAL
+                    for step_type in trajectory.step_types)))
         if 'success' in trajectory.env_infos:
             success.append(float(trajectory.env_infos['success'].any()))
 
@@ -154,7 +158,7 @@ def log_performance(itr, batch, discount, prefix='Evaluation'):
         tabular.record('StdReturn', np.std(undiscounted_returns))
         tabular.record('MaxReturn', np.max(undiscounted_returns))
         tabular.record('MinReturn', np.min(undiscounted_returns))
-        tabular.record('TerminationRate', np.mean(completion))
+        tabular.record('TerminationRate', np.mean(termination))
         if success:
             tabular.record('SuccessRate', np.mean(success))
 

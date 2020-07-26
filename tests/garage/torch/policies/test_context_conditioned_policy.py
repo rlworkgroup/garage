@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F  # NOQA
 
-from garage import TimeStep
+from garage import StepType, TimeStep
 from garage.envs import EnvSpec, GarageEnv
 from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import (ContextConditionedPolicy,
@@ -81,9 +81,9 @@ class TestContextConditionedPolicy:
                      next_observation=np.ones(self.obs_dim),
                      action=np.ones(self.action_dim),
                      reward=1.0,
-                     terminal=False,
                      env_info={},
-                     agent_info={})
+                     agent_info={},
+                     step_type=StepType.FIRST)
         updates = 10
         for _ in range(updates):
             self.module.update_context(s)

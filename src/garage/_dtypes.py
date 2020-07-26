@@ -408,6 +408,18 @@ class TrajectoryBatch(
                     [p['observations'][-1] for p in paths])
 
         stacked_paths = tensor_utils.concat_tensor_dict_list(paths)
+
+        # Temporary solution. This logic is not needed if algorithms process
+        # step_types instead of dones directly.
+        if 'dones' in stacked_paths and 'step_types' not in stacked_paths:
+            step_types = np.array([
+                StepType.TERMINAL if done else StepType.MID
+                for done in stacked_paths['dones']
+            ],
+                                  dtype=StepType)
+            stacked_paths['step_types'] = step_types
+            del stacked_paths['dones']
+
         return cls(env_spec=env_spec,
                    observations=observations,
                    last_observations=last_observations,
@@ -696,7 +708,7 @@ class TimeStepBatch(
         inferred_batch_size = len(rewards)
         if inferred_batch_size < 1:
             raise ValueError(
-                'Expected batch dimension of terminals to be greater than 1, '
+                'Expected batch dimension of rewards to be greater than 1, '
                 'but got length {} instead.'.format(inferred_batch_size))
 
         first_observation = observations[0]
@@ -895,7 +907,7 @@ class TimeStepBatch(
         """Convert the batch into a list of dictionaries.
 
         This breaks the TimeStepBatch object into a list of single
-        time step sample dictionaries. len(terminals) (or the number of
+        time step sample dictionaries. len(rewards) (or the number of
         discrete time step) dictionaries are returned
 
 
