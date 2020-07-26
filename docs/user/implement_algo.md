@@ -26,7 +26,6 @@ fields to exist.
 
 ```eval_rst
 .. literalinclude:: ../../src/garage/np/algos/rl_algorithm.py
-   :lines: 5-25
 ```
 
 In order to implement snapshotting and resume, instances of `RLAlgorithm`
@@ -190,17 +189,62 @@ Cross Entropy Method (CEM) :cite:`rubinstein2004cross` using NumPy.
 
 ### PyTorch
 
-```eval_rst
-.. literalinclude:: ../../examples/torch/tutorial_vpg.py
-   :lines: 3-5,10-11,16,24-31,33,40-41,46-48,58-72
+```py
+import torch
+import numpy as np
+
+from garage.samplers import RaySampler
+from garage.misc import tensor_utils
+
+class SimpleVPG:
+
+    sampler_cls = RaySampler
+
+    def __init__(self, env_spec, policy):
+        self.env_spec = env_spec
+        self.policy = policy
+        self.max_path_length = 200
+        self._discount = 0.99
+        self._policy_opt = torch.optim.Adam(self.policy.parameters(), lr=1e-3)
+
+    def train(self, runner):
+        for epoch in runner.step_epochs():
+            samples = runner.obtain_samples(epoch)
+            self._train_once(samples)
+
+    def _train_once(self, samples):
+        losses = []
+        self._policy_opt.zero_grad()
+        for path in samples:
+            returns_numpy = tensor_utils.discount_cumsum(
+                path['rewards'], self._discount)
+            returns = torch.Tensor(returns_numpy.copy())
+            obs = torch.Tensor(path['observations'])
+            actions = torch.Tensor(path['actions'])
+            dist = self.policy(obs)[0]
+            log_likelihoods = dist.log_prob(actions)
+            loss = (-log_likelihoods * returns).mean()
+            loss.backward()
+            losses.append(loss.item())
+        self._policy_opt.step()
+        return np.mean(losses)
 ```
 
 That lets us train a policy, but it doesn't let us confirm that it actually works.
 We can add a little logging to the `train()` method.
 
-```eval_rst
-.. literalinclude:: ../../examples/torch/tutorial_vpg.py
-   :lines: 6,13,33,40-46
+```py
+from garage import log_performance, TrajectoryBatch
+
+...
+    def train(self, runner):
+        for epoch in runner.step_epochs():
+            samples = runner.obtain_samples(epoch)
+            log_performance(
+                epoch,
+                TrajectoryBatch.from_trajectory_list(self.env_spec, samples),
+                self._discount)
+            self._train_once(samples)
 ```
 
 For completeness, the full experiment file ([`example/torch/tutorial_vpg.py`](https://github.com/rlworkgroup/garage/blob/master/examples/torch/tutorial_vpg.py))
@@ -208,7 +252,6 @@ is repeated below:
 
 ```eval_rst
 .. literalinclude:: ../../examples/torch/tutorial_vpg.py
-   :lines: 3-13,16,24-33,40-48,58-76,84-93
 ```
 
 Running the experiment file should print outputs like the following. The policy
@@ -276,25 +319,94 @@ def tutorial_vpg(ctxt=None):
 Before the training part, TensorFlow version is almost the same as PyTorch's,
 except for the replacement of `LocalRunner` with `LocalTFRunner`.
 
-```eval_rst
-.. literalinclude:: ../../examples/tf/tutorial_vpg.py
-   :lines: 6-9,12,118-120,128-134
+```py
+...
+from garage import wrap_experiment
+from garage.envs import PointEnv, GarageEnv
+from garage.experiment import LocalTFRunner
+from garage.experiment.deterministic import set_seed
+from garage.tf.policies import GaussianMLPPolicy
+
+@wrap_experiment
+def tutorial_vpg(ctxt=None):
+    set_seed(100)
+    with LocalTFRunner(ctxt) as runner:
+        env = GarageEnv(PointEnv())
+        policy = GaussianMLPPolicy(env.spec)
+        algo = SimpleVPG(env.spec, policy)
+        runner.setup(algo, env)
+        runner.train(n_epochs=500, batch_size=4000)
+...
 ```
 
 Different from PyTorch's version, we need to build the computation graph before
 training the policy in TensorFlow.
 
-```eval_rst
-.. literalinclude:: ../../examples/tf/tutorial_vpg.py
-   :lines: 4,14-15,23-32,34-51
+```py
+import tensorflow as tf
+...
+
+class SimpleVPG:
+
+    sampler_cls = RaySampler
+
+    def __init__(self, env_spec, policy):
+        self.env_spec = env_spec
+        self.policy = policy
+        self.max_path_length = 200
+        self._discount = 0.99
+        self.init_opt()
+
+    def init_opt(self):
+        observation_dim = self.policy.observation_space.flat_dim
+        action_dim = self.policy.action_space.flat_dim
+        with tf.name_scope('inputs'):
+            self._observation = tf.compat.v1.placeholder(
+                tf.float32, shape=[None, observation_dim], name='observation')
+            self._action = tf.compat.v1.placeholder(tf.float32,
+                                                    shape=[None, action_dim],
+                                                    name='action')
+            self._returns = tf.compat.v1.placeholder(tf.float32,
+                                                     shape=[None],
+                                                     name='return')
+        policy_dist = self.policy.build(self._observation, name='policy').dist
+        with tf.name_scope('loss'):
+            ll = policy_dist.log_prob(self._action, name='log_likelihood')
+            loss = -tf.reduce_mean(ll * self._returns)
+        with tf.name_scope('train'):
+            self._train_op = tf.compat.v1.train.AdamOptimizer(1e-3).minimize(
+                loss)
 ```
 
 The `train()` method is the same, while int the `_train_once()` method, we feed
 the inputs with sample data.
 
-```eval_rst
-.. literalinclude:: ../../examples/tf/tutorial_vpg.py
-   :lines: 53,60-68,78-92
+```py
+    def train(self, runner):
+        for epoch in runner.step_epochs():
+            samples = runner.obtain_samples(epoch)
+            log_performance(
+                epoch,
+                TrajectoryBatch.from_trajectory_list(self.env_spec, samples),
+                self._discount)
+            self._train_once(samples)
+
+    def _train_once(self, samples):
+        obs = np.concatenate([path['observations'] for path in samples])
+        actions = np.concatenate([path['actions'] for path in samples])
+        returns = []
+        for path in samples:
+            returns.append(
+                tensor_utils.discount_cumsum(path['rewards'], self._discount))
+        returns = np.concatenate(returns)
+        sess = tf.compat.v1.get_default_session()
+        sess.run(self._train_op,
+                 feed_dict={
+                     self._observation: obs,
+                     self._action: actions,
+                     self._returns: returns,
+                 })
+        return np.mean(returns)
 ```
 
 As it is mentioned above, to support snapshot and resume, we need to implement
@@ -302,9 +414,18 @@ all things pickling. However, we use instance variables (e.g. `self._action`)
 to save unpickled `tf.Tensor` in the class. So we need to define `__getstate__`
 and `__setstate__` like:
 
-```eval_rst
-.. literalinclude:: ../../examples/tf/tutorial_vpg.py
-   :lines: 94,101-108,115-116
+```py
+   def __getstate__(self):
+        data = self.__dict__.copy()
+        del data['_observation']
+        del data['_action']
+        del data['_returns']
+        del data['_train_op']
+        return data
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+        self.init_opt()
 ```
 
 For completeness, the full experiment file ([`example/tf/tutorial_vpg.py`](https://github.com/rlworkgroup/garage/blob/master/examples/tf/tutorial_vpg.py))
@@ -312,7 +433,6 @@ is repeated below:
 
 ```eval_rst
 .. literalinclude:: ../../examples/tf/tutorial_vpg.py
-   :lines: 3-15,23-32,34-53,60-68,78-94,101-108,115-120,128-137
 ```
 
 Similar to the PyTorch's version, Running the experiment file should print
@@ -363,20 +483,91 @@ TotalEnvSteps                        8000
 
 We will implement [CEM](https://github.com/rlworkgroup/garage/blob/master/src/garage/np/algos/cem.py)
 with NumPy, and train the `CategoricalMLPPolicy` to solve `CartPole-v1`. The
-debug function is similar to that of TensorFlow:
+experiment function is similar to that of TensorFlow:
 
-```eval_rst
-.. literalinclude:: ../../examples/np/tutorial_cem.py
-   :lines: 5-8,11,104-107,115-121
+```py
+from garage import wrap_experiment
+from garage.envs import GarageEnv
+from garage.experiment import LocalTFRunner
+from garage.experiment.deterministic import set_seed
+from garage.tf.policies import CategoricalMLPPolicy
+
+@wrap_experiment
+def tutorial_cem(ctxt=None):
+    set_seed(100)
+    with LocalTFRunner(ctxt) as runner:
+        env = GarageEnv(env_name='CartPole-v1')
+        policy = CategoricalMLPPolicy(env.spec)
+        algo = SimpleCEM(env.spec, policy)
+        runner.setup(algo, env)
+        runner.train(n_epochs=100, batch_size=1000)
 ```
 
 When training the policy, we use `policy.get_param_values()` method to get the
 initial parameters of the policy, and use `policy.set_param_values()` to update
 parameters of the policy.
 
-```eval_rst
-.. literalinclude:: ../../examples/np/tutorial_cem.py
-   :lines: 3,9-10,12,15,23-40,47-55,66-87,97-102
+```py
+import numpy as np
+from garage.misc import tensor_utils
+from garage.sampler import RaySampler
+
+class SimpleCEM:
+    sampler_cls = RaySampler
+
+    def __init__(self, env_spec, policy):
+        self.env_spec = env_spec
+        self.policy = policy
+        self.max_path_length = 200
+        self._discount = 0.99
+        self._extra_std = 1
+        self._extra_decay_time = 100
+        self._n_samples = 20
+        self._n_best = 1
+        self._cur_std = 1
+        self._cur_mean = self.policy.get_param_values()
+        self._all_avg_returns = []
+        self._all_params = [self._cur_mean.copy()]
+        self._cur_params = None
+
+    def train(self, runner):
+        for epoch in runner.step_epochs():
+            samples = runner.obtain_samples(epoch)
+            log_performance(
+                epoch,
+                TrajectoryBatch.from_trajectory_list(self.env_spec, samples),
+                self._discount)
+            self._train_once(epoch, samples)
+
+    def _train_once(self, epoch, paths):
+        returns = []
+        for path in paths:
+            returns.append(
+                tensor_utils.discount_cumsum(path['rewards'], self._discount))
+        avg_return = np.mean(np.concatenate(returns))
+        self._all_avg_returns.append(avg_return)
+        if (epoch + 1) % self._n_samples == 0:
+            avg_rtns = np.array(self._all_avg_returns)
+            best_inds = np.argsort(-avg_rtns)[:self._n_best]
+            best_params = np.array(self._all_params)[best_inds]
+            self._cur_mean = best_params.mean(axis=0)
+            self._cur_std = best_params.std(axis=0)
+            self.policy.set_param_values(self._cur_mean)
+            avg_return = max(self._all_avg_returns)
+            self._all_avg_returns.clear()
+            self._all_params.clear()
+        self._cur_params = self._sample_params(epoch)
+        self._all_params.append(self._cur_params.copy())
+        self.policy.set_param_values(self._cur_params)
+        return avg_return
+
+    def _sample_params(self, epoch):
+        extra_var_mult = max(1.0 - epoch / self._extra_decay_time, 0)
+        sample_std = np.sqrt(
+            np.square(self._cur_std) +
+            np.square(self._extra_std) * extra_var_mult)
+        return np.random.standard_normal(len(
+            self._cur_mean)) * sample_std + self._cur_mean
 ```
 
 You can see the full experiment file [here](https://github.com/rlworkgroup/garage/blob/master/examples/np/tutorial_cem.py).
