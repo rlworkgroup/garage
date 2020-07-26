@@ -209,6 +209,9 @@ class GarageEnv(gym.Wrapper):
         if 'TimeLimit.truncated' in info:
             info['GarageEnv.TimeLimitTerminated'] = done  # done = True always
             done = not info['TimeLimit.truncated']
+        else:
+            info['TimeLimit.truncated'] = 0
+            info['GarageEnv.TimeLimitTerminated'] = 0
         return observation, reward, done, info
 
     def __getstate__(self):
