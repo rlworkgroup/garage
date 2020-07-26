@@ -7,7 +7,7 @@ import tensorflow as tf
 
 from garage import _Default, make_optimizer
 from garage.np.optimizers import BatchDataset
-from garage.tf.misc import tensor_utils
+from garage.tf import compile_function
 from garage.tf.optimizers.utils import LazyDict
 
 
@@ -84,8 +84,7 @@ class FirstOrderOptimizer:
                 extra_inputs = list()
             self._input_vars = inputs + extra_inputs
             self._opt_fun = LazyDict(
-                f_loss=lambda: tensor_utils.compile_function(
-                    inputs + extra_inputs, loss), )
+                f_loss=lambda: compile_function(inputs + extra_inputs, loss), )
 
     def loss(self, inputs, extra_inputs=None):
         """The loss.

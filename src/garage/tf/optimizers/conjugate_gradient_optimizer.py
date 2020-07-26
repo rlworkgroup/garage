@@ -5,14 +5,19 @@ computes the optimal step size that will satisfy the KL divergence constraint.
 Finally, it performs a backtracking line search to optimize the objective.
 
 """
+# yapf: disable
 import abc
 
 from dowel import logger
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.misc import tensor_utils
+from garage.tf import (compile_function,
+                       flatten_tensor_variables,
+                       new_tensor_like)
 from garage.tf.optimizers.utils import LazyDict, sliced_fun
+
+# yapf: enable
 
 
 class HessianVectorProduct(abc.ABC):
@@ -117,10 +122,8 @@ class PearlmutterHvp(HessianVectorProduct):
                 if grad is None:
                     constraint_grads[idx] = tf.zeros_like(param)
 
-            xs = tuple([
-                tensor_utils.new_tensor_like(p.name.split(':')[0], p)
-                for p in params
-            ])
+            xs = tuple(
+                [new_tensor_like(p.name.split(':')[0], p) for p in params])
 
             def hx_plain():
                 """Computes product of Hessian(f) and vector v.
@@ -135,7 +138,7 @@ class PearlmutterHvp(HessianVectorProduct):
                             tf.stack([
                                 tf.reduce_sum(g * x)
                                 for g, x in zip(constraint_grads, xs)
-                            ])),
+                            ]))
                     hx_plain_splits = tf.gradients(hx_f,
                                                    params,
                                                    name='gradients_hx_plain')
@@ -144,15 +147,12 @@ class PearlmutterHvp(HessianVectorProduct):
                                                       params)):
                         if hx is None:
                             hx_plain_splits[idx] = tf.zeros_like(param)
-                    return tensor_utils.flatten_tensor_variables(
-                        hx_plain_splits)
+                    return flatten_tensor_variables(hx_plain_splits)
 
-            self._hvp_fun = LazyDict(
-                f_hx_plain=lambda: tensor_utils.compile_function(
-                    inputs=inputs + xs,
-                    outputs=hx_plain(),
-                    log_name='f_hx_plain',
-                ), )
+            self._hvp_fun = LazyDict(f_hx_plain=lambda: compile_function(
+                inputs=inputs + xs,
+                outputs=hx_plain(),
+            ), )
 
 
 class FiniteDifferenceHvp(HessianVectorProduct):
@@ -172,7 +172,12 @@ class FiniteDifferenceHvp(HessianVectorProduct):
         self.base_eps = base_eps
         self.symmetric = symmetric
 
-    def update_hvp(self, f, target, inputs, reg_coeff, name='FiniteDifferenceHvp'):
+    def update_hvp(self,
+                   f,
+                   target,
+                   inputs,
+                   reg_coeff,
+                   name='FiniteDifferenceHvp'):
         """Build the symbolic graph to compute the Hessian-vector product.
 
         Args:
@@ -194,7 +199,7 @@ class FiniteDifferenceHvp(HessianVectorProduct):
             for idx, (grad, param) in enumerate(zip(constraint_grads, params)):
                 if grad is None:
                     constraint_grads[idx] = tf.zeros_like(param)
-            flat_grad = tensor_utils.flatten_tensor_variables(constraint_grads)
+            flat_grad = flatten_tensor_variables(constraint_grads)
 
             def f_hx_plain(*args):
                 """Computes product of Hessian(f) and vector v.
@@ -230,10 +235,9 @@ class FiniteDifferenceHvp(HessianVectorProduct):
                     return hx
 
             self._hvp_fun = LazyDict(
-                f_grad=lambda: tensor_utils.compile_function(
+                f_grad=lambda: compile_function(
                     inputs=inputs,
                     outputs=flat_grad,
-                    log_name='f_grad',
                 ),
                 f_hx_plain=lambda: f_hx_plain,
             )
@@ -293,14 +297,14 @@ class ConjugateGradientOptimizer:
         self._hvp_approach = hvp_approach
 
     def update_opt(
-            self,
-            loss,
-            target,
-            leq_constraint,
-            inputs,
-            extra_inputs=None,
-            name='ConjugateGradientOptimizer',
-            constraint_name='constraint',
+        self,
+        loss,
+        target,
+        leq_constraint,
+        inputs,
+        extra_inputs=None,
+        name='ConjugateGradientOptimizer',
+        constraint_name='constraint',
     ):
         """Update the optimizer.
 
@@ -325,7 +329,6 @@ class ConjugateGradientOptimizer:
 
         """
         params = target.get_params()
-        ns_vals = [loss, target, leq_constraint, inputs, extra_inputs, params]
         with tf.name_scope(name):
             inputs = tuple(inputs)
             if extra_inputs is None:
@@ -340,7 +343,7 @@ class ConjugateGradientOptimizer:
                 for idx, (grad, param) in enumerate(zip(grads, params)):
                     if grad is None:
                         grads[idx] = tf.zeros_like(param)
-                flat_grad = tensor_utils.flatten_tensor_variables(grads)
+                flat_grad = flatten_tensor_variables(grads)
 
             self._hvp_approach.update_hvp(f=constraint_term,
                                           target=target,
@@ -353,25 +356,21 @@ class ConjugateGradientOptimizer:
             self._constraint_name = constraint_name
 
             self._opt_fun = LazyDict(
-                f_loss=lambda: tensor_utils.compile_function(
+                f_loss=lambda: compile_function(
                     inputs=inputs + extra_inputs,
                     outputs=loss,
-                    log_name='f_loss',
                 ),
-                f_grad=lambda: tensor_utils.compile_function(
+                f_grad=lambda: compile_function(
                     inputs=inputs + extra_inputs,
                     outputs=flat_grad,
-                    log_name='f_grad',
                 ),
-                f_constraint=lambda: tensor_utils.compile_function(
+                f_constraint=lambda: compile_function(
                     inputs=inputs + extra_inputs,
                     outputs=constraint_term,
-                    log_name='constraint',
                 ),
-                f_loss_constraint=lambda: tensor_utils.compile_function(
+                f_loss_constraint=lambda: compile_function(
                     inputs=inputs + extra_inputs,
                     outputs=[loss, constraint_term],
-                    log_name='f_loss_constraint',
                 ),
             )
 

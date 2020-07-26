@@ -4,7 +4,7 @@ import time
 import scipy.optimize
 import tensorflow as tf
 
-from garage.tf.misc import tensor_utils
+from garage.tf import compile_function, flatten_tensor_variables
 from garage.tf.optimizers.utils import LazyDict
 
 
@@ -58,7 +58,7 @@ class LbfgsOptimizer:
 
                 """
                 with tf.name_scope('get_opt_output'):
-                    flat_grad = tensor_utils.flatten_tensor_variables(
+                    flat_grad = flatten_tensor_variables(
                         tf.gradients(loss, params))
                     return [
                         tf.cast(loss, tf.float64),
@@ -69,9 +69,8 @@ class LbfgsOptimizer:
                 extra_inputs = list()
 
             self._opt_fun = LazyDict(
-                f_loss=lambda: tensor_utils.compile_function(
-                    inputs + extra_inputs, loss),
-                f_opt=lambda: tensor_utils.compile_function(
+                f_loss=lambda: compile_function(inputs + extra_inputs, loss),
+                f_opt=lambda: compile_function(
                     inputs=inputs + extra_inputs,
                     outputs=get_opt_output(),
                 ))
