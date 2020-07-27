@@ -120,8 +120,8 @@ class BulletEnv(gym.Wrapper):
             info['BulletEnv.TimeLimitTerminated'] = done  # done = True always
             done = not info['TimeLimit.truncated']
         else:
-            info['TimeLimit.truncated'] = 0
-            info['BulletEnv.TimeLimitTerminated'] = 0
+            info['TimeLimit.truncated'] = False
+            info['BulletEnv.TimeLimitTerminated'] = False
         return observation, reward, done, info
 
     def __getstate__(self):
