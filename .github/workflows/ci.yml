@@ -5,7 +5,7 @@ env:
   TRAVIS_COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
   DOCKER_TAG: garage-ci-${{ github.run_id }}
   OWNER: "rlworkgroup"
-  DOCKER_CACHE_REPO: "rlworkgroup/garage-ci"
+  DOCKER_CACHE_REPO: "garage-ci"
 
 on:
   push:
@@ -30,11 +30,11 @@ jobs:
           --target garage-dev-18.04 \
           -t "${DOCKER_TAG}" \
           --build-arg GARAGE_GH_TOKEN \
-          --cache-from="docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+          --cache-from="docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Push to cache (GitHub Package Registry)
       run: |
-        docker tag "${DOCKER_TAG}" "docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-        docker push "docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+        docker tag "${DOCKER_TAG}" "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+        docker push "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
 
 
   check_pre_commit:
@@ -48,9 +48,9 @@ jobs:
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
     - name: Pull from cache (GitHub Package Registry)
-      run: docker pull "docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+      run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Rename docker image
-      run: docker tag docker.pkg.github.com/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
+      run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Check pre-commit
       run: |
         docker run \
@@ -67,7 +67,7 @@ jobs:
     steps:
     - uses: actions/delete-package-versions@v1
       with:
-        owner: "rlworkgroup"
-        repo: "garage-ci"
-        package-name: ${DOCKER_TAG}
+        owner: ${{ env.OWNER }}
+        repo: ${{ env.DOCKER_CACHE_REPO }}
+        package-name: ${{ env.DOCKER_TAG }}
         token: ${{ secrets.CI_REGISTRY_TOKEN }}
