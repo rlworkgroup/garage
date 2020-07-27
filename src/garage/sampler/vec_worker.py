@@ -125,9 +125,7 @@ class VecWorker(DefaultWorker):
         assert 0 < self._path_lengths[
             rollout_number] <= self._max_episode_length
         env_infos = self._env_infos[rollout_number]
-        self._env_infos[rollout_number] = collections.defaultdict(list)
         agent_infos = self._agent_infos[rollout_number]
-        self._agent_infos[rollout_number] = collections.defaultdict(list)
         for k, v in env_infos.items():
             env_infos[k] = np.asarray(v)
         for k, v in agent_infos.items():
@@ -151,6 +149,8 @@ class VecWorker(DefaultWorker):
         self._step_types[rollout_number] = []
         self._path_lengths[rollout_number] = 0
         self._prev_obs[rollout_number] = self._envs[rollout_number].reset()
+        self._env_infos[rollout_number] = collections.defaultdict(list)
+        self._agent_infos[rollout_number] = collections.defaultdict(list)
 
     def step_rollout(self):
         """Take a single time-step in the current rollout.
