@@ -1,4 +1,5 @@
 import numpy as np
+from dowel import tabular
 
 from garage.np.exploration_policies import ExplorationPolicy
 
@@ -8,9 +9,10 @@ class AddExpertActions(ExplorationPolicy):
 
     """
 
-    def __init__(self, policy, expert_policy, initial_expert_p=1.0,
+    def __init__(self, env_spec, policy, expert_policy, initial_expert_p=1.0,
                  final_expert_p=0.1, decay_period=int(1e6)):
         super().__init__(policy)
+        self.env_spec = env_spec
         self.expert_policy = expert_policy
         self.initial_expert_p = initial_expert_p
         self.final_expert_p = final_expert_p
@@ -32,7 +34,12 @@ class AddExpertActions(ExplorationPolicy):
         policy_action, policy_info = self.policy.get_action(observation)
         assert 'mean' in policy_info
         if np.random.uniform() < self.current_expert_p:
-            return self.expert_policy.get_action(observation), policy_info
+            expert_action = self.expert_policy.get_action(observation)
+            low = getattr(self.env_spec.action_space, 'low')
+            high = getattr(self.env_spec.action_space, 'high')
+            if low is not None and high is not None:
+                expert_action = np.clip(expert_action, low, high)
+            return expert_action, policy_info
         else:
             return policy_action, policy_info
 
@@ -50,7 +57,12 @@ class AddExpertActions(ExplorationPolicy):
         actions, info = self.policy.get_actions(observations)
         for i, obs in enumerate(observations):
             if np.random.uniform() < self.current_expert_p:
-                actions[i] = self.expert_policy.get_action(obs)
+                expert_action = self.expert_policy.get_action(obs)
+                low = getattr(self.env_spec.action_space, 'low')
+                high = getattr(self.env_spec.action_space, 'high')
+                if low is not None and high is not None:
+                    expert_action = np.clip(expert_action, low, high)
+                actions[i] = expert_action
         return actions, info
 
     def update(self, trajectory_batch):
@@ -69,6 +81,11 @@ class AddExpertActions(ExplorationPolicy):
                                               xp=[0, self.decay_period],
                                               fp=[self.initial_expert_p,
                                                   self.final_expert_p])[0]
+
+        tabular.record('AddExpertActions/TotalEnvSteps',
+                       self.total_steps_so_far)
+        tabular.record('AddExpertActions/CurrentExpertProbability',
+                       self.current_expert_p)
 
     def get_param_values(self):
         """Get parameter values.
