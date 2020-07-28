@@ -26,7 +26,7 @@ REQUIRED = [
     'scikit-image',
     'scipy',
     'setproctitle>=1.0',
-    'tensorflow>=1.14',
+    'tensorflow>=1.14,<2.3.0',
     'tensorflow-probability<=0.10.0',
     'torch>=1.0.0,!=1.5.0',
     'torchvision>=0.2.1',
