@@ -7,6 +7,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
 
+from garage.experiment import deterministic
 from garage.tf.models.gru import gru
 from garage.tf.models.model import Model
 from garage.tf.models.parameter import recurrent_parameter
@@ -63,12 +64,15 @@ class GaussianGRUModel(Model):
                  hidden_dim=32,
                  name='GaussianGRUModel',
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
-                 recurrent_w_init=tf.initializers.glorot_uniform(),
+                 recurrent_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
                  hidden_state_init_trainable=False,

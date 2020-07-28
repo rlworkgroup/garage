@@ -5,6 +5,7 @@ real-valued inputs to real-valued outputs.
 """
 import tensorflow as tf
 
+from garage.experiment import deterministic
 from garage.tf.models.mlp import mlp
 from garage.tf.models.model import Model
 
@@ -45,10 +46,12 @@ class MLPModel(Model):
                  name='MLPModel',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         super().__init__(name)

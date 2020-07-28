@@ -2,6 +2,8 @@
 
 import tensorflow as tf
 
+from garage.experiment import deterministic
+
 
 def mlp(input_var,
         output_dim,
@@ -10,10 +12,12 @@ def mlp(input_var,
         input_var2=None,
         concat_layer=-2,
         hidden_nonlinearity=tf.nn.relu,
-        hidden_w_init=tf.initializers.glorot_uniform(),
+        hidden_w_init=tf.initializers.glorot_uniform(
+            seed=deterministic.get_tf_seed_stream()),
         hidden_b_init=tf.zeros_initializer(),
         output_nonlinearity=None,
-        output_w_init=tf.initializers.glorot_uniform(),
+        output_w_init=tf.initializers.glorot_uniform(
+            seed=deterministic.get_tf_seed_stream()),
         output_b_init=tf.zeros_initializer(),
         layer_normalization=False):
     """Multi-layer perceptron (MLP).
