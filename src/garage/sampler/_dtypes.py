@@ -64,14 +64,20 @@ class InProgressTrajectory:
 
         """
         assert len(self.rewards) > 0
+        env_infos = dict(self.env_infos)
+        agent_infos = dict(self.agent_infos)
+        for k, v in env_infos.items():
+            env_infos[k] = np.asarray(v)
+        for k, v in agent_infos.items():
+            agent_infos[k] = np.asarray(v)
         return TrajectoryBatch(env_spec=self.env.spec,
                                observations=np.asarray(self.observations[:-1]),
                                last_observations=np.asarray([self.last_obs]),
                                actions=np.asarray(self.actions),
                                rewards=np.asarray(self.rewards),
                                terminals=np.asarray(self.terminals),
-                               env_infos=self.env_infos,
-                               agent_infos=self.env_infos,
+                               env_infos=env_infos,
+                               agent_infos=agent_infos,
                                lengths=np.asarray([len(self.rewards)],
                                                   dtype='l'))
 
