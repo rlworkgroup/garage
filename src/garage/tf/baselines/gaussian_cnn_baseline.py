@@ -211,7 +211,6 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
         (_, _, norm_dist, norm_mean, norm_log_std, _, mean, _, self._x_mean,
          self._x_std, self._y_mean,
          self._y_std) = self.build(input_var).outputs
-        self._old_model.parameters = self.parameters
 
         normalized_ys_var = (ys_var - self._y_mean) / self._y_std
         old_normalized_dist = self._old_network.normalized_dist
@@ -302,8 +301,7 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
     def clone_model(self, name):
         """Return a clone of the GaussianCNNBaselineModel.
 
-        It only copies the configuration of the primitive,
-        not the parameters.
+        It copies the configuration of the primitive and also the parameters.
 
         Args:
             name (str): Name of the newly created model. It has to be
@@ -314,7 +312,7 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
             garage.tf.baselines.GaussianCNNBaselineModel: Newly cloned model.
 
         """
-        return GaussianCNNBaselineModel(
+        new_baseline = GaussianCNNBaselineModel(
             name=name,
             input_shape=self._env_spec.observation_space.shape,
             output_dim=1,
@@ -342,6 +340,8 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
             std_output_nonlinearity=None,
             std_parameterization='exp',
             layer_normalization=self._layer_normalization)
+        new_baseline.parameters = self.parameters
+        return new_baseline
 
     @property
     def recurrent(self):

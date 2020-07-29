@@ -167,3 +167,11 @@ class TestGaussianMLPBaseline(TfGraphTestCase):
             prediction2 = gmb_pickled.predict(paths)
 
             assert np.array_equal(prediction, prediction2)
+
+    def test_clone(self):
+        box_env_spec = GarageEnv(DummyBoxEnv(obs_dim=(2, ))).spec
+        gmb = GaussianMLPBaseline(env_spec=box_env_spec)
+        cloned_gmb_model = gmb.clone_model(name='cloned_model')
+        for cloned_param, param in zip(cloned_gmb_model.parameters.values(),
+                                       gmb.parameters.values()):
+            assert np.array_equal(cloned_param, param)

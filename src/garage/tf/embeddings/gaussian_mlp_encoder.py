@@ -274,6 +274,8 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
     def clone(self, name):
         """Return a clone of the encoder.
 
+        It copies the configuration of the primitive and also the parameters.
+
         Args:
             name (str): Name of the newly created encoder. It has to be
                 different from source encoder if cloned under the same
@@ -304,7 +306,7 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
             std_output_nonlinearity=self._std_output_nonlinearity,
             std_parameterization=self._std_parameterization,
             layer_normalization=self._layer_normalization)
-
+        new_encoder.model.parameters = self.model.parameters
         return new_encoder
 
     def __getstate__(self):
