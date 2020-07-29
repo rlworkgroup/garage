@@ -60,7 +60,7 @@ class AddGaussianNoise(ExplorationPolicy):
         action, agent_info = self.policy.get_action(observation)
         sigma = self._max_sigma - (self._max_sigma - self._min_sigma) * min(
             1.0, self._iteration * 1.0 / self._decay_period)
-        return np.clip(action + np.random.normal(size=len(action)) * sigma,
+        return np.clip(action + np.random.normal(size=action.shape) * sigma,
                        self._action_space.low,
                        self._action_space.high), agent_info
 
@@ -78,6 +78,6 @@ class AddGaussianNoise(ExplorationPolicy):
         actions, agent_infos = self.policy.get_actions(observations)
         sigma = self._max_sigma - (self._max_sigma - self._min_sigma) * min(
             1.0, self._iteration * 1.0 / self._decay_period)
-        return np.clip(actions + np.random.normal(size=len(actions)) * sigma,
+        return np.clip(actions + np.random.normal(size=actions.shape) * sigma,
                        self._action_space.low,
                        self._action_space.high), agent_infos
