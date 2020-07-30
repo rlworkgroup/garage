@@ -50,6 +50,7 @@ def test_obtain_samples():
     env.close()
 
 
+@pytest.mark.flaky
 @pytest.mark.timeout(10)
 def test_update_envs_env_update():
     max_path_length = 16
@@ -170,6 +171,7 @@ def test_init_with_crashed_worker():
     env.close()
 
 
+@pytest.mark.flaky
 @pytest.mark.timeout(10)
 def test_pickle():
     max_path_length = 16
