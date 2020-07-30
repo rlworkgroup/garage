@@ -1,3 +1,5 @@
+# pylint is confused by pytest.mark.parametrize
+# pylint: disable=not-callable
 import math
 import pprint
 
@@ -78,6 +80,7 @@ def slice_trajectories(trajectories, slice_size):
     return sliced
 
 
+# pylint: disable=not-callable
 @pytest.mark.parametrize('timesteps_per_call', [1, 2])
 def test_rollout(env, policy, timesteps_per_call):
     worker = FragmentWorker(seed=SEED,
@@ -96,6 +99,7 @@ def test_rollout(env, policy, timesteps_per_call):
     worker.shutdown()
 
 
+# pylint: disable=not-callable
 @pytest.mark.parametrize('timesteps_per_call', [1, 2])
 def test_in_local_sampler(policy, envs, other_envs, timesteps_per_call):
     true_workers = WorkerFactory(seed=100,
