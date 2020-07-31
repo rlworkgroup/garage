@@ -66,7 +66,7 @@ jobs:
           --memory 7500m \
           --memory-swap 7500m \
           "${DOCKER_TAG}" \
-          [ ! -f $(MJKEY_PATH) ] || mv $(MJKEY_PATH) $(MJKEY_PATH).bak
+          [ ! -f ${MJKEY_PATH} ] || mv ${MJKEY_PATH} ${MJKEY_PATH}.bak
           pytest --cov=garage --cov-report=xml -m \
               'not nightly and not huge and not flaky and not large and not mujoco and not mujoco_long' --durations=20
           for i in {1..5}; do \
