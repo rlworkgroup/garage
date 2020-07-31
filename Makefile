@@ -155,7 +155,7 @@ build-headless: assert-docker-version docker/Dockerfile
 		${BUILD_ARGS} .
 
 build-nvidia: TAG ?= rlworkgroup/garage-nvidia:latest
-build-nvidia: PARENT_IMAGE ?= nvidia/cuda:10.2-runtime-ubuntu18.04
+build-nvidia: PARENT_IMAGE ?= nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04
 build-nvidia: assert-docker-version docker/Dockerfile
 	docker build \
 		-f docker/Dockerfile \
