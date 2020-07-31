@@ -22,6 +22,6 @@ elif [[ "$DOCKER_REPO" = *"rlworkgroup/garage-nvidia" ]]; then
 		-f "../$DOCKERFILE_PATH" \
 		--target garage-nvidia-18.04 \
 		-t "$IMAGE_NAME" \
-		--build-arg PARENT_IMAGE="nvidia/cuda:10.2-runtime-ubuntu18.04" \
+		--build-arg PARENT_IMAGE="nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04" \
 		..
 fi
