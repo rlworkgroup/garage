@@ -28,7 +28,7 @@ make test
 This will run the test suite in a docker container, so be sure to have docker
 installed. Also note that this will run all tests, including ones that require a
 mujoco license. If you want to skip the mujoco tests, you can manually build
-and run a docker container and run specific tests fromw within it. See the
+and run a docker container and run specific tests from within it. See the
 [docker doc](docker.md) for more.
 
 ## Submitting a PR
