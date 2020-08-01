@@ -9,7 +9,11 @@ This collection of functions can be used to manage the following:
         - Converting Tensors into `numpy.ndarray` format and vice versa
     - Updating model parameters
 """
+import copy
+
+import gym
 import torch
+from torch import nn
 import torch.nn.functional as F
 
 _USE_GPU = False
@@ -187,6 +191,22 @@ def flatten_batch(tensor):
     return tensor.reshape((-1, ) + tensor.shape[2:])
 
 
+def flatten_to_single_vector(tensor):
+    """Collapse the C x H x W values per representation into a single long vector.
+
+    Reshape a tensor of size (N, C, H, W) into (N, C * H * W).
+
+    Args:
+        tensor (torch.tensor): batch of data.
+
+    Returns:
+        torch.Tensor: Reshaped view of that data (analogous to numpy.reshape)
+
+    """
+    N = tensor.shape[0]  # read in N, C, H, W
+    return tensor.view(N, -1)
+
+
 def update_module_params(module, new_params):  # noqa: D202
     """Load parameters to a module.
 
@@ -273,3 +293,75 @@ def product_of_gaussians(mus, sigmas_squared):
     sigma_squared = 1. / torch.sum(torch.reciprocal(sigmas_squared), dim=0)
     mu = sigma_squared * torch.sum(mus / sigmas_squared, dim=0)
     return mu, sigma_squared
+
+
+class NonLinearity(nn.Module):
+    """Wrapper class for non linear function or module.
+
+    Args:
+        non_linear (callable or type): Non-linear function or type to be
+            wrapped.
+
+    """
+
+    def __init__(self, non_linear):
+        super().__init__()
+
+        if isinstance(non_linear, type):
+            self.module = non_linear()
+        elif callable(non_linear):
+            self.module = copy.deepcopy(non_linear)
+        else:
+            raise ValueError(
+                'Non linear function {} is not supported'.format(non_linear))
+
+    # pylint: disable=arguments-differ
+    def forward(self, input_value):
+        """Forward method.
+
+        Args:
+            input_value (torch.Tensor): Input values
+
+        Returns:
+            torch.Tensor: Output value
+
+        """
+        return self.module(input_value)
+
+    # pylint: disable=missing-return-doc, missing-return-type-doc
+    def __repr__(self):
+        """object representation method."""
+        return repr(self.module)
+
+
+class TransposeImage(gym.ObservationWrapper):
+    """Transpose observation space for image observation in PyTorch."""
+
+    def __init__(self, env=None):
+        """Transpose image observation space.
+
+        Reshape the input observation shape from (H, W, C) into (C, H, W)
+        in pytorch format.
+
+        Args:
+            env (garage.envs): environment.
+        """
+        super().__init__(env)
+        obs_shape = self.observation_space.shape
+        self.observation_space = gym.spaces.Box(
+            self.observation_space.low[0, 0, 0],
+            self.observation_space.high[0, 0, 0],
+            [obs_shape[2], obs_shape[1], obs_shape[0]],
+            dtype=self.observation_space.dtype)
+
+    def observation(self, observation):
+        """Transpose image observation.
+
+        Args:
+            observation (tensor): observation.
+
+        Returns:
+            torch.Tensor: transposed observation.
+        """
+        # Observation is of type Tensor
+        return observation.transpose(2, 0, 1)

@@ -1,6 +1,7 @@
 """Base Stochastic Policy."""
 import abc
 
+import akro
 import torch
 
 from garage.torch import global_device
@@ -25,12 +26,13 @@ class StochasticPolicy(Policy, abc.ABC):
                     * np.ndarray[float]: Mean of the distribution
                     * np.ndarray[float]: Standard deviation of logarithmic
                         values of the distribution.
-
         """
         with torch.no_grad():
             if not isinstance(observation, torch.Tensor):
                 observation = torch.as_tensor(observation).float().to(
                     global_device())
+            if isinstance(self._env_spec.observation_space, akro.Image):
+                observation /= 255.0  # scale image
             observation = observation.unsqueeze(0)
             dist, info = self.forward(observation)
             return dist.sample().squeeze(0).cpu().numpy(), {
@@ -53,12 +55,13 @@ class StochasticPolicy(Policy, abc.ABC):
                     * np.ndarray[float]: Mean of the distribution.
                     * np.ndarray[float]: Standard deviation of logarithmic
                         values of the distribution.
-
         """
         with torch.no_grad():
             if not isinstance(observations, torch.Tensor):
                 observations = torch.as_tensor(observations).float().to(
                     global_device())
+            if isinstance(self._env_spec.observation_space, akro.Image):
+                observations /= 255.0  # scale image
             dist, info = self.forward(observations)
             return dist.sample().cpu().numpy(), {
                 k: v.detach().cpu().numpy()
@@ -78,5 +81,4 @@ class StochasticPolicy(Policy, abc.ABC):
             torch.distributions.Distribution: Batch distribution of actions.
             dict[str, torch.Tensor]: Additional agent_info, as torch Tensors.
                 Do not need to be detached, and can be on any device.
-
         """

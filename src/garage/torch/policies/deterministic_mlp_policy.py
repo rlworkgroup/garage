@@ -23,7 +23,6 @@ class DeterministicMLPPolicy(Policy):
             env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
             name (str): Policy name.
             kwargs : Additional keyword arguments passed to the MLPModule.
-
         """
         super().__init__(env_spec, name)
 
@@ -43,7 +42,6 @@ class DeterministicMLPPolicy(Policy):
 
         Returns:
             torch.Tensor: Batch of actions.
-
         """
         return self._module(observations)
 
@@ -57,10 +55,9 @@ class DeterministicMLPPolicy(Policy):
             tuple:
                 * np.ndarray: Predicted action.
                 * dict:
-                    * list[float]: Mean of the distribution
-                    * list[float]: Log of standard deviation of the
+                    * np.ndarray[float]: Mean of the distribution
+                    * np.ndarray[float]: Log of standard deviation of the
                         distribution
-
         """
         with torch.no_grad():
             x = self(torch.Tensor(observation).unsqueeze(0))
@@ -76,10 +73,9 @@ class DeterministicMLPPolicy(Policy):
             tuple:
                 * np.ndarray: Predicted actions.
                 * dict:
-                    * list[float]: Mean of the distribution
-                    * list[float]: Log of standard deviation of the
+                    * np.ndarray[float]: Mean of the distribution
+                    * np.ndarray[float]: Log of standard deviation of the
                         distribution
-
         """
         with torch.no_grad():
             x = self(torch.Tensor(observations))
