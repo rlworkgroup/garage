@@ -77,7 +77,11 @@ RUN mkdir -p $HOME/.mujoco && \
   unzip mujoco.zip -d $HOME/.mujoco && \
   rm mujoco.zip && \
   ln -s $HOME/.mujoco/mujoco200_linux $HOME/.mujoco/mujoco200
-ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:$HOME/.mujoco/mujoco200/bin
+# This is a hack required to make mujoco-py compile in gpu mode
+USER root
+RUN mkdir -p /usr/lib/nvidia-000
+USER $user
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:$HOME/.mujoco/mujoco200/bin:/usr/lib/nvidia-000
 
 # Fixes Segmentation Fault
 # See: https://github.com/openai/mujoco-py/pull/145#issuecomment-356938564
