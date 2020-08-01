@@ -49,9 +49,9 @@ class TD3(RLAlgorithm):
         max_action (float): Maximum action magnitude.
         name (str): Name of the algorithm shown in computation graph.
         steps_per_epoch (int): Number of batches of samples in each epoch.
-        max_path_length (int): Maximum length of a path.
+        max_episode_length (int): Maximum length of a path.
         max_eval_path_length (int or None): Maximum length of paths used for
-            off-policy evaluation. If None, defaults to `max_path_length`.
+            off-policy evaluation. If None, defaults to `max_episode_length`.
         n_train_steps (int): Number of optimizations in each epoch cycle.
         buffer_batch_size (int): Size of replay buffer.
         min_buffer_size (int):
@@ -86,7 +86,7 @@ class TD3(RLAlgorithm):
             max_action=None,
             name='TD3',
             steps_per_epoch=20,
-            max_path_length=None,
+            max_episode_length=None,
             max_eval_path_length=None,
             n_train_steps=50,
             buffer_batch_size=64,
@@ -137,7 +137,7 @@ class TD3(RLAlgorithm):
         self._buffer_batch_size = buffer_batch_size
         self._discount = discount
         self._reward_scale = reward_scale
-        self.max_path_length = max_path_length
+        self.max_episode_length = max_episode_length
         self._max_eval_path_length = max_eval_path_length
         self._eval_env = None
 

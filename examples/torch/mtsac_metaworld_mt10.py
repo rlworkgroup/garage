@@ -82,7 +82,7 @@ def mtsac_metaworld_mt10(ctxt=None, seed=1, _gpu=None):
                   qf1=qf1,
                   qf2=qf2,
                   gradient_steps_per_itr=150,
-                  max_path_length=150,
+                  max_episode_length=150,
                   eval_env=mt10_test_envs,
                   env_spec=mt10_train_envs.spec,
                   num_tasks=10,

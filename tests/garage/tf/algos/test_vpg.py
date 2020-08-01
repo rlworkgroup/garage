@@ -27,7 +27,7 @@ class TestVPG(TfGraphTestCase):
             algo = VPG(env_spec=env.spec,
                        policy=policy,
                        baseline=baseline,
-                       max_path_length=100,
+                       max_episode_length=100,
                        discount=0.99,
                        optimizer_args=dict(learning_rate=0.01, ))
 

@@ -39,14 +39,14 @@ def categorical_lstm_policy(ctxt, env_id, seed):
             env_spec=env.spec,
             policy=policy,
             baseline=baseline,
-            max_path_length=100,
+            max_episode_length=100,
             discount=0.99,
             gae_lambda=0.95,
             lr_clip_range=0.2,
             policy_ent_coeff=0.0,
             optimizer_args=dict(
                 batch_size=32,
-                max_epochs=10,
+                max_episode_length=10,
                 learning_rate=1e-3,
             ),
         )

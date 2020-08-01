@@ -26,7 +26,7 @@ class CMAES(RLAlgorithm):
             (Generalized Advantage Estimation).
         n_samples (int): Number of policies sampled in one epoch.
         discount (float): Environment reward discount.
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         sigma0 (float): Initial std for param distribution.
 
     """
@@ -37,10 +37,10 @@ class CMAES(RLAlgorithm):
                  baseline,
                  n_samples,
                  discount=0.99,
-                 max_path_length=500,
+                 max_episode_length=500,
                  sigma0=1.):
         self.policy = policy
-        self.max_path_length = max_path_length
+        self.max_episode_length = max_episode_length
         self.sampler_cls = RaySampler
 
         self._env_spec = env_spec
@@ -116,7 +116,7 @@ class CMAES(RLAlgorithm):
             ]
 
         # -- Stage: Pre-process samples based on collected paths
-        samples_data = paths_to_tensors(paths, self.max_path_length,
+        samples_data = paths_to_tensors(paths, self.max_episode_length,
                                         baseline_predictions, self._discount)
 
         # -- Stage: Run and calculate performance of the algorithm

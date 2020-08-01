@@ -82,7 +82,7 @@ class PEARL(MetaRLAlgorithm):
         embedding_mini_batch_size (int): Number of transitions in mini context
             batch; should be same as embedding_batch_size for non-recurrent
             encoder.
-        max_path_length (int): Maximum path length.
+        max_episode_length (int): Maximum path length.
         discount (float): RL discount factor.
         replay_buffer_size (int): Maximum samples in replay buffer.
         reward_scale (int): Reward scale.
@@ -126,7 +126,7 @@ class PEARL(MetaRLAlgorithm):
                  batch_size=1024,
                  embedding_batch_size=1024,
                  embedding_mini_batch_size=1024,
-                 max_path_length=1000,
+                 max_episode_length=1000,
                  discount=0.99,
                  replay_buffer_size=1000000,
                  reward_scale=1,
@@ -158,7 +158,7 @@ class PEARL(MetaRLAlgorithm):
         self._batch_size = batch_size
         self._embedding_batch_size = embedding_batch_size
         self._embedding_mini_batch_size = embedding_mini_batch_size
-        self.max_path_length = max_path_length
+        self.max_episode_length = max_episode_length
         self._discount = discount
         self._replay_buffer_size = replay_buffer_size
         self._reward_scale = reward_scale
@@ -169,7 +169,7 @@ class PEARL(MetaRLAlgorithm):
 
         worker_args = dict(deterministic=True, accum_context=True)
         self._evaluator = MetaEvaluator(test_task_sampler=test_env_sampler,
-                                        max_path_length=max_path_length,
+                                        max_episode_length=max_episode_length,
                                         worker_class=PEARLWorker,
                                         worker_args=worker_args,
                                         n_test_tasks=num_test_tasks)
@@ -420,7 +420,7 @@ class PEARL(MetaRLAlgorithm):
 
         if update_posterior_rate != np.inf:
             num_samples_per_batch = (update_posterior_rate *
-                                     self.max_path_length)
+                                     self.max_episode_length)
         else:
             num_samples_per_batch = num_samples
 
@@ -679,7 +679,7 @@ class PEARLWorker(DefaultWorker):
 
     Args:
         seed(int): The seed to use to intialize random number generators.
-        max_path_length(int or float): The maximum length paths which will
+        max_episode_length(int or float): The maximum length paths which will
             be sampled. Can be (floating point) infinity.
         worker_number(int): The number of the worker where this update is
             occurring. This argument is used to set a different seed for each
@@ -698,14 +698,14 @@ class PEARLWorker(DefaultWorker):
     def __init__(self,
                  *,
                  seed,
-                 max_path_length,
+                 max_episode_length,
                  worker_number,
                  deterministic=False,
                  accum_context=False):
         self._deterministic = deterministic
         self._accum_context = accum_context
         super().__init__(seed=seed,
-                         max_path_length=max_path_length,
+                         max_episode_length=max_episode_length,
                          worker_number=worker_number)
 
     def start_rollout(self):
@@ -718,10 +718,10 @@ class PEARLWorker(DefaultWorker):
 
         Returns:
             bool: True iff the path is done, either due to the environment
-            indicating termination of due to reaching `max_path_length`.
+            indicating termination of due to reaching `max_episode_length`.
 
         """
-        if self._path_length < self._max_path_length:
+        if self._path_length < self._max_episode_length:
             a, agent_info = self.agent.get_action(self._prev_obs)
             if self._deterministic:
                 a = agent_info['mean']
@@ -764,5 +764,5 @@ class PEARLWorker(DefaultWorker):
         while not self.step_rollout():
             pass
         self._agent_infos['context'] = [self.agent.z.detach().cpu().numpy()
-                                        ] * self._max_path_length
+                                        ] * self._max_episode_length
         return self.collect_rollout()

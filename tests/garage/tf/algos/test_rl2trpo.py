@@ -40,7 +40,7 @@ class TestRL2TRPO(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.max_path_length = 100
+        self.max_episode_length = 100
         self.meta_batch_size = 10
         self.episode_per_task = 4
         self.tasks = task_sampler.SetTaskSampler(lambda: RL2Env(env=normalize(
@@ -54,13 +54,14 @@ class TestRL2TRPO(TfGraphTestCase):
     def test_rl2_trpo_pendulum(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             algo = RL2TRPO(
-                rl2_max_path_length=self.max_path_length,
+                rl2_max_episode_length=self.max_episode_length,
                 meta_batch_size=self.meta_batch_size,
                 task_sampler=self.tasks,
                 env_spec=self.env_spec,
                 policy=self.policy,
                 baseline=self.baseline,
-                max_path_length=self.max_path_length * self.episode_per_task,
+                max_episode_length=self.max_episode_length *
+                self.episode_per_task,
                 discount=0.99,
                 max_kl_step=0.01,
                 optimizer=ConjugateGradientOptimizer,
@@ -75,20 +76,20 @@ class TestRL2TRPO(TfGraphTestCase):
 
             last_avg_ret = runner.train(n_epochs=1,
                                         batch_size=self.episode_per_task *
-                                        self.max_path_length *
+                                        self.max_episode_length *
                                         self.meta_batch_size)
             assert last_avg_ret > -40
 
     def test_rl2_trpo_pendulum_default_optimizer(self):
         with LocalTFRunner(snapshot_config, sess=self.sess):
-            algo = RL2TRPO(rl2_max_path_length=self.max_path_length,
+            algo = RL2TRPO(rl2_max_episode_length=self.max_episode_length,
                            meta_batch_size=self.meta_batch_size,
                            task_sampler=self.tasks,
                            env_spec=self.env_spec,
                            policy=self.policy,
                            baseline=self.baseline,
                            kl_constraint='hard',
-                           max_path_length=self.max_path_length *
+                           max_episode_length=self.max_episode_length *
                            self.episode_per_task,
                            discount=0.99,
                            max_kl_step=0.01)
@@ -97,14 +98,14 @@ class TestRL2TRPO(TfGraphTestCase):
 
     def test_ppo_pendulum_default_optimizer2(self):
         with LocalTFRunner(snapshot_config, sess=self.sess):
-            algo = RL2TRPO(rl2_max_path_length=self.max_path_length,
+            algo = RL2TRPO(rl2_max_episode_length=self.max_episode_length,
                            meta_batch_size=self.meta_batch_size,
                            task_sampler=self.tasks,
                            env_spec=self.env_spec,
                            policy=self.policy,
                            baseline=self.baseline,
                            kl_constraint='soft',
-                           max_path_length=self.max_path_length *
+                           max_episode_length=self.max_episode_length *
                            self.episode_per_task,
                            discount=0.99,
                            max_kl_step=0.01)
@@ -114,14 +115,14 @@ class TestRL2TRPO(TfGraphTestCase):
     def test_rl2_trpo_pendulum_invalid_kl_constraint(self):
         with LocalTFRunner(snapshot_config, sess=self.sess):
             with pytest.raises(ValueError):
-                RL2TRPO(rl2_max_path_length=self.max_path_length,
+                RL2TRPO(rl2_max_episode_length=self.max_episode_length,
                         meta_batch_size=self.meta_batch_size,
                         task_sampler=self.tasks,
                         env_spec=self.env_spec,
                         policy=self.policy,
                         baseline=self.baseline,
                         kl_constraint='xyz',
-                        max_path_length=self.max_path_length *
+                        max_episode_length=self.max_episode_length *
                         self.episode_per_task,
                         discount=0.99,
                         max_kl_step=0.01)

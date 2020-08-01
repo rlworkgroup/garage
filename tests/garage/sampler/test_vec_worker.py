@@ -9,7 +9,7 @@ from garage.sampler import LocalSampler, VecWorker, WorkerFactory
 
 SEED = 100
 N_TRAJ = 5
-MAX_PATH_LENGTH = 9
+MAX_EPISODE_LENGTH = 9
 
 
 @pytest.fixture
@@ -61,7 +61,7 @@ def assert_trajs_eq(ground_truth_traj, test_traj):
 
 def test_rollout(env, policy):
     worker = VecWorker(seed=SEED,
-                       max_path_length=MAX_PATH_LENGTH,
+                       max_episode_length=MAX_EPISODE_LENGTH,
                        worker_number=0,
                        n_envs=N_TRAJ)
     worker.update_agent(policy)
@@ -77,7 +77,7 @@ def test_rollout(env, policy):
 
 def test_non_vec_rollout(env, policy):
     worker = VecWorker(seed=SEED,
-                       max_path_length=MAX_PATH_LENGTH,
+                       max_episode_length=MAX_EPISODE_LENGTH,
                        worker_number=0,
                        n_envs=1)
     worker.update_agent(policy)
@@ -93,13 +93,13 @@ def test_non_vec_rollout(env, policy):
 def test_in_local_sampler(policy, envs):
     true_workers = WorkerFactory(seed=100,
                                  n_workers=N_TRAJ,
-                                 max_path_length=MAX_PATH_LENGTH)
+                                 max_episode_length=MAX_EPISODE_LENGTH)
     true_sampler = LocalSampler.from_worker_factory(true_workers, policy, envs)
     vec_workers = WorkerFactory(seed=100,
                                 n_workers=1,
                                 worker_class=VecWorker,
                                 worker_args=dict(n_envs=N_TRAJ),
-                                max_path_length=MAX_PATH_LENGTH)
+                                max_episode_length=MAX_EPISODE_LENGTH)
     vec_sampler = LocalSampler.from_worker_factory(vec_workers, policy, [envs])
     n_samples = 100
 
@@ -122,16 +122,16 @@ def test_in_local_sampler(policy, envs):
 def test_reset_optimization(policy, envs, other_envs):
     true_workers = WorkerFactory(seed=100,
                                  n_workers=N_TRAJ,
-                                 max_path_length=MAX_PATH_LENGTH)
+                                 max_episode_length=MAX_EPISODE_LENGTH)
     true_sampler = LocalSampler.from_worker_factory(true_workers, policy, envs)
     vec_workers = WorkerFactory(seed=100,
                                 n_workers=1,
                                 worker_class=VecWorker,
                                 worker_args=dict(n_envs=N_TRAJ),
-                                max_path_length=MAX_PATH_LENGTH)
+                                max_episode_length=MAX_EPISODE_LENGTH)
     vec_sampler = LocalSampler.from_worker_factory(vec_workers, [policy],
                                                    [envs])
-    n_samples = 4 * MAX_PATH_LENGTH
+    n_samples = 4 * MAX_EPISODE_LENGTH
     true_sampler.obtain_samples(0, n_samples, None)
     true_sampler.obtain_samples(0, n_samples, None)
 
@@ -150,13 +150,13 @@ def test_init_with_env_updates(policy, envs):
     envs = task_sampler.sample(N_TRAJ)
     true_workers = WorkerFactory(seed=100,
                                  n_workers=N_TRAJ,
-                                 max_path_length=MAX_PATH_LENGTH)
+                                 max_episode_length=MAX_EPISODE_LENGTH)
     true_sampler = LocalSampler.from_worker_factory(true_workers, policy, envs)
     vec_workers = WorkerFactory(seed=100,
                                 n_workers=1,
                                 worker_class=VecWorker,
                                 worker_args=dict(n_envs=N_TRAJ),
-                                max_path_length=MAX_PATH_LENGTH)
+                                max_episode_length=MAX_EPISODE_LENGTH)
     vec_sampler = LocalSampler.from_worker_factory(vec_workers, [policy],
                                                    [envs])
     n_samples = 100

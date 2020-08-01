@@ -10,7 +10,7 @@ from garage.misc import tensor_utils
 def rollout(env,
             agent,
             *,
-            max_path_length=np.inf,
+            max_episode_length=np.inf,
             animated=False,
             speedup=1,
             deterministic=False):
@@ -19,8 +19,8 @@ def rollout(env,
     Args:
         agent(Policy): Agent used to select actions.
         env(gym.Env): Environment to perform actions in.
-        max_path_length(int): If the rollout reaches this many timesteps, it is
-            terminated.
+        max_episode_length(int): If the rollout reaches this many timesteps, it
+            is terminated.
         animated(bool): If true, render the environment after each step.
         speedup(float): Factor by which to decrease the wait time between
             rendered steps. Only relevant, if animated == true.
@@ -58,7 +58,7 @@ def rollout(env,
     path_length = 0
     if animated:
         env.render()
-    while path_length < (max_path_length or np.inf):
+    while path_length < (max_episode_length or np.inf):
         o = env.observation_space.flatten(o)
         a, agent_info = agent.get_action(o)
         if deterministic and 'mean' in agent_info:

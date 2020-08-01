@@ -35,7 +35,7 @@ class NPO(RLAlgorithm):
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -88,7 +88,7 @@ class NPO(RLAlgorithm):
                  policy,
                  baseline,
                  scope=None,
-                 max_path_length=100,
+                 max_episode_length=100,
                  discount=0.99,
                  gae_lambda=1,
                  center_adv=True,
@@ -107,7 +107,7 @@ class NPO(RLAlgorithm):
                  name='NPO'):
         self.policy = policy
         self.scope = scope
-        self.max_path_length = max_path_length
+        self.max_episode_length = max_episode_length
 
         self._env_spec = env_spec
         self._baseline = baseline
@@ -220,7 +220,7 @@ class NPO(RLAlgorithm):
             ]
 
         # -- Stage: Pre-process samples based on collected paths
-        samples_data = paths_to_tensors(paths, self.max_path_length,
+        samples_data = paths_to_tensors(paths, self.max_episode_length,
                                         baseline_predictions, self._discount,
                                         self._gae_lambda)
 
@@ -369,12 +369,12 @@ class NPO(RLAlgorithm):
         with tf.name_scope('policy_loss'):
             adv = compute_advantages(self._discount,
                                      self._gae_lambda,
-                                     self.max_path_length,
+                                     self.max_episode_length,
                                      i.baseline_var,
                                      rewards,
                                      name='adv')
 
-            adv = tf.reshape(adv, [-1, self.max_path_length])
+            adv = tf.reshape(adv, [-1, self.max_episode_length])
             # Optionally normalize advantages
             eps = tf.constant(1e-8, dtype=tf.float32)
             if self._center_adv:
@@ -433,8 +433,8 @@ class NPO(RLAlgorithm):
             self._f_rewards = tf.compat.v1.get_default_session().make_callable(
                 rewards, feed_list=flatten_inputs(self._policy_opt_inputs))
 
-            returns = discounted_returns(self._discount, self.max_path_length,
-                                         rewards)
+            returns = discounted_returns(self._discount,
+                                         self.max_episode_length, rewards)
             self._f_returns = tf.compat.v1.get_default_session().make_callable(
                 returns, feed_list=flatten_inputs(self._policy_opt_inputs))
 
@@ -467,7 +467,8 @@ class NPO(RLAlgorithm):
                 policy_entropy = tf.stop_gradient(policy_entropy)
 
         # dense form, match the shape of advantage
-        policy_entropy = tf.reshape(policy_entropy, [-1, self.max_path_length])
+        policy_entropy = tf.reshape(policy_entropy,
+                                    [-1, self.max_episode_length])
 
         self._f_policy_entropy = compile_function(
             flatten_inputs(self._policy_opt_inputs), policy_entropy)
@@ -502,9 +503,9 @@ class NPO(RLAlgorithm):
             aug_rewards.append(path['rewards'])
             aug_returns.append(path['returns'])
         samples_data['rewards'] = np_tensor_utils.pad_tensor_n(
-            aug_rewards, self.max_path_length)
+            aug_rewards, self.max_episode_length)
         samples_data['returns'] = np_tensor_utils.pad_tensor_n(
-            aug_returns, self.max_path_length)
+            aug_returns, self.max_episode_length)
 
         # Fit baseline
         logger.log('Fitting baseline...')

@@ -48,7 +48,7 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task):
     policy_ent_coeff = 2e-2
     encoder_ent_coeff = 2e-4
     inference_ce_coeff = 5e-2
-    max_path_length = 100
+    max_episode_length = 100
     embedding_init_std = 0.1
     embedding_max_std = 0.2
     embedding_min_std = 1e-6
@@ -105,7 +105,7 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task):
                      policy=policy,
                      baseline=baseline,
                      inference=inference,
-                     max_path_length=max_path_length,
+                     max_episode_length=max_episode_length,
                      discount=0.99,
                      lr_clip_range=0.2,
                      policy_ent_coeff=policy_ent_coeff,
@@ -114,12 +114,12 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task):
                      use_softplus_entropy=True,
                      optimizer_args=dict(
                          batch_size=32,
-                         max_epochs=10,
+                         max_episode_length=10,
                          learning_rate=1e-3,
                      ),
                      inference_optimizer_args=dict(
                          batch_size=32,
-                         max_epochs=10,
+                         max_episode_length=10,
                      ),
                      center_adv=True,
                      stop_ce_gradient=True)

@@ -5,13 +5,13 @@ import abc
 class Worker(abc.ABC):
     """Worker class used in all Samplers."""
 
-    def __init__(self, *, seed, max_path_length, worker_number):
+    def __init__(self, *, seed, max_episode_length, worker_number):
         """Initialize a worker.
 
         Args:
             seed(int): The seed to use to intialize random number generators.
-            max_path_length(int or float): The maximum length paths which will
-                be sampled. Can be (floating point) infinity.
+            max_episode_length(int or float): The maximum length paths which
+                will be sampled. Can be (floating point) infinity.
             worker_number(int): The number of the worker this update is
                 occurring in. This argument is used to set a different seed for
                 each worker.
@@ -22,7 +22,7 @@ class Worker(abc.ABC):
 
         """
         self._seed = seed
-        self._max_path_length = max_path_length
+        self._max_episode_length = max_episode_length
         self._worker_number = worker_number
 
     def update_agent(self, agent_update):
@@ -48,7 +48,7 @@ class Worker(abc.ABC):
 
         Returns:
             garage.TrajectoryBatch: Batch of sampled trajectories. May be
-                truncated if max_path_length is set.
+                truncated if max_episode_length is set.
 
         """
 
@@ -60,7 +60,7 @@ class Worker(abc.ABC):
 
         Returns:
             True iff the path is done, either due to the environment indicating
-            termination of due to reaching `max_path_length`.
+            termination of due to reaching `max_episode_length`.
 
         """
 

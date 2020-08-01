@@ -35,7 +35,7 @@ class REPS(RLAlgorithm):  # noqa: D416
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -62,7 +62,7 @@ class REPS(RLAlgorithm):  # noqa: D416
                  env_spec,
                  policy,
                  baseline,
-                 max_path_length=500,
+                 max_episode_length=500,
                  discount=0.99,
                  gae_lambda=1,
                  center_adv=True,
@@ -80,7 +80,7 @@ class REPS(RLAlgorithm):  # noqa: D416
         dual_optimizer_args = dual_optimizer_args or dict(maxiter=50)
 
         self.policy = policy
-        self.max_path_length = max_path_length
+        self.max_episode_length = max_episode_length
 
         self._env_spec = env_spec
         self._baseline = baseline
@@ -181,7 +181,7 @@ class REPS(RLAlgorithm):  # noqa: D416
             ]
 
         # -- Stage: Pre-process samples based on collected paths
-        samples_data = paths_to_tensors(paths, self.max_path_length,
+        samples_data = paths_to_tensors(paths, self.max_episode_length,
                                         baseline_predictions, self._discount,
                                         self._gae_lambda)
 
@@ -559,7 +559,7 @@ class REPS(RLAlgorithm):  # noqa: D416
                         self._env_spec.observation_space.low,
                         self._env_spec.observation_space.high)
             lr = len(path['rewards'])
-            al = np.arange(lr).reshape(-1, 1) / self.max_path_length
+            al = np.arange(lr).reshape(-1, 1) / self.max_episode_length
             feats = np.concatenate(
                 [o, o**2, al, al**2, al**3,
                  np.ones((lr, 1))], axis=1)

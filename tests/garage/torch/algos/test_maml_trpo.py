@@ -41,13 +41,13 @@ def test_maml_trpo_pendulum():
                                               hidden_sizes=(32, 32))
 
     rollouts_per_task = 5
-    max_path_length = 100
+    max_episode_length = 100
 
     runner = LocalRunner(snapshot_config)
     algo = MAMLTRPO(env=env,
                     policy=policy,
                     value_function=value_function,
-                    max_path_length=max_path_length,
+                    max_episode_length=max_episode_length,
                     meta_batch_size=5,
                     discount=0.99,
                     gae_lambda=1.,
@@ -56,7 +56,8 @@ def test_maml_trpo_pendulum():
 
     runner.setup(algo, env, sampler_cls=LocalSampler)
     last_avg_ret = runner.train(n_epochs=5,
-                                batch_size=rollouts_per_task * max_path_length)
+                                batch_size=rollouts_per_task *
+                                max_episode_length)
 
     assert last_avg_ret > -5
 
@@ -77,13 +78,13 @@ def test_maml_trpo_dummy_named_env():
                                               hidden_sizes=(32, 32))
 
     rollouts_per_task = 2
-    max_path_length = 100
+    max_episode_length = 100
 
     runner = LocalRunner(snapshot_config)
     algo = MAMLTRPO(env=env,
                     policy=policy,
                     value_function=value_function,
-                    max_path_length=max_path_length,
+                    max_episode_length=max_episode_length,
                     meta_batch_size=5,
                     discount=0.99,
                     gae_lambda=1.,
@@ -91,4 +92,4 @@ def test_maml_trpo_dummy_named_env():
                     num_grad_updates=1)
 
     runner.setup(algo, env, sampler_cls=LocalSampler)
-    runner.train(n_epochs=2, batch_size=rollouts_per_task * max_path_length)
+    runner.train(n_epochs=2, batch_size=rollouts_per_task * max_episode_length)

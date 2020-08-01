@@ -47,10 +47,10 @@ class OptimalActionInference(MetaRLAlgorithm):
 
     sampler_cls = LocalSampler
 
-    def __init__(self, env, max_path_length):
+    def __init__(self, env, max_episode_length):
         self.env = env
         self.policy = RandomPolicy(self.env.spec.action_space)
-        self.max_path_length = max_path_length
+        self.max_episode_length = max_episode_length
 
     def train(self, runner):
         del runner
@@ -68,17 +68,18 @@ class OptimalActionInference(MetaRLAlgorithm):
 def test_meta_evaluator():
     set_seed(100)
     tasks = SetTaskSampler(lambda: GarageEnv(PointEnv()))
-    max_path_length = 200
+    max_episode_length = 200
     with tempfile.TemporaryDirectory() as log_dir_name:
         runner = LocalRunner(
             SnapshotConfig(snapshot_dir=log_dir_name,
                            snapshot_mode='last',
                            snapshot_gap=1))
         env = GarageEnv(PointEnv())
-        algo = OptimalActionInference(env=env, max_path_length=max_path_length)
+        algo = OptimalActionInference(env=env,
+                                      max_episode_length=max_episode_length)
         runner.setup(algo, env)
         meta_eval = MetaEvaluator(test_task_sampler=tasks,
-                                  max_path_length=max_path_length,
+                                  max_episode_length=max_episode_length,
                                   n_test_tasks=10)
         log_file = tempfile.NamedTemporaryFile()
         csv_output = CsvOutput(log_file.name)
@@ -106,11 +107,11 @@ class MockAlgo:
 
     sampler_cls = LocalSampler
 
-    def __init__(self, env, policy, max_path_length, n_exploration_traj,
+    def __init__(self, env, policy, max_episode_length, n_exploration_traj,
                  meta_eval):
         self.env = env
         self.policy = policy
-        self.max_path_length = max_path_length
+        self.max_episode_length = max_episode_length
         self.n_exploration_traj = n_exploration_traj
         self.meta_eval = meta_eval
 
@@ -131,7 +132,7 @@ class MockAlgo:
 def test_pickle_meta_evaluator():
     set_seed(100)
     tasks = SetTaskSampler(lambda: GarageEnv(PointEnv()))
-    max_path_length = 200
+    max_episode_length = 200
     env = GarageEnv(PointEnv())
     n_traj = 3
     with tempfile.TemporaryDirectory() as log_dir_name:
@@ -140,11 +141,11 @@ def test_pickle_meta_evaluator():
                            snapshot_mode='last',
                            snapshot_gap=1))
         meta_eval = MetaEvaluator(test_task_sampler=tasks,
-                                  max_path_length=max_path_length,
+                                  max_episode_length=max_episode_length,
                                   n_test_tasks=10,
                                   n_exploration_traj=n_traj)
         policy = RandomPolicy(env.spec.action_space)
-        algo = MockAlgo(env, policy, max_path_length, n_traj, meta_eval)
+        algo = MockAlgo(env, policy, max_episode_length, n_traj, meta_eval)
         runner.setup(algo, env)
         log_file = tempfile.NamedTemporaryFile()
         csv_output = CsvOutput(log_file.name)
@@ -158,7 +159,7 @@ def test_pickle_meta_evaluator():
 def test_meta_evaluator_with_tf():
     set_seed(100)
     tasks = SetTaskSampler(lambda: GarageEnv(PointEnv()))
-    max_path_length = 200
+    max_episode_length = 200
     env = GarageEnv(PointEnv())
     n_traj = 3
     with tempfile.TemporaryDirectory() as log_dir_name:
@@ -167,11 +168,11 @@ def test_meta_evaluator_with_tf():
                               snapshot_gap=1)
         with LocalTFRunner(ctxt) as runner:
             meta_eval = MetaEvaluator(test_task_sampler=tasks,
-                                      max_path_length=max_path_length,
+                                      max_episode_length=max_episode_length,
                                       n_test_tasks=10,
                                       n_exploration_traj=n_traj)
             policy = GaussianMLPPolicy(env.spec)
-            algo = MockAlgo(env, policy, max_path_length, n_traj, meta_eval)
+            algo = MockAlgo(env, policy, max_episode_length, n_traj, meta_eval)
             runner.setup(algo, env)
             log_file = tempfile.NamedTemporaryFile()
             csv_output = CsvOutput(log_file.name)

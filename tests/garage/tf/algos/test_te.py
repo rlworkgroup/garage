@@ -56,7 +56,7 @@ class TestTE(TfGraphTestCase):
         self.policy_ent_coeff = 2e-2
         self.encoder_ent_coeff = 2.2e-3
         self.inference_ce_coeff = 5e-2
-        self.max_path_length = 100
+        self.max_episode_length = 100
         embedding_init_std = 1.0
         embedding_max_std = 2.0
         embedding_min_std = 0.38
@@ -127,7 +127,7 @@ class TestTE(TfGraphTestCase):
 
     def test_te_worker(self):
         worker = TaskEmbeddingWorker(seed=1,
-                                     max_path_length=100,
+                                     max_episode_length=100,
                                      worker_number=1)
         worker.update_env(self.env)
         worker.update_agent(self.policy)
@@ -146,7 +146,7 @@ class TestTE(TfGraphTestCase):
                          policy=self.policy,
                          baseline=self.baseline,
                          inference=self.inference,
-                         max_path_length=self.max_path_length,
+                         max_episode_length=self.max_episode_length,
                          discount=0.99,
                          lr_clip_range=0.2,
                          policy_ent_coeff=self.policy_ent_coeff,
@@ -155,11 +155,11 @@ class TestTE(TfGraphTestCase):
                          use_softplus_entropy=True,
                          optimizer_args=dict(
                              batch_size=32,
-                             max_epochs=10,
+                             max_episode_length=10,
                          ),
                          inference_optimizer_args=dict(
                              batch_size=32,
-                             max_epochs=10,
+                             max_episode_length=10,
                          ),
                          center_adv=True,
                          stop_ce_gradient=True)

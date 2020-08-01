@@ -10,9 +10,9 @@ class RL2TRPO(RL2):
     See https://arxiv.org/abs/1502.05477.
 
     Args:
-        rl2_max_path_length (int): Maximum length for trajectories with respect
-            to RL^2. Notice that it is different from the maximum path length
-            for the inner algorithm.
+        rl2_max_episode_length (int): Maximum length for trajectories with
+            respect to RL^2. Notice that it is different from the maximum
+            path length for the inner algorithm.
         meta_batch_size (int): Meta batch size.
         task_sampler (garage.experiment.TaskSampler): Task sampler.
         env_spec (garage.envs.EnvSpec): Environment specification.
@@ -22,7 +22,7 @@ class RL2TRPO(RL2):
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -63,14 +63,14 @@ class RL2TRPO(RL2):
     """
 
     def __init__(self,
-                 rl2_max_path_length,
+                 rl2_max_episode_length,
                  meta_batch_size,
                  task_sampler,
                  env_spec,
                  policy,
                  baseline,
                  scope=None,
-                 max_path_length=500,
+                 max_episode_length=500,
                  discount=0.99,
                  gae_lambda=0.98,
                  center_adv=True,
@@ -100,14 +100,14 @@ class RL2TRPO(RL2):
         if optimizer_args is None:
             optimizer_args = dict()
 
-        super().__init__(rl2_max_path_length=rl2_max_path_length,
+        super().__init__(rl2_max_episode_length=rl2_max_episode_length,
                          meta_batch_size=meta_batch_size,
                          task_sampler=task_sampler,
                          env_spec=env_spec,
                          policy=policy,
                          baseline=baseline,
                          scope=scope,
-                         max_path_length=max_path_length,
+                         max_episode_length=max_episode_length,
                          discount=discount,
                          gae_lambda=gae_lambda,
                          center_adv=center_adv,

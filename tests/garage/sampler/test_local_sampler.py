@@ -8,17 +8,17 @@ from garage.sampler import LocalSampler, WorkerFactory
 
 
 def test_update_envs_env_update():
-    max_path_length = 16
+    max_episode_length = 16
     env = GarageEnv(PointEnv())
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
-                             for _ in range(max_path_length)
+                             for _ in range(max_episode_length)
                          ])
     tasks = SetTaskSampler(PointEnv)
     n_workers = 8
     workers = WorkerFactory(seed=100,
-                            max_path_length=max_path_length,
+                            max_episode_length=max_episode_length,
                             n_workers=n_workers)
     sampler = LocalSampler.from_worker_factory(workers, policy, env)
     rollouts = sampler.obtain_samples(0,
@@ -42,17 +42,17 @@ def test_update_envs_env_update():
 
 
 def test_init_with_env_updates():
-    max_path_length = 16
+    max_episode_length = 16
     env = GarageEnv(PointEnv())
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
-                             for _ in range(max_path_length)
+                             for _ in range(max_episode_length)
                          ])
     tasks = SetTaskSampler(lambda: GarageEnv(PointEnv()))
     n_workers = 8
     workers = WorkerFactory(seed=100,
-                            max_path_length=max_path_length,
+                            max_episode_length=max_episode_length,
                             n_workers=n_workers)
     sampler = LocalSampler.from_worker_factory(workers,
                                                policy,
@@ -62,16 +62,16 @@ def test_init_with_env_updates():
 
 
 def test_obtain_exact_trajectories():
-    max_path_length = 15
+    max_episode_length = 15
     n_workers = 8
     env = GarageEnv(PointEnv())
     per_worker_actions = [env.action_space.sample() for _ in range(n_workers)]
     policies = [
-        FixedPolicy(env.spec, [action] * max_path_length)
+        FixedPolicy(env.spec, [action] * max_episode_length)
         for action in per_worker_actions
     ]
     workers = WorkerFactory(seed=100,
-                            max_path_length=max_path_length,
+                            max_episode_length=max_episode_length,
                             n_workers=n_workers)
     sampler = LocalSampler.from_worker_factory(workers, policies, envs=env)
     n_traj_per_worker = 3
@@ -89,16 +89,16 @@ def test_obtain_exact_trajectories():
 
 
 def test_no_seed():
-    max_path_length = 16
+    max_episode_length = 16
     env = GarageEnv(PointEnv())
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
-                             for _ in range(max_path_length)
+                             for _ in range(max_episode_length)
                          ])
     n_workers = 8
     workers = WorkerFactory(seed=None,
-                            max_path_length=max_path_length,
+                            max_episode_length=max_episode_length,
                             n_workers=n_workers)
     sampler = LocalSampler.from_worker_factory(workers, policy, env)
     rollouts = sampler.obtain_samples(0, 160, policy)

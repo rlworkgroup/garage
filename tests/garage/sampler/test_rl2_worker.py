@@ -12,7 +12,7 @@ class TestRL2Worker(TfGraphTestCase):
         env = GarageEnv(DummyBoxEnv(obs_dim=(1, )))
         policy = DummyPolicy(env_spec=env.spec)
         worker = RL2Worker(seed=1,
-                           max_path_length=100,
+                           max_episode_length=100,
                            worker_number=1,
                            n_paths_per_trial=5)
         worker.update_agent(policy)

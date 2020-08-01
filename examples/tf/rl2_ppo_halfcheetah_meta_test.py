@@ -17,13 +17,13 @@ from garage.tf.policies import GaussianGRUPolicy
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--max_path_length', default=100)
+@click.option('--max_episode_length', default=100)
 @click.option('--meta_batch_size', default=10)
 @click.option('--n_epochs', default=10)
 @click.option('--episode_per_task', default=4)
 @wrap_experiment
-def rl2_ppo_halfcheetah_meta_test(ctxt, seed, max_path_length, meta_batch_size,
-                                  n_epochs, episode_per_task):
+def rl2_ppo_halfcheetah_meta_test(ctxt, seed, max_episode_length,
+                                  meta_batch_size, n_epochs, episode_per_task):
     """Perform meta-testing on RL2PPO with HalfCheetah environment.
 
     Args:
@@ -31,7 +31,7 @@ def rl2_ppo_halfcheetah_meta_test(ctxt, seed, max_path_length, meta_batch_size,
             configuration used by LocalRunner to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         meta_batch_size (int): Meta batch size.
         n_epochs (int): Total number of epochs for training.
         episode_per_task (int): Number of training episode per task.
@@ -53,10 +53,10 @@ def rl2_ppo_halfcheetah_meta_test(ctxt, seed, max_path_length, meta_batch_size,
         meta_evaluator = MetaEvaluator(test_task_sampler=tasks,
                                        n_exploration_traj=10,
                                        n_test_rollouts=10,
-                                       max_path_length=max_path_length,
+                                       max_episode_length=max_episode_length,
                                        n_test_tasks=5)
 
-        algo = RL2PPO(rl2_max_path_length=max_path_length,
+        algo = RL2PPO(rl2_max_episode_length=max_episode_length,
                       meta_batch_size=meta_batch_size,
                       task_sampler=tasks,
                       env_spec=env_spec,
@@ -67,13 +67,13 @@ def rl2_ppo_halfcheetah_meta_test(ctxt, seed, max_path_length, meta_batch_size,
                       lr_clip_range=0.2,
                       optimizer_args=dict(
                           batch_size=32,
-                          max_epochs=10,
+                          max_episode_length=10,
                       ),
                       stop_entropy_gradient=True,
                       entropy_method='max',
                       policy_ent_coeff=0.02,
                       center_adv=False,
-                      max_path_length=max_path_length * episode_per_task,
+                      max_episode_length=max_episode_length * episode_per_task,
                       meta_evaluator=meta_evaluator,
                       n_epochs_per_eval=10)
 
@@ -85,7 +85,7 @@ def rl2_ppo_halfcheetah_meta_test(ctxt, seed, max_path_length, meta_batch_size,
                      worker_args=dict(n_paths_per_trial=episode_per_task))
 
         runner.train(n_epochs=n_epochs,
-                     batch_size=episode_per_task * max_path_length *
+                     batch_size=episode_per_task * max_episode_length *
                      meta_batch_size)
 
 

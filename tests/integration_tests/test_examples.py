@@ -95,7 +95,7 @@ def test_dqn_pong():
     env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'tf/dqn_pong.py', '--buffer_size', '5',
-        '--max_path_length', '5'
+        '--max_episode_length', '5'
     ],
                           check=False,
                           env=env).returncode == 0
@@ -176,7 +176,7 @@ def test_pearl_half_cheetah_vel():
         '--num_steps_per_epoch', '5', '--num_initial_steps', '5',
         '--num_steps_prior', '1', '--num_extra_rl_steps_posterior', '1',
         '--batch_size', '4', '--embedding_batch_size', '2',
-        '--embedding_mini_batch_size', '2', '--max_path_length', '1'
+        '--embedding_mini_batch_size', '2', '--max_episode_length', '1'
     ],
                           check=False).returncode == 0
 
@@ -193,7 +193,7 @@ def test_pearl_metaworld_ml1_push():
         '--num_steps_per_epoch', '5', '--num_initial_steps', '5',
         '--num_steps_prior', '1', '--num_extra_rl_steps_posterior', '1',
         '--batch_size', '4', '--embedding_batch_size', '2',
-        '--embedding_mini_batch_size', '2', '--max_path_length', '1'
+        '--embedding_mini_batch_size', '2', '--max_episode_length', '1'
     ],
                           check=False).returncode == 0
 
@@ -209,7 +209,7 @@ def test_pearl_metaworld_ml10():
         '--num_steps_per_epoch', '2', '--num_initial_steps', '2',
         '--num_steps_prior', '1', '--num_extra_rl_steps_posterior', '1',
         '--batch_size', '2', '--embedding_batch_size', '1',
-        '--embedding_mini_batch_size', '1', '--max_path_length', '1'
+        '--embedding_mini_batch_size', '1', '--max_episode_length', '1'
     ],
                           check=False).returncode == 0
 
@@ -226,7 +226,7 @@ def test_pearl_metaworld_ml45():
         '--num_steps_per_epoch', '2', '--num_initial_steps', '2',
         '--num_steps_prior', '1', '--num_extra_rl_steps_posterior', '1',
         '--batch_size', '2', '--embedding_batch_size', '1',
-        '--embedding_mini_batch_size', '1', '--max_path_length', '1'
+        '--embedding_mini_batch_size', '1', '--max_episode_length', '1'
     ],
                           check=False).returncode == 0
 

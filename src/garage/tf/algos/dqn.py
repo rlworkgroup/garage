@@ -32,10 +32,10 @@ class DQN(RLAlgorithm):
         min_buffer_size (int): The minimum buffer size for replay buffer.
         buffer_batch_size (int): Batch size for replay buffer.
         n_train_steps (int): Training steps.
-        max_path_length (int): Maximum path length. The episode will
-            terminate when length of trajectory reaches max_path_length.
+        max_episode_length (int): Maximum path length. The episode will
+            terminate when length of trajectory reaches max_episode_length.
         max_eval_path_length (int or None): Maximum length of paths used for
-            off-policy evaluation. If None, defaults to `max_path_length`.
+            off-policy evaluation. If None, defaults to `max_episode_length`.
         qf_lr (float): Learning rate for Q-Function.
         qf_optimizer (tf.Optimizer): Optimizer for Q-Function.
         discount (float): Discount factor for rewards.
@@ -61,7 +61,7 @@ class DQN(RLAlgorithm):
                  min_buffer_size=int(1e4),
                  buffer_batch_size=64,
                  n_train_steps=50,
-                 max_path_length=None,
+                 max_episode_length=None,
                  max_eval_path_length=None,
                  qf_lr=_Default(0.001),
                  qf_optimizer=tf.compat.v1.train.AdamOptimizer,
@@ -88,7 +88,7 @@ class DQN(RLAlgorithm):
         self._buffer_batch_size = buffer_batch_size
         self._discount = discount
         self._reward_scale = reward_scale
-        self.max_path_length = max_path_length
+        self.max_episode_length = max_episode_length
         self._max_eval_path_length = max_eval_path_length
         self._eval_env = None
 

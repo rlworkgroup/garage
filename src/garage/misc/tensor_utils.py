@@ -31,12 +31,12 @@ def explained_variance_1d(ypred, y, valids=None):
 
     Args:
         ypred (np.ndarray): Sample data from the first variable.
-            Shape: :math:`(N, max_path_length)`.
+            Shape: :math:`(N, max_episode_length)`.
         y (np.ndarray): Sample data from the second variable.
-            Shape: :math:`(N, max_path_length)`.
+            Shape: :math:`(N, max_episode_length)`.
         valids (np.ndarray): Optional argument. Array indicating valid indices.
             If None, it assumes the entire input array are valid.
-            Shape: :math:`(N, max_path_length)`.
+            Shape: :math:`(N, max_episode_length)`.
 
     Returns:
         float: The explained variance.

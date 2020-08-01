@@ -57,7 +57,7 @@ class MAML:
                  evaluate_every_n_epochs=1):
         self.sampler_cls = RaySampler
 
-        self.max_path_length = inner_algo.max_path_length
+        self.max_episode_length = inner_algo.max_episode_length
 
         self._meta_evaluator = meta_evaluator
         self._policy = policy

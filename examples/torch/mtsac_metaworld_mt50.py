@@ -84,7 +84,7 @@ def mtsac_metaworld_mt50(ctxt=None, seed=1, use_gpu=False, _gpu=0):
                   qf1=qf1,
                   qf2=qf2,
                   gradient_steps_per_itr=150,
-                  max_path_length=250,
+                  max_episode_length=250,
                   eval_env=mt50_test_envs,
                   env_spec=mt50_train_envs.spec,
                   num_tasks=10,

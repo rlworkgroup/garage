@@ -150,7 +150,7 @@ class LocalRunner:
                      *,
                      seed=None,
                      n_workers=psutil.cpu_count(logical=False),
-                     max_path_length=None,
+                     max_episode_length=None,
                      worker_class=None,
                      sampler_args=None,
                      worker_args=None):
@@ -159,7 +159,7 @@ class LocalRunner:
         Args:
             sampler_cls (type): The type of sampler to construct.
             seed (int): Seed to use in sampler workers.
-            max_path_length (int): Maximum path length to be sampled by the
+            max_episode_length (int): Maximum path length to be sampled by the
                 sampler. Paths longer than this will be truncated.
             n_workers (int): The number of workers the sampler should use.
             worker_class (type): Type of worker the Sampler should use.
@@ -169,9 +169,9 @@ class LocalRunner:
                 passed to the sampler.
 
         Raises:
-            ValueError: If `max_path_length` isn't passed and the algorithm
-                doesn't contain a `max_path_length` field, or if the algorithm
-                doesn't have a policy field.
+            ValueError: If `max_episode_length` isn't passed and the algorithm
+                doesn't contain a `max_episode_length` field, or if the
+                algorithm doesn't have a policy field.
 
         Returns:
             sampler_cls: An instance of the sampler class.
@@ -184,12 +184,12 @@ class LocalRunner:
             raise ValueError('If the runner is used to construct a sampler, '
                              'the algorithm must have a `policy` or '
                              '`exploration_policy` field.')
-        if max_path_length is None:
-            if hasattr(self._algo, 'max_path_length'):
-                max_path_length = self._algo.max_path_length
-        if max_path_length is None:
+        if max_episode_length is None:
+            if hasattr(self._algo, 'max_episode_length'):
+                max_episode_length = self._algo.max_episode_length
+        if max_episode_length is None:
             raise ValueError('If `sampler_cls` is specified in runner.setup, '
-                             'the algorithm must specify `max_path_length`')
+                             'the algorithm must specify `max_episode_length`')
         if worker_class is None:
             worker_class = getattr(self._algo, 'worker_cls', DefaultWorker)
         if seed is None:
@@ -201,7 +201,7 @@ class LocalRunner:
 
         return sampler_cls.from_worker_factory(WorkerFactory(
             seed=seed,
-            max_path_length=max_path_length,
+            max_episode_length=max_episode_length,
             n_workers=n_workers,
             worker_class=worker_class,
             worker_args=worker_args),
@@ -237,7 +237,7 @@ class LocalRunner:
 
         Raises:
             ValueError: If sampler_cls is passed and the algorithm doesn't
-                contain a `max_path_length` field.
+                contain a `max_episode_length` field.
 
         """
         self._algo = algo
@@ -460,7 +460,7 @@ class LocalRunner:
 
         if self._plot:
             self._plotter.update_plot(self._algo.policy,
-                                      self._algo.max_path_length)
+                                      self._algo.max_episode_length)
             if pause_for_plot:
                 input('Plotting evaluation run: Press Enter to " "continue...')
 

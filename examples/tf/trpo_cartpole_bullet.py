@@ -42,7 +42,7 @@ def trpo_cartpole_bullet(ctxt=None, seed=1):
         algo = TRPO(env_spec=env.spec,
                     policy=policy,
                     baseline=baseline,
-                    max_path_length=1000,
+                    max_episode_length=1000,
                     discount=0.99,
                     max_kl_step=0.01)
 

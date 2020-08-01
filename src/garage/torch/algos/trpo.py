@@ -18,7 +18,7 @@ class TRPO(VPG):
             for policy.
         vf_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer for
             value function.
-        max_path_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single rollout.
         num_train_per_epoch (int): Number of train_once calls per epoch.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
@@ -49,7 +49,7 @@ class TRPO(VPG):
                  value_function,
                  policy_optimizer=None,
                  vf_optimizer=None,
-                 max_path_length=100,
+                 max_episode_length=100,
                  num_train_per_epoch=1,
                  discount=0.99,
                  gae_lambda=0.98,
@@ -76,7 +76,7 @@ class TRPO(VPG):
                          value_function=value_function,
                          policy_optimizer=policy_optimizer,
                          vf_optimizer=vf_optimizer,
-                         max_path_length=max_path_length,
+                         max_episode_length=max_episode_length,
                          num_train_per_epoch=num_train_per_epoch,
                          discount=discount,
                          gae_lambda=gae_lambda,

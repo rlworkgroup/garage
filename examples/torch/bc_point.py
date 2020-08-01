@@ -84,7 +84,7 @@ def bc_point(ctxt=None, loss='log_prob'):
               policy,
               batch_size=batch_size,
               source=expert,
-              max_path_length=200,
+              max_episode_length=200,
               policy_lr=1e-2,
               loss=loss)
     runner.setup(algo, env)

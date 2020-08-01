@@ -53,20 +53,20 @@ def test_methods():
                                               use_information_bottleneck=True,
                                               use_next_obs=False)
 
-    max_path_length = 20
+    max_episode_length = 20
     worker1 = PEARLWorker(seed=1,
-                          max_path_length=max_path_length,
+                          max_episode_length=max_episode_length,
                           worker_number=1)
     worker1.update_agent(context_policy)
     worker1.update_env(env_spec)
     rollouts = worker1.rollout()
 
-    assert rollouts.observations.shape == (max_path_length, obs_dim)
-    assert rollouts.actions.shape == (max_path_length, action_dim)
-    assert rollouts.rewards.shape == (max_path_length, )
+    assert rollouts.observations.shape == (max_episode_length, obs_dim)
+    assert rollouts.actions.shape == (max_episode_length, action_dim)
+    assert rollouts.rewards.shape == (max_episode_length, )
 
     worker2 = PEARLWorker(seed=1,
-                          max_path_length=max_path_length,
+                          max_episode_length=max_episode_length,
                           worker_number=1,
                           deterministic=True,
                           accum_context=True)
@@ -74,8 +74,8 @@ def test_methods():
     worker2.update_env(env_spec)
     rollouts = worker2.rollout()
 
-    assert context_policy.context.shape == (1, max_path_length,
+    assert context_policy.context.shape == (1, max_episode_length,
                                             encoder_input_dim)
-    assert rollouts.observations.shape == (max_path_length, obs_dim)
-    assert rollouts.actions.shape == (max_path_length, action_dim)
-    assert rollouts.rewards.shape == (max_path_length, )
+    assert rollouts.observations.shape == (max_episode_length, obs_dim)
+    assert rollouts.actions.shape == (max_episode_length, action_dim)
+    assert rollouts.rewards.shape == (max_episode_length, )

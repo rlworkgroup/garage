@@ -15,7 +15,7 @@ class FragmentWorker(DefaultWorker):
 
     Args:
         seed(int): The seed to use to intialize random number generators.
-        max_path_length(int or float): The maximum length paths which
+        max_episode_length(int or float): The maximum length paths which
             will be sampled. Can be (floating point) infinity.
         length of fragments before they're transmitted out of
         worker_number(int): The number of the worker this update is
@@ -33,12 +33,12 @@ class FragmentWorker(DefaultWorker):
     def __init__(self,
                  *,
                  seed,
-                 max_path_length,
+                 max_episode_length,
                  worker_number,
                  n_envs=DEFAULT_N_ENVS,
                  timesteps_per_call=1):
         super().__init__(seed=seed,
-                         max_path_length=max_path_length,
+                         max_episode_length=max_episode_length,
                          worker_number=worker_number)
         self._n_envs = n_envs
         self._timesteps_per_call = timesteps_per_call
@@ -103,11 +103,11 @@ class FragmentWorker(DefaultWorker):
         completes = [False] * len(self._envs)
         for i, action in enumerate(actions):
             frag = self._fragments[i]
-            if self._path_lengths[i] < self._max_path_length:
+            if self._path_lengths[i] < self._max_episode_length:
                 agent_info = {k: v[i] for (k, v) in agent_infos.items()}
                 frag.step(action, agent_info)
                 self._path_lengths[i] += 1
-            if (self._path_lengths[i] >= self._max_path_length
+            if (self._path_lengths[i] >= self._max_episode_length
                     or frag.terminals[-1]):
                 self._path_lengths[i] = 0
                 complete_frag = frag.to_batch()

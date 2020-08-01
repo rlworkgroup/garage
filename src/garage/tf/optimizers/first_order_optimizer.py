@@ -21,7 +21,7 @@ class FirstOrderOptimizer:
         optimizer (tf.Optimizer): Optimizer to be used.
         learning_rate (dict): learning rate arguments.
             learning rates are our main interest parameters to tune optimizers.
-        max_epochs (int): Maximum number of epochs for update.
+        max_episode_length (int): Maximum number of epochs for update.
         tolerance (float): Tolerance for difference in loss during update.
         batch_size (int): Batch size for optimization.
         callback (callable): Function to call during each epoch. Default is
@@ -34,7 +34,7 @@ class FirstOrderOptimizer:
     def __init__(self,
                  optimizer=None,
                  learning_rate=None,
-                 max_epochs=1000,
+                 max_episode_length=1000,
                  tolerance=1e-6,
                  batch_size=32,
                  callback=None,
@@ -51,7 +51,7 @@ class FirstOrderOptimizer:
 
         self._tf_optimizer = optimizer
         self._learning_rate = learning_rate
-        self._max_epochs = max_epochs
+        self._max_episode_length = max_episode_length
         self._tolerance = tolerance
         self._batch_size = batch_size
         self._verbose = verbose
@@ -145,7 +145,7 @@ class FirstOrderOptimizer:
 
         sess = tf.compat.v1.get_default_session()
 
-        for epoch in range(self._max_epochs):
+        for epoch in range(self._max_episode_length):
             if self._verbose:
                 logger.log('Epoch {}'.format(epoch))
 

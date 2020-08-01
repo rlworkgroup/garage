@@ -40,7 +40,7 @@ class TestNPO(TfGraphTestCase):
             algo = NPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
-                       max_path_length=100,
+                       max_episode_length=100,
                        discount=0.99,
                        gae_lambda=0.98,
                        policy_ent_coeff=0.0)

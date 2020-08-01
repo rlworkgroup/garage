@@ -44,7 +44,7 @@ class TestMAML:
         self.algo = MAMLPPO(env=self.env,
                             policy=self.policy,
                             value_function=self.value_function,
-                            max_path_length=100,
+                            max_episode_length=100,
                             meta_batch_size=5,
                             discount=0.99,
                             gae_lambda=1.,
@@ -81,7 +81,7 @@ class TestMAML:
 
     def test_adapt_policy(self):
         """Test if policy can adapt to samples."""
-        worker = WorkerFactory(seed=100, max_path_length=100)
+        worker = WorkerFactory(seed=100, max_episode_length=100)
         sampler = LocalSampler.from_worker_factory(worker, self.policy,
                                                    self.env)
 
