@@ -1,25 +1,20 @@
 """Discrete CNN QFunction with CNN-MLP structure."""
-# yapf: disable
 import akro
 import tensorflow as tf
 
-from garage.experiment import deterministic
-from garage.tf.models import (CNNModel,
-                              CNNModelWithMaxPooling,
-                              MLPDuelingModel,
-                              MLPModel,
-                              Sequential)
-
-# yapf: enable
+from garage.tf.models import CNNModel
+from garage.tf.models import CNNModelWithMaxPooling
+from garage.tf.models import MLPDuelingModel
+from garage.tf.models import MLPModel
+from garage.tf.models import Sequential
+from garage.tf.q_functions.q_function import QFunction
 
 
-class DiscreteCNNQFunction(Sequential):
+class DiscreteCNNQFunction(QFunction):
     """Q function based on a CNN-MLP structure for discrete action space.
-
     This class implements a Q value network to predict Q based on the
     input state and action. It uses an CNN and a MLP to fit the function
     of Q(s, a).
-
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
         filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
@@ -66,7 +61,6 @@ class DiscreteCNNQFunction(Sequential):
             a tf.Tensor.
         dueling (bool): Bool for using dueling network or not.
         layer_normalization (bool): Bool for using layer normalization or not.
-
     """
 
     def __init__(self,
@@ -81,12 +75,10 @@ class DiscreteCNNQFunction(Sequential):
                  pool_shapes=(2, 2),
                  cnn_hidden_nonlinearity=tf.nn.relu,
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  dueling=False,
                  layer_normalization=False):
@@ -100,6 +92,7 @@ class DiscreteCNNQFunction(Sequential):
                     type(env_spec.observation_space).__name__,
                     env_spec.observation_space.shape))
 
+        super().__init__(name)
         self._env_spec = env_spec
         self._action_dim = env_spec.action_space.n
         self._filters = filters
@@ -157,7 +150,7 @@ class DiscreteCNNQFunction(Sequential):
                 output_b_init=output_b_init,
                 layer_normalization=layer_normalization)
 
-        super().__init__(cnn_model, output_model, name=name)
+        self.model = Sequential(cnn_model, output_model)
         self._network = None
 
         self._initialize()
@@ -175,97 +168,85 @@ class DiscreteCNNQFunction(Sequential):
                                               name='obs')
             augmented_obs_ph = obs_ph
 
-        self._network = super().build(augmented_obs_ph)
+        with tf.compat.v1.variable_scope(self.name) as vs:
+            self._variable_scope = vs
+            self._network = self.model.build(augmented_obs_ph)
 
         self._obs_input = obs_ph
 
     @property
     def q_vals(self):
         """Return the Q values, the output of the network.
-
         Return:
             list[tf.Tensor]: Q values.
-
         """
         return self._network.outputs
 
     @property
     def input(self):
         """Get input.
-
         Return:
             tf.Tensor: QFunction Input.
-
         """
         return self._obs_input
 
     # pylint: disable=arguments-differ
-    def build(self, state_input, name):
-        """Build the symbolic graph for q-network.
-
+    def get_qval_sym(self, state_input, name):
+        """Symbolic graph for q-network.
         Args:
             state_input (tf.Tensor): The state input tf.Tensor to the network.
             name (str): Network variable scope.
-
         Return:
             tf.Tensor: The tf.Tensor output of Discrete CNN QFunction.
-
         """
-        augmented_state_input = state_input
-        if isinstance(self._env_spec.observation_space, akro.Image):
-            augmented_state_input = tf.cast(state_input, tf.float32) / 255.0
-        return super().build(augmented_state_input, name=name).outputs
+        with tf.compat.v1.variable_scope(self._variable_scope):
+            augmented_state_input = state_input
+            if isinstance(self._env_spec.observation_space, akro.Image):
+                augmented_state_input = tf.cast(state_input,
+                                                tf.float32) / 255.0
+            return self.model.build(augmented_state_input, name=name).outputs
 
     def clone(self, name):
         """Return a clone of the Q-function.
-
-        It copies the configuration of the primitive and also the parameters.
-
+        It only copies the configuration of the Q-function,
+        not the parameters.
         Args:
             name(str) : Name of the newly created q-function.
-
         Returns:
             garage.tf.q_functions.DiscreteCNNQFunction: Clone of this object
-
         """
-        new_qf = self.__class__(name=name,
-                                env_spec=self._env_spec,
-                                filters=self._filters,
-                                strides=self._strides,
-                                hidden_sizes=self._hidden_sizes,
-                                padding=self._padding,
-                                max_pooling=self._max_pooling,
-                                pool_shapes=self._pool_shapes,
-                                pool_strides=self._pool_strides,
-                                hidden_nonlinearity=self._hidden_nonlinearity,
-                                hidden_w_init=self._hidden_w_init,
-                                hidden_b_init=self._hidden_b_init,
-                                output_nonlinearity=self._output_nonlinearity,
-                                output_w_init=self._output_w_init,
-                                output_b_init=self._output_b_init,
-                                dueling=self._dueling,
-                                layer_normalization=self._layer_normalization)
-        new_qf.parameters = self.parameters
-        return new_qf
+        return self.__class__(name=name,
+                              env_spec=self._env_spec,
+                              filters=self._filters,
+                              strides=self._strides,
+                              hidden_sizes=self._hidden_sizes,
+                              padding=self._padding,
+                              max_pooling=self._max_pooling,
+                              pool_shapes=self._pool_shapes,
+                              pool_strides=self._pool_strides,
+                              hidden_nonlinearity=self._hidden_nonlinearity,
+                              hidden_w_init=self._hidden_w_init,
+                              hidden_b_init=self._hidden_b_init,
+                              output_nonlinearity=self._output_nonlinearity,
+                              output_w_init=self._output_w_init,
+                              output_b_init=self._output_b_init,
+                              dueling=self._dueling,
+                              layer_normalization=self._layer_normalization)
 
     def __setstate__(self, state):
         """Object.__setstate__.
-
         Args:
             state (dict): Unpickled state.
-
         """
-        super().__setstate__(state)
+        self.__dict__.update(state)
         self._initialize()
 
     def __getstate__(self):
         """Object.__getstate__.
-
         Returns:
             dict: The state.
-
         """
-        new_dict = super().__getstate__()
+        new_dict = self.__dict__.copy()
         del new_dict['_obs_input']
         del new_dict['_network']
         return new_dict

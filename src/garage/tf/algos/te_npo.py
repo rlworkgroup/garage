@@ -7,7 +7,11 @@ import numpy as np
 import scipy.stats
 import tensorflow as tf
 
+<<<<<<< HEAD
 from garage import EpisodeBatch, InOutSpec, log_performance
+=======
+from garage import InOutSpec, log_performance, TrajectoryBatch
+>>>>>>> e547773e... Add tfp SeedStream (#1821)
 from garage.experiment import deterministic
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm

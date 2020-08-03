@@ -4,6 +4,10 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 
 from garage.experiment import deterministic
+<<<<<<< HEAD
+=======
+from garage.tf.distributions import DiagonalGaussian
+>>>>>>> e547773e... Add tfp SeedStream (#1821)
 from garage.tf.models.cnn import cnn
 from garage.tf.models.mlp import mlp
 from garage.tf.models.model import Model
@@ -313,8 +317,12 @@ class GaussianCNNModel(Model):
             else:  # we know it must be softplus here
                 log_std_var = tf.math.log(tf.math.log(1. + tf.exp(std_param)))
 
+<<<<<<< HEAD
         dist = tfp.distributions.MultivariateNormalDiag(
             loc=mean_var, scale_diag=tf.exp(log_std_var))
+=======
+        dist = DiagonalGaussian(self._output_dim)
+>>>>>>> e547773e... Add tfp SeedStream (#1821)
         rnd = tf.random.normal(shape=mean_var.get_shape().as_list()[1:],
                                seed=deterministic.get_tf_seed_stream())
         action_var = rnd * tf.exp(log_std_var) + mean_var

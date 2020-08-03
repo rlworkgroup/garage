@@ -73,7 +73,11 @@ class CategoricalCNNPolicy(CategoricalCNNModel, Policy):
                  hidden_w_init=tf.initializers.glorot_uniform(
                      seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
+<<<<<<< HEAD
                  output_nonlinearity=tf.nn.softmax,
+=======
+                 output_nonlinearity=None,
+>>>>>>> e547773e... Add tfp SeedStream (#1821)
                  output_w_init=tf.initializers.glorot_uniform(
                      seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
@@ -123,6 +127,7 @@ class CategoricalCNNPolicy(CategoricalCNNModel, Policy):
 
     def _initialize(self):
         """Initialize policy."""
+<<<<<<< HEAD
         state_input = tf.compat.v1.placeholder(tf.float32,
                                                shape=(None, None) +
                                                self._obs_dim)
@@ -138,6 +143,46 @@ class CategoricalCNNPolicy(CategoricalCNNModel, Policy):
                           -1), dist.probs
             ],
             feed_list=[state_input])
+=======
+        with tf.compat.v1.variable_scope(self.name) as vs:
+            self._variable_scope = vs
+            state_input = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, None) +
+                                                   self._obs_dim)
+            if isinstance(self.env_spec.observation_space, akro.Image):
+                augmented_state_input = tf.cast(state_input, tf.float32)
+                augmented_state_input /= 255.0
+            else:
+                augmented_state_input = state_input
+            self._dist = self.model.build(augmented_state_input).dist
+            self._f_prob = tf.compat.v1.get_default_session().make_callable(
+                [
+                    tf.argmax(
+                        self._dist.sample(
+                            seed=deterministic.get_tf_seed_stream()), -1),
+                    self._dist.probs
+                ],
+                feed_list=[state_input])
+
+    def build(self, state_input, name=None):
+        """Build policy.
+
+        Args:
+            state_input (tf.Tensor) : State input.
+            name (str): Name of the policy, which is also the name scope.
+
+        Returns:
+            tfp.distributions.OneHotCategorical: Policy distribution.
+
+        """
+        with tf.compat.v1.variable_scope(self._variable_scope):
+            if isinstance(self.env_spec.observation_space, akro.Image):
+                augmented_state_input = tf.cast(state_input, tf.float32)
+                augmented_state_input /= 255.0
+            else:
+                augmented_state_input = state_input
+            return self.model.build(augmented_state_input, name=name)
+>>>>>>> e547773e... Add tfp SeedStream (#1821)
 
     @property
     def input_dim(self):

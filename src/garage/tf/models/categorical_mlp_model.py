@@ -52,7 +52,11 @@ class CategoricalMLPModel(MLPModel):
                  hidden_w_init=tf.initializers.glorot_uniform(
                      seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
+<<<<<<< HEAD
                  output_nonlinearity=tf.nn.softmax,
+=======
+                 output_nonlinearity=None,
+>>>>>>> e547773e... Add tfp SeedStream (#1821)
                  output_w_init=tf.initializers.glorot_uniform(
                      seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
