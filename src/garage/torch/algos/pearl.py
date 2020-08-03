@@ -10,7 +10,7 @@ from dowel import logger
 import numpy as np
 import torch
 
-from garage import InOutSpec, TimeStep
+from garage import InOutSpec, StepType, TimeStep
 from garage.envs import EnvSpec
 from garage.experiment import MetaEvaluator
 from garage.np.algos import MetaRLAlgorithm
@@ -432,11 +432,19 @@ class PEARL(MetaRLAlgorithm):
 
             for path in paths:
                 p = {
-                    'observations': path['observations'],
-                    'actions': path['actions'],
-                    'rewards': path['rewards'].reshape(-1, 1),
-                    'next_observations': path['next_observations'],
-                    'dones': path['dones'].reshape(-1, 1)
+                    'observations':
+                    path['observations'],
+                    'actions':
+                    path['actions'],
+                    'rewards':
+                    path['rewards'].reshape(-1, 1),
+                    'next_observations':
+                    path['next_observations'],
+                    'dones':
+                    np.array([
+                        step_type == StepType.TERMINAL
+                        for step_type in path['step_types']
+                    ]).reshape(-1, 1)
                 }
                 self._replay_buffers[self._task_idx].add_path(p)
 
@@ -734,16 +742,24 @@ class PEARLWorker(DefaultWorker):
             for k, v in env_info.items():
                 self._env_infos[k].append(v)
             self._path_length += 1
-            self._terminals.append(d)
+            # Temp solution
+            if d:
+                self._step_types.append(StepType.TERMINAL)
+            else:
+                self._step_types.append(StepType.MID)
+
             if self._accum_context:
+                # step_type should be extracted from TimeStep returned from
+                # env.step(). The population of step_type should be updated
+                # once env returns a TimeStep.
                 s = TimeStep(env_spec=self.env,
                              observation=self._prev_obs,
                              next_observation=next_o,
                              action=a,
                              reward=float(r),
-                             terminal=d,
                              env_info=env_info,
-                             agent_info=agent_info)
+                             agent_info=agent_info,
+                             step_type=StepType.MID)
                 self.agent.update_context(s)
             if not d:
                 self._prev_obs = next_o

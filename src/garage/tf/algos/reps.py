@@ -1,4 +1,5 @@
 """Relative Entropy Policy Search implementation in Tensorflow."""
+# yapf: disable
 import collections
 
 from dowel import logger, tabular
@@ -6,13 +7,19 @@ import numpy as np
 import scipy.optimize
 import tensorflow as tf
 
-from garage import _Default, log_performance, make_optimizer, TrajectoryBatch
+from garage import (_Default,
+                    log_performance,
+                    make_optimizer,
+                    StepType,
+                    TrajectoryBatch)
 from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
 from garage.tf import paths_to_tensors
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import flatten_inputs, graph_inputs
 from garage.tf.optimizers import LbfgsOptimizer
+
+# yapf: disable
 
 
 # pylint: disable=differing-param-doc, differing-type-doc
@@ -170,7 +177,10 @@ class REPS(RLAlgorithm):  # noqa: D416
                 rewards=path['rewards'],
                 env_infos=path['env_infos'],
                 agent_infos=path['agent_infos'],
-                dones=path['dones']) for path in paths
+                dones=np.array([
+                    step_type == StepType.TERMINAL
+                    for step_type in path['step_types']
+                ])) for path in paths
         ]
 
         if hasattr(self._baseline, 'predict_n'):

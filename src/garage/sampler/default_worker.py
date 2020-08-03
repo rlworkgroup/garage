@@ -3,7 +3,7 @@ from collections import defaultdict
 
 import numpy as np
 
-from garage import TrajectoryBatch
+from garage import StepType, TrajectoryBatch
 from garage.experiment import deterministic
 from garage.sampler import _apply_env_update
 from garage.sampler.worker import Worker
@@ -41,7 +41,7 @@ class DefaultWorker(Worker):
         self._last_observations = []
         self._actions = []
         self._rewards = []
-        self._terminals = []
+        self._step_types = []
         self._lengths = []
         self._agent_infos = defaultdict(list)
         self._env_infos = defaultdict(list)
@@ -116,7 +116,13 @@ class DefaultWorker(Worker):
             for k, v in env_info.items():
                 self._env_infos[k].append(v)
             self._path_length += 1
-            self._terminals.append(d)
+            # Temporary solution
+            # When env returns a TimeStep in future, this should append the
+            # step type. Now only StepType.TERMINAL is added.
+            if d:
+                self._step_types.append(StepType.TERMINAL)
+            else:
+                self._step_types.append(StepType.MID)
             if not d:
                 self._prev_obs = next_o
                 return False
@@ -140,8 +146,8 @@ class DefaultWorker(Worker):
         self._actions = []
         rewards = self._rewards
         self._rewards = []
-        terminals = self._terminals
-        self._terminals = []
+        step_types = self._step_types
+        self._step_types = []
         env_infos = self._env_infos
         self._env_infos = defaultdict(list)
         agent_infos = self._agent_infos
@@ -152,12 +158,16 @@ class DefaultWorker(Worker):
             env_infos[k] = np.asarray(v)
         lengths = self._lengths
         self._lengths = []
-        return TrajectoryBatch(self.env.spec, np.asarray(observations),
-                               np.asarray(last_observations),
-                               np.asarray(actions), np.asarray(rewards),
-                               np.asarray(terminals), dict(env_infos),
-                               dict(agent_infos), np.asarray(lengths,
-                                                             dtype='i'))
+        return TrajectoryBatch(env_spec=self.env.spec,
+                               observations=np.asarray(observations),
+                               last_observations=np.asarray(last_observations),
+                               actions=np.asarray(actions),
+                               rewards=np.asarray(rewards),
+                               step_types=np.asarray(step_types,
+                                                     dtype=StepType),
+                               env_infos=dict(env_infos),
+                               agent_infos=dict(agent_infos),
+                               lengths=np.asarray(lengths, dtype='i'))
 
     def rollout(self):
         """Sample a single rollout of the agent in the environment.

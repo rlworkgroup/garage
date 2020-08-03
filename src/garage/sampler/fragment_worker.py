@@ -3,7 +3,7 @@ import copy
 
 import numpy as np
 
-from garage import TrajectoryBatch
+from garage import StepType, TrajectoryBatch
 from garage.sampler import _apply_env_update, InProgressTrajectory
 from garage.sampler.default_worker import DefaultWorker
 
@@ -108,7 +108,7 @@ class FragmentWorker(DefaultWorker):
                 frag.step(action, agent_info)
                 self._path_lengths[i] += 1
             if (self._path_lengths[i] >= self._max_episode_length
-                    or frag.terminals[-1]):
+                    or frag.step_types[-1] == StepType.TERMINAL):
                 self._path_lengths[i] = 0
                 complete_frag = frag.to_batch()
                 self._complete_fragments.append(complete_frag)

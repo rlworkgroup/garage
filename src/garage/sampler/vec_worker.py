@@ -4,7 +4,7 @@ import copy
 
 import numpy as np
 
-from garage import TrajectoryBatch
+from garage import StepType, TrajectoryBatch
 from garage.sampler import _apply_env_update
 from garage.sampler.default_worker import DefaultWorker
 
@@ -113,7 +113,7 @@ class VecWorker(DefaultWorker):
             self._observations = [[] for _ in range(n)]
             self._actions = [[] for _ in range(n)]
             self._rewards = [[] for _ in range(n)]
-            self._terminals = [[] for _ in range(n)]
+            self._step_types = [[] for _ in range(n)]
             self._env_infos = [collections.defaultdict(list) for _ in range(n)]
             self._agent_infos = [
                 collections.defaultdict(list) for _ in range(n)
@@ -125,19 +125,22 @@ class VecWorker(DefaultWorker):
         assert 0 < self._path_lengths[
             rollout_number] <= self._max_episode_length
         traj = TrajectoryBatch(
-            self._envs[rollout_number].spec,
-            np.asarray(self._observations[rollout_number]),
-            np.asarray([last_observation]),
-            np.asarray(self._actions[rollout_number]),
-            np.asarray(self._rewards[rollout_number]),
-            np.asarray(self._terminals[rollout_number]),
-            self._env_infos[rollout_number], self._agent_infos[rollout_number],
-            np.asarray([self._path_lengths[rollout_number]], dtype='l'))
+            env_spec=self._envs[rollout_number].spec,
+            observations=np.asarray(self._observations[rollout_number]),
+            last_observations=np.asarray([last_observation]),
+            actions=np.asarray(self._actions[rollout_number]),
+            rewards=np.asarray(self._rewards[rollout_number]),
+            step_types=np.asarray(self._step_types[rollout_number],
+                                  dtype=StepType),
+            env_infos=self._env_infos[rollout_number],
+            agent_infos=self._agent_infos[rollout_number],
+            lengths=np.asarray([self._path_lengths[rollout_number]],
+                               dtype='l'))
         self._completed_rollouts.append(traj)
         self._observations[rollout_number] = []
         self._actions[rollout_number] = []
         self._rewards[rollout_number] = []
-        self._terminals[rollout_number] = []
+        self._step_types[rollout_number] = []
         self._path_lengths[rollout_number] = 0
         self._prev_obs[rollout_number] = self._envs[rollout_number].reset()
 
@@ -162,7 +165,13 @@ class VecWorker(DefaultWorker):
                 for k, v in env_info.items():
                     self._env_infos[i][k].append(v)
                 self._path_lengths[i] += 1
-                self._terminals[i].append(d)
+                # Temporary solution. _step_types[i] should store the actual
+                #  step type returned from env.step() once it returns a
+                # TimeStep (to be added in future).
+                if d:
+                    self._step_types[i].append(StepType.TERMINAL)
+                else:
+                    self._step_types[i].append(StepType.MID)
                 self._prev_obs[i] = next_o
             if self._path_lengths[i] >= self._max_episode_length or d:
                 self._gather_rollout(i, next_o)

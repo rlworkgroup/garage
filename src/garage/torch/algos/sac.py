@@ -7,7 +7,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from garage import log_performance
+from garage import log_performance, StepType
 from garage.np import obtain_evaluation_samples
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, RaySampler
@@ -197,7 +197,10 @@ class SAC(RLAlgorithm):
                              action=path['actions'],
                              reward=path['rewards'].reshape(-1, 1),
                              next_observation=path['next_observations'],
-                             terminal=path['dones'].reshape(-1, 1)))
+                             terminal=np.array([
+                                 step_type == StepType.TERMINAL
+                                 for step_type in path['step_types']
+                             ]).reshape(-1, 1)))
                     path_returns.append(sum(path['rewards']))
                 assert len(path_returns) is len(runner.step_path)
                 self.episode_rewards.append(np.mean(path_returns))

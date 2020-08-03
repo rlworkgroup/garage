@@ -3,7 +3,7 @@ import collections
 
 import numpy as np
 
-from garage import TrajectoryBatch
+from garage import StepType, TrajectoryBatch
 
 
 class InProgressTrajectory:
@@ -27,7 +27,7 @@ class InProgressTrajectory:
         self.observations = [initial_observation]
         self.actions = []
         self.rewards = []
-        self.terminals = []
+        self.step_types = []
         self.agent_infos = collections.defaultdict(list)
         self.env_infos = collections.defaultdict(list)
 
@@ -50,7 +50,13 @@ class InProgressTrajectory:
             self.agent_infos[k].append(v)
         for k, v in env_info.items():
             self.env_infos[k].append(v)
-        self.terminals.append(d)
+        # Temporary solution
+        # When env returns a TimeStep in future, this should append the
+        # step type. Now only StepType.TERMINAL is added.
+        if d:
+            self.step_types.append(StepType.TERMINAL)
+        else:
+            self.step_types.append(StepType.MID)
         return next_o
 
     def to_batch(self):
@@ -75,7 +81,8 @@ class InProgressTrajectory:
                                last_observations=np.asarray([self.last_obs]),
                                actions=np.asarray(self.actions),
                                rewards=np.asarray(self.rewards),
-                               terminals=np.asarray(self.terminals),
+                               step_types=np.asarray(self.step_types,
+                                                     dtype=StepType),
                                env_infos=env_infos,
                                agent_infos=agent_infos,
                                lengths=np.asarray([len(self.rewards)],

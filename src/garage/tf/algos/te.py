@@ -3,7 +3,7 @@ from collections import defaultdict
 
 import numpy as np
 
-from garage import TrajectoryBatch
+from garage import StepType, TrajectoryBatch
 from garage.sampler import DefaultWorker
 
 
@@ -73,7 +73,11 @@ class TaskEmbeddingWorker(DefaultWorker):
             for k, v in env_info.items():
                 self._env_infos[k].append(v)
             self._path_length += 1
-            self._terminals.append(d)
+            # Temporary solution
+            if d:
+                self._step_types.append(StepType.TERMINAL)
+            else:
+                self._step_types.append(StepType.MID)
 
             if not d:
                 self._prev_obs = next_o
@@ -105,8 +109,8 @@ class TaskEmbeddingWorker(DefaultWorker):
         self._actions = []
         rewards = self._rewards
         self._rewards = []
-        terminals = self._terminals
-        self._terminals = []
+        step_types = self._step_types
+        self._step_types = []
         latents = self._latents
         self._latents = []
         tasks = self._tasks
@@ -130,9 +134,13 @@ class TaskEmbeddingWorker(DefaultWorker):
         lengths = self._lengths
         self._lengths = []
 
-        return TrajectoryBatch(self.env.spec, np.asarray(observations),
-                               np.asarray(last_observations),
-                               np.asarray(actions), np.asarray(rewards),
-                               np.asarray(terminals), dict(env_infos),
-                               dict(agent_infos), np.asarray(lengths,
-                                                             dtype='i'))
+        return TrajectoryBatch(env_spec=self.env.spec,
+                               observations=np.asarray(observations),
+                               last_observations=np.asarray(last_observations),
+                               actions=np.asarray(actions),
+                               rewards=np.asarray(rewards),
+                               step_types=np.asarray(step_types,
+                                                     dtype=StepType),
+                               env_infos=(env_infos),
+                               agent_infos=dict(agent_infos),
+                               lengths=np.asarray(lengths, dtype='i'))
