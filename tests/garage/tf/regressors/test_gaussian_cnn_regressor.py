@@ -88,7 +88,7 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
         train_data, test_data = get_train_test_data()
         observations, returns = train_data
 
-        for _ in range(20):
+        for _ in range(30):
             gcr.fit(observations, returns)
 
         paths, expected = test_data
