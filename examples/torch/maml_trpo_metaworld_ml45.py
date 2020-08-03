@@ -1,26 +1,30 @@
 #!/usr/bin/env python3
 """This is an example to train MAML-TRPO on ML45 environment."""
 # pylint: disable=no-value-for-parameter
+# yapf: disable
 import click
-import metaworld.benchmarks as mwb
+import metaworld
 import torch
 
 from garage import wrap_experiment
-from garage.envs import GymEnv, normalize
-from garage.experiment import MetaEvaluator
+from garage.envs import MetaWorldSetTaskEnv, normalize
+from garage.experiment import (MetaEvaluator,
+                               MetaWorldTaskSampler,
+                               SetTaskSampler)
 from garage.experiment.deterministic import set_seed
-from garage.experiment.task_sampler import EnvPoolSampler
-from garage.np.baselines import LinearFeatureBaseline
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
+from garage.torch.value_functions import GaussianMLPValueFunction
 from garage.trainer import Trainer
+
+# yapf: enable
 
 
 @click.command()
 @click.option('--seed', default=1)
 @click.option('--epochs', default=300)
-@click.option('--episodes_per_task', default=10)
-@click.option('--meta_batch_size', default=20)
+@click.option('--episodes_per_task', default=45)
+@click.option('--meta_batch_size', default=45)
 @wrap_experiment(snapshot_mode='all')
 def maml_trpo_metaworld_ml45(ctxt, seed, epochs, episodes_per_task,
                              meta_batch_size):
@@ -38,8 +42,18 @@ def maml_trpo_metaworld_ml45(ctxt, seed, epochs, episodes_per_task,
 
     """
     set_seed(seed)
-    env = normalize(GymEnv(mwb.ML45.get_train_tasks(), max_episode_length=150),
-                    expected_action_scale=10.)
+    ml45 = metaworld.ML45()
+
+    # pylint: disable=missing-return-doc,missing-return-type-doc
+    def wrap(env, _):
+        return normalize(env, expected_action_scale=10.0)
+
+    train_task_sampler = MetaWorldTaskSampler(ml45, 'train', wrap)
+    test_env = wrap(MetaWorldSetTaskEnv(ml45, 'test'), None)
+    test_task_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
+                                       env=test_env,
+                                       wrapper=wrap)
+    env = train_task_sampler.sample(45)[0]()
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
@@ -48,23 +62,16 @@ def maml_trpo_metaworld_ml45(ctxt, seed, epochs, episodes_per_task,
         output_nonlinearity=None,
     )
 
-    value_function = LinearFeatureBaseline(env_spec=env.spec)
+    value_function = GaussianMLPValueFunction(env_spec=env.spec,
+                                              hidden_sizes=(32, 32),
+                                              hidden_nonlinearity=torch.tanh,
+                                              output_nonlinearity=None)
 
-    max_episode_length = env.spec.max_episode_length
-
-    test_task_names = mwb.ML45.get_test_tasks().all_task_names
-    test_tasks = [
-        normalize(GymEnv(mwb.ML45.from_task(task)), expected_action_scale=10.)
-        for task in test_task_names
-    ]
-    test_sampler = EnvPoolSampler(test_tasks)
-
-    meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
-                                   max_episode_length=max_episode_length,
-                                   n_test_tasks=len(test_task_names))
+    meta_evaluator = MetaEvaluator(test_task_sampler=test_task_sampler)
 
     trainer = Trainer(ctxt)
     algo = MAMLTRPO(env=env,
+                    task_sampler=train_task_sampler,
                     policy=policy,
                     value_function=value_function,
                     meta_batch_size=meta_batch_size,
@@ -74,9 +81,9 @@ def maml_trpo_metaworld_ml45(ctxt, seed, epochs, episodes_per_task,
                     num_grad_updates=1,
                     meta_evaluator=meta_evaluator)
 
-    trainer.setup(algo, env)
+    trainer.setup(algo, env, n_workers=meta_batch_size)
     trainer.train(n_epochs=epochs,
-                  batch_size=episodes_per_task * max_episode_length)
+                  batch_size=episodes_per_task * env.spec.max_episode_length)
 
 
 maml_trpo_metaworld_ml45()

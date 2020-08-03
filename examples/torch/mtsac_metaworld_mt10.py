@@ -4,15 +4,15 @@
 https://arxiv.org/pdf/1910.10897.pdf
 """
 import click
-import metaworld.benchmarks as mwb
+import metaworld
 import numpy as np
 from torch import nn
 from torch.nn import functional as F
 
 from garage import wrap_experiment
-from garage.envs import GymEnv, MultiEnvWrapper, normalize
-from garage.envs.multi_env_wrapper import round_robin_strategy
+from garage.envs import normalize
 from garage.experiment import deterministic
+from garage.experiment.task_sampler import MetaWorldTaskSampler
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.torch import set_gpu_mode
@@ -25,8 +25,10 @@ from garage.trainer import Trainer
 @click.command()
 @click.option('--seed', 'seed', type=int, default=1)
 @click.option('--gpu', '_gpu', type=int, default=None)
+@click.option('--n_tasks', default=10)
+@click.option('--timesteps', default=20000000)
 @wrap_experiment(snapshot_mode='none')
-def mtsac_metaworld_mt10(ctxt=None, seed=1, _gpu=None):
+def mtsac_metaworld_mt10(ctxt=None, *, seed, _gpu, n_tasks, timesteps):
     """Train MTSAC with MT10 environment.
 
     Args:
@@ -35,29 +37,35 @@ def mtsac_metaworld_mt10(ctxt=None, seed=1, _gpu=None):
         seed (int): Used to seed the random number generator to produce
             determinism.
         _gpu (int): The ID of the gpu to be used (used on multi-gpu machines).
+        n_tasks (int): Number of tasks to use. Should be a multiple of 10.
+        timesteps (int): Number of timesteps to run.
 
     """
     deterministic.set_seed(seed)
     trainer = Trainer(ctxt)
-    task_names = mwb.MT10.get_train_tasks().all_task_names
-    train_envs = []
-    test_envs = []
-    for task_name in task_names:
-        train_env = normalize(GymEnv(mwb.MT10.from_task(task_name),
-                                     max_episode_length=150),
-                              normalize_reward=True)
-        test_env = normalize(
-            GymEnv(mwb.MT10.from_task(task_name), max_episode_length=150))
-        train_envs.append(train_env)
-        test_envs.append(test_env)
-    mt10_train_envs = MultiEnvWrapper(train_envs,
-                                      sample_strategy=round_robin_strategy,
-                                      mode='vanilla')
-    mt10_test_envs = MultiEnvWrapper(test_envs,
-                                     sample_strategy=round_robin_strategy,
-                                     mode='vanilla')
+    mt10 = metaworld.MT10()
+    mt10_test = metaworld.MT10()
+
+    # pylint: disable=missing-return-doc, missing-return-type-doc
+    def wrap(env, _):
+        return normalize(env)
+
+    train_task_sampler = MetaWorldTaskSampler(mt10,
+                                              'train',
+                                              wrap,
+                                              add_env_onehot=True)
+    test_task_sampler = MetaWorldTaskSampler(mt10_test,
+                                             'train',
+                                             wrap,
+                                             add_env_onehot=True)
+    assert n_tasks % 10 == 0
+    assert n_tasks <= 500
+    mt10_train_envs = train_task_sampler.sample(n_tasks)
+    env = mt10_train_envs[0]()
+    mt10_test_envs = [env_up() for env_up in test_task_sampler.sample(n_tasks)]
+
     policy = TanhGaussianMLPPolicy(
-        env_spec=mt10_train_envs.spec,
+        env_spec=env.spec,
         hidden_sizes=[400, 400, 400],
         hidden_nonlinearity=nn.ReLU,
         output_nonlinearity=None,
@@ -65,18 +73,18 @@ def mtsac_metaworld_mt10(ctxt=None, seed=1, _gpu=None):
         max_std=np.exp(2.),
     )
 
-    qf1 = ContinuousMLPQFunction(env_spec=mt10_train_envs.spec,
+    qf1 = ContinuousMLPQFunction(env_spec=env.spec,
                                  hidden_sizes=[400, 400, 400],
                                  hidden_nonlinearity=F.relu)
 
-    qf2 = ContinuousMLPQFunction(env_spec=mt10_train_envs.spec,
+    qf2 = ContinuousMLPQFunction(env_spec=env.spec,
                                  hidden_sizes=[400, 400, 400],
                                  hidden_nonlinearity=F.relu)
 
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
+    meta_batch_size = 10
 
-    timesteps = 20000000
-    batch_size = int(150 * mt10_train_envs.num_tasks)
+    batch_size = int(env.spec.max_episode_length * meta_batch_size)
     num_evaluation_points = 500
     epochs = timesteps // batch_size
     epoch_cycles = epochs // num_evaluation_points
@@ -85,9 +93,8 @@ def mtsac_metaworld_mt10(ctxt=None, seed=1, _gpu=None):
                   qf1=qf1,
                   qf2=qf2,
                   gradient_steps_per_itr=150,
-                  max_episode_length_eval=150,
                   eval_env=mt10_test_envs,
-                  env_spec=mt10_train_envs.spec,
+                  env_spec=env.spec,
                   num_tasks=10,
                   steps_per_epoch=epoch_cycles,
                   replay_buffer=replay_buffer,
@@ -101,8 +108,9 @@ def mtsac_metaworld_mt10(ctxt=None, seed=1, _gpu=None):
     trainer.setup(algo=mtsac,
                   env=mt10_train_envs,
                   sampler_cls=LocalSampler,
-                  n_workers=1)
+                  n_workers=meta_batch_size)
     trainer.train(n_epochs=epochs, batch_size=batch_size)
 
 
+# pylint: disable=missing-kwoa
 mtsac_metaworld_mt10()

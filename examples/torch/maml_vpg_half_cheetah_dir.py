@@ -55,17 +55,20 @@ def maml_vpg_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
 
     max_episode_length = env.spec.max_episode_length
 
-    task_sampler = SetTaskSampler(lambda: normalize(
-        GymEnv(HalfCheetahDirEnv()), expected_action_scale=10.))
+    task_sampler = SetTaskSampler(
+        HalfCheetahDirEnv,
+        wrapper=lambda env, _: normalize(GymEnv(
+            env, max_episode_length=max_episode_length),
+                                         expected_action_scale=10.))
 
     meta_evaluator = MetaEvaluator(test_task_sampler=task_sampler,
-                                   max_episode_length=max_episode_length,
                                    n_test_tasks=1,
                                    n_test_episodes=10)
 
     trainer = Trainer(ctxt)
     algo = MAMLVPG(env=env,
                    policy=policy,
+                   task_sampler=task_sampler,
                    value_function=value_function,
                    meta_batch_size=meta_batch_size,
                    discount=0.99,

@@ -14,6 +14,7 @@ class MAMLVPG(MAML):
         env (Environment): A multi-task environment.
         policy (garage.torch.policies.Policy): Policy.
         value_function (garage.np.baselines.Baseline): The value function.
+        task_sampler (garage.experiment.TaskSampler): Task sampler.
         inner_lr (float): Adaptation learning rate.
         outer_lr (float): Meta policy learning rate.
         discount (float): Discount.
@@ -48,6 +49,7 @@ class MAMLVPG(MAML):
                  env,
                  policy,
                  value_function,
+                 task_sampler,
                  inner_lr=_Default(1e-1),
                  outer_lr=1e-3,
                  discount=0.99,
@@ -85,6 +87,7 @@ class MAMLVPG(MAML):
         super().__init__(inner_algo=inner_algo,
                          env=env,
                          policy=policy,
+                         task_sampler=task_sampler,
                          meta_optimizer=torch.optim.Adam,
                          meta_batch_size=meta_batch_size,
                          inner_lr=inner_lr,

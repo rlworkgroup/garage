@@ -1,28 +1,32 @@
 #!/usr/bin/env python3
 """This is an example to train MAML-TRPO on ML1 Push environment."""
 # pylint: disable=no-value-for-parameter
+# yapf: disable
 import click
-import metaworld.benchmarks as mwb
+import metaworld
 import torch
 
 from garage import wrap_experiment
-from garage.envs import GymEnv, normalize
-from garage.experiment import MetaEvaluator
+from garage.envs import MetaWorldSetTaskEnv
+from garage.experiment import (MetaEvaluator,
+                               MetaWorldTaskSampler,
+                               SetTaskSampler)
 from garage.experiment.deterministic import set_seed
-from garage.experiment.task_sampler import SetTaskSampler
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
 from garage.trainer import Trainer
 
+# yapf: enable
+
 
 @click.command()
 @click.option('--seed', default=1)
 @click.option('--epochs', default=300)
-@click.option('--episodes_per_task', default=10)
+@click.option('--rollouts_per_task', default=10)
 @click.option('--meta_batch_size', default=20)
 @wrap_experiment(snapshot_mode='all')
-def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, episodes_per_task,
+def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
                                  meta_batch_size):
     """Set up environment and algorithm and run the task.
 
@@ -32,15 +36,18 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, episodes_per_task,
         seed (int): Used to seed the random number generator to produce
             determinism.
         epochs (int): Number of training epochs.
-        episodes_per_task (int): Number of episodes per epoch per task
+        rollouts_per_task (int): Number of rollouts per epoch per task
             for training.
         meta_batch_size (int): Number of tasks sampled per batch.
 
     """
     set_seed(seed)
-    env = normalize(GymEnv(mwb.ML1.get_train_tasks('push-v1'),
-                           max_episode_length=150),
-                    expected_action_scale=10.)
+
+    ml1 = metaworld.ML1('push-v1')
+    tasks = MetaWorldTaskSampler(ml1, 'train')
+    env = tasks.sample(1)[0]()
+    test_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
+                                  env=MetaWorldSetTaskEnv(ml1, 'test'))
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
@@ -54,17 +61,12 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, episodes_per_task,
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
-    max_episode_length = env.spec.max_episode_length
-
-    test_sampler = SetTaskSampler(lambda: normalize(
-        GymEnv(mwb.ML1.get_test_tasks('push-v1'))))
-
-    meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
-                                   max_episode_length=max_episode_length)
+    meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler)
 
     trainer = Trainer(ctxt)
     algo = MAMLTRPO(env=env,
                     policy=policy,
+                    task_sampler=tasks,
                     value_function=value_function,
                     meta_batch_size=meta_batch_size,
                     discount=0.99,
@@ -73,9 +75,9 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, episodes_per_task,
                     num_grad_updates=1,
                     meta_evaluator=meta_evaluator)
 
-    trainer.setup(algo, env)
+    trainer.setup(algo, env, n_workers=meta_batch_size)
     trainer.train(n_epochs=epochs,
-                  batch_size=episodes_per_task * max_episode_length)
+                  batch_size=rollouts_per_task * env.spec.max_episode_length)
 
 
 maml_trpo_metaworld_ml1_push()

@@ -300,6 +300,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
     garage/tf/algos/rl2ppo.py and garage/tf/algos/rl2trpo.py.
 
     Args:
+        env_spec (EnvSpec): Environment specification.
         episodes_per_trial (int): Used to calculate the max episode length for
             the inner algorithm.
         meta_batch_size (int): Meta batch size.
@@ -311,13 +312,15 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
     """
 
-    def __init__(self, episodes_per_trial, meta_batch_size, task_sampler,
-                 meta_evaluator, n_epochs_per_eval, **inner_algo_args):
-
-        self._inner_algo = RL2NPO(**inner_algo_args)
-        self._env_spec = self._inner_algo._env_spec
-        self._rl2_max_episode_length = (self._env_spec.max_episode_length /
-                                        episodes_per_trial)
+    def __init__(self, env_spec, episodes_per_trial, meta_batch_size,
+                 task_sampler, meta_evaluator, n_epochs_per_eval,
+                 **inner_algo_args):
+        self._env_spec = env_spec
+        _inner_env_spec = EnvSpec(
+            env_spec.observation_space, env_spec.action_space,
+            episodes_per_trial * env_spec.max_episode_length)
+        self._inner_algo = RL2NPO(env_spec=_inner_env_spec, **inner_algo_args)
+        self._rl2_max_episode_length = self._env_spec.max_episode_length
         self._n_epochs_per_eval = n_epochs_per_eval
         self._policy = self._inner_algo.policy
         self._discount = self._inner_algo._discount

@@ -24,40 +24,28 @@ except Exception:  # pylint: disable=broad-except
 from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv  # isort:skip # noqa: E501
 
 
-@pytest.mark.mujoco
 def test_env_pool_sampler():
     # Import, construct environments here to avoid using up too much
     # resources if this test isn't run.
     # pylint: disable=import-outside-toplevel
-    from metaworld.benchmarks import ML10
-    train_tasks = ML10.get_train_tasks().all_task_names
-    ML10_train_envs = [
-        ML10.from_task(train_task) for train_task in train_tasks
-    ]
-    tasks = task_sampler.EnvPoolSampler(ML10_train_envs)
-    assert tasks.n_tasks == 10
-    updates = tasks.sample(10)
-    for env in ML10_train_envs:
+    envs = [HalfCheetahVelEnv() for _ in range(5)]
+    tasks = task_sampler.EnvPoolSampler(envs)
+    assert tasks.n_tasks == 5
+    updates = tasks.sample(5)
+    for env in envs:
         assert any(env is update() for update in updates)
     with pytest.raises(ValueError):
-        tasks.sample(10, with_replacement=True)
+        tasks.sample(5, with_replacement=True)
     with pytest.raises(ValueError):
-        tasks.sample(11)
-    tasks.grow_pool(20)
-    tasks.sample(20)
+        tasks.sample(6)
+    tasks.grow_pool(10)
+    tasks.sample(10)
 
 
-@pytest.mark.mujoco
-def test_construct_envs_sampler_ml10():
-    # pylint: disable=import-outside-toplevel
-    from metaworld.benchmarks import ML10
-    train_tasks = ML10.get_train_tasks().all_task_names
-    ML10_constructors = [
-        functools.partial(ML10.from_task, train_task)
-        for train_task in train_tasks
-    ]
-    tasks = task_sampler.ConstructEnvsSampler(ML10_constructors)
-    assert tasks.n_tasks == 10
+def test_construct_envs_sampler():
+    env_constructors = [HalfCheetahVelEnv for _ in range(5)]
+    tasks = task_sampler.ConstructEnvsSampler(env_constructors)
+    assert tasks.n_tasks == 5
     updates = tasks.sample(15)
     envs = [update() for update in updates]
     action = envs[0].action_space.sample()
@@ -71,19 +59,28 @@ def test_construct_envs_sampler_ml10():
 
 @pytest.mark.mujoco
 def test_set_task_task_sampler_ml10():
+    # Import, construct environments here to avoid using up too much
+    # resources if this test isn't run.
     # pylint: disable=import-outside-toplevel
-    from metaworld.benchmarks import ML10
-    tasks = task_sampler.SetTaskSampler(ML10.get_train_tasks)
-    assert tasks.n_tasks == 10
-    updates = tasks.sample(3)
+    import metaworld
+    ml10 = metaworld.ML10()
+    tasks = task_sampler.MetaWorldTaskSampler(ml10, 'test')
+    assert tasks.n_tasks == 5 * 50
+    with pytest.raises(ValueError):
+        tasks.sample(1)
+    updates = tasks.sample(10)
     envs = [update() for update in updates]
+    for env in envs:
+        env.reset()
     action = envs[0].action_space.sample()
     rewards = [env.step(action)[1] for env in envs]
     assert np.var(rewards) > 0
     env = envs[0]
     env.close = unittest.mock.MagicMock(name='env.close')
-    updates[-1](env)
+    updates[1](env)
     env.close.assert_not_called()
+    updates[2](env)
+    env.close.assert_called()
 
 
 @pytest.mark.mujoco
@@ -99,3 +96,23 @@ def test_set_task_task_sampler_half_cheetah_vel_env():
     env.close = unittest.mock.MagicMock(name='env.close')
     updates[-1](env)
     env.close.assert_not_called()
+
+
+@pytest.mark.mujoco
+def test_metaworld_sample_and_step():
+    # Import, construct environments here to avoid using up too much
+    # resources if this test isn't run.
+    # pylint: disable=import-outside-toplevel
+    import metaworld
+    ml1 = metaworld.ML1('push-v1')
+    tasks = task_sampler.MetaWorldTaskSampler(ml1, 'train')
+    updates = tasks.sample(100)
+    assert len(updates) == 100
+    env = updates[0]()
+    action = env.action_space.sample()
+    env.reset()
+    env.step(action)
+    env.step(action)
+    env.close()
+    updates = tasks.sample(100, with_replacement=True)
+    assert len(updates) == 100

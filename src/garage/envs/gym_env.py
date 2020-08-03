@@ -233,6 +233,7 @@ class GymEnv(Environment):
         # 'GymEnv.TimeLimitTerminated'
         if 'TimeLimit.truncated' in info or step_type == StepType.TIMEOUT:
             info['GymEnv.TimeLimitTerminated'] = True
+            info['TimeLimit.truncated'] = info.get('TimeLimit.truncated', True)
             step_type = StepType.TIMEOUT
         else:
             info['TimeLimit.truncated'] = False
