@@ -183,7 +183,9 @@ class LocalTFRunner(LocalRunner):
         if self._plot:
             # pylint: disable=import-outside-toplevel
             from garage.tf.plotter import Plotter
-            self._plotter = Plotter(self.get_env_copy(), self._algo.policy)
+            self._plotter = Plotter(self.get_env_copy(),
+                                    self._algo.policy,
+                                    sess=tf.compat.v1.get_default_session())
             self._plotter.start()
 
     def initialize_tf_vars(self):
