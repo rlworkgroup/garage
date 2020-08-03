@@ -6,7 +6,6 @@ import tensorflow as tf
 
 from garage import make_optimizer
 from garage.experiment import deterministic
-from garage.misc.tensor_utils import normalize_pixel_batch
 from garage.np.baselines.baseline import Baseline
 from garage.tf.baselines.gaussian_cnn_baseline_model import (
     GaussianCNNBaselineModel)
@@ -202,7 +201,9 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
         input_var = tf.compat.v1.placeholder(tf.float32,
                                              shape=(None, ) +
                                              self._input_shape)
-
+        if isinstance(self.env_spec.observation_space, akro.Image):
+            input_var = tf.cast(input_var, tf.float32)
+            input_var /= 255.0
         ys_var = tf.compat.v1.placeholder(dtype=tf.float32,
                                           name='ys',
                                           shape=(None, self._output_dim))
@@ -243,9 +244,6 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
 
         """
         xs = np.concatenate([p['observations'] for p in paths])
-        if isinstance(self.env_spec.observation_space, akro.Image):
-            xs = normalize_pixel_batch(xs)
-
         ys = np.concatenate([p['returns'] for p in paths])
         ys = ys.reshape((-1, 1))
 
@@ -293,8 +291,6 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
 
         """
         xs = paths['observations']
-        if isinstance(self.env_spec.observation_space, akro.Image):
-            xs = normalize_pixel_batch(xs)
 
         return self._f_predict(xs).flatten()
 
