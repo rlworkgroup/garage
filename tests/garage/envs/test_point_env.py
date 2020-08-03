@@ -4,8 +4,6 @@ import numpy as np
 
 from garage.envs.point_env import PointEnv
 
-from tests.helpers import step_env
-
 
 class TestPointEnv:
 
@@ -13,7 +11,8 @@ class TestPointEnv:
         env = PointEnv()
         round_trip = pickle.loads(pickle.dumps(env))
         assert round_trip
-        step_env(round_trip)
+        round_trip.reset()
+        round_trip.step(round_trip.action_space.sample())
         env.close()
         round_trip.close()
 
@@ -28,13 +27,15 @@ class TestPointEnv:
 
     def test_observation_space(self):
         env = PointEnv()
+        env.reset()
         obs_space = env.observation_space
         a = env.action_space.sample()
-        obs, _, _, _ = env.step(a)
+        obs = env.step(a).observation
         assert obs_space.contains(obs)
 
     def test_reset(self):
         env = PointEnv()
+        env.reset()
 
         assert (env._point == np.array([0, 0])).all()
 
@@ -46,6 +47,7 @@ class TestPointEnv:
 
     def test_task(self):
         env = PointEnv()
+        env.reset()
         tasks = env.sample_tasks(5)
         assert len(tasks) == 5
 
@@ -55,8 +57,9 @@ class TestPointEnv:
 
     def test_done(self):
         env = PointEnv()
+        env.reset()
         for _ in range(1000):
-            _, _, done, _ = env.step(env._goal)
+            done = env.step(env._goal).terminal
             if done:
                 break
         else:

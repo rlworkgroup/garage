@@ -63,7 +63,7 @@ class TestDDPG(TfGraphTestCase):
         This environment has a [-3, 3] action_space bound.
         """
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = GarageEnv(normalize(gym.make('InvertedPendulum-v2')))
+            env = normalize(GarageEnv(gym.make('InvertedPendulum-v2')))
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=tf.nn.relu,
@@ -104,7 +104,7 @@ class TestDDPG(TfGraphTestCase):
         This environment has a [-3, 3] action_space bound.
         """
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = GarageEnv(normalize(gym.make('InvertedPendulum-v2')))
+            env = normalize(GarageEnv(gym.make('InvertedPendulum-v2')))
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=tf.nn.relu,

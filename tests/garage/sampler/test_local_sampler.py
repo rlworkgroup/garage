@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from garage.envs import GarageEnv, PointEnv
+from garage.envs import PointEnv
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.np.policies import FixedPolicy, ScriptedPolicy
 from garage.sampler import LocalSampler, WorkerFactory
@@ -9,7 +9,7 @@ from garage.sampler import LocalSampler, WorkerFactory
 
 def test_update_envs_env_update():
     max_episode_length = 16
-    env = GarageEnv(PointEnv())
+    env = PointEnv()
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
@@ -43,13 +43,13 @@ def test_update_envs_env_update():
 
 def test_init_with_env_updates():
     max_episode_length = 16
-    env = GarageEnv(PointEnv())
+    env = PointEnv()
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
                              for _ in range(max_episode_length)
                          ])
-    tasks = SetTaskSampler(lambda: GarageEnv(PointEnv()))
+    tasks = SetTaskSampler(lambda: PointEnv())
     n_workers = 8
     workers = WorkerFactory(seed=100,
                             max_episode_length=max_episode_length,
@@ -64,7 +64,7 @@ def test_init_with_env_updates():
 def test_obtain_exact_trajectories():
     max_episode_length = 15
     n_workers = 8
-    env = GarageEnv(PointEnv())
+    env = PointEnv()
     per_worker_actions = [env.action_space.sample() for _ in range(n_workers)]
     policies = [
         FixedPolicy(env.spec, [action] * max_episode_length)
@@ -90,7 +90,7 @@ def test_obtain_exact_trajectories():
 
 def test_no_seed():
     max_episode_length = 16
-    env = GarageEnv(PointEnv())
+    env = PointEnv()
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()

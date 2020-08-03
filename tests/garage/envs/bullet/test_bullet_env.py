@@ -35,7 +35,7 @@ def test_can_step(env_ids):
         a = act_space.sample()
         assert act_space.contains(a)
         # Skip rendering because it causes TravisCI to run out of memory
-        step_env(env, render=False)
+        step_env(env, visualize=False)
         env.close()
 
 
@@ -99,10 +99,9 @@ def test_time_limit_env():
     is expected to be True after 50 steps.
 
     """
-    env = BulletEnv(gym.make('MinitaurBulletEnv-v0'))
-    env.env._max_episode_steps = 50
+    env = BulletEnv(gym.make('MinitaurBulletEnv-v0'), max_episode_length=50)
     env.reset()
     for _ in range(50):
-        _, _, done, info = env.step(env.spec.action_space.sample())
-    assert not done and info['TimeLimit.truncated']
-    assert info['BulletEnv.TimeLimitTerminated']
+        ts = env.step(env.spec.action_space.sample())
+    assert not ts.terminal and ts.env_info['TimeLimit.truncated']
+    assert ts.env_info['BulletEnv.TimeLimitTerminated']

@@ -69,7 +69,7 @@ class TestTE(TfGraphTestCase):
         task_kwargs = [tasks[t]['kwargs'] for t in task_names]
 
         task_envs = [
-            GarageEnv(PointEnv(*t_args, **t_kwargs))
+            PointEnv(*t_args, **t_kwargs)
             for t_args, t_kwargs in zip(task_args, task_kwargs)
         ]
         self.env = env = MultiEnvWrapper(task_envs,

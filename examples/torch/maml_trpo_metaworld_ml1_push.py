@@ -37,8 +37,8 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
 
     """
     set_seed(seed)
-    env = GarageEnv(
-        normalize(mwb.ML1.get_train_tasks('push-v1'),
+    env = normalize(
+        GarageEnv(mwb.ML1.get_train_tasks('push-v1'),
                   expected_action_scale=10.))
 
     policy = GaussianMLPPolicy(
@@ -55,8 +55,8 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
 
     max_episode_length = 100
 
-    test_sampler = SetTaskSampler(lambda: GarageEnv(
-        normalize(mwb.ML1.get_test_tasks('push-v1'))))
+    test_sampler = SetTaskSampler(lambda: normalize(
+        GarageEnv(mwb.ML1.get_test_tasks('push-v1'))))
 
     meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
                                    max_episode_length=max_episode_length)

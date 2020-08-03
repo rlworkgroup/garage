@@ -25,7 +25,7 @@ def trpo_gym_tf_cartpole(ctxt=None, seed=1):
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        env = GarageEnv(gym.make('CartPole-v1'))
+        env = gym.make('CartPole-v1')
 
         policy = CategoricalMLPPolicy(name='policy',
                                       env_spec=env.spec,

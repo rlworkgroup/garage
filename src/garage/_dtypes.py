@@ -511,7 +511,7 @@ class TimeStep(
             :obj:`env_spec.observation_space`.
             The observation after applying the action.
         env_info (dict): A dict arbitrary environment state information.
-        agent_info (numpy.ndarray): A dict of arbitrary agent
+        agent_info (dict): A dict of arbitrary agent
             state information. For example, this may contain the hidden states
             from an RNN policy.
         step_type (garage.StepType): a `StepType` enum value. Can either be

@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 
-from garage.envs import GarageEnv, PointEnv
+from garage.envs import PointEnv
 from garage.envs.grid_world_env import GridWorldEnv
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.np.policies import FixedPolicy, ScriptedPolicy
@@ -13,7 +13,7 @@ from garage.sampler import LocalSampler, MultiprocessingSampler, WorkerFactory
 
 @pytest.mark.timeout(10)
 def test_obtain_samples():
-    env = GarageEnv(GridWorldEnv(desc='4x4'))
+    env = GridWorldEnv(desc='4x4')
     policy = ScriptedPolicy(
         scripted_actions=[2, 2, 1, 0, 3, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 1])
     algo = Mock(env_spec=env.spec, policy=policy, max_episode_length=16)
@@ -54,7 +54,7 @@ def test_obtain_samples():
 @pytest.mark.timeout(10)
 def test_update_envs_env_update():
     max_episode_length = 16
-    env = GarageEnv(PointEnv())
+    env = PointEnv()
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
@@ -89,13 +89,13 @@ def test_update_envs_env_update():
 @pytest.mark.timeout(10)
 def test_init_with_env_updates():
     max_episode_length = 16
-    env = GarageEnv(PointEnv())
+    env = PointEnv()
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
                              for _ in range(max_episode_length)
                          ])
-    tasks = SetTaskSampler(lambda: GarageEnv(PointEnv()))
+    tasks = SetTaskSampler(lambda: PointEnv())
     n_workers = 8
     workers = WorkerFactory(seed=100,
                             max_episode_length=max_episode_length,
@@ -112,7 +112,7 @@ def test_init_with_env_updates():
 def test_obtain_exact_trajectories():
     max_episode_length = 15
     n_workers = 8
-    env = GarageEnv(PointEnv())
+    env = PointEnv()
     per_worker_actions = [env.action_space.sample() for _ in range(n_workers)]
     policies = [
         FixedPolicy(env.spec, [action] * max_episode_length)
@@ -143,13 +143,13 @@ def test_obtain_exact_trajectories():
 @pytest.mark.timeout(30)
 def test_init_with_crashed_worker():
     max_episode_length = 16
-    env = GarageEnv(PointEnv())
+    env = PointEnv()
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
                              for _ in range(max_episode_length)
                          ])
-    tasks = SetTaskSampler(lambda: GarageEnv(PointEnv()))
+    tasks = SetTaskSampler(lambda: PointEnv())
     n_workers = 2
     workers = WorkerFactory(seed=100,
                             max_episode_length=max_episode_length,
@@ -175,7 +175,7 @@ def test_init_with_crashed_worker():
 @pytest.mark.timeout(10)
 def test_pickle():
     max_episode_length = 16
-    env = GarageEnv(PointEnv())
+    env = PointEnv()
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()

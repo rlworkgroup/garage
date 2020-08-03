@@ -14,7 +14,7 @@ class TestGarageEnv:
     def test_is_pickleable(self):
         env = GarageEnv(env_name='CartPole-v1')
         round_trip = pickle.loads(pickle.dumps(env))
-        assert round_trip.env.spec == env.env.spec
+        assert round_trip
 
     @pytest.mark.nightly
     @pytest.mark.parametrize('spec', list(gym.envs.registry.all()))
@@ -24,7 +24,7 @@ class TestGarageEnv:
                 'Defender-* envs bundled in atari-py 0.2.x don\'t load')
         if any(name == spec.id for name in _get_unsupported_env_list()):
             pytest.skip('Skip unsupported Bullet environments')
-        env = GarageEnv(spec.make())
+        env = GarageEnv(env_name=spec.id)
         step_env_with_gym_quirks(env, spec)
 
     @pytest.mark.nightly

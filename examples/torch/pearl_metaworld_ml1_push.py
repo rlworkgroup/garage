@@ -93,12 +93,12 @@ def pearl_metaworld_ml1_push(ctxt=None,
     encoder_hidden_sizes = (encoder_hidden_size, encoder_hidden_size,
                             encoder_hidden_size)
     # create multi-task environment and sample tasks
-    env_sampler = SetTaskSampler(lambda: GarageEnv(
-        normalize(mwb.ML1.get_train_tasks('push-v1'))))
+    env_sampler = SetTaskSampler(lambda: normalize(
+        GarageEnv(mwb.ML1.get_train_tasks('push-v1'))))
     env = env_sampler.sample(num_train_tasks)
 
-    test_env_sampler = SetTaskSampler(lambda: GarageEnv(
-        normalize(mwb.ML1.get_test_tasks('push-v1'))))
+    test_env_sampler = SetTaskSampler(lambda: normalize(
+        GarageEnv(mwb.ML1.get_test_tasks('push-v1'))))
 
     runner = LocalRunner(ctxt)
 

@@ -9,19 +9,20 @@ class TestSingleWrappedEnv:
 
     def setup_method(self):
         self.env = PointEnv()
-        self.base_len = len(self.env.reset())
+        obs, _ = self.env.reset()
+        self.base_len = len(obs)
         self.n_total_tasks = 5
         self.task_index = 1
         self.wrapped = TaskOnehotWrapper(self.env, self.task_index,
                                          self.n_total_tasks)
 
     def test_produces_correct_onehots(self):
-        obs = self.wrapped.reset()
+        obs, _ = self.wrapped.reset()
         assert len(obs) == self.base_len + self.n_total_tasks
         assert (obs[-self.n_total_tasks:] == np.array([0, 1, 0, 0, 0])).all()
 
     def test_spec_obs_space(self):
-        obs = self.wrapped.reset()
+        obs, _ = self.wrapped.reset()
         assert self.wrapped.observation_space.contains(obs)
         assert self.wrapped.spec.observation_space.contains(obs)
         assert (self.wrapped.spec.observation_space ==
@@ -30,17 +31,18 @@ class TestSingleWrappedEnv:
 
 def test_wrapped_env_list_produces_correct_onehots():
     envs = [PointEnv(), PointEnv(), PointEnv(), PointEnv()]
-    base_len = len(envs[0].reset())
+    obs, _ = envs[0].reset()
+    base_len = len(obs)
     n_total_tasks = len(envs)
     wrapped = TaskOnehotWrapper.wrap_env_list(envs)
     assert len(wrapped) == n_total_tasks
     for i, env in enumerate(wrapped):
-        obs = env.reset()
+        obs, _ = env.reset()
         assert len(obs) == base_len + n_total_tasks
         onehot = np.zeros(n_total_tasks)
         onehot[i] = 1.
         assert (obs[-n_total_tasks:] == onehot).all()
-        next_obs, _, _, _ = env.step(env.action_space.sample())
+        next_obs = env.step(env.action_space.sample()).observation
         assert (next_obs[-n_total_tasks:] == onehot).all()
 
 
@@ -52,10 +54,10 @@ def test_wrapped_env_cons_list_produces_correct_onehots():
     wrapped_envs = [cons() for cons in wrapped_cons]
     assert len(wrapped_envs) == n_total_tasks
     for i, env in enumerate(wrapped_envs):
-        obs = env.reset()
+        obs, _ = env.reset()
         assert len(obs) == base_len + n_total_tasks
         onehot = np.zeros(n_total_tasks)
         onehot[i] = 1.
         assert (obs[-n_total_tasks:] == onehot).all()
-        next_obs, _, _, _ = env.step(env.action_space.sample())
+        next_obs = env.step(env.action_space.sample()).observation
         assert (next_obs[-n_total_tasks:] == onehot).all()

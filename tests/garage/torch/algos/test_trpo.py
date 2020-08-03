@@ -18,7 +18,7 @@ class TestTRPO:
 
     def setup_method(self):
         """Setup method which is called before every test."""
-        self.env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+        self.env = normalize(GarageEnv(gym.make('InvertedDoublePendulum-v2')))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
             hidden_sizes=(64, 64),

@@ -29,7 +29,7 @@ class TestCategoricalPolicies(TfGraphTestCase):
     @pytest.mark.parametrize('policy_cls', [*policies])
     def test_categorical_policies(self, policy_cls):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = GarageEnv(normalize(gym.make('CartPole-v0')))
+            env = normalize(GarageEnv(gym.make('CartPole-v0')))
 
             policy = policy_cls(name='policy', env_spec=env.spec)
 

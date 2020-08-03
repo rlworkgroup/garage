@@ -95,12 +95,12 @@ def pearl_metaworld_ml45(ctxt=None,
                             encoder_hidden_size)
     # create multi-task environment and sample tasks
     ml45_train_envs = [
-        GarageEnv(normalize(mwb.ML45.from_task(task_name)))
+        normalize(GarageEnv(mwb.ML45.from_task(task_name)))
         for task_name in mwb.ML45.get_train_tasks().all_task_names
     ]
 
     ml45_test_envs = [
-        GarageEnv(normalize(mwb.ML45.from_task(task_name)))
+        normalize(GarageEnv(mwb.ML45.from_task(task_name)))
         for task_name in mwb.ML45.get_test_tasks().all_task_names
     ]
 

@@ -40,7 +40,7 @@ def continuous_mlp_baseline(ctxt, env_id, seed):
     deterministic.set_seed(seed)
 
     with LocalTFRunner(ctxt) as runner:
-        env = GarageEnv(normalize(gym.make(env_id)))
+        env = normalize(GarageEnv(gym.make(env_id)))
 
         policy = GaussianLSTMPolicy(
             env_spec=env.spec,

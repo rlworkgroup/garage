@@ -1,16 +1,13 @@
 """Simple 2D environment containing a point and a goal location."""
-import gym
+import akro
+import math
 import numpy as np
 
-from garage.envs.step import Step
+from garage import Environment, TimeStep, StepType
+from garage.envs import EnvSpec
 
-
-class PointEnv(gym.Env):
+class PointEnv(Environment):
     """A simple 2D point environment.
-
-    Attributes:
-        observation_space (gym.spaces.Box): The observation space
-        action_space (gym.spaces.Box): The action space
 
     Args:
         goal (np.ndarray): A 2D array representing the goal position
@@ -20,6 +17,7 @@ class PointEnv(gym.Env):
             once the point as reached the goal
         never_done (bool): Never send a `done` signal, even if the
             agent achieves the goal
+         max_episode_length (int): The maximum steps allowed for an episode.
 
     """
 
@@ -29,6 +27,7 @@ class PointEnv(gym.Env):
         arena_size=5.,
         done_bonus=0.,
         never_done=False,
+        max_episode_length=math.inf
     ):
         goal = np.array(goal, dtype=np.float32)
         self._goal = goal
@@ -38,49 +37,78 @@ class PointEnv(gym.Env):
 
         assert ((goal >= -arena_size) & (goal <= arena_size)).all()
 
+        self._last_observation = None
+        self._step_cnt = 0
+        self._max_episode_length = max_episode_length
+
         self._point = np.zeros_like(self._goal)
         self._task = {'goal': self._goal}
-        self._observation_space = gym.spaces.Box(low=-np.inf,
+        self._observation_space = akro.Box(low=-np.inf,
                                                  high=np.inf,
                                                  shape=(3, ),
                                                  dtype=np.float32)
-        self._action_space = gym.spaces.Box(low=-0.1,
+        self._action_space = akro.Box(low=-0.1,
                                             high=0.1,
                                             shape=(2, ),
                                             dtype=np.float32)
-
-    @property
-    def observation_space(self):
-        """gym.spaces.Box: The observation space."""
-        return self._observation_space
+        self._spec = EnvSpec(action_space=self.action_space,
+                             observation_space=self.observation_space,
+                             max_episode_length=max_episode_length)
 
     @property
     def action_space(self):
-        """gym.spaces.Box: The action space."""
+        """akro.Space: The action space specification."""
         return self._action_space
 
+    @property
+    def observation_space(self):
+        """akro.Space: The observation space specification."""
+        return self._observation_space
+
+    @property
+    def spec(self):
+        """EnvSpec: The environment specification."""
+        return self._spec
+
+    @property
+    def render_modes(self):
+        """list: A list of string representing the supported render modes."""
+        return []
+
     def reset(self):
-        """Reset the environment.
+        """Call reset on wrapped env.
 
         Returns:
-            np.ndarray: Observation of the environment.
+            numpy.ndarray: The first observation. It must conforms to
+            `observation_space`.
+            dict: The episode-level information. Note that this is not part
+            of `env_info` provided in `step()`. It contains information of
+            the entire episode， which could be needed to determine the first
+            action (e.g. in the case of goal-conditioned or MTRL.)
 
         """
         self._point = np.zeros_like(self._goal)
         dist = np.linalg.norm(self._point - self._goal)
-        return np.concatenate([self._point, (dist, )])
+
+        first_obs = np.concatenate([self._point, (dist, )])
+        self._last_observation = first_obs
+        self._step_cnt = 0
+        episode_info = {}
+        return first_obs, episode_info
 
     def step(self, action):
-        """Step the environment state.
+        """Call step on wrapped env.
 
         Args:
-            action (np.ndarray): The action to take in the environment.
+            action (np.ndarray): An action provided by the agent.
 
         Returns:
-            np.ndarray: Observation. The observation of the environment.
-            float: Reward. The reward acquired at this time step.
-            boolean: Done. Whether the environment was completed at this
-                time step. Always False for this environment.
+            TimeStep: The time step resulting from the action.
+
+        Raises:
+            RuntimeError: if `step()` is called after the environment
+            has been
+                constructed and `reset()` has not been called.
 
         """
         # enforce action space
@@ -97,24 +125,55 @@ class PointEnv(gym.Env):
         # done bonus
         if succ:
             reward += self._done_bonus
+        # Type conversion
+        if not isinstance(reward, float):
+            reward = float(reward)
 
         # sometimes we don't want to terminate
         done = succ and not self._never_done
 
         obs = np.concatenate([self._point, (dist, )])
 
-        return Step(obs, reward, done, task=self._task, success=succ)
+        last_obs = self._last_observation
+        self._last_observation = last_obs
+        self._step_cnt += 1
 
-    def render(self, mode='human'):
-        """Draw the environment.
+        step_type = None
+        if done:
+            step_type = StepType.TERMINAL
+        elif self._step_cnt >= self._spec.max_episode_length:
+            step_type = StepType.TIMEOUT
+        elif self._step_cnt == 1:
+            step_type = StepType.FIRST
+        else:
+            step_type = StepType.MID
 
-        Not implemented.
+        return TimeStep(
+            env_spec=self.spec,
+            observation=last_obs,
+            action=action,
+            reward=reward,
+            next_observation=obs,
+            env_info={'task': self._task, 'success': succ},
+            agent_info={},  # TODO: can't be populated by env
+            step_type=step_type)
+
+    def render(self, mode):
+        """Renders the environment.
 
         Args:
-            mode (str): Ignored.
-
+            mode (str): the mode to render with. The string must be present in
+                `self.render_modes`.
         """
-        # pylint: disable=no-self-use
+        pass
+
+    def visualize(self):
+        """Creates a visualization of the environment."""
+        pass
+
+    def close(self):
+        """Close the wrapped env."""
+        pass
 
     def sample_tasks(self, num_tasks):
         """Sample a list of `num_tasks` tasks.
@@ -142,3 +201,4 @@ class PointEnv(gym.Env):
         """
         self._task = task
         self._goal = task['goal']
+

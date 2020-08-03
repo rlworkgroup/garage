@@ -39,7 +39,7 @@ class TestTensorUtil:
 
     def test_normalize_pixel_batch(self):
         env = GarageEnv(DummyDiscretePixelEnv(), is_image=True)
-        obs = env.reset()
+        obs, _ = env.reset()
         obs_normalized = normalize_pixel_batch(obs)
         expected = [ob / 255.0 for ob in obs]
         assert np.allclose(obs_normalized, expected)

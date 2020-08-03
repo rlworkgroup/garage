@@ -30,7 +30,7 @@ def sac_half_cheetah_batch(ctxt=None, seed=1):
     """
     deterministic.set_seed(seed)
     runner = LocalRunner(snapshot_config=ctxt)
-    env = GarageEnv(normalize(gym.make('HalfCheetah-v2')))
+    env = normalize(GarageEnv(gym.make('HalfCheetah-v2')))
 
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,

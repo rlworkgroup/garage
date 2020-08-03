@@ -30,7 +30,7 @@ from garage.envs.mujoco import HalfCheetahDirEnv  # isort:skip # pylint: disable
 @pytest.mark.mujoco
 def test_maml_trpo_pendulum():
     """Test PPO with Pendulum environment."""
-    env = GarageEnv(normalize(HalfCheetahDirEnv(), expected_action_scale=10.))
+    env = normalize(GarageEnv(HalfCheetahDirEnv(), expected_action_scale=10.))
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=(64, 64),

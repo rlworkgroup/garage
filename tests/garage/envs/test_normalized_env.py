@@ -7,7 +7,6 @@ from garage.envs.normalized_env import NormalizedEnv
 
 from tests.helpers import step_env
 
-
 class TestNormalizedEnv:
 
     def test_pickleable(self):
@@ -17,9 +16,9 @@ class TestNormalizedEnv:
         assert round_trip
         assert round_trip._scale_reward == env._scale_reward
         assert np.array_equal(round_trip.env._goal, env.env._goal)
-        step_env(round_trip)
-        round_trip.close()
+        step_env(round_trip, visualize=False)
         env.close()
+        round_trip.close()
 
     def test_does_not_modify_action(self):
         inner_env = PointEnv(goal=(1., 2.))

@@ -34,7 +34,7 @@ def ppo_pendulum(ctxt=None, seed=1):
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+        env = normalize(GarageEnv(gym.make('InvertedDoublePendulum-v2')))
 
         policy = GaussianMLPPolicy(
             env_spec=env.spec,

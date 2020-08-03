@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 from garage import StepType, TrajectoryBatch
-from garage.envs import GarageEnv, GridWorldEnv
+from garage.envs import GridWorldEnv
 from garage.np.policies import ScriptedPolicy
 from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
 
@@ -18,7 +18,7 @@ MAX_EPISODE_LENGTH = 9
 
 @pytest.fixture
 def env():
-    return GarageEnv(GridWorldEnv(desc='4x4'))
+    return GridWorldEnv(desc='4x4')
 
 
 @pytest.fixture
@@ -36,7 +36,7 @@ def envs():
         ['SFFF', 'FFFF', 'FFFF', 'FFFF'],
         ['SHFF', 'HHFF', 'FFFF', 'FFFF'],
     ]
-    return [GarageEnv(GridWorldEnv(desc=desc)) for desc in descs]
+    return [GridWorldEnv(desc=desc) for desc in descs]
 
 
 @pytest.fixture
@@ -48,7 +48,7 @@ def other_envs():
         ['FHSF', 'FGFH', 'FHFH', 'HFFH'],
         ['SHFF', 'HHFF', 'FFFF', 'FFFF'],
     ]
-    return [GarageEnv(GridWorldEnv(desc=desc)) for desc in descs]
+    return [GridWorldEnv(desc=desc) for desc in descs]
 
 
 def trajs_eq(true_traj, test_traj):

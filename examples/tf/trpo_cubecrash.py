@@ -31,7 +31,7 @@ def trpo_cubecrash(ctxt=None, seed=1, batch_size=4000):
     """
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
-        env = GarageEnv(normalize(gym.make('CubeCrash-v0')))
+        env = normalize(GarageEnv(gym.make('CubeCrash-v0')))
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       filters=((32, (8, 8)), (64, (4, 4))),
                                       strides=(4, 2),

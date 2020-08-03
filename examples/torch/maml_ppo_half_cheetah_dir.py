@@ -37,7 +37,7 @@ def maml_ppo_half_cheetah_dir(ctxt, seed, epochs, rollouts_per_task,
 
     """
     set_seed(seed)
-    env = GarageEnv(normalize(HalfCheetahDirEnv(), expected_action_scale=10.))
+    env = normalize(GarageEnv(HalfCheetahDirEnv(), expected_action_scale=10.))
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
@@ -53,8 +53,8 @@ def maml_ppo_half_cheetah_dir(ctxt, seed, epochs, rollouts_per_task,
 
     max_episode_length = 100
 
-    task_sampler = SetTaskSampler(lambda: GarageEnv(
-        normalize(HalfCheetahDirEnv(), expected_action_scale=10.)))
+    task_sampler = SetTaskSampler(lambda: normalize(
+        GarageEnv(HalfCheetahDirEnv(), expected_action_scale=10.)))
 
     meta_evaluator = MetaEvaluator(test_task_sampler=task_sampler,
                                    max_episode_length=max_episode_length,

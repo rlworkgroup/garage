@@ -94,7 +94,7 @@ class DefaultWorker(Worker):
     def start_rollout(self):
         """Begin a new rollout."""
         self._path_length = 0
-        self._prev_obs = self.env.reset()
+        self._prev_obs, _ = self.env.reset()
         self.agent.reset()
 
     def step_rollout(self):
@@ -107,24 +107,18 @@ class DefaultWorker(Worker):
         """
         if self._path_length < self._max_episode_length:
             a, agent_info = self.agent.get_action(self._prev_obs)
-            next_o, r, d, env_info = self.env.step(a)
+            ts = self.env.step(a)
             self._observations.append(self._prev_obs)
-            self._rewards.append(r)
-            self._actions.append(a)
+            self._rewards.append(ts.reward)
+            self._actions.append(ts.action)
             for k, v in agent_info.items():
                 self._agent_infos[k].append(v)
-            for k, v in env_info.items():
+            for k, v in ts.env_info.items():
                 self._env_infos[k].append(v)
             self._path_length += 1
-            # Temporary solution
-            # When env returns a TimeStep in future, this should append the
-            # step type. Now only StepType.TERMINAL is added.
-            if d:
-                self._step_types.append(StepType.TERMINAL)
-            else:
-                self._step_types.append(StepType.MID)
-            if not d:
-                self._prev_obs = next_o
+            self._step_types.append(ts.step_type)
+            if not ts.last:
+                self._prev_obs = ts.next_observation
                 return False
         self._lengths.append(self._path_length)
         self._last_observations.append(self._prev_obs)

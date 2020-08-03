@@ -3,21 +3,23 @@
 See `~TaskOnehotWrapper.wrap_env_list` for the main way of using this module.
 
 """
+from copy import deepcopy
+
 import akro
-import gym
 import numpy as np
 
+from garage import Environment, TimeStep
 from garage.envs.env_spec import EnvSpec
 
 
-class TaskOnehotWrapper(gym.Wrapper):
+class TaskOnehotWrapper(Environment):
     """Append a one-hot task representation to an environment.
 
     See TaskOnehotWrapper.wrap_env_list for the recommended way of creating
     this class.
 
     Args:
-        env (gym.Env): The environment to wrap.
+        env (Environment): The environment to wrap.
         task_index (int): The index of this task among the tasks.
         n_total_tasks (int): The number of total tasks.
 
@@ -25,17 +27,30 @@ class TaskOnehotWrapper(gym.Wrapper):
 
     def __init__(self, env, task_index, n_total_tasks):
         assert 0 <= task_index < n_total_tasks
-        super().__init__(env)
+        self.env = env
         self._task_index = task_index
         self._n_total_tasks = n_total_tasks
         env_lb = self.env.observation_space.low
         env_ub = self.env.observation_space.high
         one_hot_ub = np.ones(self._n_total_tasks)
         one_hot_lb = np.zeros(self._n_total_tasks)
-        self.observation_space = akro.Box(np.concatenate([env_lb, one_hot_lb]),
+        self._last_observation = None
+        self._observation_space = akro.Box(np.concatenate([env_lb,
+                                                           one_hot_lb]),
                                           np.concatenate([env_ub, one_hot_ub]))
-        self.__spec = EnvSpec(action_space=self.action_space,
-                              observation_space=self.observation_space)
+        self._spec = EnvSpec(action_space=self.action_space,
+                             observation_space=self.observation_space,
+                             max_episode_length=self.env.spec.max_episode_length)
+
+    @property
+    def action_space(self):
+        """akro.Space: The action space specification."""
+        return self.env.action_space
+
+    @property
+    def observation_space(self):
+        """akro.Space: The observation space specification."""
+        return self._observation_space
 
     @property
     def spec(self):
@@ -45,7 +60,12 @@ class TaskOnehotWrapper(gym.Wrapper):
             garage.envs.env_spec.EnvSpec: The envionrment specification.
 
         """
-        return self.__spec
+        return self._spec
+
+    @property
+    def render_modes(self):
+        """list: A list of string representing the supported render modes."""
+        return self.env.render_modes
 
     def reset(self, **kwargs):
         """Sample new task and call reset on new task env.
@@ -54,31 +74,67 @@ class TaskOnehotWrapper(gym.Wrapper):
             kwargs (dict): Keyword arguments to be passed to env.reset
 
         Returns:
-            numpy.ndarray: active task one-hot representation + observation
+            numpy.ndarray: The first observation. It must conforms to
+            `observation_space`.
+            dict: The episode-level information. Note that this is not part
+            of `env_info` provided in `step()`. It contains information of
+            the entire episode， which could be needed to determine the first
+            action (e.g. in the case of goal-conditioned or MTRL.)
 
         """
-        return self._obs_with_one_hot(self.env.reset(**kwargs))
+        first_obs, episode_info = self.env.reset(**kwargs)
+        first_obs = self._obs_with_one_hot(first_obs)
+        self._last_observation = first_obs
+        return first_obs, episode_info
 
     def step(self, action):
-        """gym.Env step for the active task env.
+        """Environment step for the active task env.
 
         Args:
             action (np.ndarray): Action performed by the agent in the
                 environment.
 
         Returns:
-            tuple:
-                np.ndarray: Agent's observation of the current environment.
-                float: Amount of reward yielded by previous action.
-                bool: True iff the episode has ended.
-                dict[str, np.ndarray]: Contains auxiliary diagnostic
-                    information about this time-step.
+            TimeStep: The time step resulting from the action.
 
         """
-        obs, reward, done, info = self.env.step(action)
+        ts = self.env.step(action)
+        obs = ts.observation
         oh_obs = self._obs_with_one_hot(obs)
-        info['task_id'] = self._task_index
-        return oh_obs, reward, done, info
+
+        last_obs = self._last_observation
+        self._last_observation = last_obs
+
+        env_info = deepcopy(ts.env_info)
+
+        env_info['task_id'] = self._task_index
+
+        return TimeStep(
+            env_spec=self.spec,
+            observation=last_obs,
+            action=action,
+            reward=ts.reward,
+            next_observation=oh_obs,
+            env_info=env_info,
+            agent_info=ts.agent_info,
+            step_type=ts.step_type)
+
+    def render(self, mode):
+        """Renders the environment.
+
+        Args:
+            mode (str): the mode to render with. The string must be present in
+                `self.render_modes`.
+        """
+        return self.env.render(mode)
+
+    def visualize(self):
+        """Creates a visualization of the environment."""
+        self.env.visualize()
+
+    def close(self):
+        """Close the wrapped env."""
+        self.env.close()
 
     def _obs_with_one_hot(self, obs):
         """Concatenate observation and task one-hot.
@@ -112,7 +168,8 @@ class TaskOnehotWrapper(gym.Wrapper):
         '''
 
         Args:
-            envs (list[gym.Env]): List of environments to wrap. Note that the
+            envs (list[Environment]): List of environments to wrap. Note
+            that the
                 order these environments are passed in determines the value of
                 their one-hot encoding. It is essential that this list is
                 always in the same order, or the resulting encodings will be
@@ -149,7 +206,8 @@ class TaskOnehotWrapper(gym.Wrapper):
 
 
         Args:
-            env_cons (list[Callable[gym.Env]]): List of environment constructor
+            env_cons (list[Callable[Environment]]): List of environment
+            constructor
                 to wrap. Note that the order these constructors are passed in
                 determines the value of their one-hot encoding. It is essential
                 that this list is always in the same order, or the resulting

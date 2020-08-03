@@ -23,7 +23,7 @@ class InProgressTrajectory:
     def __init__(self, env, initial_observation=None):
         self.env = env
         if initial_observation is None:
-            initial_observation = env.reset()
+            initial_observation, episode_info = env.reset()
         self.observations = [initial_observation]
         self.actions = []
         self.rewards = []
@@ -42,22 +42,17 @@ class InProgressTrajectory:
             np.ndarray: The new observation from the environment.
 
         """
-        next_o, r, d, env_info = self.env.step(action)
-        self.observations.append(next_o)
-        self.rewards.append(r)
-        self.actions.append(action)
+        ts = self.env.step(action)
+
+        self.observations.append(ts.next_observation)
+        self.rewards.append(ts.reward)
+        self.actions.append(ts.action)
         for k, v in agent_info.items():
             self.agent_infos[k].append(v)
-        for k, v in env_info.items():
+        for k, v in ts.env_info.items():
             self.env_infos[k].append(v)
-        # Temporary solution
-        # When env returns a TimeStep in future, this should append the
-        # step type. Now only StepType.TERMINAL is added.
-        if d:
-            self.step_types.append(StepType.TERMINAL)
-        else:
-            self.step_types.append(StepType.MID)
-        return next_o
+        self.step_types.append(ts.step_type)
+        return ts.next_observation
 
     def to_batch(self):
         """Convert this in-progress trajectory into a TrajectoryBatch.

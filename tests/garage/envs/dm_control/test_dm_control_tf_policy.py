@@ -19,7 +19,7 @@ class TestDmControlTfPolicy(TfGraphTestCase):
         task = ALL_TASKS[0]
 
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = GarageEnv(DmControlEnv.from_suite(*task))
+            env = DmControlEnv.from_suite(*task)
 
             policy = GaussianMLPPolicy(
                 env_spec=env.spec,

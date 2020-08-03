@@ -42,7 +42,7 @@ def her_garage_tf(ctxt, env_id, seed):
     deterministic.set_seed(seed)
 
     with LocalTFRunner(ctxt) as runner:
-        env = GarageEnv(normalize(gym.make(env_id)))
+        env = normalize(GarageEnv(gym.make(env_id)))
 
         policy = ContinuousMLPPolicy(
             env_spec=env.spec,

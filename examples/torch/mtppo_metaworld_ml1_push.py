@@ -32,7 +32,7 @@ def mtppo_metaworld_ml1_push(ctxt, seed, epochs, batch_size):
 
     """
     set_seed(seed)
-    env = GarageEnv(normalize(mwb.ML1.get_train_tasks('push-v1')))
+    env = normalize(GarageEnv(mwb.ML1.get_train_tasks('push-v1')))
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,

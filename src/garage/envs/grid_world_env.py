@@ -1,7 +1,10 @@
-import gym
+import math
+
+import akro
 import numpy as np
 
-from garage.envs.step import Step
+from garage import Environment, StepType, TimeStep
+from garage.envs import EnvSpec
 
 MAPS = {
     'chain': ['GFFFFFFFFFFFFFSFFFFFFFFFFFFFG'],
@@ -30,7 +33,7 @@ MAPS = {
 }   # yapf: disable
 
 
-class GridWorldEnv(gym.Env):
+class GridWorldEnv(Environment):
     """
     | 'S' : starting point
     | 'F' or '.': free space
@@ -39,7 +42,13 @@ class GridWorldEnv(gym.Env):
     | 'G' : goal
     """
 
-    def __init__(self, desc='4x4'):
+    def __init__(self, desc='4x4', max_episode_length=math.inf):
+        """Initialize the environment.
+
+        Args:
+            desc (str): grid configuration key.
+            max_episode_length (int): The maximum steps allowed for an episode.
+        """
         if isinstance(desc, str):
             desc = MAPS[desc]
         desc = np.array(list(map(list, desc)))
@@ -53,30 +62,94 @@ class GridWorldEnv(gym.Env):
         self.state = None
         self.domain_fig = None
 
-    def reset(self):
-        self.state = self.start_state
-        return self.state
+        self._last_observation = None
+        self._step_cnt = 0
+        self._max_episode_length = max_episode_length
+
+        self._action_space = akro.Discrete(4)
+        self._observation_space = akro.Discrete(self.n_row * self.n_col)
+        self._spec = EnvSpec(action_space=self.action_space,
+                             observation_space=self.observation_space,
+                             max_episode_length=max_episode_length)
+
+    @property
+    def action_space(self):
+        """akro.Space: The action space specification."""
+        return self._action_space
+
+    @property
+    def observation_space(self):
+        """akro.Space: The observation space specification."""
+        return self._observation_space
+
+    @property
+    def spec(self):
+        """EnvSpec: The environment specification."""
+        return self._spec
+
+    @property
+    def render_modes(self):
+        """list: A list of string representing the supported render modes."""
+        return []
 
     @staticmethod
     def action_from_direction(d):
-        """
-        Return the action corresponding to the given direction. This is a
-        helper method for debugging and testing purposes.
-        :return: the action index corresponding to the given direction
+        """Return the action corresponding to the given direction.
+
+        This is a helper method for debugging and testing purposes.
+
+        Args:
+            d (int): direction.
+
+        Returns:
+            dict: the action index corresponding to the given direction
         """
         return dict(left=0, down=1, right=2, up=3)[d]
 
-    def step(self, action):
+    def reset(self):
+        """Resets the environment.
+
+        Returns:
+            numpy.ndarray: The first observation. It must conforms to
+            `observation_space`.
+            dict: The episode-level information. Note that this is
+            not part
+            of `env_info` provided in `step()`. It contains
+            information of the entire episode， which could be needed to
+            determine the first action (e.g. in the case of goal-conditioned
+            or MTRL.)
+
         """
+        self.state = self.start_state
+        episode_info = {}  # populate if needed
+
+        self._step_cnt = 0
+
+        return self.state, episode_info
+
+    def step(self, action):
+        """Steps the environment.
+
         action map:
         0: left
         1: down
         2: right
         3: up
-        :param action: should be a one-hot vector encoding the action
-        :return:
+
+        Args:
+            action (int): an int encoding the action
+
+        Returns:
+            TimeStep: The time step resulting from the action.
+
+        Raises:
+            RuntimeError: if `step()` is called after the environment has been
+                constructed and `reset()` has not been called.
         """
-        possible_next_states = self.get_possible_next_states(
+        if self.state is None:
+            raise RuntimeError('reset() must be called before step()!')
+
+        possible_next_states = self._get_possible_next_states(
             self.state, action)
 
         probs = [x[1] for x in possible_next_states]
@@ -89,30 +162,71 @@ class GridWorldEnv(gym.Env):
         next_state_type = self.desc[next_x, next_y]
         if next_state_type == 'H':
             done = True
-            reward = 0
+            reward = 0.0
         elif next_state_type in ['F', 'S']:
             done = False
-            reward = 0
+            reward = 0.0
         elif next_state_type == 'G':
             done = True
-            reward = 1
+            reward = 1.0
         else:
             raise NotImplementedError
+
+        step_type = None
+        if done:
+            step_type = StepType.TERMINAL
+        elif self._step_cnt >= self._spec.max_episode_length:
+            step_type = StepType.TIMEOUT
+        elif self._step_cnt == 1:
+            step_type = StepType.FIRST
+        else:
+            step_type = StepType.MID
+
+        print('state {}, action {}, next {}， possible {}'.format(
+            self.state, action, next_state, possible_next_states))
+
+        last_state = self.state
         self.state = next_state
-        return Step(observation=self.state, reward=reward, done=done)
 
-    def get_possible_next_states(self, state, action):
-        """
-        Given the state and action, return a list of possible next states and
-        their probabilities. Only next states with nonzero probabilities will
-        be returned
-        :param state: start state
-        :param action: action
-        :return: a list of pairs (s', p(s'|s,a))
-        """
-        # assert self.observation_space.contains(state)
-        # assert self.action_space.contains(action)
+        return TimeStep(
+            env_spec=self.spec,
+            observation=last_state,
+            action=action,
+            reward=reward,
+            next_observation=next_state,
+            env_info={},
+            agent_info={},  # TODO: can't be populated by env
+            step_type=step_type)
 
+    def render(self, mode):
+        """Renders the environment.
+
+        Args:
+            mode (str): the mode to render with. The string must be present in
+                `self.render_modes`.
+        """
+        pass
+
+    def visualize(self):
+        """Creates a visualization of the environment."""
+        pass
+
+    def close(self):
+        """Close the wrapped env."""
+        pass
+
+    def _get_possible_next_states(self, state, action):
+        """Return possible next states and their probabilities.
+
+        Only next states with nonzero probabilities will be returned.
+
+        Args:
+            state (list): start state
+            action (int): action
+
+        Returns:
+            list: a list of pairs (s', p(s'|s,a))
+        """
         x = state // self.n_col
         y = state % self.n_col
         coords = np.array([x, y])
@@ -127,17 +241,6 @@ class GridWorldEnv(gym.Env):
             return [(state, 1.)]
         else:
             return [(next_state, 1.)]
-
-    @property
-    def action_space(self):
-        return gym.spaces.Discrete(4)
-
-    @property
-    def observation_space(self):
-        return gym.spaces.Discrete(self.n_row * self.n_col)
-
-    def render(self, mode='human'):
-        pass
 
     def log_diagnostics(self, paths):
         pass

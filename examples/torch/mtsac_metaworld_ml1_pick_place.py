@@ -47,8 +47,8 @@ def mtsac_metaworld_ml1_pick_place(ctxt=None, seed=1, _gpu=None):
     test_envs = []
     env_names = []
     for i in range(50):
-        train_env = GarageEnv(
-            normalize(mwb.ML1.get_train_tasks('pick-place-v1'),
+        train_env = normalize(
+            GarageEnv(mwb.ML1.get_train_tasks('pick-place-v1'),
                       normalize_reward=True))
         test_env = pickle.loads(pickle.dumps(train_env))
         env_names.append('pick_place_{}'.format(i))

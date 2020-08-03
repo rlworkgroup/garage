@@ -89,8 +89,8 @@ class TestMultiEnvWrapper:
         tasks = []
         for _ in envs:
             mt_env.reset()
-            _, _, _, info = mt_env.step(1)
-            tasks.append(info['task_id'])
+            ts = mt_env.step(1)
+            tasks.append(ts.env_info['task_id'])
 
         assert tasks[0] == 0 and tasks[1] == 1
 
@@ -102,8 +102,8 @@ class TestMultiEnvWrapper:
         tasks = []
         for _ in envs:
             mt_env.reset()
-            _, _, _, info = mt_env.step(1)
-            tasks.append(info['task_id'])
+            ts = mt_env.step(1)
+            tasks.append(ts.env_info['task_id'])
 
         for task in tasks:
             assert 0 <= task < 4
@@ -116,8 +116,8 @@ class TestMultiEnvWrapper:
         mt_env.reset()
         tasks = []
         for _ in envs:
-            _, _, _, info = mt_env.step(1)
-            tasks.append(info['task_id'])
+            ts = mt_env.step(1)
+            tasks.append(ts.env_info['task_id'])
 
         assert tasks[0] == 0 and tasks[1] == 0
 
@@ -136,14 +136,14 @@ class TestMultiEnvWrapper:
         mt_env = self._init_multi_env_wrapper(
             envs, sample_strategy=round_robin_strategy)
 
-        obs = mt_env.reset()
+        obs, _ = mt_env.reset()
         assert (obs[-2:] == np.array([1., 0.])).all()
-        obs = mt_env.step(1)[0]
+        obs = mt_env.step(1).observation
         assert (obs[-2:] == np.array([1., 0.])).all()
 
-        obs = mt_env.reset()
+        obs, _ = mt_env.reset()
         assert (obs[-2:] == np.array([0., 1.])).all()
-        obs = mt_env.step(1)[0]
+        obs = mt_env.step(1).observation
         assert (obs[-2:] == np.array([0., 1.])).all()
 
 
@@ -187,8 +187,10 @@ class TestMetaWorldMultiEnvWrapper:
         self.env_no_onehot.reset()
         action0 = self.env.spec.action_space.sample()
         action1 = self.env_no_onehot.spec.action_space.sample()
-        obs0, _, _, info0 = self.env.step(action0)
-        obs1, _, _, info1 = self.env_no_onehot.step(action1)
+        ts = self.env.step(action0)
+        obs0, info0 = ts.observation, ts.env_info
+        ts = self.env_no_onehot.step(action1)
+        obs1, info1 = ts.observation, ts.env_info
         assert info0['task_id'] == self.env.active_task_index
         assert info1['task_id'] == self.env.active_task_index
         assert (self.env._active_task_one_hot() == obs0[9:]).all()
@@ -201,7 +203,7 @@ class TestMetaWorldMultiEnvWrapper:
         for _ in range(self.env.num_tasks):
             self.env.reset()
             action = self.env.spec.action_space.sample()
-            _, _, _, info = self.env.step(action)
+            info = self.env.step(action).env_info
             assert not info['task_id'] == active_task_id
             active_task_id = self.env.active_task_index
 
@@ -211,6 +213,6 @@ class TestMetaWorldMultiEnvWrapper:
         self.env._active_task_index = 0
         for i in range(self.env.num_tasks):
             action = self.env.spec.action_space.sample()
-            _, _, _, info = self.env.step(action)
+            info = self.env.step(action).env_info
             assert info['task_name'] == self.task_names[i]
             self.env.reset()

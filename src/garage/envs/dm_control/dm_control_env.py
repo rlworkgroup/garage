@@ -1,12 +1,14 @@
 """DM control environment."""
+import math
 
+import akro
 from dm_control import suite
 from dm_control.rl.control import flatten_observation
-from dm_env import StepType
-import gym
+from dm_env import StepType as dm_StepType
 import numpy as np
 
-from garage.envs import Step
+from garage import Environment, StepType, TimeStep
+from garage.envs import EnvSpec
 from garage.envs.dm_control.dm_control_viewer import DmControlViewer
 
 
@@ -22,22 +24,68 @@ def _flat_shape(observation):
     return np.sum(int(np.prod(v.shape)) for k, v in observation.items())
 
 
-class DmControlEnv(gym.Env):
+class DmControlEnv(Environment):
     """Binding for `dm_control <https://arxiv.org/pdf/1801.00690.pdf>`."""
 
-    def __init__(self, env, name=None):
+    def __init__(self, env, name=None, max_episode_length=math.inf):
         """Create a DmControlEnv.
 
         Args:
             env (dm_control.suite.Task): The wrapped dm_control environment.
             name (str): Name of the environment.
+            max_episode_length (int): The maximum steps allowed for an episode.
         """
         self._name = name or type(env.task).__name__
         self._env = env
         self._viewer = None
+        self._last_observation = None
+        self._step_cnt = 0
+        self._max_episode_length = max_episode_length
+
+        # action space
+        action_spec = self._env.action_spec()
+        if (len(action_spec.shape) == 1) and (-np.inf in action_spec.minimum or
+                                              np.inf in action_spec.maximum):
+            self._action_space = akro.Discrete(np.prod(action_spec.shape))
+        else:
+            self._action_space = akro.Box(low=action_spec.minimum,
+                                          high=action_spec.maximum,
+                                          dtype=np.float32)
+
+        # observation_space
+        flat_dim = _flat_shape(self._env.observation_spec())
+        self._observation_space = akro.Box(low=-np.inf,
+                                           high=np.inf,
+                                           shape=[flat_dim],
+                                           dtype=np.float32)
+
+        # spec
+        self._spec = EnvSpec(action_space=self.action_space,
+                             observation_space=self.observation_space,
+                             max_episode_length=max_episode_length)
+
+    @property
+    def action_space(self):
+        """akro.Space: The action space specification."""
+        return self._action_space
+
+    @property
+    def observation_space(self):
+        """akro.Space: The observation space specification."""
+        return self._observation_space
+
+    @property
+    def spec(self):
+        """EnvSpec: The environment specification."""
+        return self._spec
+
+    @property
+    def render_modes(self):
+        """list: A list of string representing the supported render modes."""
+        return ['rgb_array']
 
     @classmethod
-    def from_suite(cls, domain_name, task_name):
+    def from_suite(cls, domain_name, task_name, max_episode_length=math.inf):
         """Create a DmControl task given the domain name and task name.
 
         Args:
@@ -47,34 +95,77 @@ class DmControlEnv(gym.Env):
         Return:
             dm_control.suit.Task: the dm_control task environment
         """
-        return cls(suite.load(domain_name, task_name),
-                   name='{}.{}'.format(domain_name, task_name))
+        return cls(env=suite.load(domain_name, task_name),
+                   name='{}.{}'.format(domain_name, task_name),
+                   max_episode_length=max_episode_length)
+
+    def reset(self):
+        """Resets the environment.
+
+        Returns:
+            numpy.ndarray: The first observation. It must conforms to
+            `observation_space`.
+            dict: The episode-level information. Note that this is not part
+            of `env_info` provided in `step()`. It contains information of
+            the entire episode， which could be needed to determine the first
+            action (e.g. in the case of goal-conditioned or MTRL.)
+
+        """
+        time_step = self._env.reset()
+        first_obs = flatten_observation(time_step.observation)['observations']
+
+        self._step_cnt = 0
+        self._last_observation = first_obs
+        # Populate episode_info if needed.
+        episode_info = {}
+        return first_obs, episode_info
 
     def step(self, action):
-        """Step the environment.
+        """Steps the environment with the action and returns a `TimeStep`.
 
         Args:
             action (object): input action
 
         Returns:
-            Step: The time step after applying this action.
+            TimeStep: The time step resulting from the action.
+
+        Raises:
+            RuntimeError: if `step()` is called after the environment has been
+                constructed and `reset()` has not been called.
         """
-        time_step = self._env.step(action)
-        return Step(
-            flatten_observation(time_step.observation)['observations'],
-            time_step.reward, time_step.step_type == StepType.LAST,
-            **time_step.observation)
+        if self._last_observation is None:
+            raise RuntimeError('reset() must be called before step()!')
 
-    def reset(self):
-        """Reset the environment.
+        dm_time_step = self._env.step(action)
+        if self._viewer:
+            self._viewer.render()
 
-        Returns:
-            Step: The first time step.
-        """
-        time_step = self._env.reset()
-        return flatten_observation(time_step.observation)['observations']
+        observation = flatten_observation(
+            dm_time_step.observation)['observations']
 
-    def render(self, mode='human'):
+        last_obs = self._last_observation
+        self._step_cnt += 1
+        self._last_observation = observation
+
+        # Determine step type
+        step_type = None
+        if dm_time_step.step_type == dm_StepType.MID:
+            step_type = StepType.TIMEOUT if \
+                self._step_cnt >= self._max_episode_length else StepType.MID
+        elif dm_time_step.step_type == dm_StepType.LAST:
+            step_type = StepType.TERMINAL
+
+        return TimeStep(
+            env_spec=self.spec,
+            observation=last_obs,
+            action=action,
+            reward=dm_time_step.reward,
+            next_observation=observation,
+            env_info=dm_time_step.observation,  # TODO: what to put in env_info
+            agent_info={},  # TODO: can't be populated by env
+            step_type=step_type)
+
+    def render(self, mode):
         """Render the environment.
 
         Args:
@@ -87,17 +178,19 @@ class DmControlEnv(gym.Env):
             ValueError: if mode is not supported.
         """
         # pylint: disable=inconsistent-return-statements
-        if mode == 'human':
-            if not self._viewer:
-                title = 'dm_control {}'.format(self._name)
-                self._viewer = DmControlViewer(title=title)
-                self._viewer.launch(self._env)
-            self._viewer.render()
-            return None
-        elif mode == 'rgb_array':
+        if mode == 'rgb_array':
             return self._env.physics.render()
         else:
-            raise ValueError
+            raise ValueError('Supported render modes are {}, but '
+                             'got render mode {} instead.'.format(
+                                 self.render_modes, mode))
+
+    def visualize(self):
+        """Creates a visualization of the environment."""
+        if not self._viewer:
+            title = 'dm_control {}'.format(self._name)
+            self._viewer = DmControlViewer(title=title)
+            self._viewer.launch(self._env)
 
     def close(self):
         """Close the environment."""
@@ -106,27 +199,6 @@ class DmControlEnv(gym.Env):
         self._env.close()
         self._viewer = None
         self._env = None
-
-    @property
-    def action_space(self):
-        """gym.Space: the action space specification."""
-        action_spec = self._env.action_spec()
-        if (len(action_spec.shape) == 1) and (-np.inf in action_spec.minimum or
-                                              np.inf in action_spec.maximum):
-            return gym.spaces.Discrete(np.prod(action_spec.shape))
-        else:
-            return gym.spaces.Box(action_spec.minimum,
-                                  action_spec.maximum,
-                                  dtype=np.float32)
-
-    @property
-    def observation_space(self):
-        """gym.Space: the observation space specification."""
-        flat_dim = _flat_shape(self._env.observation_spec())
-        return gym.spaces.Box(low=-np.inf,
-                              high=np.inf,
-                              shape=[flat_dim],
-                              dtype=np.float32)
 
     def __getstate__(self):
         """See `Object.__getstate__`.

@@ -53,31 +53,27 @@ def rollout(env,
     agent_infos = []
     env_infos = []
     dones = []
-    o = env.reset()
+    o, episode_info = env.reset()
     agent.reset()
     path_length = 0
     if animated:
-        env.render()
+        env.visualize()
     while path_length < (max_episode_length or np.inf):
         o = env.observation_space.flatten(o)
         a, agent_info = agent.get_action(o)
         if deterministic and 'mean' in agent_info:
-            a = agent_info['mean']
-        next_o, r, d, env_info = env.step(a)
+            a = np.full(a.shape, agent_info['mean'])
+        ts = env.step(a)
         observations.append(o)
-        rewards.append(r)
-        actions.append(a)
+        rewards.append(ts.reward)
+        actions.append(ts.action)
         agent_infos.append(agent_info)
-        env_infos.append(env_info)
-        dones.append(d)
+        env_infos.append(ts.env_info)
+        dones.append(ts.terminal)
         path_length += 1
-        if d:
+        if ts.terminal:
             break
-        o = next_o
-        if animated:
-            env.render()
-            timestep = 0.05
-            time.sleep(timestep / speedup)
+        o = ts.next_observation
 
     return dict(
         observations=np.array(observations),

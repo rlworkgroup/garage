@@ -93,11 +93,11 @@ def pearl_half_cheetah_vel(ctxt=None,
     encoder_hidden_sizes = (encoder_hidden_size, encoder_hidden_size,
                             encoder_hidden_size)
     # create multi-task environment and sample tasks
-    env_sampler = SetTaskSampler(lambda: GarageEnv(
-        normalize(HalfCheetahVelEnv())))
+    env_sampler = SetTaskSampler(lambda: normalize(
+        GarageEnv(HalfCheetahVelEnv())))
     env = env_sampler.sample(num_train_tasks)
-    test_env_sampler = SetTaskSampler(lambda: GarageEnv(
-        normalize(HalfCheetahVelEnv())))
+    test_env_sampler = SetTaskSampler(lambda: normalize(
+        GarageEnv(HalfCheetahVelEnv())))
 
     runner = LocalRunner(ctxt)
 

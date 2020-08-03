@@ -17,7 +17,7 @@ class TestTNPG(TfGraphTestCase):
     def test_tnpg_inverted_pendulum(self):
         """Test TNPG with InvertedPendulum-v2 environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = GarageEnv(normalize(gym.make('InvertedPendulum-v2')))
+            env = normalize(GarageEnv(gym.make('InvertedPendulum-v2')))
 
             policy = GaussianMLPPolicy(name='policy',
                                        env_spec=env.spec,

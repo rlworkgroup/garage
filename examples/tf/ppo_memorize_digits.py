@@ -31,7 +31,7 @@ def ppo_memorize_digits(ctxt=None, seed=1, batch_size=4000):
     """
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
-        env = GarageEnv(normalize(gym.make('MemorizeDigits-v0')),
+        env = normalize(GarageEnv(gym.make('MemorizeDigits-v0')),
                         is_image=True)
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       filters=(

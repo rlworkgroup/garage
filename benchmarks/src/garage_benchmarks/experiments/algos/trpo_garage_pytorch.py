@@ -36,7 +36,7 @@ def trpo_garage_pytorch(ctxt, env_id, seed):
 
     runner = LocalRunner(ctxt)
 
-    env = GarageEnv(normalize(gym.make(env_id)))
+    env = normalize(GarageEnv(gym.make(env_id)))
 
     policy = PyTorch_GMP(env.spec,
                          hidden_sizes=hyper_parameters['hidden_sizes'],

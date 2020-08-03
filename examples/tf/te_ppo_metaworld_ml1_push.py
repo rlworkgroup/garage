@@ -36,7 +36,7 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
 
     """
     set_seed(seed)
-    envs = [GarageEnv(normalize(ML1.get_train_tasks('push-v1')))]
+    envs = [normalize(GarageEnv(ML1.get_train_tasks('push-v1')))]
     env = MultiEnvWrapper(envs, mode='del-onehot')
 
     latent_length = 2

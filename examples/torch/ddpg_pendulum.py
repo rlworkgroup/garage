@@ -34,7 +34,7 @@ def ddpg_pendulum(ctxt=None, seed=1, lr=1e-4):
     """
     set_seed(seed)
     runner = LocalRunner(ctxt)
-    env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+    env = normalize(GarageEnv(gym.make('InvertedDoublePendulum-v2')))
 
     policy = DeterministicMLPPolicy(env_spec=env.spec,
                                     hidden_sizes=[64, 64],

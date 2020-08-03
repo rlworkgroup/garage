@@ -15,17 +15,14 @@ parser.add_argument('--n_steps',
 args = parser.parse_args()
 
 # Construct the environment
-env = DmControlEnv.from_suite('walker', 'run')
+env = DmControlEnv.from_suite('walker', 'run', args.n_steps)
 
 # Reset the environment and launch the viewer
 env.reset()
-env.render()
+env.visualize()
 
 # Step randomly until interrupted
-steps = 0
 while True:
-    if steps == args.n_steps:
+    ts = env.step(env.action_space.sample())
+    if ts.last:
         break
-    env.step(env.action_space.sample())
-    env.render()
-    steps += 1

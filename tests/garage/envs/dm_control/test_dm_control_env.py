@@ -19,14 +19,14 @@ class TestDmControlEnv:
         env = DmControlEnv.from_suite(domain_name, task_name)
         ob_space = env.observation_space
         act_space = env.action_space
-        ob = env.reset()
+        ob, _ = env.reset()
         assert ob_space.contains(ob)
         a = act_space.sample()
         assert act_space.contains(a)
         # Skip rendering because it causes TravisCI to run out of memory
         # Sometimes random actions lead to physics errors
         with env._env.physics.suppress_physics_errors():
-            step_env(env, render=False)
+            step_env(env, visualize=False)
         env.close()
 
     @pytest.mark.nightly
@@ -36,14 +36,14 @@ class TestDmControlEnv:
         env = DmControlEnv.from_suite(domain_name, task_name)
         ob_space = env.observation_space
         act_space = env.action_space
-        ob = env.reset()
+        ob, _ = env.reset()
         assert ob_space.contains(ob)
         a = act_space.sample()
         assert act_space.contains(a)
         # Skip rendering because it causes TravisCI to run out of memory
         # Sometimes random actions lead to physics errors
         with env._env.physics.suppress_physics_errors():
-            step_env(env, render=False)
+            step_env(env, visualize=False)
         env.close()
 
     def test_pickleable(self):
@@ -54,7 +54,7 @@ class TestDmControlEnv:
         # Skip rendering because it causes TravisCI to run out of memory
         # Sometimes random actions lead to physics errors
         with env._env.physics.suppress_physics_errors():
-            step_env(env, render=False)
+            step_env(env, visualize=False)
         round_trip.close()
         env.close()
 
@@ -68,7 +68,7 @@ class TestDmControlEnv:
         # Skip rendering because it causes TravisCI to run out of memory
         # Sometimes random actions lead to physics errors
         with env._env.physics.suppress_physics_errors():
-            step_env(env, render=False)
+            step_env(env, visualize=False)
         round_trip.close()
         env.close()
 
@@ -77,6 +77,7 @@ class TestDmControlEnv:
         env = DmControlEnv.from_suite(domain_name, task_name)
         a = env.action_space.sample()
         a_copy = copy(a)
+        env.reset()
         env.step(a)
         if isinstance(a, collections.Iterable):
             assert a.all() == a_copy.all()
@@ -91,6 +92,7 @@ class TestDmControlEnv:
         env = DmControlEnv.from_suite(domain_name, task_name)
         a = env.action_space.sample()
         a_copy = copy(a)
+        env.reset()
         env.step(a)
         if isinstance(a, collections.Iterable):
             assert a.all() == a_copy.all()

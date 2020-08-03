@@ -26,17 +26,17 @@ def step_bullet_kuka_env(n_steps=1000):
         gym.make('KukaBulletEnv-v0',
                  renders=True,
                  isDiscrete=True,
-                 maxSteps=10000000))
+                 maxSteps=2000))
 
     # Reset the environment and launch the viewer
     env.reset()
-    env.render()
+    env.visualize()
 
     # Step randomly until interrupted
     steps = 0
     while steps < n_steps:
-        _, _, done, _ = env.step(env.action_space.sample())
-        if done:
+        ts = env.step(env.action_space.sample())
+        if ts.last:
             break
         steps += 1
 

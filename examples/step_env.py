@@ -3,6 +3,7 @@
 import argparse
 
 import gym
+from garage.envs import GarageEnv
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--n_steps',
@@ -12,11 +13,11 @@ parser.add_argument('--n_steps',
 args = parser.parse_args()
 
 # Construct the environment
-env = gym.make('MountainCar-v0')
+env = GarageEnv(gym.make('MountainCar-v0'))
 
 # Reset the environment and launch the viewer
 env.reset()
-env.render()
+env.visualize()
 
 steps = 0
 while True:
@@ -24,5 +25,4 @@ while True:
         env.close()
         break
     env.step(env.action_space.sample())
-    env.render()
     steps += 1

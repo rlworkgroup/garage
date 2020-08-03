@@ -65,7 +65,7 @@ class TestDDPG:
         """
         deterministic.set_seed(0)
         runner = LocalRunner(snapshot_config)
-        env = GarageEnv(normalize(gym.make('InvertedPendulum-v2')))
+        env = normalize(GarageEnv(gym.make('InvertedPendulum-v2')))
 
         policy = DeterministicMLPPolicy(env_spec=env.spec,
                                         hidden_sizes=[64, 64],

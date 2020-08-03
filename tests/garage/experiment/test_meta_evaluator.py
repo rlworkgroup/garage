@@ -67,14 +67,14 @@ class OptimalActionInference(MetaRLAlgorithm):
 @pytest.mark.serial
 def test_meta_evaluator():
     set_seed(100)
-    tasks = SetTaskSampler(lambda: GarageEnv(PointEnv()))
+    tasks = SetTaskSampler(lambda: PointEnv())
     max_episode_length = 200
     with tempfile.TemporaryDirectory() as log_dir_name:
         runner = LocalRunner(
             SnapshotConfig(snapshot_dir=log_dir_name,
                            snapshot_mode='last',
                            snapshot_gap=1))
-        env = GarageEnv(PointEnv())
+        env = PointEnv()
         algo = OptimalActionInference(env=env,
                                       max_episode_length=max_episode_length)
         runner.setup(algo, env)
@@ -131,9 +131,9 @@ class MockAlgo:
 
 def test_pickle_meta_evaluator():
     set_seed(100)
-    tasks = SetTaskSampler(lambda: GarageEnv(PointEnv()))
+    tasks = SetTaskSampler(lambda: PointEnv())
     max_episode_length = 200
-    env = GarageEnv(PointEnv())
+    env = PointEnv()
     n_traj = 3
     with tempfile.TemporaryDirectory() as log_dir_name:
         runner = LocalRunner(
@@ -158,9 +158,9 @@ def test_pickle_meta_evaluator():
 
 def test_meta_evaluator_with_tf():
     set_seed(100)
-    tasks = SetTaskSampler(lambda: GarageEnv(PointEnv()))
+    tasks = SetTaskSampler(lambda: PointEnv())
     max_episode_length = 200
-    env = GarageEnv(PointEnv())
+    env = PointEnv()
     n_traj = 3
     with tempfile.TemporaryDirectory() as log_dir_name:
         ctxt = SnapshotConfig(snapshot_dir=log_dir_name,
