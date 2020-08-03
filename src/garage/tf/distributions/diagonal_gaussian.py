@@ -2,6 +2,7 @@
 import numpy as np
 import tensorflow as tf
 
+from garage.experiment import deterministic
 from garage.tf.distributions.distribution import Distribution
 
 
@@ -162,7 +163,8 @@ class DiagonalGaussian(Distribution):
         # pylint: disable=no-self-use
         means = dist_info_vars['mean']
         log_stds = dist_info_vars['log_std']
-        rnd = tf.random.normal(shape=tf.shape(means))
+        rnd = tf.random.normal(shape=tf.shape(means),
+                               seed=deterministic.get_tf_seed_stream())
         return rnd * tf.math.exp(log_stds) + means
 
     def log_likelihood(self, xs, dist_info):

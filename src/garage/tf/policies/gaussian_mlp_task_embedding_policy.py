@@ -4,6 +4,7 @@ import akro
 import numpy as np
 import tensorflow as tf
 
+from garage.experiment import deterministic
 from garage.tf.models import GaussianMLPModel
 from garage.tf.policies.task_embedding_policy import TaskEmbeddingPolicy
 
@@ -70,10 +71,12 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
                  name='GaussianMLPTaskEmbeddingPolicy',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  learn_std=True,
                  adaptive_std=False,
@@ -148,7 +151,8 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
 
         # Encoder should be outside policy scope
         with tf.compat.v1.variable_scope(self._encoder.name):
-            latent_var = self._encoder.distribution.sample()
+            latent_var = self._encoder.distribution.sample(
+                seed=deterministic.get_tf_seed_stream())
 
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
@@ -166,11 +170,17 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
                 embed_state_input, name='given_task').outputs
 
         self._f_dist_obs_latent = tf.compat.v1.get_default_session(
-        ).make_callable([self._dist.sample(), mean_var, log_std_var],
+        ).make_callable([
+            self._dist.sample(seed=deterministic.get_tf_seed_stream()),
+            mean_var, log_std_var
+        ],
                         feed_list=[obs_input, latent_input])
 
         self._f_dist_obs_task = tf.compat.v1.get_default_session(
-        ).make_callable([dist_given_task.sample(), mean_g_t, log_std_g_t],
+        ).make_callable([
+            dist_given_task.sample(seed=deterministic.get_tf_seed_stream()),
+            mean_g_t, log_std_g_t
+        ],
                         feed_list=[obs_input, self._encoder.input])
 
     def build(self, obs_input, task_input, name=None):

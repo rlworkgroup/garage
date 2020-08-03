@@ -4,6 +4,7 @@ A model composed only of a long-short term memory (LSTM).
 """
 import tensorflow as tf
 
+from garage.experiment import deterministic
 from garage.tf.models.lstm import lstm
 from garage.tf.models.model import Model
 
@@ -59,12 +60,15 @@ class LSTMModel(Model):
                  hidden_dim,
                  name=None,
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
-                 recurrent_w_init=tf.initializers.glorot_uniform(),
+                 recurrent_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
                  hidden_state_init_trainable=False,

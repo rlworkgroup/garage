@@ -7,6 +7,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
 
+from garage.experiment import deterministic
 from garage.tf.models.mlp import mlp
 from garage.tf.models.model import Model
 from garage.tf.models.parameter import parameter
@@ -82,10 +83,12 @@ class GaussianMLPModel(Model):
                  name=None,
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  learn_std=True,
                  adaptive_std=False,
@@ -95,10 +98,12 @@ class GaussianMLPModel(Model):
                  max_std=None,
                  std_hidden_sizes=(32, 32),
                  std_hidden_nonlinearity=tf.nn.tanh,
-                 std_hidden_w_init=tf.initializers.glorot_uniform(),
+                 std_hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  std_hidden_b_init=tf.zeros_initializer(),
                  std_output_nonlinearity=None,
-                 std_output_w_init=tf.initializers.glorot_uniform(),
+                 std_output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  std_parameterization='exp',
                  layer_normalization=False):
         # Network parameters

@@ -9,6 +9,7 @@ import akro
 import numpy as np
 import tensorflow as tf
 
+from garage.experiment import deterministic
 from garage.tf.models import CategoricalCNNModel
 from garage.tf.policies.policy import StochasticPolicy
 
@@ -68,10 +69,12 @@ class CategoricalCNNPolicy(StochasticPolicy):
                  name='CategoricalCNNPolicy',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         assert isinstance(env_spec.action_space, akro.Discrete), (
@@ -125,7 +128,12 @@ class CategoricalCNNPolicy(StochasticPolicy):
                 augmented_state_input = state_input
             self._dist = self.model.build(augmented_state_input).dist
             self._f_prob = tf.compat.v1.get_default_session().make_callable(
-                [tf.argmax(self._dist.sample(), -1), self._dist.probs],
+                [
+                    tf.argmax(
+                        self._dist.sample(
+                            seed=deterministic.get_tf_seed_stream()), -1),
+                    self._dist.probs
+                ],
                 feed_list=[state_input])
 
     def build(self, state_input, name=None):

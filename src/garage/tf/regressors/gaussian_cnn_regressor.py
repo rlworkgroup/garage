@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage import make_optimizer
+from garage.experiment import deterministic
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers import LbfgsOptimizer, PenaltyLbfgsOptimizer
 from garage.tf.regressors.gaussian_cnn_regressor_model import (
@@ -103,10 +104,12 @@ class GaussianCNNRegressor(StochasticRegressor):
                  padding,
                  hidden_sizes,
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_w_init=tf.initializers.glorot_uniform(
+                     seed=deterministic.get_tf_seed_stream()),
                  output_b_init=tf.zeros_initializer(),
                  name='GaussianCNNRegressor',
                  learn_std=True,
