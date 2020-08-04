@@ -69,7 +69,7 @@ baseline = LinearFeatureBaseline(env_spec=env.spec)
 algo = TRPO(env_spec=env.spec,
             policy=policy,
             baseline=baseline,
-            max_path_length=100,
+            max_episode_length=100,
             discount=0.99,
             max_kl_step=0.01)
 ```
@@ -139,7 +139,7 @@ def trpo_cartpole(ctxt=None, seed=1):
         algo = TRPO(env_spec=env.spec,
                     policy=policy,
                     baseline=baseline,
-                    max_path_length=100,
+                    max_episode_length=100,
                     discount=0.99,
                     max_kl_step=0.01)
 

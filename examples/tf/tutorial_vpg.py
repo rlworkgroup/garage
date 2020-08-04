@@ -25,7 +25,7 @@ class SimpleVPG:
     def __init__(self, env_spec, policy):
         self.env_spec = env_spec
         self.policy = policy
-        self.max_path_length = 200
+        self.max_episode_length = 200
         self._discount = 0.99
         self.init_opt()
 
