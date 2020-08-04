@@ -7,7 +7,7 @@ from garage.envs import GarageEnv
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.misc import tensor_utils
-from garage.sampler import RaySampler
+from garage.sampler import LocalSampler
 from garage.tf.policies import CategoricalMLPPolicy
 
 
@@ -20,7 +20,7 @@ class SimpleCEM:
         policy (garage.np.policies.Policy): Action policy.
 
     """
-    sampler_cls = RaySampler
+    sampler_cls = LocalSampler
 
     def __init__(self, env_spec, policy):
         self.env_spec = env_spec

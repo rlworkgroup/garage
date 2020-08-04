@@ -143,11 +143,11 @@ and `policy` fields on our algorithm, and call `runner.obtain_samples()`. We'll
 also need to seed the random number generators used for the experiment.
 
 ```py
-from garage.samplers import RaySampler
+from garage.samplers import LocalSampler
 
 class SimpleVPG:
 
-    sampler_cls = RaySampler
+    sampler_cls = LocalSampler
 
     def __init__(self, env_spec, policy):
         self.env_spec = env_spec
@@ -193,12 +193,12 @@ Cross Entropy Method (CEM) :cite:`rubinstein2004cross` using NumPy.
 import torch
 import numpy as np
 
-from garage.samplers import RaySampler
+from garage.samplers import LocalSampler
 from garage.misc import tensor_utils
 
 class SimpleVPG:
 
-    sampler_cls = RaySampler
+    sampler_cls = LocalSampler
 
     def __init__(self, env_spec, policy):
         self.env_spec = env_spec
@@ -348,7 +348,7 @@ import tensorflow as tf
 
 class SimpleVPG:
 
-    sampler_cls = RaySampler
+    sampler_cls = LocalSampler
 
     def __init__(self, env_spec, policy):
         self.env_spec = env_spec
@@ -510,10 +510,10 @@ parameters of the policy.
 ```py
 import numpy as np
 from garage.misc import tensor_utils
-from garage.sampler import RaySampler
+from garage.sampler import LocalSampler
 
 class SimpleCEM:
-    sampler_cls = RaySampler
+    sampler_cls = LocalSampler
 
     def __init__(self, env_spec, policy):
         self.env_spec = env_spec
