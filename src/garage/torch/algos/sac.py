@@ -462,7 +462,10 @@ class SAC(RLAlgorithm):
 
         """
         eval_episodes = obtain_evaluation_episodes(
-            self.policy, self._eval_env, num_eps=self._num_evaluation_episodes)
+            self.policy,
+            self._eval_env,
+            max_episode_length=self._max_episode_length_eval,
+            num_eps=self._num_evaluation_episodes)
         last_return = log_performance(epoch,
                                       eval_episodes,
                                       discount=self._discount)
