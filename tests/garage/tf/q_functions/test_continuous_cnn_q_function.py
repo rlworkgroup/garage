@@ -344,3 +344,6 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
         assert qf_clone._filters == qf._filters
         assert qf_clone._strides == qf._strides
         # pylint: enable=protected-access
+        for cloned_param, param in zip(qf_clone.model.parameters.values(),
+                                       qf.model.parameters.values()):
+            assert np.array_equal(cloned_param, param)

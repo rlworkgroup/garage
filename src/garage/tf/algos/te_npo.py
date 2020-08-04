@@ -129,9 +129,6 @@ class TENPO(RLAlgorithm):
         self._name = name
         self._name_scope = tf.name_scope(self._name)
         self._old_policy = policy.clone('old_policy')
-        self._old_policy.model.parameters = self.policy.model.parameters
-        self._old_policy.encoder.model.parameters = (
-            self.policy.encoder.model.parameters)
         self._use_softplus_entropy = use_softplus_entropy
         self._stop_ce_gradient = stop_ce_gradient
 
@@ -149,8 +146,6 @@ class TENPO(RLAlgorithm):
 
             self._inference = inference
             self._old_inference = inference.clone('old_inference')
-            self._old_inference.model.parameters = (
-                self._inference.model.parameters)
             self.inference_ce_coeff = float(inference_ce_coeff)
             self.inference_optimizer = inference_opt(**inference_opt_args)
             self.encoder_ent_coeff = encoder_ent_coeff

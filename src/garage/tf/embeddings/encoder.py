@@ -47,8 +47,7 @@ class Encoder(BaseEncoder, Module):
     def clone(self, name):
         """Return a clone of the encoder.
 
-        It only copies the configuration of the primitive,
-        not the parameters.
+        It copies the configuration of the primitive and also the parameters.
 
         Args:
             name (str): Name of the newly created encoder. It has to be

@@ -169,8 +169,7 @@ class ContinuousMLPPolicy(Policy):
     def clone(self, name):
         """Return a clone of the policy.
 
-        It only copies the configuration of the Q-function,
-        not the parameters.
+        It copies the configuration of the primitive and also the parameters.
 
         Args:
             name (str): Name of the newly created policy.
@@ -179,16 +178,19 @@ class ContinuousMLPPolicy(Policy):
             garage.tf.policies.ContinuousMLPPolicy: Clone of this object
 
         """
-        return self.__class__(name=name,
-                              env_spec=self._env_spec,
-                              hidden_sizes=self._hidden_sizes,
-                              hidden_nonlinearity=self._hidden_nonlinearity,
-                              hidden_w_init=self._hidden_w_init,
-                              hidden_b_init=self._hidden_b_init,
-                              output_nonlinearity=self._output_nonlinearity,
-                              output_w_init=self._output_w_init,
-                              output_b_init=self._output_b_init,
-                              layer_normalization=self._layer_normalization)
+        new_policy = self.__class__(
+            name=name,
+            env_spec=self._env_spec,
+            hidden_sizes=self._hidden_sizes,
+            hidden_nonlinearity=self._hidden_nonlinearity,
+            hidden_w_init=self._hidden_w_init,
+            hidden_b_init=self._hidden_b_init,
+            output_nonlinearity=self._output_nonlinearity,
+            output_w_init=self._output_w_init,
+            output_b_init=self._output_b_init,
+            layer_normalization=self._layer_normalization)
+        new_policy.model.parameters = self.model.parameters
+        return new_policy
 
     def __getstate__(self):
         """Object.__getstate__.

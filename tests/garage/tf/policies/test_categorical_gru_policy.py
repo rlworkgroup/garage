@@ -158,9 +158,3 @@ class TestCategoricalGRUPolicy(TfGraphTestCase):
         policy = CategoricalGRUPolicy(env_spec=env.spec,
                                       state_include_action=True)
         assert policy.state_info_specs == [('prev_action', (4, ))]
-
-    def test_clone(self):
-        env = GarageEnv(DummyDiscreteEnv(obs_dim=(10, ), action_dim=4))
-        policy = CategoricalGRUPolicy(env_spec=env.spec)
-        policy_clone = policy.clone('CategoricalGRUPolicyClone')
-        assert policy.env_spec == policy_clone.env_spec

@@ -89,18 +89,3 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
             output2 = sess.run(policy_pickled.distribution.probs,
                                feed_dict={policy_pickled.model.input: [[obs]]})
             assert np.array_equal(output1, output2)
-
-    @pytest.mark.parametrize('filters, strides, padding, hidden_sizes', [
-        (((3, (32, 32)), ), (1, ), 'VALID', (4, )),
-        (((3, (32, 32)), (3, (64, 64))), (2, 2), 'SAME', (4, 4)),
-    ])
-    def test_clone(self, filters, strides, padding, hidden_sizes):
-        env = GarageEnv(DummyDiscretePixelEnv())
-        policy = CategoricalCNNPolicy(env_spec=env.spec,
-                                      filters=filters,
-                                      strides=strides,
-                                      padding=padding,
-                                      hidden_sizes=hidden_sizes)
-
-        policy_clone = policy.clone('CategoricalCNNPolicyClone')
-        assert policy.env_spec == policy_clone.env_spec

@@ -173,9 +173,3 @@ class TestGaussianGRUPolicy(TfGraphTestCase):
         policy = GaussianGRUPolicy(env_spec=env.spec,
                                    state_include_action=True)
         assert policy.state_info_specs == [('prev_action', (4, ))]
-
-    def test_clone(self):
-        env = GarageEnv(DummyBoxEnv(obs_dim=(4, ), action_dim=(4, )))
-        policy = GaussianGRUPolicy(env_spec=env.spec)
-        policy_clone = policy.clone('GaussianGRUPolicyClone')
-        assert policy_clone.env_spec == policy.env_spec
