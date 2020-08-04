@@ -72,9 +72,11 @@ def slice_trajectories(trajectories, slice_size):
                 rewards=traj.rewards[indices],
                 step_types=traj.step_types[indices],
                 env_infos={k: v[indices]
-                           for (k, v) in traj.env_infos},
-                agent_infos={k: v[indices]
-                             for (k, v) in traj.agent_infos},
+                           for (k, v) in traj.env_infos.items()},
+                agent_infos={
+                    k: v[indices]
+                    for (k, v) in traj.agent_infos.items()
+                },
                 lengths=np.asarray([len(indices)], dtype='l'))
             sliced.append(t)
     return sliced
