@@ -45,7 +45,7 @@ class SAC(RLAlgorithm):
             environment that the agent is being trained in. Usually accessable
             by calling env.spec.
         max_episode_length (int): Max path length of the algorithm.
-        max_eval_path_length (int or None): Maximum length of paths used for
+        max_eval_episode_length (int or None): Maximum length of paths used for
             off-policy evaluation. If None, defaults to `max_episode_length`.
         gradient_steps_per_itr (int): Number of optimization steps that should
         max_episode_length(int): Max path length of the environment.
@@ -94,7 +94,7 @@ class SAC(RLAlgorithm):
         replay_buffer,
         *,  # Everything after this is numbers.
         max_episode_length,
-        max_eval_path_length=None,
+        max_eval_episode_length=None,
         gradient_steps_per_itr,
         fixed_alpha=None,
         target_entropy=None,
@@ -130,7 +130,7 @@ class SAC(RLAlgorithm):
         self._discount = discount
         self._reward_scale = reward_scale
         self.max_episode_length = max_episode_length
-        self._max_eval_path_length = max_eval_path_length
+        self._max_eval_path_length = max_eval_episode_length
 
         self.policy = policy
         self.env_spec = env_spec
@@ -464,6 +464,7 @@ class SAC(RLAlgorithm):
         eval_trajectories = obtain_evaluation_samples(
             self.policy,
             self._eval_env,
+            max_episode_length=self._max_eval_path_length,
             num_trajs=self._num_evaluation_trajectories)
         last_return = log_performance(epoch,
                                       eval_trajectories,
