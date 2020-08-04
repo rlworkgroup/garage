@@ -202,7 +202,6 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
             input_var = tf.compat.v1.placeholder(tf.uint8,
                                                  shape=(None, ) +
                                                  self._input_shape)
-            input_var = tf.cast(input_var, tf.float32) / 255.0
         else:
             input_var = tf.compat.v1.placeholder(tf.float32,
                                                  shape=(None, ) +
