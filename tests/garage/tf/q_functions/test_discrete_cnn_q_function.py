@@ -261,16 +261,13 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
     ])
     # yapf: enable
     def test_clone(self, filters, strides):
-        with mock.patch(('garage.tf.q_functions.'
-                         'discrete_cnn_q_function.CNNModel'),
-                        new=SimpleCNNModel):
-            with mock.patch(('garage.tf.q_functions.'
-                             'discrete_cnn_q_function.MLPModel'),
-                            new=SimpleMLPModel):
-                qf = DiscreteCNNQFunction(env_spec=self.env.spec,
-                                          filters=filters,
-                                          strides=strides,
-                                          dueling=False)
+        qf = DiscreteCNNQFunction(env_spec=self.env.spec,
+                                  filters=filters,
+                                  strides=strides,
+                                  dueling=False)
         qf_clone = qf.clone('another_qf')
         assert qf_clone._filters == qf._filters
         assert qf_clone._strides == qf._strides
+        for cloned_param, param in zip(qf_clone.parameters.values(),
+                                       qf.parameters.values()):
+            assert np.array_equal(cloned_param, param)

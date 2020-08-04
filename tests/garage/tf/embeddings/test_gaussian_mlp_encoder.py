@@ -92,6 +92,10 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         embedding = GaussianMLPEncoder(embedding_spec)
         clone_embedding = embedding.clone(name='cloned')
         assert clone_embedding.input_dim == embedding.input_dim
+        for cloned_param, param in zip(
+                clone_embedding.model.parameters.values(),
+                embedding.model.parameters.values()):
+            assert np.array_equal(cloned_param, param)
         assert clone_embedding.output_dim == embedding.output_dim
 
     def test_auxiliary(self):

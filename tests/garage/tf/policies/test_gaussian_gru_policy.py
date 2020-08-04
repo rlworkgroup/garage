@@ -189,3 +189,6 @@ class TestGaussianGRUPolicy(TfGraphTestCase):
         policy = GaussianGRUPolicy(env_spec=env.spec)
         policy_clone = policy.clone('GaussianGRUPolicyClone')
         assert policy_clone.env_spec == policy.env_spec
+        for cloned_param, param in zip(policy_clone.parameters.values(),
+                                       policy.parameters.values()):
+            assert np.array_equal(cloned_param, param)

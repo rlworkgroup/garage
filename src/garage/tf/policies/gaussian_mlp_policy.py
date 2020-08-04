@@ -215,8 +215,7 @@ class GaussianMLPPolicy(GaussianMLPModel, Policy):
     def clone(self, name):
         """Return a clone of the policy.
 
-        It only copies the configuration of the primitive,
-        not the parameters.
+        It copies the configuration of the primitive and also the parameters.
 
         Args:
             name (str): Name of the newly created policy. It has to be
@@ -227,7 +226,7 @@ class GaussianMLPPolicy(GaussianMLPModel, Policy):
             garage.tf.policies.GaussianMLPPolicy: Newly cloned policy.
 
         """
-        return self.__class__(
+        new_policy = self.__class__(
             name=name,
             env_spec=self._env_spec,
             hidden_sizes=self._hidden_sizes,
@@ -248,6 +247,8 @@ class GaussianMLPPolicy(GaussianMLPModel, Policy):
             std_output_nonlinearity=self._std_output_nonlinearity,
             std_parameterization=self._std_parameterization,
             layer_normalization=self._layer_normalization)
+        new_policy.parameters = self.parameters
+        return new_policy
 
     @property
     def env_spec(self):

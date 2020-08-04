@@ -182,8 +182,7 @@ class CategoricalCNNPolicy(CategoricalCNNModel, Policy):
     def clone(self, name):
         """Return a clone of the policy.
 
-        It only copies the configuration of the primitive,
-        not the parameters.
+        It copies the configuration of the primitive and also the parameters.
 
         Args:
             name (str): Name of the newly created policy. It has to be
@@ -194,19 +193,22 @@ class CategoricalCNNPolicy(CategoricalCNNModel, Policy):
             garage.tf.policies.CategoricalCNNPolicy: Newly cloned policy.
 
         """
-        return self.__class__(name=name,
-                              env_spec=self._env_spec,
-                              filters=self._filters,
-                              strides=self._strides,
-                              padding=self._padding,
-                              hidden_sizes=self._hidden_sizes,
-                              hidden_nonlinearity=self._hidden_nonlinearity,
-                              hidden_w_init=self._hidden_w_init,
-                              hidden_b_init=self._hidden_b_init,
-                              output_nonlinearity=self._output_nonlinearity,
-                              output_w_init=self._output_w_init,
-                              output_b_init=self._output_b_init,
-                              layer_normalization=self._layer_normalization)
+        new_policy = self.__class__(
+            name=name,
+            env_spec=self._env_spec,
+            filters=self._filters,
+            strides=self._strides,
+            padding=self._padding,
+            hidden_sizes=self._hidden_sizes,
+            hidden_nonlinearity=self._hidden_nonlinearity,
+            hidden_w_init=self._hidden_w_init,
+            hidden_b_init=self._hidden_b_init,
+            output_nonlinearity=self._output_nonlinearity,
+            output_w_init=self._output_w_init,
+            output_b_init=self._output_b_init,
+            layer_normalization=self._layer_normalization)
+        new_policy.parameters = self.parameters
+        return new_policy
 
     def __getstate__(self):
         """Object.__getstate__.

@@ -241,3 +241,16 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
         new_gcb.set_param_values(old_param_values)
         new_param_values = new_gcb.get_param_values()
         assert np.array_equal(old_param_values, new_param_values)
+
+    def test_clone(self):
+        gcb = GaussianCNNBaseline(env_spec=test_env_spec,
+                                  filters=((3, (3, 3)), (6, (3, 3))),
+                                  strides=(1, 1),
+                                  padding='SAME',
+                                  hidden_sizes=(32, ),
+                                  adaptive_std=False,
+                                  use_trust_region=False)
+        cloned_gcb_model = gcb.clone_model(name='cloned_model')
+        for cloned_param, param in zip(cloned_gcb_model.parameters.values(),
+                                       gcb.parameters.values()):
+            assert np.array_equal(cloned_param, param)

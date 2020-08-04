@@ -219,8 +219,7 @@ class DiscreteCNNQFunction(Sequential):
     def clone(self, name):
         """Return a clone of the Q-function.
 
-        It only copies the configuration of the Q-function,
-        not the parameters.
+        It copies the configuration of the primitive and also the parameters.
 
         Args:
             name(str) : Name of the newly created q-function.
@@ -229,23 +228,25 @@ class DiscreteCNNQFunction(Sequential):
             garage.tf.q_functions.DiscreteCNNQFunction: Clone of this object
 
         """
-        return self.__class__(name=name,
-                              env_spec=self._env_spec,
-                              filters=self._filters,
-                              strides=self._strides,
-                              hidden_sizes=self._hidden_sizes,
-                              padding=self._padding,
-                              max_pooling=self._max_pooling,
-                              pool_shapes=self._pool_shapes,
-                              pool_strides=self._pool_strides,
-                              hidden_nonlinearity=self._hidden_nonlinearity,
-                              hidden_w_init=self._hidden_w_init,
-                              hidden_b_init=self._hidden_b_init,
-                              output_nonlinearity=self._output_nonlinearity,
-                              output_w_init=self._output_w_init,
-                              output_b_init=self._output_b_init,
-                              dueling=self._dueling,
-                              layer_normalization=self._layer_normalization)
+        new_qf = self.__class__(name=name,
+                                env_spec=self._env_spec,
+                                filters=self._filters,
+                                strides=self._strides,
+                                hidden_sizes=self._hidden_sizes,
+                                padding=self._padding,
+                                max_pooling=self._max_pooling,
+                                pool_shapes=self._pool_shapes,
+                                pool_strides=self._pool_strides,
+                                hidden_nonlinearity=self._hidden_nonlinearity,
+                                hidden_w_init=self._hidden_w_init,
+                                hidden_b_init=self._hidden_b_init,
+                                output_nonlinearity=self._output_nonlinearity,
+                                output_w_init=self._output_w_init,
+                                output_b_init=self._output_b_init,
+                                dueling=self._dueling,
+                                layer_normalization=self._layer_normalization)
+        new_qf.parameters = self.parameters
+        return new_qf
 
     def __setstate__(self, state):
         """Object.__setstate__.
