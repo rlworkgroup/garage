@@ -86,6 +86,74 @@ class DiscreteQfDerivedPolicy(Policy):
 
         return opt_actions, dict()
 
+    def get_trainable_vars(self):
+        """Get trainable variables.
+
+        Returns:
+            List[tf.Variable]: A list of trainable variables in the current
+                variable scope.
+
+        """
+        return self._qf.get_trainable_vars()
+
+    def get_global_vars(self):
+        """Get global variables.
+
+        Returns:
+            List[tf.Variable]: A list of global variables in the current
+                variable scope.
+
+        """
+        return self._qf.get_global_vars()
+
+    def get_regularizable_vars(self):
+        """Get all network weight variables in the current scope.
+
+        Returns:
+            List[tf.Variable]: A list of network weight variables in the
+                current variable scope.
+
+        """
+        return self._qf.get_regularizable_vars()
+
+    def get_params(self):
+        """Get the trainable variables.
+
+        Returns:
+            List[tf.Variable]: A list of trainable variables in the current
+                variable scope.
+
+        """
+        return self._qf.get_params()
+
+    def get_param_shapes(self):
+        """Get parameter shapes.
+
+        Returns:
+            List[tuple]: A list of variable shapes.
+
+        """
+        return self._qf.get_param_shapes()
+
+    def get_param_values(self):
+        """Get param values.
+
+        Returns:
+            np.ndarray: Values of the parameters evaluated in
+                the current session
+
+        """
+        return self._qf.get_param_values()
+
+    def set_param_values(self, param_values):
+        """Set param values.
+
+        Args:
+            param_values (np.ndarray): A numpy array of parameter values.
+
+        """
+        self._qf.set_param_values(param_values)
+
     def __getstate__(self):
         """Object.__getstate__.
 
