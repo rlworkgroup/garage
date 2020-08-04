@@ -134,7 +134,7 @@ experiment launcher.
 export CUDA_VISIBLE_DEVICES=-1  # CPU only
 ```
 
-You can see more information about using GPU [here](experiments).
+You can see more information about using GPU [here](experiments.html#running-experiments-on-gpu-cpu).
 
 ----
 
