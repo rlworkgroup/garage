@@ -455,7 +455,7 @@ class StepType(enum.IntEnum):
     Note that the last `TimeStep` in a sequence can either be TERMINAL or
     TIMEOUT.
 
-    Suppose max_path_length = 5:
+    Suppose max_episode_length = 5:
     * A success sequence terminated at step 4 will look like:
         FIRST, MID, MID, TERMINAL
     * A success sequence terminated at step 5 will look like:
