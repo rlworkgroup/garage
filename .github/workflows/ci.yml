@@ -3,43 +3,42 @@ name: Garage CI
 env:
   GARAGE_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   TRAVIS_COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
-  DOCKER_TAG: garage-ci-${{ github.run_id }}
+  DOCKER_TAG: garage-ci-189158592
   OWNER: "rlworkgroup"
   DOCKER_CACHE_REPO: "garage-ci"
+  MJKEY_PATH: ${HOME}/.mujoco/mjkey.txt
 
 on:
   pull_request:
     branches: [ master ]
 
 jobs:
-  build_docker_container:
-    name: Build and Push Docker Container
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - name: Login to GitHub Package Registry
-      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
-    - name: Build Docker container
-      run: |
-        docker build . \
-          -f docker/Dockerfile \
-          --target garage-dev-18.04 \
-          -t "${DOCKER_TAG}" \
-          --build-arg GARAGE_GH_TOKEN \
-          --cache-from="docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-    - name: Push to cache (GitHub Package Registry)
-      run: |
-        docker tag "${DOCKER_TAG}" "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-        docker push "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+#  build_docker_container:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#    - uses: actions/checkout@v2
+#      with:
+#        fetch-depth: 0
+#    - name: Login to GitHub Package Registry
+#      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
+#    - name: Build Docker container
+#      run: |
+#        docker build . \
+#          -f docker/Dockerfile \
+#          --target garage-dev-18.04 \
+#          -t "${DOCKER_TAG}" \
+#          --build-arg GARAGE_GH_TOKEN \
+#          --cache-from="docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+#    - name: Push to cache (GitHub Package Registry)
+#      run: |
+#        docker tag "${DOCKER_TAG}" "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+#        docker push "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
 
 
   check_pre_commit:
-    name: Pre-commit Checking
     runs-on: ubuntu-latest
-    needs: build_docker_container
+#    needs: build_docker_container
 
     steps:
     - uses: actions/checkout@v2
@@ -49,7 +48,7 @@ jobs:
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
     - name: Pull from cache (GitHub Package Registry)
       run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-    - name: Tag docker image
+    - name: Rename docker image
       run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Check pre-commit
       run: |
@@ -58,17 +57,32 @@ jobs:
           --memory 7500m \
           --memory-swap 7500m \
           "${DOCKER_TAG}" scripts/travisci/check_precommit.sh
+    - name: Run normal tests
+      run: |
+        docker run \
+          -e TRAVIS_COMMIT_RANGE \
+          --memory 7500m \
+          --memory-swap 7500m \
+          "${DOCKER_TAG}" \
+          /bin/bash -c \
+          "[ ! -f ${MJKEY_PATH} ] || mv ${MJKEY_PATH} ${MJKEY_PATH}.bak &&
+          pytest --cov=garage --cov-report=xml -m \
+              'not nightly and not huge and not flaky and not large and not mujoco and not mujoco_long' --durations=20 &&
+          for i in {1..5}; do \
+          	bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
+          		|| echo 'Retrying...' && sleep 30 && continue; \
+          	exit 1; \
+          done"
 
 
-  delete_docker_container:
-    name: Delete Docker Container
-    runs-on: ubuntu-latest
-    needs: build_docker_container
-
-    steps:
-    - uses: actions/delete-package-versions@v1
-      with:
-        owner: ${{ env.OWNER }}
-        repo: ${{ env.DOCKER_CACHE_REPO }}
-        package-name: ${{ env.DOCKER_TAG }}
-        token: ${{ secrets.CI_REGISTRY_TOKEN }}
+#  delete_docker_container:
+#    runs-on: ubuntu-latest
+#    needs: build_docker_container
+#
+#    steps:
+#    - uses: actions/delete-package-versions@v1
+#      with:
+#        owner: ${{ env.OWNER }}
+#        repo: ${{ env.DOCKER_CACHE_REPO }}
+#        package-name: ${{ env.DOCKER_TAG }}
+#        token: ${{ secrets.CI_REGISTRY_TOKEN }}
