@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-This is an example to train a task with DDPG + HER algorithm.
+"""This is an example to train a task with DDPG + HER algorithm.
 
 Here it creates a gym environment FetchReach.
 
@@ -22,7 +21,15 @@ from garage.tf.q_functions import ContinuousMLPQFunction
 
 
 def run_task(snapshot_config, *_):
-    """Run task."""
+    """Run task.
+
+    Args:
+        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+            configuration used by LocalRunner to create the snapshotter.
+
+        _ (object): Ignored by this function.
+
+    """
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(gym.make('FetchReach-v1'))
 
