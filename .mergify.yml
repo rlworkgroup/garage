@@ -50,7 +50,7 @@ pull_request_rules:
       - status-success="Travis CI - Pull Request"
       - status-success="docs/readthedocs.org:garage"
       - label=ready-to-merge
-      - -files~=\.(?!md|rst|png)
+      - -files~=\.(?!md|rst|png|bib)
     actions:
       merge:
         strict: smart
@@ -67,7 +67,7 @@ pull_request_rules:
       - status-success="Travis CI - Pull Request"
       - status-success="docs/readthedocs.org:garage"
       - label=ready-to-merge
-      - -files~=\.(?!md|rst|png)
+      - -files~=\.(?!md|rst|png|bib)
     actions:
       merge:
         strict: smart
