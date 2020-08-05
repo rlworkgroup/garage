@@ -29,7 +29,10 @@ disable =
     # Detection seems buggy or unhelpful
     duplicate-code,
     # Allow more readable code
-    no-else-return
+    no-else-return,
+    # Don't show suppressed messages
+    suppressed-message,
+    locally-disabled,
 
 [REPORTS]
 msg-template = {path}:{line:3d},{column}: {msg} ({symbol})

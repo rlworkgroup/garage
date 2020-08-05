@@ -44,7 +44,9 @@ disable =
     redefined-outer-name,
     too-few-public-methods,
     unused-import,
-
+    # Don't show suppressed messages
+    suppressed-message,
+    locally-disabled,
 
 [REPORTS]
 msg-template = {path}:{line:3d},{column}: {msg} ({symbol})
