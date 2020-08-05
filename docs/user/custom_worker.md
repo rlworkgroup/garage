@@ -149,7 +149,7 @@ from garage.tf.algos.rl2 import RL2Worker
                  ...)
 ```
 
-You can see a full example of ppo with RL2 [here](https://github.com/rlworkgroup/garage/blob/master/examples/tf/rl2_ppo_halfcheetah.py).
+You can see a full example launcher of PPO with RL2 [here](https://github.com/rlworkgroup/garage/blob/master/examples/tf/rl2_ppo_halfcheetah.py).
 
 ## References
 
