@@ -47,7 +47,6 @@ def rollout(env,
             * dones(np.array): Array of termination signals.
 
     """
-    assert deterministic == True
     observations = []
     actions = []
     rewards = []
@@ -64,8 +63,6 @@ def rollout(env,
         a, agent_info = agent.get_action(o)
         if deterministic and 'mean' in agent_info:
             a = agent_info['mean']
-        else:
-            assert False
         next_o, r, d, env_info = env.step(a)
         observations.append(o)
         rewards.append(r)
