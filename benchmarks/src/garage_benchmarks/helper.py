@@ -41,6 +41,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3 import Retry
+
 _plot = None
 _log_dir = None
 _auto = False
@@ -240,3 +244,36 @@ def _upload_to_gcp_storage(exec_dir):
                 if os.path.isfile(file_path):
                     blob = _bucket.blob(os.path.join(remote_folder, file_name))
                     blob.upload_from_filename(file_path)
+
+
+def notify(msg):
+    """Send a message to slack.
+
+    Requires setting the OAuth token for the autobenchmarknotifier bot as an
+    environment variable called SLACK_TOKEN.
+
+    The messages are sent to the channel garage-auto-benchmark-updates in the
+    USC CLVR slack as bot named autobenchmarknotifier.
+
+    Args:
+        msg (str): Message to be sent
+
+    """
+    retry_strategy = Retry(
+        total=3,
+        status_forcelist=[429, 500, 502, 503, 504],
+        method_whitelist=['POST'],
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    http = requests.Session()
+    http.mount('https://', adapter)
+    token = os.getenv('SLACK_TOKEN')
+    headers = {
+        'Authorization': f'Bearer {token}',
+        'Content-Type': 'application/json; charset=utf-8'
+    }
+    body = {'channel': 'garage-auto-benchmark-updates', 'text': msg}
+    resp = http.post('https://slack.com/api/chat.postMessage',
+                     json=body,
+                     headers=headers)
+    print(resp.text)

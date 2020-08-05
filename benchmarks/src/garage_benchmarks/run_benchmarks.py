@@ -11,6 +11,8 @@ Examples:
 """
 # yapf: disable
 import inspect
+import sys
+import traceback
 
 import click
 
@@ -19,6 +21,7 @@ from garage_benchmarks import (benchmark_algos,
                                benchmark_baselines,
                                benchmark_policies,
                                benchmark_q_functions)
+from garage_benchmarks.helper import notify
 
 # yapf: enable
 
@@ -71,9 +74,19 @@ def run(names):
 @click.command()
 def auto():
     """Start continuous benchmarking."""
+    notify('> Starting continuous benchmarking')
     benchmark_functions = _get_runs_dict(benchmark_auto).values()
     for function in benchmark_functions:
-        function()
+        notify(f'> Starting {function.__name__}')
+        try:
+            function()
+        except Exception as e:  # pylint: disable=broad-except
+            exc_info = sys.exc_info()
+            notify('```' + ''.join(traceback.format_exception(*exc_info)) +
+                   '```')
+            print(e)
+        notify(f'> Finished {function.__name__}')
+    notify('> Benchmarking finished')
 
 
 cli.add_command(list)
