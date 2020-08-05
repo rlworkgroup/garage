@@ -5,14 +5,11 @@ It provides observations augmented with one-hot representation of tasks.
 """
 
 import random
-from copy import deepcopy
 
 import akro
 import numpy as np
 
-from garage import Environment, StepType, TimeStep
-from garage.envs import EnvSpec
-from garage.envs.garage_env import GarageEnv
+from garage import EnvSpec, EnvStep, Wrapper
 
 
 def round_robin_strategy(num_tasks, last_task=None):
@@ -46,7 +43,7 @@ def uniform_random_strategy(num_tasks, _):
     return random.randint(0, num_tasks - 1)
 
 
-class MultiEnvWrapper(Environment):
+class MultiEnvWrapper(Wrapper):
     """A wrapper class to handle multiple environments.
 
     This wrapper adds an integer 'task_id' to env_info every timestep.
@@ -83,11 +80,8 @@ class MultiEnvWrapper(Environment):
         self._num_tasks = len(envs)
         self._active_task_index = None
         self._mode = mode
-        self._last_observation = None
-        for i, env in enumerate(envs):
-            if not isinstance(env, GarageEnv):
-                envs[i] = GarageEnv(env)
-        self.env = envs[0]
+
+        super().__init__(envs[0])
         if env_names is not None:
             assert isinstance(env_names, list), 'env_names must be a list'
             msg = ('env_names are not unique or there is not an env_name',
@@ -97,17 +91,12 @@ class MultiEnvWrapper(Environment):
         self._task_envs = []
         for env in envs:
             if (env.observation_space.shape !=
-                    self.env.observation_space.shape):
+                    self._env.observation_space.shape):
                 raise ValueError(
                     'Observation space of all envs should be same.')
-            if env.action_space.shape != self.env.action_space.shape:
+            if env.action_space.shape != self._env.action_space.shape:
                 raise ValueError('Action space of all envs should be same.')
             self._task_envs.append(env)
-
-    @property
-    def action_space(self):
-        """akro.Space: The action space specification."""
-        return self.env.action_space
 
     @property
     def observation_space(self):
@@ -118,14 +107,14 @@ class MultiEnvWrapper(Environment):
 
         """
         if self._mode == 'vanilla':
-            return self.env.observation_space
+            return self._env.observation_space
         elif self._mode == 'add-onehot':
             task_lb, task_ub = self.task_space.bounds
-            env_lb, env_ub = self.env.observation_space.bounds
+            env_lb, env_ub = self._env.observation_space.bounds
             return akro.Box(np.concatenate([env_lb, task_lb]),
                             np.concatenate([env_ub, task_ub]))
         else:  # self._mode == 'del-onehot'
-            env_lb, env_ub = self.env.observation_space.bounds
+            env_lb, env_ub = self._env.observation_space.bounds
             num_tasks = self._num_tasks
             return akro.Box(env_lb[:-num_tasks], env_ub[:-num_tasks])
 
@@ -138,14 +127,9 @@ class MultiEnvWrapper(Environment):
                 wrapped environments.
 
         """
-        return  EnvSpec(action_space=self.action_space,
-                        observation_space=self.observation_space,
-                        max_episode_length=self.env.spec.max_episode_length)
-
-    @property
-    def render_modes(self):
-        """list: A list of string representing the supported render modes."""
-        return self.env.render_modes
+        return EnvSpec(action_space=self.action_space,
+                       observation_space=self.observation_space,
+                       max_episode_length=self._env.spec.max_episode_length)
 
     @property
     def num_tasks(self):
@@ -177,40 +161,35 @@ class MultiEnvWrapper(Environment):
             int: Index of active task.
 
         """
-        if hasattr(self.env, 'active_task_index'):
-            return self.env.active_task_index
+        if hasattr(self._env, 'active_task_index'):
+            return self._env.active_task_index
         else:
             return self._active_task_index
 
-    def reset(self, **kwargs):
+    def reset(self):
         """Sample new task and call reset on new task env.
 
-        Args:
-            kwargs (dict): Keyword arguments to be passed to
-            Environment.reset()
-
         Returns:
-            numpy.ndarray: The first observation. It must conforms to
-            `observation_space`.
-            dict: The episode-level information. Note that this is not part
-            of `env_info` provided in `step()`. It contains information of
-            the entire episode， which could be needed to determine the first
-            action (e.g. in the case of goal-conditioned or MTRL.)
+            numpy.ndarray: The first observation conforming to
+                `observation_space`.
+            dict: The episode-level information.
+                Note that this is not part of `env_info` provided in `step()`.
+                It contains information of he entire episode， which could be
+                needed to determine the first action (e.g. in the case of
+                goal-conditioned or MTRL.)
 
         """
         self._active_task_index = self._sample_strategy(
             self._num_tasks, self._active_task_index)
-        self.env = self._task_envs[self._active_task_index]
-        obs, episode_info = self.env.reset(**kwargs)
-        self._step_cnt = 0
+        self._env = self._task_envs[self._active_task_index]
+        obs, episode_info = self._env.reset()
+
         if self._mode == 'vanilla':
             pass
         elif self._mode == 'add-onehot':
             obs = np.concatenate([obs, self._active_task_one_hot()])
         else:  # self._mode == 'del-onehot'
             obs = obs[:-self._num_tasks]
-
-        self._last_observation = obs
 
         return obs, episode_info
 
@@ -221,51 +200,30 @@ class MultiEnvWrapper(Environment):
             action (object): object to be passed in Environment.reset(action)
 
         Returns:
-            TimeStep: The time step resulting from the action.
+            EnvStep: The environment step resulting from the action.
 
         """
-        ts = self.env.step(action)
-        self._step_cnt += 1
-        if self._mode == 'add-onehot':
-            obs = np.concatenate([ts.observation,
-                                             self._active_task_one_hot()])
-        elif self._mode == 'del-onehot':
-            obs = ts.observation[:-self._num_tasks]
-        else:  # self._mode == 'vanilla'
-            obs = ts.observation
+        es = self._env.step(action)
 
-        env_info = deepcopy(ts.env_info)
-        if 'task_id' not in ts.env_info:
+        if self._mode == 'add-onehot':
+            obs = np.concatenate([es.observation, self._active_task_one_hot()])
+        elif self._mode == 'del-onehot':
+            obs = es.observation[:-self._num_tasks]
+        else:  # self._mode == 'vanilla'
+            obs = es.observation
+
+        env_info = es.env_info
+        if 'task_id' not in es.env_info:
             env_info['task_id'] = self._active_task_index
         if self._env_names is not None:
             env_info['task_name'] = self._env_names[self._active_task_index]
 
-        last_obs = self._last_observation
-        self._last_observation = obs
-
-        return TimeStep(
-            env_spec=self.spec,
-            observation=last_obs,
-            action=action,
-            reward=ts.reward,
-            next_observation=obs,
-            env_info=env_info,
-            agent_info=ts.agent_info,
-            step_type=ts.step_type
-        )
-
-    def render(self, mode):
-        """Renders the environment.
-
-        Args:
-            mode (str): the mode to render with. The string must be present in
-                `self.render_modes`.
-        """
-        self.env.render(mode)
-
-    def visualize(self):
-        """Creates a visualization of the environment."""
-        self.env.visualize()
+        return EnvStep(env_spec=self.spec,
+                       action=action,
+                       reward=es.reward,
+                       observation=obs,
+                       env_info=env_info,
+                       step_type=es.step_type)
 
     def close(self):
         """Close all task envs."""

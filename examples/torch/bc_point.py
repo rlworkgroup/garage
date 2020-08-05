@@ -4,7 +4,7 @@ import click
 import numpy as np
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, PointEnv
+from garage.envs import PointEnv
 from garage.experiment import LocalRunner
 from garage.torch.algos import BC
 from garage.torch.policies import GaussianMLPPolicy, Policy

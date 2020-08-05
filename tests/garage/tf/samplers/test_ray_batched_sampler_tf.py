@@ -11,7 +11,7 @@ from unittest.mock import Mock
 import ray
 
 # pylint: disable=unused-import
-from garage.envs import GarageEnv, GridWorldEnv
+from garage.envs import GridWorldEnv, GymEnv
 from garage.np.policies import ScriptedPolicy
 from garage.sampler import RaySampler, WorkerFactory
 
@@ -41,7 +41,7 @@ class TestRaySamplerTF():
     """
 
     def setup_method(self):
-        self.env = GarageEnv(GridWorldEnv(desc='4x4'))
+        self.env = GridWorldEnv(desc='4x4')
         self.policy = ScriptedPolicy(
             scripted_actions=[2, 2, 1, 0, 3, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 1])
         self.algo = Mock(env_spec=self.env.spec,

@@ -1,4 +1,4 @@
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner
 from garage.np.algos import CMAES
 from garage.np.baselines import LinearFeatureBaseline
@@ -13,7 +13,7 @@ class TestCMAES(TfGraphTestCase):
     def test_cma_es_cartpole(self):
         """Test CMAES with Cartpole-v1 environment."""
         with LocalTFRunner(snapshot_config) as runner:
-            env = GarageEnv(env_name='CartPole-v1')
+            env = GymEnv('CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
                                           env_spec=env.spec,

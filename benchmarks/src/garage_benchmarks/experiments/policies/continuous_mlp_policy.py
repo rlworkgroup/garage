@@ -1,9 +1,8 @@
 """Benchmarking experiment of the ContinuousMLPPolicy."""
-import gym
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic, LocalTFRunner
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
@@ -42,7 +41,7 @@ def continuous_mlp_policy(ctxt, env_id, seed):
     deterministic.set_seed(seed)
 
     with LocalTFRunner(ctxt) as runner:
-        env = normalize(GarageEnv(gym.make(env_id)))
+        env = normalize(GymEnv(env_id))
 
         policy = ContinuousMLPPolicy(
             env_spec=env.spec,

@@ -8,7 +8,7 @@ import pytest
 import tensorflow as tf
 
 from garage import InOutSpec
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.tf.embeddings import GaussianMLPEncoder
 
 from tests.fixtures import TfGraphTestCase
@@ -26,7 +26,7 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         ((2, 2), (2, 2)),
     ])
     def test_get_embedding(self, obs_dim, embedding_dim):
-        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=embedding_dim))
+        env = GymEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=embedding_dim))
         embedding_spec = InOutSpec(input_space=env.spec.observation_space,
                                    output_space=env.spec.action_space)
         embedding = GaussianMLPEncoder(embedding_spec)
@@ -36,7 +36,7 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         embedding.build(task_input, name='task_input')
 
         env.reset()
-        obs, _, _, _ = env.step(1)
+        obs = env.step(env.action_space.sample()).observation
 
         latent, _ = embedding.get_latent(obs)
         latents, _ = embedding.get_latents([obs] * 5)
@@ -53,13 +53,13 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         ((2, 2), (2, 2)),
     ])
     def test_is_pickleable(self, obs_dim, embedding_dim):
-        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=embedding_dim))
+        env = GymEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=embedding_dim))
         embedding_spec = InOutSpec(input_space=env.spec.observation_space,
                                    output_space=env.spec.action_space)
         embedding = GaussianMLPEncoder(embedding_spec)
 
         env.reset()
-        obs, _, _, _ = env.step(1)
+        obs = env.step(env.action_space.sample()).observation
         obs_dim = env.spec.observation_space.flat_dim
 
         with tf.compat.v1.variable_scope('GaussianMLPEncoder/GaussianMLPModel',
@@ -86,7 +86,7 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
             assert np.array_equal(output1, output2)
 
     def test_clone(self):
-        env = GarageEnv(DummyBoxEnv(obs_dim=(2, ), action_dim=(2, )))
+        env = GymEnv(DummyBoxEnv(obs_dim=(2, ), action_dim=(2, )))
         embedding_spec = InOutSpec(input_space=env.spec.observation_space,
                                    output_space=env.spec.action_space)
         embedding = GaussianMLPEncoder(embedding_spec)

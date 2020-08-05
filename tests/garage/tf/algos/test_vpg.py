@@ -1,6 +1,6 @@
 import pytest
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
@@ -16,7 +16,7 @@ class TestVPG(TfGraphTestCase):
     def test_vpg_cartpole(self):
         """Test VPG with CartPole-v1 environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = GarageEnv(env_name='CartPole-v1')
+            env = GymEnv('CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
                                           env_spec=env.spec,

@@ -6,7 +6,7 @@ performance is too low.
 import numpy as np
 import pytest
 
-from garage.envs import normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import LocalTFRunner, task_sampler
 from garage.experiment.meta_evaluator import MetaEvaluator
 from garage.np.baselines import LinearFeatureBaseline
@@ -42,9 +42,9 @@ class TestRL2PPO(TfGraphTestCase):
         self.max_episode_length = 100
         self.meta_batch_size = 10
         self.episode_per_task = 4
-        self.tasks = task_sampler.SetTaskSampler(lambda: RL2Env(env=normalize(
-            HalfCheetahDirEnv())))
-        self.env_spec = RL2Env(env=normalize(HalfCheetahDirEnv())).spec
+        self.tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
+            normalize(GymEnv(HalfCheetahDirEnv()))))
+        self.env_spec = RL2Env(normalize(GymEnv(HalfCheetahDirEnv()))).spec
         self.policy = GaussianGRUPolicy(env_spec=self.env_spec,
                                         hidden_dim=64,
                                         state_include_action=False)

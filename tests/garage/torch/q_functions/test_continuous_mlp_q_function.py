@@ -5,7 +5,7 @@ import pytest
 import torch
 from torch import nn
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.torch.q_functions import ContinuousMLPQFunction
 
 from tests.fixtures.envs.dummy import DummyBoxEnv
@@ -17,7 +17,7 @@ class TestContinuousNNQFunction:
         (1, ), (2, ), (3, ), (1, 1), (2, 2)])
     # yapf: enable
     def test_forward(self, hidden_sizes):
-        env_spec = GarageEnv(DummyBoxEnv())
+        env_spec = GymEnv(DummyBoxEnv()).spec
         obs_dim = env_spec.observation_space.flat_dim
         act_dim = env_spec.action_space.flat_dim
         obs = torch.ones(obs_dim, dtype=torch.float32).unsqueeze(0)
@@ -46,7 +46,7 @@ class TestContinuousNNQFunction:
     ])
     # yapf: enable
     def test_output_shape(self, batch_size, hidden_sizes):
-        env_spec = GarageEnv(DummyBoxEnv())
+        env_spec = GymEnv(DummyBoxEnv()).spec
         obs_dim = env_spec.observation_space.flat_dim
         act_dim = env_spec.action_space.flat_dim
         obs = torch.ones(batch_size, obs_dim, dtype=torch.float32)
@@ -66,7 +66,7 @@ class TestContinuousNNQFunction:
         (1, ), (2, ), (3, ), (1, 5), (2, 7, 10)])
     # yapf: enable
     def test_is_pickleable(self, hidden_sizes):
-        env_spec = GarageEnv(DummyBoxEnv())
+        env_spec = GymEnv(DummyBoxEnv()).spec
         obs_dim = env_spec.observation_space.flat_dim
         act_dim = env_spec.action_space.flat_dim
         obs = torch.ones(obs_dim, dtype=torch.float32).unsqueeze(0)

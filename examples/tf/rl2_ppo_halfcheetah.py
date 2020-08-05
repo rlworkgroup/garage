@@ -4,6 +4,7 @@
 import click
 
 from garage import wrap_experiment
+from garage.envs import GymEnv
 from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv
 from garage.experiment import LocalTFRunner, task_sampler
 from garage.experiment.deterministic import set_seed
@@ -39,9 +40,9 @@ def rl2_ppo_halfcheetah(ctxt, seed, max_episode_length, meta_batch_size,
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
         tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
-            env=HalfCheetahVelEnv()))
+            GymEnv(HalfCheetahVelEnv())))
 
-        env_spec = RL2Env(env=HalfCheetahVelEnv()).spec
+        env_spec = RL2Env(GymEnv(HalfCheetahVelEnv())).spec
         policy = GaussianGRUPolicy(name='policy',
                                    hidden_dim=64,
                                    env_spec=env_spec,

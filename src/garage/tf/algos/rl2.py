@@ -2,6 +2,7 @@
 
 This module contains RL2, RL2Worker and the environment wrapper for RL2.
 """
+# yapf: disable
 import abc
 import collections
 
@@ -9,16 +10,21 @@ import akro
 from dowel import logger
 import numpy as np
 
-from garage import (Environment, log_multitask_performance, StepType, TimeStep,
-                    TrajectoryBatch)
-from garage.envs import EnvSpec
+from garage import (EnvSpec,
+                    EnvStep,
+                    log_multitask_performance,
+                    StepType,
+                    TrajectoryBatch,
+                    Wrapper)
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import MetaRLAlgorithm
 from garage.sampler import DefaultWorker
 from garage.tf.algos._rl2npo import RL2NPO
 
+# yapf: enable
 
-class RL2Env(Environment):
+
+class RL2Env(Wrapper):
     """Environment wrapper for RL2.
 
     In RL2, observation is concatenated with previous action,
@@ -29,19 +35,13 @@ class RL2Env(Environment):
     """
 
     def __init__(self, env):
-        self.env = env
-
-        self._last_observation = None
+        super().__init__(env)
 
         self._observation_space = self._create_rl2_obs_space()
-        self._spec = EnvSpec(action_space=self.env.action_space,
-                             observation_space=self._observation_space,
-                             max_episode_length=self.env.spec.max_episode_length)
-
-    @property
-    def action_space(self):
-        """akro.Space: The action space specification."""
-        return self.env.action_space
+        self._spec = EnvSpec(
+            action_space=self.action_space,
+            observation_space=self._observation_space,
+            max_episode_length=self._env.spec.max_episode_length)
 
     @property
     def observation_space(self):
@@ -53,33 +53,23 @@ class RL2Env(Environment):
         """EnvSpec: The environment specification."""
         return self._spec
 
-    @property
-    def render_modes(self):
-        """list: A list of string representing the supported render modes."""
-        return self.env.render_modes
-
-    def reset(self, **kwargs):
+    def reset(self):
         """Call reset on wrapped env.
 
-        Args:
-            kwargs: Keyword args
-
         Returns:
-            numpy.ndarray: The first observation. It must conforms to
-            `observation_space`.
-            dict: The episode-level information. Note that this is not part
-            of `env_info` provided in `step()`. It contains information of
-            the entire episode， which could be needed to determine the first
-            action (e.g. in the case of goal-conditioned or MTRL.)
+            numpy.ndarray: The first observation conforming to
+                `observation_space`.
+            dict: The episode-level information.
+                Note that this is not part of `env_info` provided in `step()`.
+                It contains information of he entire episode， which could be
+                needed to determine the first action (e.g. in the case of
+                goal-conditioned or MTRL.)
 
         """
-        del kwargs
-        first_obs, episode_info = self.env.reset()
+        first_obs, episode_info = self._env.reset()
         first_obs = np.concatenate(
             [first_obs,
-             np.zeros(self.env.action_space.shape), [0], [0]])
-
-        self._last_observation = first_obs
+             np.zeros(self._env.action_space.shape), [0], [0]])
 
         return first_obs, episode_info
 
@@ -90,76 +80,25 @@ class RL2Env(Environment):
             action (np.ndarray): An action provided by the agent.
 
         Returns:
-            TimeStep: The time step resulting from the action.
+            EnvStep: The environment step resulting from the action.
 
         Raises:
             RuntimeError: if `step()` is called after the environment has been
                 constructed and `reset()` has not been called.
 
         """
-        ts = self.env.step(action)
-        next_obs = ts.observation
-        next_obs = np.concatenate([next_obs, action, [ts.reward],
-                                      [ts.step_type == StepType.TERMINAL]])
-        last_obs = self._last_observation
-        self._last_observation = next_obs
+        es = self._env.step(action)
+        next_obs = es.observation
+        next_obs = np.concatenate([
+            next_obs, action, [es.reward], [es.step_type == StepType.TERMINAL]
+        ])
 
-        return TimeStep(
-            env_spec=self.spec,
-            observation=last_obs,
-            action=action,
-            reward=ts.reward,
-            next_observation=next_obs,
-            env_info=ts.env_info,
-            agent_info=ts.agent_info,
-            step_type=ts.step_type)
-
-    def render(self, mode):
-        """Renders the environment.
-
-        Args:
-            mode (str): the mode to render with. The string must be present in
-                `self.render_modes`.
-        """
-        return self.env.render(mode)
-
-    def visualize(self):
-        """Creates a visualization of the environment."""
-        self.visualize()
-
-    def close(self):
-        """Close the wrapped env."""
-        self.env.close()
-
-    def sample_tasks(self, num_tasks):
-        """Sample a list of `num_tasks` tasks.
-
-        Needed for environments that implement `sample_tasks` and `set_task`.
-        For example, :py:class:`~HalfCheetahVelEnv`, as implemented in Garage.
-
-        Args:
-            num_tasks (int): Number of tasks to sample.
-
-        Returns:
-            list[dict[str, float]]: A list of "tasks," where each task is a
-                dictionary containing a single key, "velocity", mapping to a
-                value between 0 and 2.
-
-        """
-        return self.env.sample_tasks(num_tasks)
-
-    def set_task(self, task):
-        """Reset with a task.
-
-        Needed for environments that implement `sample_tasks` and `set_task`.
-        For example, :py:class:`~HalfCheetahVelEnv`, as implemented in Garage.
-
-        Args:
-            task (dict[str, float]): A task (a dictionary containing a single
-                key, "velocity", usually between 0 and 2).
-
-        """
-        self.env.set_task(task)
+        return EnvStep(env_spec=self.spec,
+                       action=action,
+                       reward=es.reward,
+                       observation=next_obs,
+                       env_info=es.env_info,
+                       step_type=es.step_type)
 
     def _create_rl2_obs_space(self):
         """Create observation space for RL2.
@@ -168,8 +107,8 @@ class RL2Env(Environment):
             akro.Box: Augmented observation space.
 
         """
-        obs_flat_dim = np.prod(self.env.observation_space.shape)
-        action_flat_dim = np.prod(self.env.action_space.shape)
+        obs_flat_dim = np.prod(self._env.observation_space.shape)
+        action_flat_dim = np.prod(self._env.action_space.shape)
         return akro.Box(low=-np.inf,
                         high=np.inf,
                         shape=(obs_flat_dim + action_flat_dim + 1 + 1, ))
@@ -213,7 +152,7 @@ class RL2Worker(DefaultWorker):
     def start_rollout(self):
         """Begin a new rollout."""
         self._path_length = 0
-        self._prev_obs, episode_info = self.env.reset()
+        self._prev_obs = self.env.reset()[0]
 
     def rollout(self):
         """Sample a single rollout of the agent in the environment.
@@ -227,7 +166,7 @@ class RL2Worker(DefaultWorker):
             self.start_rollout()
             while not self.step_rollout():
                 pass
-        self._agent_infos['batch_idx'] = np.full(len(self._rewards),
+        self._agent_infos['batch_idx'] = np.full(len(self._env_steps),
                                                  self._worker_number)
         return self.collect_rollout()
 
@@ -519,9 +458,9 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
         name_map = None
         if hasattr(self._task_sampler, '_envs') and hasattr(
-                self._task_sampler._envs[0].env, 'all_task_names'):
+                self._task_sampler.envs[0].env, 'all_task_names'):
             names = [
-                env.env.all_task_names[0] for env in self._task_sampler._envs
+                env.env.all_task_names[0] for env in self._task_sampler.envs
             ]
             name_map = dict(enumerate(names))
 

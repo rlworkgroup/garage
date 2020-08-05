@@ -1,15 +1,13 @@
-import gym
-
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 
 
 class TestNormalizedGym:
 
     def setup_method(self):
-        self.env = normalize(GarageEnv(gym.make('Pendulum-v0')),
-                      normalize_reward=True,
-                      normalize_obs=True,
-                      flatten_obs=True)
+        self.env = normalize(GymEnv('Pendulum-v0'),
+                             normalize_reward=True,
+                             normalize_obs=True,
+                             flatten_obs=True)
 
     def teardown_method(self):
         self.env.close()
@@ -27,8 +25,8 @@ class TestNormalizedGym:
             self.env.visualize()
             for _ in range(5):
                 action = self.env.action_space.sample()
-                ts = self.env.step(action)
-                next_obs, done = ts.observation, ts.terminal
+                es = self.env.step(action)
+                next_obs, done = es.observation, es.terminal
                 assert next_obs.shape == self.env.observation_space.low.shape
                 if done:
                     break
@@ -38,8 +36,8 @@ class TestNormalizedGym:
             self.env.reset()
             for _ in range(5):
                 action = self.env.action_space.sample()
-                ts = self.env.step(action)
-                next_obs, done = ts.observation, ts.terminal
+                es = self.env.step(action)
+                next_obs, done = es.observation, es.terminal
                 # yapf: disable
                 assert (self.env.observation_space.flatten(next_obs).shape
                         == self.env.observation_space.flat_dim)

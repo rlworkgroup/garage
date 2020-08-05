@@ -11,7 +11,7 @@ class MAMLVPG(MAML):
     """Model-Agnostic Meta-Learning (MAML) applied to VPG.
 
     Args:
-        env (garage.envs.GarageEnv): A multi-task environment.
+        env (Environment): A multi-task environment.
         policy (garage.torch.policies.Policy): Policy.
         value_function (garage.np.baselines.Baseline): The value function.
         inner_lr (float): Adaptation learning rate.

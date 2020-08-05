@@ -3,7 +3,7 @@ import numpy as np
 import ray
 
 from garage import TimeStepBatch
-from garage.envs import GarageEnv, PointEnv
+from garage.envs import PointEnv
 from garage.experiment import deterministic, LocalRunner
 from garage.sampler import LocalSampler, WorkerFactory
 from garage.torch.algos import BC

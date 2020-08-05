@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 from garage import log_performance, TrajectoryBatch, wrap_experiment
-from garage.envs import GarageEnv, PointEnv
+from garage.envs import PointEnv
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.misc import tensor_utils
@@ -83,7 +83,7 @@ def tutorial_vpg(ctxt=None):
     """
     set_seed(100)
     runner = LocalRunner(ctxt)
-    env = GarageEnv(PointEnv())
+    env = PointEnv()
     policy = GaussianMLPPolicy(env.spec)
     algo = SimpleVPG(env.spec, policy)
     runner.setup(algo, env)

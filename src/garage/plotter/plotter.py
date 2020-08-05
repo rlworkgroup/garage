@@ -127,8 +127,8 @@ class Plotter:
         """Initialize the plotter.
 
         Args:
-            env (GarageEnv): Environment to visualize.
-            policy (garage.np.policies.Policy): Policy to roll out in the
+            env (GymEnv): Environment to visualize.
+            policy (Policy): Policy to roll out in the
                 visualization.
 
         """

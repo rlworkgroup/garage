@@ -2,7 +2,7 @@ import pytest
 import ray
 import tensorflow as tf
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler, MultiprocessingSampler, RaySampler
@@ -28,7 +28,7 @@ class TestLocalRunner(TfGraphTestCase):
 
     def test_train(self):
         with LocalTFRunner(snapshot_config) as runner:
-            env = GarageEnv(env_name='CartPole-v1')
+            env = GymEnv('CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
                                           env_spec=env.spec,
@@ -55,7 +55,7 @@ class TestLocalRunner(TfGraphTestCase):
 
     def test_set_plot(self):
         with LocalTFRunner(snapshot_config) as runner:
-            env = GarageEnv(env_name='CartPole-v1')
+            env = GymEnv('CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
                                           env_spec=env.spec,
@@ -88,7 +88,7 @@ class TestLocalRunner(TfGraphTestCase):
 
     def test_make_sampler_local_sampler(self):
         with LocalTFRunner(snapshot_config) as runner:
-            env = GarageEnv(env_name='CartPole-v1')
+            env = GymEnv('CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
                                           env_spec=env.spec,
@@ -111,7 +111,7 @@ class TestLocalRunner(TfGraphTestCase):
         del ray_session_fixture
         assert ray.is_initialized()
         with LocalTFRunner(snapshot_config) as runner:
-            env = GarageEnv(env_name='CartPole-v1')
+            env = GymEnv('CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
                                           env_spec=env.spec,

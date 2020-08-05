@@ -36,9 +36,9 @@ def obtain_evaluation_samples(policy,
     """Sample the policy for num_trajs trajectories and return average values.
 
     Args:
-        policy (garage.Policy): Policy to use as the actor when
+        policy (Policy): Policy to use as the actor when
             gathering samples.
-        env (garage.envs.GarageEnv): The environement used to obtain
+        env (Environment): The environment used to obtain
             trajectories.
         max_episode_length (int): Maximum path length. The episode will
             terminate when length of trajectory reaches max_episode_length.

@@ -4,10 +4,9 @@
 Here it runs MemorizeDigits-v0 environment with 1000 iterations.
 """
 import click
-import gym
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.tf.algos import PPO
@@ -31,8 +30,7 @@ def ppo_memorize_digits(ctxt=None, seed=1, batch_size=4000):
     """
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
-        env = normalize(GarageEnv(gym.make('MemorizeDigits-v0')),
-                        is_image=True)
+        env = normalize(GymEnv('MemorizeDigits-v0', is_image=True))
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       filters=(
                                                   (32, (5, 5)),

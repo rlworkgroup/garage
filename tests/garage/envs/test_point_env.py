@@ -1,6 +1,7 @@
 import pickle
 
 import numpy as np
+import pytest
 
 from garage.envs.point_env import PointEnv
 
@@ -40,7 +41,7 @@ class TestPointEnv:
         assert (env._point == np.array([0, 0])).all()
 
         a = env.action_space.sample()
-        _ = env.step(a)
+        env.step(a)
         env.reset()
 
         assert (env._point == np.array([0, 0])).all()
@@ -64,3 +65,17 @@ class TestPointEnv:
                 break
         else:
             assert False, 'Should report done'
+
+    def test_visualization(self):
+        env = PointEnv()
+        assert env.render_modes == ['ascii']
+        env.reset()
+        assert env.render('ascii') == f'Point: {env._point}, Goal: {env._goal}'
+
+        env.visualize()
+        env.step(env.action_space.sample())
+
+    def test_catch_no_reset(self):
+        env = PointEnv()
+        with pytest.raises(RuntimeError, match='reset()'):
+            env.step(env.action_space.sample())

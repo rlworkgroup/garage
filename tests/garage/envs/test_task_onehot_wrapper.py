@@ -28,6 +28,11 @@ class TestSingleWrappedEnv:
         assert (self.wrapped.spec.observation_space ==
                 self.wrapped.observation_space)
 
+    def test_visualization(self):
+        assert self.env.render_modes == self.wrapped.render_modes
+        mode = self.env.render_modes[0]
+        assert self.env.render(mode) == self.wrapped.render(mode)
+
 
 def test_wrapped_env_list_produces_correct_onehots():
     envs = [PointEnv(), PointEnv(), PointEnv(), PointEnv()]

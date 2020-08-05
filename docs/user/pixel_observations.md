@@ -55,13 +55,13 @@ working with pixel observations. You may use multiple wrappers simultaneously,
 though the order in which you use them matters. See the pixel-specific wrappers
 section for more details on this.
 
-### GarageEnv
+### GymEnv
 
-When wrapping image-based environments in `GarageEnv`, `is_image` should be set
+When wrapping image-based environments in `GymEnv`, `is_image` should be set
 to `True`:
 
 ```python
-env = GarageEnv(gym.make('MemorizeDigits-v0'), is_image=True)
+env = GymEnv(gym.make('MemorizeDigits-v0'), is_image=True)
 ```
 
 This converts the `gym.spaces.Box` observation space to an `akro.Image` space,
@@ -197,7 +197,7 @@ def  pixel_observations_example(ctxt=None, seed=1, buffer_size=int(1e4)):
         env = Resize(env, 86, 86)
         env = StackFrames(env, 2) # goes after all pixel wrappers
 
-        env = GarageEnv(env, is_image=True) # goes last
+        env = GymEnv(env, is_image=True) # goes last
 
         ...
         # setup policy, Q function, etc.

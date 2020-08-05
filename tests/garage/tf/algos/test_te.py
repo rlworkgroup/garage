@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage import InOutSpec
-from garage.envs import GarageEnv, MultiEnvWrapper, PointEnv
+from garage.envs import MultiEnvWrapper, PointEnv
 from garage.envs.multi_env_wrapper import round_robin_strategy
 from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearMultiFeatureBaseline

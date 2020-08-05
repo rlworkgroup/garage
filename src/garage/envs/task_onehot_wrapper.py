@@ -3,16 +3,13 @@
 See `~TaskOnehotWrapper.wrap_env_list` for the main way of using this module.
 
 """
-from copy import deepcopy
-
 import akro
 import numpy as np
 
-from garage import Environment, TimeStep
-from garage.envs.env_spec import EnvSpec
+from garage import EnvSpec, EnvStep, Wrapper
 
 
-class TaskOnehotWrapper(Environment):
+class TaskOnehotWrapper(Wrapper):
     """Append a one-hot task representation to an environment.
 
     See TaskOnehotWrapper.wrap_env_list for the recommended way of creating
@@ -27,25 +24,21 @@ class TaskOnehotWrapper(Environment):
 
     def __init__(self, env, task_index, n_total_tasks):
         assert 0 <= task_index < n_total_tasks
-        self.env = env
+        super().__init__(env)
         self._task_index = task_index
         self._n_total_tasks = n_total_tasks
-        env_lb = self.env.observation_space.low
-        env_ub = self.env.observation_space.high
+        env_lb = self._env.observation_space.low
+        env_ub = self._env.observation_space.high
         one_hot_ub = np.ones(self._n_total_tasks)
         one_hot_lb = np.zeros(self._n_total_tasks)
-        self._last_observation = None
-        self._observation_space = akro.Box(np.concatenate([env_lb,
-                                                           one_hot_lb]),
-                                          np.concatenate([env_ub, one_hot_ub]))
-        self._spec = EnvSpec(action_space=self.action_space,
-                             observation_space=self.observation_space,
-                             max_episode_length=self.env.spec.max_episode_length)
 
-    @property
-    def action_space(self):
-        """akro.Space: The action space specification."""
-        return self.env.action_space
+        self._observation_space = akro.Box(
+            np.concatenate([env_lb, one_hot_lb]),
+            np.concatenate([env_ub, one_hot_ub]))
+        self._spec = EnvSpec(
+            action_space=self.action_space,
+            observation_space=self.observation_space,
+            max_episode_length=self._env.spec.max_episode_length)
 
     @property
     def observation_space(self):
@@ -57,34 +50,27 @@ class TaskOnehotWrapper(Environment):
         """Return the environment specification.
 
         Returns:
-            garage.envs.env_spec.EnvSpec: The envionrment specification.
+            EnvSpec: The envionrment specification.
 
         """
         return self._spec
 
-    @property
-    def render_modes(self):
-        """list: A list of string representing the supported render modes."""
-        return self.env.render_modes
-
-    def reset(self, **kwargs):
+    def reset(self):
         """Sample new task and call reset on new task env.
 
-        Args:
-            kwargs (dict): Keyword arguments to be passed to env.reset
-
         Returns:
-            numpy.ndarray: The first observation. It must conforms to
-            `observation_space`.
-            dict: The episode-level information. Note that this is not part
-            of `env_info` provided in `step()`. It contains information of
-            the entire episode， which could be needed to determine the first
-            action (e.g. in the case of goal-conditioned or MTRL.)
+            numpy.ndarray: The first observation conforming to
+                `observation_space`.
+            dict: The episode-level information.
+                Note that this is not part of `env_info` provided in `step()`.
+                It contains information of he entire episode， which could be
+                needed to determine the first action (e.g. in the case of
+                goal-conditioned or MTRL.)
 
         """
-        first_obs, episode_info = self.env.reset(**kwargs)
+        first_obs, episode_info = self._env.reset()
         first_obs = self._obs_with_one_hot(first_obs)
-        self._last_observation = first_obs
+
         return first_obs, episode_info
 
     def step(self, action):
@@ -95,46 +81,23 @@ class TaskOnehotWrapper(Environment):
                 environment.
 
         Returns:
-            TimeStep: The time step resulting from the action.
+            EnvStep: The environment step resulting from the action.
 
         """
-        ts = self.env.step(action)
-        obs = ts.observation
+        es = self._env.step(action)
+        obs = es.observation
         oh_obs = self._obs_with_one_hot(obs)
 
-        last_obs = self._last_observation
-        self._last_observation = last_obs
-
-        env_info = deepcopy(ts.env_info)
+        env_info = es.env_info
 
         env_info['task_id'] = self._task_index
 
-        return TimeStep(
-            env_spec=self.spec,
-            observation=last_obs,
-            action=action,
-            reward=ts.reward,
-            next_observation=oh_obs,
-            env_info=env_info,
-            agent_info=ts.agent_info,
-            step_type=ts.step_type)
-
-    def render(self, mode):
-        """Renders the environment.
-
-        Args:
-            mode (str): the mode to render with. The string must be present in
-                `self.render_modes`.
-        """
-        return self.env.render(mode)
-
-    def visualize(self):
-        """Creates a visualization of the environment."""
-        self.env.visualize()
-
-    def close(self):
-        """Close the wrapped env."""
-        self.env.close()
+        return EnvStep(env_spec=self.spec,
+                       action=action,
+                       reward=es.reward,
+                       observation=oh_obs,
+                       env_info=env_info,
+                       step_type=es.step_type)
 
     def _obs_with_one_hot(self, obs):
         """Concatenate observation and task one-hot.

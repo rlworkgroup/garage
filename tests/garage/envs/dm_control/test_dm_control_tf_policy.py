@@ -1,8 +1,7 @@
 from dm_control.suite import ALL_TASKS
 import pytest
 
-from garage.envs import GarageEnv
-from garage.envs.dm_control import DmControlEnv
+from garage.envs.dm_control import DMControlEnv
 from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
@@ -19,7 +18,7 @@ class TestDmControlTfPolicy(TfGraphTestCase):
         task = ALL_TASKS[0]
 
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = DmControlEnv.from_suite(*task)
+            env = DMControlEnv.from_suite(*task)
 
             policy = GaussianMLPPolicy(
                 env_spec=env.spec,

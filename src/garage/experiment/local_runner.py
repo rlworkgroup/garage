@@ -77,7 +77,7 @@ class TrainArgs:
 class LocalRunner:
     """Base class of local runner.
 
-    Use Runner.setup(algo, env) to setup algorithm and environement for runner
+    Use Runner.setup(algo, env) to setup algorithm and environment for runner
     and Runner.train() to start training.
 
     Args:
@@ -226,9 +226,9 @@ class LocalRunner:
             policy weights can be loaded before setup().
 
         Args:
-            algo (garage.np.algos.RLAlgorithm): An algorithm instance.
-            env (garage.envs.GarageEnv): An environement instance.
-            sampler_cls (garage.sampler.Sampler): A sampler class.
+            algo (RLAlgorithm): An algorithm instance.
+            env (Environment): An environment instance.
+            sampler_cls (type): A class which implements :class:`Sampler`.
             sampler_args (dict): Arguments to be passed to sampler constructor.
             n_workers (int): The number of workers the sampler should use.
             worker_class (type): Type of worker the sampler should use.
@@ -604,7 +604,7 @@ class LocalRunner:
         """Get a copy of the environment.
 
         Returns:
-            garage.envs.GarageEnv: An environement instance.
+            Environment: An environment instance.
 
         """
         if self._env:

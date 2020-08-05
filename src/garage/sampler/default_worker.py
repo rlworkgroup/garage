@@ -37,14 +37,11 @@ class DefaultWorker(Worker):
                          worker_number=worker_number)
         self.agent = None
         self.env = None
+        self._env_steps = []
         self._observations = []
         self._last_observations = []
-        self._actions = []
-        self._rewards = []
-        self._step_types = []
-        self._lengths = []
         self._agent_infos = defaultdict(list)
-        self._env_infos = defaultdict(list)
+        self._lengths = []
         self._prev_obs = None
         self._path_length = 0
         self.worker_init()
@@ -107,18 +104,15 @@ class DefaultWorker(Worker):
         """
         if self._path_length < self._max_episode_length:
             a, agent_info = self.agent.get_action(self._prev_obs)
-            ts = self.env.step(a)
+            es = self.env.step(a)
             self._observations.append(self._prev_obs)
-            self._rewards.append(ts.reward)
-            self._actions.append(ts.action)
+            self._env_steps.append(es)
             for k, v in agent_info.items():
                 self._agent_infos[k].append(v)
-            for k, v in ts.env_info.items():
-                self._env_infos[k].append(v)
             self._path_length += 1
-            self._step_types.append(ts.step_type)
-            if not ts.last:
-                self._prev_obs = ts.next_observation
+
+            if not es.last:
+                self._prev_obs = es.observation
                 return False
         self._lengths.append(self._path_length)
         self._last_observations.append(self._prev_obs)
@@ -136,20 +130,28 @@ class DefaultWorker(Worker):
         self._observations = []
         last_observations = self._last_observations
         self._last_observations = []
-        actions = self._actions
-        self._actions = []
-        rewards = self._rewards
-        self._rewards = []
-        step_types = self._step_types
-        self._step_types = []
-        env_infos = self._env_infos
-        self._env_infos = defaultdict(list)
+
+        actions = []
+        rewards = []
+        env_infos = defaultdict(list)
+        step_types = []
+
+        for es in self._env_steps:
+            actions.append(es.action)
+            rewards.append(es.reward)
+            step_types.append(es.step_type)
+            for k, v in es.env_info.items():
+                env_infos[k].append(v)
+        self._env_steps = []
+
         agent_infos = self._agent_infos
         self._agent_infos = defaultdict(list)
         for k, v in agent_infos.items():
             agent_infos[k] = np.asarray(v)
+
         for k, v in env_infos.items():
             env_infos[k] = np.asarray(v)
+
         lengths = self._lengths
         self._lengths = []
         return TrajectoryBatch(env_spec=self.env.spec,

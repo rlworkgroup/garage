@@ -10,11 +10,13 @@ from garage.sampler.default_worker import DefaultWorker
 
 
 class VecWorker(DefaultWorker):
-    """Worker with a single policy and multiple environemnts.
+    """Worker with a single policy and multiple environments.
+
     Alternates between taking a single step in all environments and asking the
     policy for an action for every environment. This allows computing a batch
     of actions, which is generally much more efficient than computing a single
     action when using neural networks.
+
     Args:
         seed(int): The seed to use to intialize random number generators.
         max_episode_length(int or float): The maximum length paths which will
@@ -44,8 +46,30 @@ class VecWorker(DefaultWorker):
         self._agents = [None] * n_envs
         self._path_lengths = [0] * self._n_envs
 
+        n = len(self._envs)
+        self._path_lengths = [0] * n
+        self._observations = [
+            [],
+        ] * n
+        self._actions = [
+            [],
+        ] * n
+        self._rewards = [
+            [],
+        ] * n
+        self._step_types = [
+            [],
+        ] * n
+        self._env_infos = [
+            collections.defaultdict(list),
+        ] * n
+        self._agent_infos = [
+            collections.defaultdict(list),
+        ] * n
+
     def update_agent(self, agent_update):
         """Update an agent, assuming it implements garage.Policy.
+
         Args:
             agent_update (np.ndarray or dict or garage.Policy): If a
                 tuple, dict, or np.ndarray, these should be parameters to
@@ -59,12 +83,15 @@ class VecWorker(DefaultWorker):
 
     def update_env(self, env_update):
         """Update the environments.
+
         If passed a list (*inside* this list passed to the Sampler itself),
         distributes the environments across the "vectorization" dimension.
+
         Args:
             env_update(gym.Env or EnvUpdate or None): The environment to
                 replace the existing env with. Note that other implementations
                 of `Worker` may take different types for this parameter.
+
         Raises:
             TypeError: If env_update is not one of the documented types.
             ValueError: If the wrong number of updates is passed.
@@ -146,6 +173,7 @@ class VecWorker(DefaultWorker):
 
     def step_rollout(self):
         """Take a single time-step in the current rollout.
+
         Returns:
             bool: True iff at least one of the paths was completed.
         """
@@ -154,20 +182,19 @@ class VecWorker(DefaultWorker):
         completes = [False] * len(self._envs)
         for i, action in enumerate(actions):
             if self._path_lengths[i] < self._max_episode_length:
-                ts = self._envs[i].step(action)
+                es = self._envs[i].step(action)
                 self._observations[i].append(self._prev_obs[i])
-                self._rewards[i].append(ts.reward)
-                self._actions[i].append(ts.action)
+                self._rewards[i].append(es.reward)
+                self._actions[i].append(es.action)
                 for k, v in agent_info.items():
                     self._agent_infos[i][k].append(v[i])
-                for k, v in ts.env_info.items():
+                for k, v in es.env_info.items():
                     self._env_infos[i][k].append(v)
                 self._path_lengths[i] += 1
-                self._step_types[i].append(ts.step_type)
-                self._prev_obs[i] = ts.next_observation
-            if self._path_lengths[i] >= self._max_episode_length or \
-                ts.last:
-                self._gather_rollout(i, ts.next_observation)
+                self._step_types[i].append(es.step_type)
+                self._prev_obs[i] = es.observation
+            if self._path_lengths[i] >= self._max_episode_length or es.last:
+                self._gather_rollout(i, es.observation)
                 completes[i] = True
                 finished = True
         if finished:
@@ -176,8 +203,9 @@ class VecWorker(DefaultWorker):
 
     def collect_rollout(self):
         """Collect all completed rollouts.
+
         Returns:
-            garage.TrajectoryBatch: A batch of the trajectories completed since
+            TrajectoryBatch: A batch of the trajectories completed since
                 the last call to collect_rollout().
         """
         if len(self._completed_rollouts) == 1:

@@ -5,7 +5,7 @@ import pytest
 import torch
 from torch import nn
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.torch.policies import DeterministicMLPPolicy
 
 from tests.fixtures.envs.dummy import DummyBoxEnv
@@ -17,7 +17,7 @@ class TestDeterministicMLPPolicies:
         (1, ), (2, ), (3, ), (1, 1), (2, 2)])
     # yapf: enable
     def test_get_action(self, hidden_sizes):
-        env_spec = GarageEnv(DummyBoxEnv())
+        env_spec = GymEnv(DummyBoxEnv())
         obs_dim = env_spec.observation_space.flat_dim
         act_dim = env_spec.action_space.flat_dim
         obs = torch.ones([1, obs_dim], dtype=torch.float32)
@@ -43,7 +43,7 @@ class TestDeterministicMLPPolicies:
     ])
     # yapf: enable
     def test_get_actions(self, batch_size, hidden_sizes):
-        env_spec = GarageEnv(DummyBoxEnv())
+        env_spec = GymEnv(DummyBoxEnv())
         obs_dim = env_spec.observation_space.flat_dim
         act_dim = env_spec.action_space.flat_dim
         obs = torch.ones([batch_size, obs_dim], dtype=torch.float32)
@@ -69,7 +69,7 @@ class TestDeterministicMLPPolicies:
     ])
     # yapf: enable
     def test_is_pickleable(self, batch_size, hidden_sizes):
-        env_spec = GarageEnv(DummyBoxEnv())
+        env_spec = GymEnv(DummyBoxEnv())
         obs_dim = env_spec.observation_space.flat_dim
         obs = torch.ones([batch_size, obs_dim], dtype=torch.float32)
 

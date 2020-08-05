@@ -3,16 +3,16 @@ import pickle
 import gym
 import pytest
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.envs.bullet import _get_unsupported_env_list
 
 from tests.helpers import step_env_with_gym_quirks
 
 
-class TestGarageEnv:
+class TestGymEnv:
 
     def test_is_pickleable(self):
-        env = GarageEnv(env_name='CartPole-v1')
+        env = GymEnv('CartPole-v1')
         round_trip = pickle.loads(pickle.dumps(env))
         assert round_trip
 
@@ -24,7 +24,7 @@ class TestGarageEnv:
                 'Defender-* envs bundled in atari-py 0.2.x don\'t load')
         if any(name == spec.id for name in _get_unsupported_env_list()):
             pytest.skip('Skip unsupported Bullet environments')
-        env = GarageEnv(env_name=spec.id)
+        env = GymEnv(spec.id)
         step_env_with_gym_quirks(env, spec)
 
     @pytest.mark.nightly
@@ -35,9 +35,9 @@ class TestGarageEnv:
                 'Defender-* envs bundled in atari-py 0.2.x don\'t load')
         if any(name == spec.id for name in _get_unsupported_env_list()):
             pytest.skip('Skip unsupported Bullet environments')
-        env = GarageEnv(env_name=spec.id)
+        env = GymEnv(spec.id)
         step_env_with_gym_quirks(env,
                                  spec,
                                  n=1,
-                                 render=True,
+                                 visualize=True,
                                  serialize_env=True)

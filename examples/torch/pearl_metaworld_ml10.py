@@ -5,7 +5,7 @@ import click
 import metaworld.benchmarks as mwb
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import EnvPoolSampler
@@ -95,12 +95,12 @@ def pearl_metaworld_ml10(ctxt=None,
                             encoder_hidden_size)
     # create multi-task environment and sample tasks
     ML_train_envs = [
-        normalize(GarageEnv(mwb.ML10.from_task(task_name)))
+        normalize(GymEnv(mwb.ML10.from_task(task_name)))
         for task_name in mwb.ML10.get_train_tasks().all_task_names
     ]
 
     ML_test_envs = [
-        normalize(GarageEnv(mwb.ML10.from_task(task_name)))
+        normalize(GymEnv(mwb.ML10.from_task(task_name)))
         for task_name in mwb.ML10.get_test_tasks().all_task_names
     ]
 

@@ -49,7 +49,7 @@ def test_init_with_env_updates():
                              env.action_space.sample()
                              for _ in range(max_episode_length)
                          ])
-    tasks = SetTaskSampler(lambda: PointEnv())
+    tasks = SetTaskSampler(PointEnv)
     n_workers = 8
     workers = WorkerFactory(seed=100,
                             max_episode_length=max_episode_length,

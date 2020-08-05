@@ -4,10 +4,9 @@
 Here it runs CubeCrash-v0 environment with 100 iterations.
 """
 import click
-import gym
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.tf.algos import TRPO
@@ -31,7 +30,7 @@ def trpo_cubecrash(ctxt=None, seed=1, batch_size=4000):
     """
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
-        env = normalize(GarageEnv(gym.make('CubeCrash-v0')))
+        env = normalize(GymEnv('CubeCrash-v0'))
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       filters=((32, (8, 8)), (64, (4, 4))),
                                       strides=(4, 2),

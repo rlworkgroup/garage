@@ -5,7 +5,6 @@ import pytest
 import torch
 import torch.nn.functional as F
 
-from garage.envs import GarageEnv
 from garage.torch import (compute_advantages,
                           dict_np_to_torch,
                           flatten_to_single_vector,
@@ -90,7 +89,7 @@ def test_flatten_to_single_vector():
 
 def test_transpose_image():
     """Test TransposeImage."""
-    original_env = GarageEnv(DummyDiscretePixelEnv(), is_image=True)
+    original_env = DummyDiscretePixelEnv()
     obs_shape = original_env.observation_space.shape
     if len(obs_shape) == 3 and obs_shape[2] in [1, 3]:
         transposed_env = TransposeImage(original_env)

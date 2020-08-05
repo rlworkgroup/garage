@@ -1,9 +1,8 @@
 """A regression test for automatic benchmarking garage-PyTorch-VPG."""
-import gym
 import torch
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic, LocalRunner
 from garage.torch.algos import VPG as PyTorch_VPG
 from garage.torch.optimizers import OptimizerWrapper
@@ -37,7 +36,7 @@ def vpg_garage_pytorch(ctxt, env_id, seed):
 
     runner = LocalRunner(ctxt)
 
-    env = normalize(GarageEnv(gym.make(env_id)))
+    env = normalize(GymEnv(env_id))
 
     policy = PyTorch_GMP(env.spec,
                          hidden_sizes=hyper_parameters['hidden_sizes'],

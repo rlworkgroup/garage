@@ -3,12 +3,11 @@ This script creates a test that fails when garage.tf.algos.TRPO performance is
 too low.
 """
 # yapf: disable
-import gym
 import pytest
 import tensorflow as tf
 
 # yapf: disable
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic, LocalTFRunner, snapshotter
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
@@ -29,7 +28,7 @@ class TestTRPO(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = normalize(GarageEnv(gym.make('InvertedDoublePendulum-v2')))
+        self.env = normalize(GymEnv('InvertedDoublePendulum-v2'))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
             hidden_sizes=(64, 64),
@@ -90,7 +89,7 @@ class TestTRPO(TfGraphTestCase):
     @pytest.mark.mujoco_long
     def test_trpo_lstm_cartpole(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = normalize(GarageEnv(gym.make('CartPole-v1')))
+            env = normalize(GymEnv('CartPole-v1'))
 
             policy = CategoricalLSTMPolicy(name='policy', env_spec=env.spec)
 
@@ -116,7 +115,7 @@ class TestTRPO(TfGraphTestCase):
     def test_trpo_gru_cartpole(self):
         deterministic.set_seed(2)
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = normalize(GarageEnv(gym.make('CartPole-v1')))
+            env = normalize(GymEnv('CartPole-v1'))
 
             policy = CategoricalGRUPolicy(name='policy', env_spec=env.spec)
 
@@ -147,7 +146,7 @@ class TestTRPOCNNCubeCrash(TfGraphTestCase):
     @pytest.mark.large
     def test_trpo_cnn_cubecrash(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = normalize(GarageEnv(gym.make('CubeCrash-v0')))
+            env = normalize(GymEnv('CubeCrash-v0'))
 
             policy = CategoricalCNNPolicy(env_spec=env.spec,
                                           filters=((32, (8, 8)), (64, (4, 4))),

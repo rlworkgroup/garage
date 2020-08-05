@@ -15,7 +15,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, MultiEnvWrapper, normalize
+from garage.envs import GymEnv, MultiEnvWrapper, normalize
 from garage.envs.multi_env_wrapper import round_robin_strategy
 from garage.experiment import deterministic, LocalRunner
 from garage.replay_buffer import PathBuffer
@@ -48,8 +48,8 @@ def mtsac_metaworld_ml1_pick_place(ctxt=None, seed=1, _gpu=None):
     env_names = []
     for i in range(50):
         train_env = normalize(
-            GarageEnv(mwb.ML1.get_train_tasks('pick-place-v1'),
-                      normalize_reward=True))
+            GymEnv(mwb.ML1.get_train_tasks('pick-place-v1'),
+                   normalize_reward=True))
         test_env = pickle.loads(pickle.dumps(train_env))
         env_names.append('pick_place_{}'.format(i))
         train_envs.append(train_env)

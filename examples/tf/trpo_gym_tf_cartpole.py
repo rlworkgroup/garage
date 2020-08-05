@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """An example to train a task with TRPO algorithm."""
-import gym
-
 from garage import wrap_experiment
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
@@ -24,7 +22,7 @@ def trpo_gym_tf_cartpole(ctxt=None, seed=1):
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        env = GarageEnv(gym.make('CartPole-v0'))
+        env = GymEnv('CartPole-v0')
 
         policy = CategoricalMLPPolicy(name='policy',
                                       env_spec=env.spec,

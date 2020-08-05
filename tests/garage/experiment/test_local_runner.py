@@ -1,8 +1,7 @@
-import gym
 import pytest
 import torch
 
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic, LocalRunner
 from garage.plotter import Plotter
 from garage.sampler import LocalSampler
@@ -18,7 +17,7 @@ class TestLocalRunner:
 
     def setup_method(self):
         """Setup method which is called before every test."""
-        self.env = normalize(GarageEnv(gym.make('InvertedDoublePendulum-v2')))
+        self.env = normalize(GymEnv('InvertedDoublePendulum-v2'))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
             hidden_sizes=(64, 64),

@@ -47,12 +47,12 @@ class TrajectoryBatch(
     +-----------------------+-------------------------------------------------+
 
     Attributes:
-        env_spec (garage.envs.EnvSpec): Specification for the environment from
+        env_spec (EnvSpec): Specification for the environment from
             which this data was sampled.
         observations (numpy.ndarray): A numpy array of shape
             :math:`(N \bullet [T], O^*)` containing the (possibly
             multi-dimensional) observations for all time steps in this batch.
-            These must conform to :obj:`env_spec.observation_space`.
+            These must conform to :obj:`EnvStep.observation_space`.
         last_observations (numpy.ndarray): A numpy array of shape
             :math:`(N, O^*)` containing the last observation of each
             trajectory.  This is necessary since there are one more
@@ -60,7 +60,7 @@ class TrajectoryBatch(
         actions (numpy.ndarray): A  numpy array of shape
             :math:`(N \bullet [T], A^*)` containing the (possibly
             multi-dimensional) actions for all time steps in this batch. These
-            must conform to :obj:`env_spec.action_space`.
+            must conform to :obj:`EnvStep.action_space`.
         rewards (numpy.ndarray): A numpy array of shape
             :math:`(N \bullet [T])` containing the rewards for all time steps
             in this batch.
@@ -359,7 +359,7 @@ class TrajectoryBatch(
         """Create a TrajectoryBatch from a list of trajectories.
 
         Args:
-            env_spec (garage.envs.EnvSpec): Specification for the environment
+            env_spec (EnvSpec): Specification for the environment
                 from which this data was sampled.
             paths (list[dict[str, np.ndarray or dict[str, np.ndarray]]]): Keys:
                 * observations (np.ndarray): Non-flattened array of
@@ -473,6 +473,35 @@ class StepType(enum.IntEnum):
     # Denotes the last `TimeStep` in a sequence truncated by time limit.
     TIMEOUT = 3
 
+    @classmethod
+    def get_step_type(cls, step_cnt, max_episode_length, done):
+        """Determines the step type based on step cnt and done signal.
+
+        Args:
+            step_cnt (int): current step cnt of the environment.
+            max_episode_length (int): maximum episode length.
+            done (bool): the done signal returned by gym.Env.
+
+        Returns:
+            StepType: the step type.
+
+        Raises:
+            ValueError: if step_cnt is < 1. In this case a environment's
+            `reset()` is likely not called yet and the step_cnt is None.
+        """
+        if done:
+            return StepType.TERMINAL
+        elif max_episode_length is not None and step_cnt >= max_episode_length:
+            return StepType.TIMEOUT
+        elif step_cnt == 1:
+            return StepType.FIRST
+        elif step_cnt < 1:
+            raise ValueError('Expect step_cnt to be >= 1, but got {} '
+                             'instead. Did you forget to call `reset('
+                             ')`?'.format(step_cnt))
+        else:
+            return StepType.MID
+
 
 class TimeStep(
         collections.namedtuple('TimeStep', [
@@ -487,18 +516,18 @@ class TimeStep(
         that characterizes the evolution of a MDP.
 
     Attributes:
-        env_spec (garage.envs.EnvSpec): Specification for the environment from
+        env_spec (EnvSpec): Specification for the environment from
             which this data was sampled.
         observation (numpy.ndarray): A numpy array of shape :math:`(O^*)`
             containing the observation for the this time step in the
             environment. These must conform to
-            :obj:`env_spec.observation_space`.
+            :obj:`EnvStep.observation_space`.
             The observation before applying the action.
             `None` if `step_type` is `StepType.FIRST`, i.e. at the start of a
             sequence.
         action (numpy.ndarray): A numpy array of shape :math:`(A^*)`
             containing the action for the this time step. These must conform
-            to :obj:`env_spec.action_space`.
+            to :obj:`EnvStep.action_space`.
             `None` if `step_type` is `StepType.FIRST`, i.e. at the start of a
             sequence.
         reward (float): A float representing the reward for taking the action
@@ -508,96 +537,16 @@ class TimeStep(
         next_observation (numpy.ndarray): A numpy array of shape :math:`(O^*)`
             containing the observation for the this time step in the
             environment. These must conform to
-            :obj:`env_spec.observation_space`.
+            :obj:`EnvStep.observation_space`.
             The observation after applying the action.
         env_info (dict): A dict arbitrary environment state information.
         agent_info (dict): A dict of arbitrary agent
             state information. For example, this may contain the hidden states
             from an RNN policy.
-        step_type (garage.StepType): a `StepType` enum value. Can either be
+        step_type (StepType): a `StepType` enum value. Can either be
             StepType.FIRST, StepType.MID, StepType.TERMINAL, StepType.TIMEOUT.
 
-
-    Raises:
-        ValueError: If any of the above attributes do not conform to their
-            prescribed types and shapes.
-
     """
-
-    def __new__(cls, env_spec, observation, action, reward, next_observation,
-                env_info, agent_info, step_type):  # noqa: D102
-        # pylint: disable=too-many-branches
-        # observation
-        if not env_spec.observation_space.contains(observation):
-            if isinstance(env_spec.observation_space,
-                          (akro.Box, akro.Discrete, akro.Dict)):
-                if env_spec.observation_space.flat_dim != np.prod(
-                        observation.shape):
-                    raise ValueError('observation should have the same '
-                                     'dimensionality as the observation_space '
-                                     '({}), but got data with shape {} '
-                                     'instead'.format(
-                                         env_spec.observation_space.flat_dim,
-                                         observation.shape))
-            else:
-                raise ValueError(
-                    'observation must conform to observation_space {}, '
-                    'but got data with shape {} instead.'.format(
-                        env_spec.observation_space, observation))
-
-        if not env_spec.observation_space.contains(next_observation):
-            if isinstance(env_spec.observation_space,
-                          (akro.Box, akro.Discrete, akro.Dict)):
-                if env_spec.observation_space.flat_dim != np.prod(
-                        next_observation.shape):
-                    raise ValueError('next_observation should have the same '
-                                     'dimensionality as the observation_space '
-                                     '({}), but got data with shape {} '
-                                     'instead'.format(
-                                         env_spec.observation_space.flat_dim,
-                                         next_observation.shape))
-            else:
-                raise ValueError(
-                    'next_observation must conform to observation_space {}, '
-                    'but got data with shape {} instead.'.format(
-                        env_spec.observation_space, next_observation))
-
-        # action
-        if not env_spec.action_space.contains(action):
-            if isinstance(env_spec.action_space,
-                          (akro.Box, akro.Discrete, akro.Dict)):
-                if env_spec.action_space.flat_dim != np.prod(action.shape):
-                    raise ValueError('action should have the same '
-                                     'dimensionality as the action_space '
-                                     '({}), but got data with shape {} '
-                                     'instead'.format(
-                                         env_spec.action_space.flat_dim,
-                                         action.shape))
-            else:
-                raise ValueError('action must conform to action_space {}, '
-                                 'but got data with shape {} instead.'.format(
-                                     env_spec.action_space, action))
-
-        if not isinstance(agent_info, dict):
-            raise ValueError('agent_info must be type {}, but got type {} '
-                             'instead.'.format(dict, type(agent_info)))
-
-        if not isinstance(env_info, dict):
-            raise ValueError('env_info must be type {}, but got type {} '
-                             'instead.'.format(dict, type(env_info)))
-
-        if not isinstance(reward, float):
-            raise ValueError('reward must be type {}, but got type {} '
-                             'instead.'.format(float, type(reward)))
-
-        if not isinstance(step_type, StepType):
-            raise ValueError(
-                'step_type must be dtype garage.StepType, but got dtype {} '
-                'instead.'.format(type(step_type)))
-
-        return super().__new__(TimeStep, env_spec, observation, action, reward,
-                               next_observation, env_info, agent_info,
-                               step_type)
 
     @property
     def first(self):
@@ -624,6 +573,32 @@ class TimeStep(
         """bool: Whether this `TimeStep` is the last of a sequence."""
         return self.step_type is StepType.TERMINAL or self.step_type \
             is StepType.TIMEOUT
+
+    @classmethod
+    def from_env_step(cls, env_step, last_observation, agent_info):
+        """Create a TimeStep from a EnvStep.
+
+        Args:
+            env_step (EnvStep): the env step returned by the environment.
+            last_observation (numpy.ndarray): A numpy array of shape
+                :math:`(O^*)` containing the observation for the this time
+                step in the environment. These must conform to
+                :obj:`EnvStep.observation_space`.
+                The observation before applying the action.
+            agent_info (dict):  A dict of arbitrary agent state information.
+
+        Returns:
+            TimeStep: The TimeStep with all information of EnvStep plus the
+            agent info.
+        """
+        return cls(env_spec=env_step.env_spec,
+                   observation=last_observation,
+                   action=env_step.action,
+                   reward=env_step.reward,
+                   next_observation=env_step.observation,
+                   env_info=env_step.env_info,
+                   agent_info=agent_info,
+                   step_type=env_step.step_type)
 
 
 class InOutSpec:

@@ -1,7 +1,5 @@
 """Utility functions related to sampling."""
 
-import time
-
 import numpy as np
 
 from garage.misc import tensor_utils
@@ -47,41 +45,37 @@ def rollout(env,
             * dones(np.array): Array of termination signals.
 
     """
-    observations = []
-    actions = []
-    rewards = []
+    del speedup
+    env_steps = []
     agent_infos = []
-    env_infos = []
-    dones = []
-    o, episode_info = env.reset()
+    observations = []
+    last_obs = env.reset()[0]
     agent.reset()
     path_length = 0
     if animated:
         env.visualize()
     while path_length < (max_episode_length or np.inf):
-        o = env.observation_space.flatten(o)
-        a, agent_info = agent.get_action(o)
+        last_obs = env.observation_space.flatten(last_obs)
+        a, agent_info = agent.get_action(last_obs)
         if deterministic and 'mean' in agent_info:
-            a = np.full(a.shape, agent_info['mean'])
-        ts = env.step(a)
-        observations.append(o)
-        rewards.append(ts.reward)
-        actions.append(ts.action)
+            a = agent_info['mean']
+        es = env.step(a)
+        env_steps.append(es)
+        observations.append(last_obs)
         agent_infos.append(agent_info)
-        env_infos.append(ts.env_info)
-        dones.append(ts.terminal)
         path_length += 1
-        if ts.terminal:
+        if es.terminal:
             break
-        o = ts.next_observation
+        last_obs = es.observation
 
     return dict(
         observations=np.array(observations),
-        actions=np.array(actions),
-        rewards=np.array(rewards),
+        actions=np.array([es.action for es in env_steps]),
+        rewards=np.array([es.reward for es in env_steps]),
         agent_infos=tensor_utils.stack_tensor_dict_list(agent_infos),
-        env_infos=tensor_utils.stack_tensor_dict_list(env_infos),
-        dones=np.array(dones),
+        env_infos=tensor_utils.stack_tensor_dict_list(
+            [es.env_info for es in env_steps]),
+        dones=np.array([es.terminal for es in env_steps]),
     )
 
 

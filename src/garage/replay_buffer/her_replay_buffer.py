@@ -21,7 +21,7 @@ class HERReplayBuffer(PathBuffer):
         reward_fn (callable): Function to re-compute the reward with
             substituted goals.
         capacity_in_transitions (int): total size of transitions in the buffer.
-        env_spec (garage.envs.EnvSpec): Environment specification.
+        env_spec (EnvSpec): Environment specification.
     """
 
     def __init__(self, replay_k, reward_fn, capacity_in_transitions, env_spec):

@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, PointEnv
+from garage.envs import PointEnv
 from garage.envs.multi_env_wrapper import MultiEnvWrapper, round_robin_strategy
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed

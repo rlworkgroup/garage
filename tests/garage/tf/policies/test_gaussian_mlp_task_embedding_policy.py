@@ -9,7 +9,7 @@ import pytest
 import tensorflow as tf
 
 from garage import InOutSpec
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.tf.embeddings import GaussianMLPEncoder
 from garage.tf.policies import GaussianMLPTaskEmbeddingPolicy
 
@@ -24,7 +24,7 @@ class TestGaussianMLPTaskEmbeddingPolicy(TfGraphTestCase):
     @pytest.mark.parametrize('latent_dim', [1, 5])
     @pytest.mark.parametrize('action_dim', [(2, ), (2, 2)])
     def test_get_action(self, obs_dim, task_num, latent_dim, action_dim):
-        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GymEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         embedding_spec = InOutSpec(
             input_space=akro.Box(low=np.zeros(task_num),
                                  high=np.ones(task_num)),
@@ -35,7 +35,7 @@ class TestGaussianMLPTaskEmbeddingPolicy(TfGraphTestCase):
                                                 encoder=encoder)
 
         env.reset()
-        obs, _, _, _ = env.step(1)
+        obs = env.step(1).observation
         latent = np.random.random((latent_dim, ))
         task = np.zeros(task_num)
         task[0] = 1
@@ -59,7 +59,7 @@ class TestGaussianMLPTaskEmbeddingPolicy(TfGraphTestCase):
 
     def test_get_latent(self):
         obs_dim, action_dim, task_num, latent_dim = (2, ), (2, ), 5, 2
-        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GymEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         embedding_spec = InOutSpec(
             input_space=akro.Box(low=np.zeros(task_num),
                                  high=np.ones(task_num)),
@@ -80,7 +80,7 @@ class TestGaussianMLPTaskEmbeddingPolicy(TfGraphTestCase):
     # pylint: disable=no-member
     def test_auxiliary(self):
         obs_dim, action_dim, task_num, latent_dim = (2, ), (2, ), 2, 2
-        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GymEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         embedding_spec = InOutSpec(
             input_space=akro.Box(low=np.zeros(task_num),
                                  high=np.ones(task_num)),
@@ -122,7 +122,7 @@ class TestGaussianMLPTaskEmbeddingPolicy(TfGraphTestCase):
 
     def test_get_vars(self):
         obs_dim, action_dim, task_num, latent_dim = (2, ), (2, ), 5, 2
-        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GymEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         embedding_spec = InOutSpec(
             input_space=akro.Box(low=np.zeros(task_num),
                                  high=np.ones(task_num)),
@@ -153,7 +153,7 @@ class TestGaussianMLPTaskEmbeddingPolicy(TfGraphTestCase):
 
     def test_pickling(self):
         obs_dim, action_dim, task_num, latent_dim = (2, ), (2, ), 5, 2
-        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GymEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         embedding_spec = InOutSpec(
             input_space=akro.Box(low=np.zeros(task_num),
                                  high=np.ones(task_num)),

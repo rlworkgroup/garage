@@ -2,7 +2,7 @@
 import akro
 import numpy as np
 
-from garage.envs import EnvSpec
+from garage import EnvSpec
 
 from tests.fixtures.envs.dummy import DummyEnv
 

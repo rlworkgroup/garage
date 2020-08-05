@@ -14,7 +14,7 @@ class ContinuousCNNQFunction(CNNMLPMergeModel):
     of Q(s, a).
 
     Args:
-        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        env_spec (EnvSpec): Environment specification.
         filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
             of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
             are two convolutional layers. The filter for the first layer have 3

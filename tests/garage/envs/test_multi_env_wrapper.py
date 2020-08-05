@@ -3,7 +3,7 @@ import akro
 import numpy as np
 import pytest
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.envs.multi_env_wrapper import (MultiEnvWrapper,
                                            round_robin_strategy,
                                            uniform_random_strategy)
@@ -24,7 +24,7 @@ class TestMultiEnvWrapper:
         Returns:
             garage.envs.multi_env_wrapper: Multi env wrapper.
         """
-        task_envs = [GarageEnv(env_name=name) for name in env_names]
+        task_envs = [GymEnv(name) for name in env_names]
         return MultiEnvWrapper(task_envs, sample_strategy=sample_strategy)
 
     def test_tasks_from_same_env(self):
@@ -62,7 +62,7 @@ class TestMultiEnvWrapper:
         """test one hot representation of observation space"""
         envs = ['CartPole-v0', 'CartPole-v1']
         mt_env = self._init_multi_env_wrapper(envs)
-        cartpole = GarageEnv(env_name='CartPole-v0')
+        cartpole = GymEnv('CartPole-v0')
         cartpole_lb, cartpole_ub = cartpole.observation_space.bounds
         obs_space = akro.Box(np.concatenate([cartpole_lb,
                                              np.zeros(2)]),
@@ -78,7 +78,7 @@ class TestMultiEnvWrapper:
         """test action space"""
         envs = ['CartPole-v0', 'CartPole-v1']
         mt_env = self._init_multi_env_wrapper(envs)
-        task1 = GarageEnv(env_name='CartPole-v0')
+        task1 = GymEnv('CartPole-v0')
         assert mt_env.action_space.shape == task1.action_space.shape
 
     def test_round_robin_sample_strategy(self):
@@ -89,8 +89,8 @@ class TestMultiEnvWrapper:
         tasks = []
         for _ in envs:
             mt_env.reset()
-            ts = mt_env.step(1)
-            tasks.append(ts.env_info['task_id'])
+            es = mt_env.step(1)
+            tasks.append(es.env_info['task_id'])
 
         assert tasks[0] == 0 and tasks[1] == 1
 
@@ -102,8 +102,8 @@ class TestMultiEnvWrapper:
         tasks = []
         for _ in envs:
             mt_env.reset()
-            ts = mt_env.step(1)
-            tasks.append(ts.env_info['task_id'])
+            es = mt_env.step(1)
+            tasks.append(es.env_info['task_id'])
 
         for task in tasks:
             assert 0 <= task < 4
@@ -116,8 +116,8 @@ class TestMultiEnvWrapper:
         mt_env.reset()
         tasks = []
         for _ in envs:
-            ts = mt_env.step(1)
-            tasks.append(ts.env_info['task_id'])
+            es = mt_env.step(1)
+            tasks.append(es.env_info['task_id'])
 
         assert tasks[0] == 0 and tasks[1] == 0
 
@@ -146,6 +146,16 @@ class TestMultiEnvWrapper:
         obs = mt_env.step(1).observation
         assert (obs[-2:] == np.array([0., 1.])).all()
 
+    def test_visualization(self):
+        envs = ['CartPole-v0', 'CartPole-v1']
+        mt_env = self._init_multi_env_wrapper(envs)
+        mt_env.visualize()
+
+        gym_env = GymEnv('CartPole-v0')
+        assert gym_env.render_modes == mt_env.render_modes
+        mode = gym_env.render_modes[0]
+        assert gym_env.render(mode) == mt_env.render(mode)
+
 
 @pytest.mark.mujoco
 class TestMetaWorldMultiEnvWrapper:
@@ -158,7 +168,7 @@ class TestMetaWorldMultiEnvWrapper:
         tasks = MT10.get_train_tasks().all_task_names
         envs = []
         for task in tasks:
-            envs.append(MT10.from_task(task))
+            envs.append(GymEnv(MT10.from_task(task)))
         self.task_names = tasks
         self.env = MultiEnvWrapper(envs,
                                    sample_strategy=round_robin_strategy,
@@ -187,10 +197,10 @@ class TestMetaWorldMultiEnvWrapper:
         self.env_no_onehot.reset()
         action0 = self.env.spec.action_space.sample()
         action1 = self.env_no_onehot.spec.action_space.sample()
-        ts = self.env.step(action0)
-        obs0, info0 = ts.observation, ts.env_info
-        ts = self.env_no_onehot.step(action1)
-        obs1, info1 = ts.observation, ts.env_info
+        es = self.env.step(action0)
+        obs0, info0 = es.observation, es.env_info
+        es = self.env_no_onehot.step(action1)
+        obs1, info1 = es.observation, es.env_info
         assert info0['task_id'] == self.env.active_task_index
         assert info1['task_id'] == self.env.active_task_index
         assert (self.env._active_task_one_hot() == obs0[9:]).all()

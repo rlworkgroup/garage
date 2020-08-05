@@ -54,7 +54,7 @@ def test_obtain_samples():
 @pytest.mark.timeout(10)
 def test_update_envs_env_update():
     max_episode_length = 16
-    env = PointEnv()
+    env = PointEnv(max_episode_length=max_episode_length)
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
@@ -95,7 +95,7 @@ def test_init_with_env_updates():
                              env.action_space.sample()
                              for _ in range(max_episode_length)
                          ])
-    tasks = SetTaskSampler(lambda: PointEnv())
+    tasks = SetTaskSampler(PointEnv)
     n_workers = 8
     workers = WorkerFactory(seed=100,
                             max_episode_length=max_episode_length,
@@ -149,7 +149,7 @@ def test_init_with_crashed_worker():
                              env.action_space.sample()
                              for _ in range(max_episode_length)
                          ])
-    tasks = SetTaskSampler(lambda: PointEnv())
+    tasks = SetTaskSampler(PointEnv)
     n_workers = 2
     workers = WorkerFactory(seed=100,
                             max_episode_length=max_episode_length,

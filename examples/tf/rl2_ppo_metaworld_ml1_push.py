@@ -5,6 +5,7 @@ import click
 import metaworld.benchmarks as mwb
 
 from garage import wrap_experiment
+from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner, task_sampler
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
@@ -39,9 +40,9 @@ def rl2_ppo_metaworld_ml1_push(ctxt, seed, max_episode_length, meta_batch_size,
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
         tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
-            env=mwb.ML1.get_train_tasks('push-v1')))
+            GymEnv(mwb.ML1.get_train_tasks('push-v1'))))
 
-        env_spec = RL2Env(env=mwb.ML1.get_train_tasks('push-v1')).spec
+        env_spec = RL2Env(GymEnv(mwb.ML1.get_train_tasks('push-v1'))).spec
         policy = GaussianGRUPolicy(name='policy',
                                    hidden_dim=64,
                                    env_spec=env_spec,

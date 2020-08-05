@@ -5,7 +5,7 @@ import click
 import torch
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import LocalRunner, MetaEvaluator
 from garage.experiment.deterministic import set_seed
@@ -37,7 +37,7 @@ def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, rollouts_per_task,
 
     """
     set_seed(seed)
-    env = normalize(GarageEnv(HalfCheetahDirEnv(), expected_action_scale=10.))
+    env = normalize(GymEnv(HalfCheetahDirEnv()), expected_action_scale=10.)
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
@@ -54,7 +54,7 @@ def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, rollouts_per_task,
     max_episode_length = 100
 
     task_sampler = SetTaskSampler(lambda: normalize(
-        GarageEnv(HalfCheetahDirEnv(), expected_action_scale=10.)))
+        GymEnv(HalfCheetahDirEnv()), expected_action_scale=10.))
 
     meta_evaluator = MetaEvaluator(test_task_sampler=task_sampler,
                                    max_episode_length=max_episode_length,

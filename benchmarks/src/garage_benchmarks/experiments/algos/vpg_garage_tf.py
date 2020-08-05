@@ -1,9 +1,8 @@
 """A regression test for automatic benchmarking garage-TensorFlow-VPG."""
-import gym
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic, LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import VPG as TF_VPG
@@ -35,7 +34,7 @@ def vpg_garage_tf(ctxt, env_id, seed):
     deterministic.set_seed(seed)
 
     with LocalTFRunner(ctxt) as runner:
-        env = normalize(GarageEnv(gym.make(env_id)))
+        env = normalize(GymEnv(env_id))
 
         policy = TF_GMP(
             env_spec=env.spec,

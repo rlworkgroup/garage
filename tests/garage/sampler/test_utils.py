@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.sampler import utils
 
 from tests.fixtures.envs.dummy import DummyBoxEnv
@@ -11,7 +11,7 @@ from tests.fixtures.policies import DummyPolicy
 class TestRollout:
 
     def setup_method(self):
-        self.env = GarageEnv(DummyBoxEnv(obs_dim=(4, 4), action_dim=(2, 2)))
+        self.env = GymEnv(DummyBoxEnv(obs_dim=(4, 4), action_dim=(2, 2)))
         self.policy = DummyPolicy(self.env.spec)
 
     def test_max_episode_length(self):

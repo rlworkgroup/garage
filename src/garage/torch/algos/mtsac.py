@@ -29,12 +29,12 @@ class MTSAC(SAC):
             Applications.
         replay_buffer (garage.replay_buffer.ReplayBuffer): Stores transitions
             that are previously collected by the sampler.
-        env_spec (garage.envs.env_spec.EnvSpec): The env_spec attribute of the
+        env_spec (EnvSpec): The env_spec attribute of the
             environment that the agent is being trained in. Usually accessable
             by calling env.spec.
         num_tasks (int): The number of tasks being learned.
         max_episode_length (int): The max path length of the algorithm.
-        eval_env (garage.envs.GarageEnv): The environment used for collecting
+        eval_env (Environment): The environment used for collecting
             evaluation trajectories.
         gradient_steps_per_itr (int): Number of optimization steps that should
             occur before the training step is over and a new batch of

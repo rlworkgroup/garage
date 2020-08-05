@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.envs import GarageEnv, PointEnv
+from garage.envs import PointEnv
 from garage.experiment import LocalTFRunner, MetaEvaluator, SnapshotConfig
 from garage.experiment.deterministic import set_seed
 from garage.experiment.local_runner import LocalRunner
@@ -67,7 +67,7 @@ class OptimalActionInference(MetaRLAlgorithm):
 @pytest.mark.serial
 def test_meta_evaluator():
     set_seed(100)
-    tasks = SetTaskSampler(lambda: PointEnv())
+    tasks = SetTaskSampler(PointEnv)
     max_episode_length = 200
     with tempfile.TemporaryDirectory() as log_dir_name:
         runner = LocalRunner(
@@ -131,7 +131,7 @@ class MockAlgo:
 
 def test_pickle_meta_evaluator():
     set_seed(100)
-    tasks = SetTaskSampler(lambda: PointEnv())
+    tasks = SetTaskSampler(PointEnv)
     max_episode_length = 200
     env = PointEnv()
     n_traj = 3
@@ -158,7 +158,7 @@ def test_pickle_meta_evaluator():
 
 def test_meta_evaluator_with_tf():
     set_seed(100)
-    tasks = SetTaskSampler(lambda: PointEnv())
+    tasks = SetTaskSampler(PointEnv)
     max_episode_length = 200
     env = PointEnv()
     n_traj = 3

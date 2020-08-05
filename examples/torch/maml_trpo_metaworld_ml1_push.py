@@ -6,7 +6,7 @@ import metaworld.benchmarks as mwb
 import torch
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import LocalRunner, MetaEvaluator
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
@@ -37,9 +37,8 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
 
     """
     set_seed(seed)
-    env = normalize(
-        GarageEnv(mwb.ML1.get_train_tasks('push-v1'),
-                  expected_action_scale=10.))
+    env = normalize(GymEnv(mwb.ML1.get_train_tasks('push-v1')),
+                    expected_action_scale=10.)
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
@@ -56,7 +55,7 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
     max_episode_length = 100
 
     test_sampler = SetTaskSampler(lambda: normalize(
-        GarageEnv(mwb.ML1.get_test_tasks('push-v1'))))
+        GymEnv(mwb.ML1.get_test_tasks('push-v1'))))
 
     meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
                                    max_episode_length=max_episode_length)

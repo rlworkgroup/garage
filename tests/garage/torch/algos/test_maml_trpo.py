@@ -2,7 +2,7 @@
 import pytest
 import torch
 
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import LocalRunner
 from garage.sampler import LocalSampler
 from garage.torch.algos import MAMLTRPO
@@ -30,7 +30,7 @@ from garage.envs.mujoco import HalfCheetahDirEnv  # isort:skip # pylint: disable
 @pytest.mark.mujoco
 def test_maml_trpo_pendulum():
     """Test PPO with Pendulum environment."""
-    env = normalize(GarageEnv(HalfCheetahDirEnv(), expected_action_scale=10.))
+    env = normalize(GymEnv(HalfCheetahDirEnv()), expected_action_scale=10.)
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=(64, 64),
@@ -66,8 +66,7 @@ def test_maml_trpo_pendulum():
 
 def test_maml_trpo_dummy_named_env():
     """Test with dummy environment that has env_name."""
-    env = GarageEnv(
-        normalize(DummyMultiTaskBoxEnv(), expected_action_scale=10.))
+    env = normalize(GymEnv(DummyMultiTaskBoxEnv()), expected_action_scale=10.)
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=(64, 64),

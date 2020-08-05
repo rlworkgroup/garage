@@ -10,7 +10,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, MultiEnvWrapper, normalize
+from garage.envs import GymEnv, MultiEnvWrapper, normalize
 from garage.envs.multi_env_wrapper import round_robin_strategy
 from garage.experiment import deterministic, LocalRunner
 from garage.replay_buffer import PathBuffer
@@ -42,9 +42,9 @@ def mtsac_metaworld_mt10(ctxt=None, seed=1, _gpu=None):
     train_envs = []
     test_envs = []
     for task_name in task_names:
-        train_env = normalize(GarageEnv(mwb.MT10.from_task(task_name)),
+        train_env = normalize(GymEnv(mwb.MT10.from_task(task_name)),
                               normalize_reward=True)
-        test_env = normalize(GarageEnv(mwb.MT10.from_task(task_name)))
+        test_env = normalize(GymEnv(mwb.MT10.from_task(task_name)))
         train_envs.append(train_env)
         test_envs.append(test_env)
     mt10_train_envs = MultiEnvWrapper(train_envs,

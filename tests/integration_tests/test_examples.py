@@ -135,10 +135,10 @@ def test_trpo_cubecrash():
 
 @pytest.mark.no_cover
 @pytest.mark.timeout(10)
-def test_step_env():
+def test_step_gym_env():
     """Test step_env.py."""
     assert subprocess.run(
-        [EXAMPLES_ROOT_DIR / 'step_env.py', '--n_steps', '1'],
+        [EXAMPLES_ROOT_DIR / 'step_gym_env.py', '--n_steps', '1'],
         check=False).returncode == 0
 
 

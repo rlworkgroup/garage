@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from garage import Environment
+
 from tests.quirks import KNOWN_GYM_RENDER_NOT_IMPLEMENTED
 
 
@@ -21,8 +22,9 @@ def step_env(env, n=10, visualize=True):
     if visualize and issubclass(type(env), Environment):
         env.visualize()
     for _ in range(n):
-        ts = env.step(env.action_space.sample())
-        if ts.terminal:
+        print('itr:', _)
+        es = env.step(env.action_space.sample())
+        if es.last:
             break
 
 
@@ -34,7 +36,7 @@ def step_env_with_gym_quirks(env,
     """Step env gym helper.
 
     Args:
-        env (GarageEnv): Input environment.
+        env (GymEnv): Input environment.
         spec (EnvSpec): The environment specification.
         n (int): Steps.
         visualize (bool): Whether to visualize the environment.
@@ -49,14 +51,14 @@ def step_env_with_gym_quirks(env,
 
     env.reset()
     for _ in range(n):
-        ts = env.step(env.action_space.sample())
+        es = env.step(env.action_space.sample())
         if visualize:
             if spec.id not in KNOWN_GYM_RENDER_NOT_IMPLEMENTED:
                 env.visualize()
             else:
                 with pytest.raises(NotImplementedError):
                     env.visualize()
-        if ts.last:
+        if es.last:
             break
 
     env.close()

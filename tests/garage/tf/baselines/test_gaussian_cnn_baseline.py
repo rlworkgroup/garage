@@ -6,8 +6,8 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.envs import GarageEnv
-from garage.envs.env_spec import EnvSpec
+from garage import EnvSpec
+from garage.envs import GymEnv
 from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.optimizers import LbfgsOptimizer
 
@@ -148,14 +148,15 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
         assert average_error <= 0.1
 
     def test_image_input(self):
-        env = GarageEnv(DummyDiscretePixelEnv(), is_image=True)
+        env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
         gcb = GaussianCNNBaseline(env_spec=env.spec,
                                   filters=((3, (3, 3)), (6, (3, 3))),
                                   strides=(1, 1),
                                   padding='SAME',
                                   hidden_sizes=(32, ))
         env.reset()
-        obs, rewards, _, _ = env.step(1)
+        es = env.step(1)
+        obs, rewards = es.observation, es.reward
         train_paths = [{'observations': [obs], 'returns': [rewards]}]
         gcb.fit(train_paths)
         paths = {'observations': [obs]}
