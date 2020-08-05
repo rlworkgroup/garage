@@ -29,7 +29,7 @@ class DummyPolicy(Policy):
             dict: Distribution parameters.
 
         """
-        return self.action_space.sample(), dict(dummy='dummy', mean=0.)
+        return self.action_space.sample(), dict(dummy='dummy', mean=[0.])
 
     def get_actions(self, observations):
         """Get multiple actions from this policy for the input observations.
