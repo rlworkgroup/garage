@@ -2,8 +2,9 @@
 
 ```eval_rst
 In sampling, :code:`Worker` perform rollouts to get samples. In this tutorial,
-we will implement a custom worker to meet the requirements of the RL2
-algorithm :cite:`duan2016rl`.
+we will implement a custom worker to meet the requirements of the RL2 algorithm
+:cite:`duan2016rl`. Specifically, RL2 samples multiple paths in one trial and
+resets the RNN policy state at the beginning of a trail.
 ```
 
 ## `Worker` interface and `DefaultWorker`
@@ -69,7 +70,7 @@ class MyWorker(DefaultWorker):
 ## Custom Worker for RL2
 
 In RL2, different from general RL algorithms, multiple trajectories are sampled
-in one trial/meta batch. Thus we can move the original rollout into a loop:
+in one trial. Thus we can move the original rollout into a loop:
 
 ```py
 from garage.sampler import DefaultWorker
@@ -113,8 +114,8 @@ class RL2Worker(DefaultWorker):
         return self.collect_rollout()
 ```
 
-This is not enough, because in RL2 the agent/policy only resets at the beginning
-of a trail/meta batch. So we need to override `start_rollout()`. And we want to
+This is not enough, because RL2 only resets the RNN policy state at the
+beginning of a trail. So we need to override `start_rollout()`. And we want to
 record the batch index.
 
 ```py
@@ -136,6 +137,19 @@ record the batch index.
 
 We have completed our custom worker for RL2. For reference, you can see the
 complete implementation of RL2 algorithm and its worker [here](https://github.com/rlworkgroup/garage/blob/master/src/garage/tf/algos/rl2.py).
+
+To use the custom worker in a launcher, just set the `worker_class` of the
+runner, for example:
+
+```py
+from garage.tf.algos.rl2 import RL2Worker
+
+    runner.setup(...,
+                 worker_class=RL2Worker,
+                 ...)
+```
+
+You can see a full example of ppo with RL2 [here](https://github.com/rlworkgroup/garage/blob/master/examples/tf/rl2_ppo_halfcheetah.py).
 
 ## References
 
