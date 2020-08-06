@@ -14,7 +14,7 @@ we only need to choose proper `Sampler` and `Worker` when setting up
 In the following tests, we will use [`examples/torch/trpo_pendulum.py`](https://github.com/rlworkgroup/garage/blob/master/examples/torch/trpo_pendulum.py)
 as example experiment file.
 
-### `LocalSampler` and `DefaultWorker`
+### LocalSampler and DefaultWorker
 
 First, we use the most basic config, `LocalSampler` and `DefaultWorker`. The
 sampler will run workers in the same process.
@@ -37,16 +37,22 @@ about 300%.
 ...
 ```
 
-### Use `VecWorker`
+### Use VecWorker
 
 To reduce the overhead in sampling, we use `VecWorker` to run multiple
-environments in one step.
+environments in one step. To set the level of vectorization (i.e. the number of
+environments simulated in one step), just set `n_envs` in `worker_args`.
 
 ```py
 from garage.sampler import LocalSampler, VecWorker
 
     ...
-    runner.setup(algo, env, sampler_cls=LocalSampler, worker_class=VecWorker)
+    runner.setup(
+        algo=algo,
+        env=env,
+        worker_class=VecWorker,
+        worker_args=dict(n_envs=12)
+    )
     ...
 ```
 
@@ -59,16 +65,24 @@ And the CPU usage is about 350%.
 ...
 ```
 
-### Use `RaySampler`
+### Use RaySampler
 
-Though the CPU usage is increased, it still run in one process. We can
-parallelize sampling across CPUs using `RaySampler` to maximize the CPU usage:
+Though the CPU usage is increased, it still run in one process. Using
+`RaySampler`, we can not only parallelize sampling across CPUs, but also deploy
+it on clusters (AWS/Azure/GCP, k8s, etc.). Here we will show the example running
+on the local machine.
 
 ```py
 from garage.sampler import RaySampler, VecWorker
 
     ...
-    runner.setup(algo, env, sampler_cls=RaySampler, worker_class=VecWorker)
+    runner.setup(
+        algo=algo,
+        env=env,
+        sampler_cls=RaySampler,
+        worker_class=VecWorker,
+        worker_args=dict(n_envs=12)
+    )
     ...
 ```
 
@@ -85,7 +99,7 @@ From `top` command, we get:
 ...
 ```
 
-We can see that there are 4 `ray::SamplerWor` processes running, which are
+We can see that there are 4 `ray::SamplerWorker` processes running, which are
 parallelled workers for sampling.
 
 ## Use GPU
@@ -134,7 +148,23 @@ experiment launcher.
 export CUDA_VISIBLE_DEVICES=-1  # CPU only
 ```
 
-You can see more information about using GPU [here](experiments.html#running-experiments-on-gpu-cpu).
+You can also use `tf.compat.v1.ConfigProto` to config CPU and GPU used for
+training. The following example show how to set to use CPU only. More configs
+documentations can be seen in [TensorFlow docs](https://www.tensorflow.org/api_docs/python/tf/compat/v1/ConfigProto).
+
+```py
+@wrap_experiment
+def trpo_cartpole(ctxt=None):
+    sess_config = tf.compat.v1.ConfigProto(
+        # the maximum number of GPU to use is 0, (i.e. use CPU only)
+        device_count = {'GPU': 0}
+    )
+    sess = tf.compat.v1.Session(config=sess_config)
+    with LocalTFRunner(ctxt, sess=sess) as runner:
+        ...
+```
+
+You can see more information about using GPU in the [experiments page](experiments.html#running-experiments-on-gpu-cpu).
 
 ----
 
