@@ -228,6 +228,7 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
 
 class TestPPOPendulumLSTM(TfGraphTestCase):
 
+    @pytest.mark.flaky
     @pytest.mark.mujoco_long
     def test_ppo_pendulum_lstm(self):
         """Test PPO with Pendulum environment and recurrent policy."""
