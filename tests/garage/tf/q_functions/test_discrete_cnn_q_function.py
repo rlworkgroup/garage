@@ -5,23 +5,23 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.envs import GymEnv
+from garage.envs import GarageEnv
 from garage.tf.models import CNNModel
 from garage.tf.q_functions import DiscreteCNNQFunction
-
 from tests.fixtures import TfGraphTestCase
-from tests.fixtures.envs.dummy import DummyDiscreteEnv, DummyDiscretePixelEnv
-from tests.fixtures.models import (SimpleCNNModel,
-                                   SimpleCNNModelWithMaxPooling,
-                                   SimpleMLPModel)
+from tests.fixtures.envs.dummy import DummyDiscreteEnv
+from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
+from tests.fixtures.models import SimpleCNNModel
+from tests.fixtures.models import SimpleCNNModelWithMaxPooling
+from tests.fixtures.models import SimpleMLPModel
 
 
 class TestDiscreteCNNQFunction(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = GymEnv(DummyDiscretePixelEnv())
-        self.obs = self.env.reset()[0]
+        self.env = GarageEnv(DummyDiscretePixelEnv())
+        self.obs = self.env.reset()
 
     # yapf: disable
     @pytest.mark.parametrize('filters, strides', [
@@ -53,7 +53,7 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
 
     @pytest.mark.parametrize('obs_dim', [[1], [2], [1, 1, 1, 1], [2, 2, 2, 2]])
     def test_invalid_obs_shape(self, obs_dim):
-        boxEnv = GymEnv(DummyDiscreteEnv(obs_dim=obs_dim))
+        boxEnv = GarageEnv(DummyDiscreteEnv(obs_dim=obs_dim))
         with pytest.raises(ValueError):
             DiscreteCNNQFunction(env_spec=boxEnv.spec,
                                  filters=((5, (3, 3)), ),
@@ -61,7 +61,7 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
                                  dueling=False)
 
     def test_obs_is_image(self):
-        image_env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
+        image_env = GarageEnv(DummyDiscretePixelEnv(), is_image=True)
         with mock.patch(('garage.tf.models.'
                          'categorical_cnn_model.CNNModel._build'),
                         autospec=True,
@@ -84,7 +84,7 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
             state_input = tf.compat.v1.placeholder(tf.uint8,
                                                    shape=(None, ) + obs_dim)
 
-            qf.build(state_input, name='another')
+            qf.get_qval_sym(state_input, name='another')
             normalized_obs = build.call_args_list[1][0][1]
 
             fake_obs = [np.full(image_env.spec.observation_space.shape, 255)]
@@ -117,7 +117,7 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
             state_input = tf.compat.v1.placeholder(tf.float32,
                                                    shape=(None, ) + obs_dim)
 
-            qf.build(state_input, name='another')
+            qf.get_qval_sym(state_input, name='another')
             normalized_obs = build.call_args_list[1][0][1]
 
             fake_obs = [np.full(env.spec.observation_space.shape, 255)]
@@ -193,7 +193,7 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
         (((5, (3, 3)), (5, (3, 3))), (1, 1)),
     ])
     # yapf: enable
-    def test_build(self, filters, strides):
+    def test_get_qval_sym(self, filters, strides):
         with mock.patch(('garage.tf.q_functions.'
                          'discrete_cnn_q_function.CNNModel'),
                         new=SimpleCNNModel):
@@ -211,7 +211,7 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
 
         input_var = tf.compat.v1.placeholder(tf.float32,
                                              shape=(None, ) + obs_dim)
-        q_vals = qf.build(input_var, 'another')
+        q_vals = qf.get_qval_sym(input_var, 'another')
         output2 = self.sess.run(q_vals, feed_dict={input_var: [self.obs]})
 
         expected_output = np.full(action_dim, 0.5)
@@ -237,8 +237,8 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
                                           filters=filters,
                                           strides=strides,
                                           dueling=False)
-        with tf.compat.v1.variable_scope('DiscreteCNNQFunction/SimpleMLPModel',
-                                         reuse=True):
+        with tf.compat.v1.variable_scope(
+                'DiscreteCNNQFunction/Sequential/SimpleMLPModel', reuse=True):
             return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
@@ -261,13 +261,16 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
     ])
     # yapf: enable
     def test_clone(self, filters, strides):
-        qf = DiscreteCNNQFunction(env_spec=self.env.spec,
-                                  filters=filters,
-                                  strides=strides,
-                                  dueling=False)
+        with mock.patch(('garage.tf.q_functions.'
+                         'discrete_cnn_q_function.CNNModel'),
+                        new=SimpleCNNModel):
+            with mock.patch(('garage.tf.q_functions.'
+                             'discrete_cnn_q_function.MLPModel'),
+                            new=SimpleMLPModel):
+                qf = DiscreteCNNQFunction(env_spec=self.env.spec,
+                                          filters=filters,
+                                          strides=strides,
+                                          dueling=False)
         qf_clone = qf.clone('another_qf')
         assert qf_clone._filters == qf._filters
         assert qf_clone._strides == qf._strides
-        for cloned_param, param in zip(qf_clone.parameters.values(),
-                                       qf.parameters.values()):
-            assert np.array_equal(cloned_param, param)

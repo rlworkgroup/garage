@@ -1,24 +1,18 @@
 """This modules creates a continuous MLP policy network.
-
 A continuous MLP network can be used as policy method in different RL
 algorithms. It accepts an observation of the environment and predicts a
 continuous action.
 """
-import numpy as np
 import tensorflow as tf
 
-from garage.experiment import deterministic
 from garage.tf.models import MLPModel
 from garage.tf.policies.policy import Policy
 
 
-# pylint: disable=too-many-ancestors
-class ContinuousMLPPolicy(MLPModel, Policy):
+class ContinuousMLPPolicy(Policy):
     """Continuous MLP Policy Network.
-
     The policy network selects action based on the state of the environment.
     It uses neural nets to fit the function of pi(s).
-
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
         name (str): Policy name, also the variable scope.
@@ -44,7 +38,6 @@ class ContinuousMLPPolicy(MLPModel, Policy):
             of output dense layer(s). The function should return a
             tf.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
-
     """
 
     def __init__(self,
@@ -52,15 +45,13 @@ class ContinuousMLPPolicy(MLPModel, Policy):
                  name='ContinuousMLPPolicy',
                  hidden_sizes=(64, 64),
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=tf.nn.tanh,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
-        self._env_spec = env_spec
+        super().__init__(name, env_spec)
         action_dim = env_spec.action_space.flat_dim
         self._hidden_sizes = hidden_sizes
         self._hidden_nonlinearity = hidden_nonlinearity
@@ -72,84 +63,74 @@ class ContinuousMLPPolicy(MLPModel, Policy):
         self._layer_normalization = layer_normalization
         self._obs_dim = env_spec.observation_space.flat_dim
 
-        super().__init__(output_dim=action_dim,
-                         name=name,
-                         hidden_sizes=hidden_sizes,
-                         hidden_nonlinearity=hidden_nonlinearity,
-                         hidden_w_init=hidden_w_init,
-                         hidden_b_init=hidden_b_init,
-                         output_nonlinearity=output_nonlinearity,
-                         output_w_init=output_w_init,
-                         output_b_init=output_b_init,
-                         layer_normalization=layer_normalization)
+        self.model = MLPModel(output_dim=action_dim,
+                              name='MLPModel',
+                              hidden_sizes=hidden_sizes,
+                              hidden_nonlinearity=hidden_nonlinearity,
+                              hidden_w_init=hidden_w_init,
+                              hidden_b_init=hidden_b_init,
+                              output_nonlinearity=output_nonlinearity,
+                              output_w_init=output_w_init,
+                              output_b_init=output_b_init,
+                              layer_normalization=layer_normalization)
 
         self._initialize()
 
     def _initialize(self):
         state_input = tf.compat.v1.placeholder(tf.float32,
                                                shape=(None, self._obs_dim))
-        outputs = super().build(state_input).outputs
+
+        with tf.compat.v1.variable_scope(self.name) as vs:
+            self._variable_scope = vs
+            outputs = self.model.build(state_input).outputs
 
         self._f_prob = tf.compat.v1.get_default_session().make_callable(
             outputs, feed_list=[state_input])
-
-    # pylint: disable=arguments-differ
-    def build(self, obs_var, name=None):
-        """Symbolic graph of the action.
-
-        Args:
-            obs_var (tf.Tensor): Tensor input for symbolic graph.
-            name (str): Name for symbolic graph.
-
-        Returns:
-            tf.Tensor: symbolic graph of the action.
-
-        """
-        return super().build(obs_var, name=name).outputs
 
     @property
     def input_dim(self):
         """int: Dimension of the policy input."""
         return self._obs_dim
 
+    def get_action_sym(self, obs_var, name=None):
+        """Symbolic graph of the action.
+        Args:
+            obs_var (tf.Tensor): Tensor input for symbolic graph.
+            name (str): Name for symbolic graph.
+        Returns:
+            tf.Tensor: symbolic graph of the action.
+        """
+        with tf.compat.v1.variable_scope(self._variable_scope):
+            return self.model.build(obs_var, name=name).outputs
+
     def get_action(self, observation):
         """Get single action from this policy for the input observation.
-
         Args:
             observation (numpy.ndarray): Observation from environment.
-
         Returns:
             numpy.ndarray: Predicted action.
             dict: Empty dict since this policy does not model a distribution.
-
         """
-        actions, agent_infos = self.get_actions([observation])
-        action = actions[0]
-        return action, {k: v[0] for k, v in agent_infos.items()}
+        action = self._f_prob([observation])
+        action = self.action_space.unflatten(action)
+        return action, dict()
 
     def get_actions(self, observations):
         """Get multiple actions from this policy for the input observations.
-
         Args:
             observations (numpy.ndarray): Observations from environment.
-
         Returns:
             numpy.ndarray: Predicted actions.
             dict: Empty dict since this policy does not model a distribution.
-
         """
-        if not isinstance(observations[0], np.ndarray):
-            observations = self.observation_space.flatten_n(observations)
         actions = self._f_prob(observations)
         actions = self.action_space.unflatten_n(actions)
         return actions, dict()
 
     def get_regularizable_vars(self):
         """Get regularizable weight variables under the Policy scope.
-
         Returns:
             list(tf.Variable): List of regularizable variables.
-
         """
         trainable = self.get_trainable_vars()
         return [
@@ -158,47 +139,37 @@ class ContinuousMLPPolicy(MLPModel, Policy):
         ]
 
     @property
-    def env_spec(self):
-        """Policy environment specification.
-
+    def vectorized(self):
+        """Vectorized or not.
         Returns:
-            garage.EnvSpec: Environment specification.
-
+            bool: vectorized or not.
         """
-        return self._env_spec
+        return True
 
     def clone(self, name):
         """Return a clone of the policy.
-
-        It copies the configuration of the primitive and also the parameters.
-
+        It only copies the configuration of the Q-function,
+        not the parameters.
         Args:
             name (str): Name of the newly created policy.
-
         Returns:
             garage.tf.policies.ContinuousMLPPolicy: Clone of this object
-
         """
-        new_policy = self.__class__(
-            name=name,
-            env_spec=self._env_spec,
-            hidden_sizes=self._hidden_sizes,
-            hidden_nonlinearity=self._hidden_nonlinearity,
-            hidden_w_init=self._hidden_w_init,
-            hidden_b_init=self._hidden_b_init,
-            output_nonlinearity=self._output_nonlinearity,
-            output_w_init=self._output_w_init,
-            output_b_init=self._output_b_init,
-            layer_normalization=self._layer_normalization)
-        new_policy.parameters = self.parameters
-        return new_policy
+        return self.__class__(name=name,
+                              env_spec=self._env_spec,
+                              hidden_sizes=self._hidden_sizes,
+                              hidden_nonlinearity=self._hidden_nonlinearity,
+                              hidden_w_init=self._hidden_w_init,
+                              hidden_b_init=self._hidden_b_init,
+                              output_nonlinearity=self._output_nonlinearity,
+                              output_w_init=self._output_w_init,
+                              output_b_init=self._output_b_init,
+                              layer_normalization=self._layer_normalization)
 
     def __getstate__(self):
         """Object.__getstate__.
-
         Returns:
             dict: the state to be pickled as the contents for the instance.
-
         """
         new_dict = super().__getstate__()
         del new_dict['_f_prob']
@@ -206,10 +177,8 @@ class ContinuousMLPPolicy(MLPModel, Policy):
 
     def __setstate__(self, state):
         """Object.__setstate__.
-
         Args:
             state (dict): unpickled state.
-
         """
         super().__setstate__(state)
         self._initialize()

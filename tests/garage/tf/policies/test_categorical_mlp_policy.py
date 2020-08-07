@@ -118,6 +118,7 @@ class TestCategoricalMLPPolicy(TfGraphTestCase):
         assert len(reg_vars) == 2
         for var in reg_vars:
             assert ('bias' not in var.name) and ('output' not in var.name)
+<<<<<<< HEAD
 
     def test_clone(self):
         env = GymEnv(DummyDiscreteEnv(obs_dim=(10, ), action_dim=4))
@@ -127,3 +128,5 @@ class TestCategoricalMLPPolicy(TfGraphTestCase):
         for cloned_param, param in zip(policy_clone.parameters.values(),
                                        policy.parameters.values()):
             assert np.array_equal(cloned_param, param)
+=======
+>>>>>>> 5d99a8ad... Backport #1822 (#1855)

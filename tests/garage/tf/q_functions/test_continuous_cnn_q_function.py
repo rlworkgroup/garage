@@ -1,4 +1,3 @@
-# yapf: disable
 import pickle
 from unittest import mock
 
@@ -6,18 +5,15 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.envs import GymEnv
+from garage.envs import GarageEnv
 from garage.tf.q_functions import ContinuousCNNQFunction
-
 from tests.fixtures import TfGraphTestCase
-from tests.fixtures.envs.dummy import (DummyDictEnv,
-                                       DummyDiscreteEnv,
-                                       DummyDiscretePixelEnv)
-from tests.fixtures.models import (SimpleCNNModel,
-                                   SimpleCNNModelWithMaxPooling,
-                                   SimpleMLPMergeModel)
-
-# yapf: enable
+from tests.fixtures.envs.dummy import DummyDictEnv
+from tests.fixtures.envs.dummy import DummyDiscreteEnv
+from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
+from tests.fixtures.models import SimpleCNNModel
+from tests.fixtures.models import SimpleCNNModelWithMaxPooling
+from tests.fixtures.models import SimpleMLPMergeModel
 
 
 class TestContinuousCNNQFunction(TfGraphTestCase):
@@ -30,8 +26,8 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
     ])
     # yapf: enable
     def test_get_qval(self, filters, strides):
-        env = GymEnv(DummyDiscretePixelEnv())
-        obs = env.reset()[0]
+        env = GarageEnv(DummyDiscretePixelEnv())
+        obs = env.reset()
 
         with mock.patch(('garage.tf.models.'
                          'cnn_mlp_merge_model.CNNModel'),
@@ -45,7 +41,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
 
         action_dim = env.action_space.shape
 
-        obs = env.step(1).observation
+        obs, _, _, _ = env.step(1)
 
         act = np.full(action_dim, 0.5)
         expected_output = np.full((1, ), 0.5)
@@ -82,8 +78,8 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
     # yapf: enable
     def test_get_qval_max_pooling(self, filters, strides, pool_strides,
                                   pool_shapes):
-        env = GymEnv(DummyDiscretePixelEnv())
-        obs = env.reset()[0]
+        env = GarageEnv(DummyDiscretePixelEnv())
+        obs = env.reset()
 
         with mock.patch(('garage.tf.models.'
                          'cnn_mlp_merge_model.CNNModelWithMaxPooling'),
@@ -100,7 +96,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
 
         action_dim = env.action_space.shape
 
-        obs = env.step(1).observation
+        obs, _, _, _ = env.step(1)
 
         act = np.full(action_dim, 0.5)
         expected_output = np.full((1, ), 0.5)
@@ -122,20 +118,20 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
     # yapf: enable
     def test_invalid_obs_dim(self, obs_dim):
         with pytest.raises(ValueError):
-            env = GymEnv(DummyDiscreteEnv(obs_dim=obs_dim))
+            env = GarageEnv(DummyDiscreteEnv(obs_dim=obs_dim))
             ContinuousCNNQFunction(env_spec=env.spec,
                                    filters=((5, (3, 3)), ),
                                    strides=(1, ))
 
     def test_not_box(self):
         with pytest.raises(ValueError):
-            dict_env = GymEnv(DummyDictEnv())
+            dict_env = GarageEnv(DummyDictEnv())
             ContinuousCNNQFunction(env_spec=dict_env.spec,
                                    filters=((5, (3, 3)), ),
                                    strides=(1, ))
 
     def test_obs_is_image(self):
-        image_env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
+        image_env = GarageEnv(DummyDiscretePixelEnv(), is_image=True)
         with mock.patch(('tests.fixtures.models.SimpleCNNModel._build'),
                         autospec=True,
                         side_effect=SimpleCNNModel._build) as build:
@@ -175,7 +171,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                                             shape=(None, ) +
                                                             act_dim)
 
-                    qf.build(state_input, action_input, name='another')
+                    qf.get_qval_sym(state_input, action_input, name='another')
                     normalized_obs = build.call_args_list[1][0][1]
 
                     assert (self.sess.run(normalized_obs,
@@ -183,7 +179,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                                      fake_obs}) == 1.).all()
 
     def test_obs_not_image(self):
-        env = GymEnv(DummyDiscretePixelEnv())
+        env = GarageEnv(DummyDiscretePixelEnv())
 
         with mock.patch(('tests.fixtures.models.SimpleCNNModel._build'),
                         autospec=True,
@@ -213,7 +209,8 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                           feed_dict={qf.inputs[0]:
                                                      fake_obs}) == 255.).all()
 
-                    # ensure non-image obses are not normalized in build()
+                    # ensure non-image obses are not normalized
+                    # in get_qval_sym()
 
                     obs_dim = env.spec.observation_space.shape
                     state_input = tf.compat.v1.placeholder(tf.float32,
@@ -225,7 +222,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                                             shape=(None, ) +
                                                             act_dim)
 
-                    qf.build(state_input, action_input, name='another')
+                    qf.get_qval_sym(state_input, action_input, name='another')
                     normalized_obs = build.call_args_list[1][0][1]
 
                     assert (self.sess.run(normalized_obs,
@@ -239,9 +236,9 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
         (((5, (3, 3)), (5, (3, 3))), (1, 1))
     ])
     # yapf: enable
-    def test_build(self, filters, strides):
-        env = GymEnv(DummyDiscretePixelEnv())
-        obs = env.reset()[0]
+    def test_get_qval_sym(self, filters, strides):
+        env = GarageEnv(DummyDiscretePixelEnv())
+        obs = env.reset()
 
         with mock.patch(('garage.tf.models.'
                          'cnn_mlp_merge_model.CNNModel'),
@@ -254,7 +251,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                             strides=strides)
         action_dim = env.action_space.shape
 
-        obs = env.step(1).observation
+        obs, _, _, _ = env.step(1)
         act = np.full(action_dim, 0.5)
 
         output1 = qf.get_qval([obs], [act])
@@ -263,7 +260,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                               shape=(None, ) + obs.shape)
         input_var2 = tf.compat.v1.placeholder(tf.float32,
                                               shape=(None, ) + act.shape)
-        q_vals = qf.build(input_var1, input_var2, 'another')
+        q_vals = qf.get_qval_sym(input_var1, input_var2, 'another')
 
         output2 = self.sess.run(q_vals,
                                 feed_dict={
@@ -285,8 +282,8 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
     # yapf: enable
     def test_is_pickleable(self, filters, strides):
 
-        env = GymEnv(DummyDiscretePixelEnv())
-        obs = env.reset()[0]
+        env = GarageEnv(DummyDiscretePixelEnv())
+        obs = env.reset()
 
         with mock.patch(('garage.tf.models.'
                          'cnn_mlp_merge_model.CNNModel'),
@@ -300,12 +297,13 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
 
         action_dim = env.action_space.shape
 
-        obs = env.step(1).observation
+        obs, _, _, _ = env.step(1)
         act = np.full(action_dim, 0.5)
         _, _ = qf.inputs
 
         with tf.compat.v1.variable_scope(
-                'ContinuousCNNQFunction/SimpleMLPMergeModel', reuse=True):
+                'ContinuousCNNQFunction/CNNMLPMergeModel/SimpleMLPMergeModel',
+                reuse=True):
             return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
@@ -328,7 +326,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
     ])
     # yapf: enable
     def test_clone(self, filters, strides):
-        env = GymEnv(DummyDiscretePixelEnv())
+        env = GarageEnv(DummyDiscretePixelEnv())
 
         with mock.patch(('garage.tf.models.'
                          'cnn_mlp_merge_model.CNNModel'),
@@ -346,6 +344,3 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
         assert qf_clone._filters == qf._filters
         assert qf_clone._strides == qf._strides
         # pylint: enable=protected-access
-        for cloned_param, param in zip(qf_clone.parameters.values(),
-                                       qf.parameters.values()):
-            assert np.array_equal(cloned_param, param)

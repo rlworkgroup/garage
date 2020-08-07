@@ -2,19 +2,17 @@
 import akro
 import tensorflow as tf
 
-from garage.experiment import deterministic
 from garage.tf.models import CNNMLPMergeModel
+from garage.tf.q_functions import QFunction
 
 
-class ContinuousCNNQFunction(CNNMLPMergeModel):
+class ContinuousCNNQFunction(QFunction):
     """Q function based on a CNN-MLP structure for continuous action space.
-
     This class implements a Q value network to predict Q based on the
     input state and action. It uses an CNN and a MLP to fit the function
     of Q(s, a).
-
     Args:
-        env_spec (EnvSpec): Environment specification.
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
         filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
             of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
             are two convolutional layers. The filter for the first layer have 3
@@ -64,7 +62,6 @@ class ContinuousCNNQFunction(CNNMLPMergeModel):
             of output dense layer(s) in the MLP. The function should return
             a tf.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
-
     """
 
     def __init__(self,
@@ -80,12 +77,10 @@ class ContinuousCNNQFunction(CNNMLPMergeModel):
                  pool_shapes=(2, 2),
                  cnn_hidden_nonlinearity=tf.nn.relu,
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
 
@@ -99,6 +94,7 @@ class ContinuousCNNQFunction(CNNMLPMergeModel):
                     type(env_spec.observation_space).__name__,
                     env_spec.observation_space.shape))
 
+        super().__init__(name)
         self._env_spec = env_spec
         self._filters = filters
         self._strides = strides
@@ -120,23 +116,23 @@ class ContinuousCNNQFunction(CNNMLPMergeModel):
         self._obs_dim = self._env_spec.observation_space.shape
         self._action_dim = self._env_spec.action_space.shape
 
-        super().__init__(name=name,
-                         filters=self._filters,
-                         strides=self._strides,
-                         hidden_sizes=self._hidden_sizes,
-                         action_merge_layer=self._action_merge_layer,
-                         padding=self._padding,
-                         max_pooling=self._max_pooling,
-                         pool_strides=self._pool_strides,
-                         pool_shapes=self._pool_shapes,
-                         cnn_hidden_nonlinearity=self._cnn_hidden_nonlinearity,
-                         hidden_nonlinearity=self._hidden_nonlinearity,
-                         hidden_w_init=self._hidden_w_init,
-                         hidden_b_init=self._hidden_b_init,
-                         output_nonlinearity=self._output_nonlinearity,
-                         output_w_init=self._output_w_init,
-                         output_b_init=self._output_b_init,
-                         layer_normalization=self._layer_normalization)
+        self.model = CNNMLPMergeModel(
+            filters=self._filters,
+            strides=self._strides,
+            hidden_sizes=self._hidden_sizes,
+            action_merge_layer=self._action_merge_layer,
+            padding=self._padding,
+            max_pooling=self._max_pooling,
+            pool_strides=self._pool_strides,
+            pool_shapes=self._pool_shapes,
+            cnn_hidden_nonlinearity=self._cnn_hidden_nonlinearity,
+            hidden_nonlinearity=self._hidden_nonlinearity,
+            hidden_w_init=self._hidden_w_init,
+            hidden_b_init=self._hidden_b_init,
+            output_nonlinearity=self._output_nonlinearity,
+            output_w_init=self._output_w_init,
+            output_b_init=self._output_b_init,
+            layer_normalization=self._layer_normalization)
 
         self._initialize()
 
@@ -155,7 +151,9 @@ class ContinuousCNNQFunction(CNNMLPMergeModel):
                                               (None, ) + self._obs_dim,
                                               name='state')
             augmented_obs_ph = obs_ph
-        outputs = super().build(augmented_obs_ph, action_ph).outputs
+        with tf.compat.v1.variable_scope(self.name) as vs:
+            self._variable_scope = vs
+            outputs = self.model.build(augmented_obs_ph, action_ph).outputs
         self._f_qval = tf.compat.v1.get_default_session().make_callable(
             outputs, feed_list=[obs_ph, action_ph])
 
@@ -165,7 +163,6 @@ class ContinuousCNNQFunction(CNNMLPMergeModel):
     @property
     def inputs(self):
         """tuple[tf.Tensor]: The observation and action input tensors.
-
         The returned tuple contains two tensors. The first is the observation
         tensor with shape :math:`(N, O*)`, and the second is the action tensor
         with shape :math:`(N, A*)`.
@@ -174,16 +171,13 @@ class ContinuousCNNQFunction(CNNMLPMergeModel):
 
     def get_qval(self, observation, action):
         """Q Value of the network.
-
         Args:
             observation (np.ndarray): Observation input of shape
                 :math:`(N, O*)`.
             action (np.ndarray): Action input of shape :math:`(N, A*)`.
-
         Returns:
             np.ndarray: Array of shape :math:`(N, )` containing Q values
                 corresponding to each (obs, act) pair.
-
         """
         if len(observation[0].shape) < len(self._obs_dim):
             observation = self._env_spec.observation_space.unflatten_n(
@@ -192,39 +186,36 @@ class ContinuousCNNQFunction(CNNMLPMergeModel):
         return self._f_qval(observation, action)
 
     # pylint: disable=arguments-differ
-    def build(self, state_input, action_input, name):
-        """Build the symbolic graph for q-network.
-
+    def get_qval_sym(self, state_input, action_input, name):
+        """Symbolic graph for q-network.
         Args:
             state_input (tf.Tensor): The state input tf.Tensor of shape
                 :math:`(N, O*)`.
             action_input (tf.Tensor): The action input tf.Tensor of shape
                 :math:`(N, A*)`.
             name (str): Network variable scope.
-
         Return:
             tf.Tensor: The output Q value tensor of shape :math:`(N, )`.
-
         """
-        augmented_state_input = state_input
-        if isinstance(self._env_spec.observation_space, akro.Image):
-            augmented_state_input = tf.cast(state_input, tf.float32) / 255.0
-        return super().build(augmented_state_input, action_input,
-                             name=name).outputs
+        with tf.compat.v1.variable_scope(self._variable_scope):
+            augmented_state_input = state_input
+            if isinstance(self._env_spec.observation_space, akro.Image):
+                augmented_state_input = tf.cast(state_input,
+                                                tf.float32) / 255.0
+            return self.model.build(augmented_state_input,
+                                    action_input,
+                                    name=name).outputs
 
     def clone(self, name):
         """Return a clone of the Q-function.
-
-        It copies the configuration of the primitive and also the parameters.
-
+        It only copies the configuration of the Q-function,
+        not the parameters.
         Args:
             name (str): Name of the newly created q-function.
-
         Return:
             ContinuousCNNQFunction: Cloned Q function.
-
         """
-        new_qf = self.__class__(
+        return self.__class__(
             name=name,
             env_spec=self._env_spec,
             filters=self._filters,
@@ -243,17 +234,13 @@ class ContinuousCNNQFunction(CNNMLPMergeModel):
             output_w_init=self._output_w_init,
             output_b_init=self._output_b_init,
             layer_normalization=self._layer_normalization)
-        new_qf.parameters = self.parameters
-        return new_qf
 
     def __getstate__(self):
         """Object.__getstate__.
-
         Returns:
             dict: The state.
-
         """
-        new_dict = super().__getstate__()
+        new_dict = self.__dict__.copy()
         del new_dict['_f_qval']
         del new_dict['_obs_input']
         del new_dict['_act_input']
@@ -261,10 +248,8 @@ class ContinuousCNNQFunction(CNNMLPMergeModel):
 
     def __setstate__(self, state):
         """See `Object.__setstate__.
-
         Args:
             state (dict): Unpickled state of this object.
-
         """
-        super().__setstate__(state)
+        self.__dict__.update(state)
         self._initialize()

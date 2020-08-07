@@ -1,5 +1,4 @@
 """Gaussian LSTM Policy.
-
 A policy represented by a Gaussian distribution
 which is parameterized by a Long short-term memory (LSTM).
 """
@@ -8,18 +7,14 @@ import akro
 import numpy as np
 import tensorflow as tf
 
-from garage.experiment import deterministic
 from garage.tf.models import GaussianLSTMModel
-from garage.tf.policies.policy import Policy
+from garage.tf.policies.policy import StochasticPolicy
 
 
-# pylint: disable=too-many-ancestors
-class GaussianLSTMPolicy(GaussianLSTMModel, Policy):
+class GaussianLSTMPolicy(StochasticPolicy):
     """Gaussian LSTM Policy.
-
     A policy represented by a Gaussian distribution
     which is parameterized by a Long short-term memory (LSTM).
-
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
         name (str): Model name, also the variable scope.
@@ -67,7 +62,6 @@ class GaussianLSTMPolicy(GaussianLSTMModel, Policy):
         state_include_action (bool): Whether the state includes action.
             If True, input dimension will be
             (observation dimension + action dimension).
-
     """
 
     def __init__(self,
@@ -75,15 +69,12 @@ class GaussianLSTMPolicy(GaussianLSTMModel, Policy):
                  hidden_dim=32,
                  name='GaussianLSTMPolicy',
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
-                 recurrent_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 recurrent_w_init=tf.initializers.glorot_uniform(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
                  hidden_state_init_trainable=False,
@@ -99,8 +90,7 @@ class GaussianLSTMPolicy(GaussianLSTMModel, Policy):
             raise ValueError('GaussianLSTMPolicy only works with '
                              'akro.Box action space, but not {}'.format(
                                  env_spec.action_space))
-
-        self._env_spec = env_spec
+        super().__init__(name, env_spec)
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
 
@@ -131,10 +121,10 @@ class GaussianLSTMPolicy(GaussianLSTMModel, Policy):
         else:
             self._input_dim = self._obs_dim
 
-        super().__init__(
+        self.model = GaussianLSTMModel(
             output_dim=self._action_dim,
             hidden_dim=hidden_dim,
-            name=name,
+            name='GaussianLSTMModel',
             hidden_nonlinearity=hidden_nonlinearity,
             hidden_w_init=hidden_w_init,
             hidden_b_init=hidden_b_init,
@@ -156,47 +146,48 @@ class GaussianLSTMPolicy(GaussianLSTMModel, Policy):
         self._prev_actions = None
         self._prev_hiddens = None
         self._prev_cells = None
+        self._dist = None
         self._init_hidden = None
         self._init_cell = None
 
-        self._initialize_policy()
+        self._initialize()
 
-    def _initialize_policy(self):
+    def _initialize(self):
         """Initialize policy."""
-        state_input = tf.compat.v1.placeholder(shape=(None, None,
-                                                      self._input_dim),
-                                               name='state_input',
-                                               dtype=tf.float32)
-        step_input_var = tf.compat.v1.placeholder(shape=(None,
-                                                         self._input_dim),
-                                                  name='step_input',
-                                                  dtype=tf.float32)
-        step_hidden_var = tf.compat.v1.placeholder(shape=(None,
-                                                          self._hidden_dim),
-                                                   name='step_hidden_input',
+        with tf.compat.v1.variable_scope(self.name) as vs:
+            self._variable_scope = vs
+            state_input = tf.compat.v1.placeholder(shape=(None, None,
+                                                          self._input_dim),
+                                                   name='state_input',
                                                    dtype=tf.float32)
-        step_cell_var = tf.compat.v1.placeholder(shape=(None,
-                                                        self._hidden_dim),
-                                                 name='step_cell_input',
-                                                 dtype=tf.float32)
-        (_, step_mean, step_log_std, step_hidden, step_cell, self._init_hidden,
-         self._init_cell) = super().build(state_input, step_input_var,
-                                          step_hidden_var,
-                                          step_cell_var).outputs
+            step_input_var = tf.compat.v1.placeholder(shape=(None,
+                                                             self._input_dim),
+                                                      name='step_input',
+                                                      dtype=tf.float32)
+            step_hidden_var = tf.compat.v1.placeholder(
+                shape=(None, self._hidden_dim),
+                name='step_hidden_input',
+                dtype=tf.float32)
+            step_cell_var = tf.compat.v1.placeholder(shape=(None,
+                                                            self._hidden_dim),
+                                                     name='step_cell_input',
+                                                     dtype=tf.float32)
+            (self._dist, step_mean, step_log_std, step_hidden, step_cell,
+             self._init_hidden,
+             self._init_cell) = self.model.build(state_input, step_input_var,
+                                                 step_hidden_var,
+                                                 step_cell_var).outputs
 
         self._f_step_mean_std = tf.compat.v1.get_default_session(
         ).make_callable(
             [step_mean, step_log_std, step_hidden, step_cell],
             feed_list=[step_input_var, step_hidden_var, step_cell_var])
 
-    # pylint: disable=arguments-differ
     def build(self, state_input, name=None):
         """Build policy.
-
         Args:
             state_input (tf.Tensor) : State input.
             name (str): Name of the policy, which is also the name scope.
-
         Returns:
             tfp.distributions.MultivariateNormalDiag: Policy distribution.
             tf.Tensor: Step means, with shape :math:`(N, S^*)`.
@@ -205,31 +196,36 @@ class GaussianLSTMPolicy(GaussianLSTMModel, Policy):
             tf.Tensor: Step cell state, with shape :math:`(N, S^*)`.
             tf.Tensor: Initial hidden state, with shape :math:`(S^*)`.
             tf.Tensor: Initial cell state, with shape :math:`(S^*)`
-
         """
-        _, step_input, step_hidden, step_cell = self.inputs
-        return super().build(state_input,
-                             step_input,
-                             step_hidden,
-                             step_cell,
-                             name=name)
+        with tf.compat.v1.variable_scope(self._variable_scope):
+            _, step_input, step_hidden, step_cell = self.model.inputs
+            return self.model.build(state_input,
+                                    step_input,
+                                    step_hidden,
+                                    step_cell,
+                                    name=name)
 
     @property
     def input_dim(self):
         """int: Dimension of the policy input."""
         return self._input_dim
 
+    @property
+    def vectorized(self):
+        """Vectorized or not.
+        Returns:
+            Bool: True if primitive supports vectorized operations.
+        """
+        return True
+
     def reset(self, do_resets=None):
         """Reset the policy.
-
         Note:
             If `do_resets` is None, it will be by default np.array([True]),
             which implies the policy will not be "vectorized", i.e. number of
             paralle environments for training data sampling = 1.
-
         Args:
             do_resets (numpy.ndarray): Bool that indicates terminal state(s).
-
         """
         if do_resets is None:
             do_resets = np.array([True])
@@ -246,14 +242,11 @@ class GaussianLSTMPolicy(GaussianLSTMModel, Policy):
 
     def get_action(self, observation):
         """Get single action from this policy for the input observation.
-
         Args:
             observation (numpy.ndarray): Observation from environment.
-
         Returns:
             numpy.ndarray: Actions
             dict: Predicted action and agent information.
-
         Note:
             It returns an action and a dict, with keys
             - mean (numpy.ndarray): Mean of the distribution.
@@ -261,21 +254,17 @@ class GaussianLSTMPolicy(GaussianLSTMModel, Policy):
                 distribution.
             - prev_action (numpy.ndarray): Previous action, only present if
                 self._state_include_action is True.
-
         """
         actions, agent_infos = self.get_actions([observation])
         return actions[0], {k: v[0] for k, v in agent_infos.items()}
 
     def get_actions(self, observations):
         """Get multiple actions from this policy for the input observations.
-
         Args:
             observations (numpy.ndarray): Observations from environment.
-
         Returns:
             numpy.ndarray: Actions
             dict: Predicted action and agent information.
-
         Note:
             It returns an action and a dict, with keys
             - mean (numpy.ndarray): Means of the distribution.
@@ -283,10 +272,7 @@ class GaussianLSTMPolicy(GaussianLSTMModel, Policy):
                 distribution.
             - prev_action (numpy.ndarray): Previous action, only present if
                 self._state_include_action is True.
-
         """
-        if not isinstance(observations[0], np.ndarray):
-            observations = self.observation_space.flatten_n(observations)
         if self._state_include_action:
             assert self._prev_actions is not None
             all_input = np.concatenate([observations, self._prev_actions],
@@ -308,13 +294,19 @@ class GaussianLSTMPolicy(GaussianLSTMModel, Policy):
         return samples, agent_infos
 
     @property
+    def distribution(self):
+        """Policy distribution.
+        Returns:
+            tfp.Distribution.MultivariateNormalDiag: Policy distribution.
+        """
+        return self._dist
+
+    @property
     def state_info_specs(self):
         """State info specifcation.
-
         Returns:
             List[str]: keys and shapes for the information related to the
                 policy's state when taking an action.
-
         """
         if self._state_include_action:
             return [
@@ -323,31 +315,18 @@ class GaussianLSTMPolicy(GaussianLSTMModel, Policy):
 
         return []
 
-    @property
-    def env_spec(self):
-        """Policy environment specification.
-
-        Returns:
-            garage.EnvSpec: Environment specification.
-
-        """
-        return self._env_spec
-
     def clone(self, name):
         """Return a clone of the policy.
-
-        It copies the configuration of the primitive and also the parameters.
-
+        It only copies the configuration of the primitive,
+        not the parameters.
         Args:
             name (str): Name of the newly created policy. It has to be
                 different from source policy if cloned under the same
                 computational graph.
-
         Returns:
             garage.tf.policies.GaussianLSTMPolicy: Newly cloned policy.
-
         """
-        new_policy = self.__class__(
+        return self.__class__(
             name=name,
             env_spec=self._env_spec,
             hidden_dim=self._hidden_dim,
@@ -369,28 +348,23 @@ class GaussianLSTMPolicy(GaussianLSTMModel, Policy):
             init_std=self._init_std,
             layer_normalization=self._layer_normalization,
             state_include_action=self._state_include_action)
-        new_policy.parameters = self.parameters
-        return new_policy
 
     def __getstate__(self):
         """Object.__getstate__.
-
         Returns:
             dict: the state to be pickled for the instance.
-
         """
         new_dict = super().__getstate__()
         del new_dict['_f_step_mean_std']
+        del new_dict['_dist']
         del new_dict['_init_hidden']
         del new_dict['_init_cell']
         return new_dict
 
     def __setstate__(self, state):
         """Object.__setstate__.
-
         Args:
             state (dict): Unpickled state.
-
         """
         super().__setstate__(state)
-        self._initialize_policy()
+        self._initialize()
