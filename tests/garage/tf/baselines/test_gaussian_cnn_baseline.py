@@ -6,11 +6,13 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
+from garage.envs import GarageEnv
 from garage.envs.env_spec import EnvSpec
 from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.optimizers import LbfgsOptimizer
 
 from tests.fixtures import TfGraphTestCase
+from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
 def get_train_test_data():
@@ -144,6 +146,21 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
             average_error += np.abs(exp - prediction[i])
         average_error /= len(expected)
         assert average_error <= 0.1
+
+    def test_image_input(self):
+        env = GarageEnv(DummyDiscretePixelEnv(), is_image=True)
+        gcb = GaussianCNNBaseline(env_spec=env.spec,
+                                  filters=((3, (3, 3)), (6, (3, 3))),
+                                  strides=(1, 1),
+                                  padding='SAME',
+                                  hidden_sizes=(32, ))
+        env.reset()
+        obs, rewards, _, _ = env.step(1)
+        train_paths = [{'observations': [obs], 'returns': [rewards]}]
+        gcb.fit(train_paths)
+        paths = {'observations': [obs]}
+        prediction = gcb.predict(paths)
+        assert np.allclose(0., prediction)
 
     @pytest.mark.large
     def test_fit_without_trusted_region(self):
