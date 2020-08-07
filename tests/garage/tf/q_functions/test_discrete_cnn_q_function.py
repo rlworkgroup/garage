@@ -252,25 +252,3 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
                                feed_dict={qf_pickled.input: [self.obs]})
 
         assert np.array_equal(output1, output2)
-
-    # yapf: disable
-    @pytest.mark.parametrize('filters, strides', [
-        (((5, (3, 3)), ), (1, )),
-        (((5, (3, 3)), ), (2, )),
-        (((5, (3, 3)), (5, (3, 3))), (1, 1)),
-    ])
-    # yapf: enable
-    def test_clone(self, filters, strides):
-        with mock.patch(('garage.tf.q_functions.'
-                         'discrete_cnn_q_function.CNNModel'),
-                        new=SimpleCNNModel):
-            with mock.patch(('garage.tf.q_functions.'
-                             'discrete_cnn_q_function.MLPModel'),
-                            new=SimpleMLPModel):
-                qf = DiscreteCNNQFunction(env_spec=self.env.spec,
-                                          filters=filters,
-                                          strides=strides,
-                                          dueling=False)
-        qf_clone = qf.clone('another_qf')
-        assert qf_clone._filters == qf._filters
-        assert qf_clone._strides == qf._strides

@@ -317,8 +317,7 @@ class CategoricalLSTMPolicy(StochasticPolicy):
     def clone(self, name):
         """Return a clone of the policy.
 
-        It only copies the configuration of the primitive,
-        not the parameters.
+        It copies the configuration of the primitive and also the parameters.
 
         Args:
             name (str): Name of the newly created policy. It has to be
@@ -329,7 +328,7 @@ class CategoricalLSTMPolicy(StochasticPolicy):
             garage.tf.policies.CategoricalLSTMPolicy: Newly cloned policy.
 
         """
-        return self.__class__(
+        new_policy = self.__class__(
             name=name,
             env_spec=self._env_spec,
             hidden_dim=self._hidden_dim,
@@ -348,6 +347,8 @@ class CategoricalLSTMPolicy(StochasticPolicy):
             state_include_action=self._state_include_action,
             forget_bias=self._forget_bias,
             layer_normalization=self._layer_normalization)
+        new_policy.model.parameters = self.model.parameters
+        return new_policy
 
     def __getstate__(self):
         """Object.__getstate__.

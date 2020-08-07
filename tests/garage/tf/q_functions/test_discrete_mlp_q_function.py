@@ -137,20 +137,3 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
                                feed_dict={qf_pickled.input: [obs]})
 
         assert np.array_equal(output1, output2)
-
-    @pytest.mark.parametrize('obs_dim, action_dim, hidden_sizes', [
-        ((1, ), 1, (3, )),
-        ((2, ), 2, (32, )),
-        ((1, 1), 1, (3, 3)),
-        ((2, 2), 2, (32, 32)),
-    ])
-    def test_clone(self, obs_dim, action_dim, hidden_sizes):
-        env = GarageEnv(
-            DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
-        with mock.patch(('garage.tf.q_functions.'
-                         'discrete_mlp_q_function.MLPModel'),
-                        new=SimpleMLPModel):
-            qf = DiscreteMLPQFunction(env_spec=env.spec,
-                                      hidden_sizes=hidden_sizes)
-        qf_clone = qf.clone('another_qf')
-        assert qf_clone._hidden_sizes == qf._hidden_sizes

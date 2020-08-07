@@ -150,19 +150,3 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
             output2 = qf_pickled.get_qval([obs], [act])
 
         assert np.array_equal(output1, output2)
-
-    @pytest.mark.parametrize('obs_dim, action_dim, hidden_sizes', [
-        ((1, ), (1, ), (3, )),
-        ((2, ), (2, ), (32, )),
-        ((1, 1), (1, ), (3, 3)),
-        ((2, 2), (2, ), (32, 32)),
-    ])
-    def test_clone(self, obs_dim, action_dim, hidden_sizes):
-        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
-        with mock.patch(('garage.tf.q_functions.'
-                         'continuous_mlp_q_function.MLPMergeModel'),
-                        new=SimpleMLPMergeModel):
-            qf = ContinuousMLPQFunction(env_spec=env.spec,
-                                        hidden_sizes=hidden_sizes)
-        qf_clone = qf.clone('another_qf')
-        assert qf_clone._hidden_sizes == qf._hidden_sizes

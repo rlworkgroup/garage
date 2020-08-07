@@ -401,6 +401,8 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
     def clone(self, name):
         """Return a clone of the policy.
 
+        It copies the configuration of the primitive and also the parameters.
+
         Args:
             name (str): Name of the newly created policy. It has to be
                 different from source policy if cloned under the same
@@ -432,7 +434,7 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
             std_output_nonlinearity=self._std_output_nonlinearity,
             std_parameterization=self._std_parameterization,
             layer_normalization=self._layer_normalization)
-
+        new_policy.model.parameters = self.model.parameters
         return new_policy
 
     def __getstate__(self):

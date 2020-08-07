@@ -123,7 +123,6 @@ class NPO(RLAlgorithm):
         self._name = name
         self._name_scope = tf.name_scope(self._name)
         self._old_policy = policy.clone('old_policy')
-        self._old_policy.model.parameters = policy.model.parameters
         self._use_softplus_entropy = use_softplus_entropy
         self._use_neg_logli_entropy = use_neg_logli_entropy
         self._stop_entropy_gradient = stop_entropy_gradient

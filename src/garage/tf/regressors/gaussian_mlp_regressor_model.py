@@ -211,8 +211,7 @@ class GaussianMLPRegressorModel(GaussianMLPModel):
     def clone(self, name):
         """Return a clone of the model.
 
-        It only copies the configuration of the primitive,
-        not the parameters.
+        It copies the configuration and parameters of the primitive.
 
         Args:
             name (str): Name of the newly created model. It has to be
@@ -223,7 +222,7 @@ class GaussianMLPRegressorModel(GaussianMLPModel):
             garage.tf.policies.GaussianMLPModel: Newly cloned model.
 
         """
-        return self.__class__(
+        new_regressor = self.__class__(
             name=name,
             input_shape=self._input_shape,
             output_dim=self._output_dim,
@@ -248,3 +247,5 @@ class GaussianMLPRegressorModel(GaussianMLPModel):
             std_output_w_init=self._std_output_w_init,
             std_parameterization=self._std_parameterization,
             layer_normalization=self._layer_normalization)
+        new_regressor.parameters = self.parameters
+        return new_regressor

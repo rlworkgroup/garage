@@ -222,8 +222,7 @@ class ContinuousCNNQFunction(QFunction):
     def clone(self, name):
         """Return a clone of the Q-function.
 
-        It only copies the configuration of the Q-function,
-        not the parameters.
+        It copies the configuration of the primitive and also the parameters.
 
         Args:
             name (str): Name of the newly created q-function.
@@ -232,7 +231,7 @@ class ContinuousCNNQFunction(QFunction):
             ContinuousCNNQFunction: Cloned Q function.
 
         """
-        return self.__class__(
+        new_qf = self.__class__(
             name=name,
             env_spec=self._env_spec,
             filters=self._filters,
@@ -251,6 +250,8 @@ class ContinuousCNNQFunction(QFunction):
             output_w_init=self._output_w_init,
             output_b_init=self._output_b_init,
             layer_normalization=self._layer_normalization)
+        new_qf.model.parameters = self.model.parameters
+        return new_qf
 
     def __getstate__(self):
         """Object.__getstate__.

@@ -106,9 +106,3 @@ class TestCategoricalMLPPolicy(TfGraphTestCase):
         assert len(reg_vars) == 2
         for var in reg_vars:
             assert ('bias' not in var.name) and ('output' not in var.name)
-
-    def test_clone(self):
-        env = GarageEnv(DummyDiscreteEnv(obs_dim=(10, ), action_dim=4))
-        policy = CategoricalMLPPolicy(env_spec=env.spec)
-        policy_clone = policy.clone('CategoricalMLPPolicyClone')
-        assert policy.env_spec == policy_clone.env_spec

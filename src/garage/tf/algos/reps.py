@@ -97,7 +97,6 @@ class REPS(RLAlgorithm):  # noqa: D416
         self._name = name
         self._name_scope = tf.name_scope(self._name)
         self._old_policy = policy.clone('old_policy')
-        self._old_policy.model.parameters = self.policy.model.parameters
 
         self._feat_diff = None
         self._param_eta = None
