@@ -2,6 +2,7 @@ pull_request_rules:
   - name: Request reviews from contributors
     conditions:
       - -draft
+      - "review-requested!=@rlworkgroup/garage-contributors"
     actions:
       request_reviews:
         teams:
