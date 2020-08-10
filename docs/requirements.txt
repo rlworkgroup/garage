@@ -4,9 +4,9 @@ cloudpickle
 cma==2.7.0
 dm_env
 dowel==0.0.3
-gym[atari, box2d, classic_control]==0.15.4
+gym[atari, box2d, classic_control]==0.17.2
 psutil
-pyglet<1.4.0,>=1.3.0
+pyglet>=1.4.0,<=1.5.0
 pyprind
 python-dateutil
 scikit-image
