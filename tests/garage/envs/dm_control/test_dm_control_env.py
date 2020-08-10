@@ -25,7 +25,7 @@ class TestDmControlEnv:
         assert act_space.contains(a)
         # Skip rendering because it causes TravisCI to run out of memory
         # Sometimes random actions lead to physics errors
-        with dm_control.mujoco.Physics.suppress_physics_errors():
+        with env.physics.suppress_physics_errors():
             step_env(env, render=False)
         env.close()
 
@@ -42,7 +42,7 @@ class TestDmControlEnv:
         assert act_space.contains(a)
         # Skip rendering because it causes TravisCI to run out of memory
         # Sometimes random actions lead to physics errors
-        with dm_control.mujoco.Physics.suppress_physics_errors():
+        with env.physics.suppress_physics_errors():
             step_env(env, render=False)
         env.close()
 
@@ -53,7 +53,7 @@ class TestDmControlEnv:
         assert round_trip
         # Skip rendering because it causes TravisCI to run out of memory
         # Sometimes random actions lead to physics errors
-        with dm_control.mujoco.Physics.suppress_physics_errors():
+        with env.physics.suppress_physics_errors():
             step_env(env, render=False)
         round_trip.close()
         env.close()
@@ -67,7 +67,7 @@ class TestDmControlEnv:
         assert round_trip
         # Skip rendering because it causes TravisCI to run out of memory
         # Sometimes random actions lead to physics errors
-        with dm_control.mujoco.Physics.suppress_physics_errors():
+        with env.physics.suppress_physics_errors():
             step_env(env, render=False)
         round_trip.close()
         env.close()
