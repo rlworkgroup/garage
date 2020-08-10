@@ -51,6 +51,7 @@ def dqn_cartpole(ctxt=None, seed=1):
                    steps_per_epoch=steps_per_epoch,
                    qf_lr=1e-4,
                    discount=1.0,
+                   max_path_length=100,
                    min_buffer_size=int(1e3),
                    double_q=True,
                    n_train_steps=500,

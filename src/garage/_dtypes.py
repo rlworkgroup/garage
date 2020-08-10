@@ -409,6 +409,21 @@ class TrajectoryBatch(
                    agent_infos=stacked_paths['agent_infos'],
                    lengths=lengths)
 
+    @property
+    def next_observations(self):
+        """Get the observations seen after actions are performed.
+        Usually, in a TrajectoryBatch, next_observations don't need to be
+        stored explicitly, since the next observation is already stored in the
+        batch.
+        Returns:
+            np.ndarray: The "next_observations".
+        """
+        return np.concatenate(
+            tuple([
+                np.concatenate((traj.observations[1:], traj.last_observations))
+                for traj in self.split()
+            ]))
+
 
 class TimeStep(
         collections.namedtuple('TimeStep', [

@@ -8,8 +8,8 @@ from garage import _Default, make_optimizer
 from garage import log_performance
 from garage.np import obtain_evaluation_samples
 from garage.np import samples_to_tensors
+from garage.sampler import LocalSampler
 from garage.np.algos import RLAlgorithm
-from garage.sampler import OffPolicyVectorizedSampler
 from garage.tf.misc import tensor_utils
 
 
@@ -105,7 +105,7 @@ class DQN(RLAlgorithm):
         self.policy = policy
         self.exploration_policy = exploration_policy
 
-        self.sampler_cls = OffPolicyVectorizedSampler
+        self.sampler_cls = LocalSampler
 
         self.init_opt()
 
@@ -216,9 +216,9 @@ class DQN(RLAlgorithm):
 
         for _ in runner.step_epochs():
             for cycle in range(self._steps_per_epoch):
-                runner.step_path = runner.obtain_samples(runner.step_itr)
-                for path in runner.step_path:
-                    path['rewards'] *= self._reward_scale
+                runner.step_path = runner.obtain_trajectories(runner.step_itr)
+                # for path in runner.step_path:
+                #     path['rewards'] *= self._reward_scale
                 last_return = self.train_once(runner.step_itr,
                                               runner.step_path)
                 if (cycle == 0 and self.replay_buffer.n_transitions_stored >=
@@ -243,10 +243,11 @@ class DQN(RLAlgorithm):
             numpy.float64: Average return.
 
         """
-        paths = samples_to_tensors(paths)
         epoch = itr / self._steps_per_epoch
 
-        self.episode_rewards.extend(paths['undiscounted_returns'])
+        self.replay_buffer.add_trajectory_batch(paths)
+        self.episode_rewards.extend(
+            [traj.rewards.sum() for traj in paths.split()])
         last_average_return = np.mean(self.episode_rewards)
         for _ in range(self._n_train_steps):
             if (self.replay_buffer.n_transitions_stored >=

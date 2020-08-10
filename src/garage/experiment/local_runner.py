@@ -290,7 +290,7 @@ class LocalRunner:
         if self._plot:
             self._plotter.close()
 
-    def obtain_samples(self,
+    def obtain_trajectories(self,
                        itr,
                        batch_size=None,
                        agent_update=None,
@@ -327,21 +327,43 @@ class LocalRunner:
                              'Either provide `batch_size` to runner.train, '
                              ' or pass `batch_size` to runner.obtain_samples.')
         paths = None
-        if isinstance(self._sampler, BaseSampler):
-            paths = self._sampler.obtain_samples(
-                itr, (batch_size or self._train_args.batch_size))
-        else:
-            if agent_update is None:
-                agent_update = self._algo.policy.get_param_values()
-            paths = self._sampler.obtain_samples(
-                itr, (batch_size or self._train_args.batch_size),
-                agent_update=agent_update,
-                env_update=env_update)
-            paths = paths.to_trajectory_list()
-
-        self._stats.total_env_steps += sum([len(p['rewards']) for p in paths])
-
+        paths = None
+        if agent_update is None:
+            agent_update = self._algo.policy.get_param_values()
+        paths = self._sampler.obtain_samples(
+            itr, (batch_size or self._train_args.batch_size),
+            agent_update=agent_update,
+            env_update=env_update)
+        self._stats.total_env_steps += sum(paths.lengths)
         return paths
+
+    def obtain_samples(self,
+                       itr,
+                       batch_size=None,
+                       agent_update=None,
+                       env_update=None):
+        """Obtain one batch of samples.
+        Args:
+            itr (int): Index of iteration (epoch).
+            batch_size (int): Number of steps in batch.
+                This is a hint that the sampler may or may not respect.
+            agent_update (object): Value which will be passed into the
+                `agent_update_fn` before doing rollouts. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
+            env_update (object): Value which will be passed into the
+                `env_update_fn` before doing rollouts. If a list is passed in,
+                it must have length exactly `factory.n_workers`, and will be
+                spread across the workers.
+        Raises:
+            ValueError: Raised if the runner was initialized without a sampler,
+                        or batch_size wasn't provided here or to train.
+        Returns:
+            list[dict]: One batch of samples.
+        """
+        trajs = self.obtain_trajectories(itr, batch_size, agent_update,
+                                         env_update)
+        return trajs.to_trajectory_list()
 
     def save(self, epoch):
         """Save snapshot of current batch.
