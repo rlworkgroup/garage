@@ -125,6 +125,8 @@ ci-job-verify-envs-pipenv:
 	pipenv graph
 	# pylint will verify all imports work
 	pipenv run pylint --disable=all --enable=import-error garage
+	@echo "Frozen dependencies:"
+	pipenv run pip freeze
 
 ci-deploy-docker: assert-travis
 	echo "${DOCKER_API_KEY}" | docker login -u "${DOCKER_USERNAME}" \
