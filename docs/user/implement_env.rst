@@ -1,51 +1,68 @@
 .. _implement_mdp:
 
-===========================
-Adding a New Environment
-===========================
+================================
+Working with Garage Environments
+================================
 
-Garage uses an environment API based on the very popular OpenAI Gym interface. The main difference is that garage uses
-:code:`akro` to describe input and output spaces, which are an extension of the :code:`gym.Space` API.
+Garage uses the :code:`Environment` API for all RL environments.
 
-If you have an OpenAI Gym compatible environment, you can wrap it in :code:`garage.envs.GymEnv` to use it with
-garage. You can also provide its environment name id (see the example below), and let `:code:`GymEnv` creates
-the environment for you.
+The public API methods of :code:`Environment` are:
 
-.. code-block:: python
+* :code:`reset()`: Resets the environment. Return the first observation, and the episode-level information.
+* :code:`step()`: Steps the environment with an action and returns an EnvStep.
 
-    import gym
-    from garage.envs import GymEnv
+    An :code:`EnvStep` is a named tuple of :code:`env_spec`, :code:`observation`, :code:`action`, :code:`reward`,
+    :code:`step_type` representing a single step in the environment.
+* :code:`render()`: Returns value for rendering, could be a terminal text, an image, etc.
+* :code:`visualize()`: Creates a visualization of the environment.
+* :code:`close()`: Closes the environment.
 
-    my_env = GymEnv('CartPole-v1')  # shorthand for GymEnv(gym.make('CartPole-v1'))
+The attributes of :code:`Environment` are:
+
+* :code:`action_space`: The action space specification.
+* :code:`observation_space`: The observation space specification.
+* :code:`spec`: The environment specifications.
+* :code:`render_modes`: The list of supported render modes.
+
+You should expect to use all environments in garage with this API.
 
 +++++++++++++++++++++++++++
 Add an Environment Wrapper
 +++++++++++++++++++++++++++
 
-If you would like to add an existing environment to garage, you will probably need an environment wrapper to handle
-environment-specific logic.
+Luckily, Garage already came with a variety of external environment wrappers:
 
-Available environment wrappers in garage are:
-
+* :code:`garage.envs.GymEnv`, which supports the :code:`gym` API.
 * :code:`garage.envs.dm_control.DmControlEnv`, which supports Deepmind's :code:`dm_control` API.
 * :code:`garage.envs.bullet.BulletEnv`, which supports the :code:`pybullet` API.
 
-To-do list for adding a new environment wrapper:
+    Note that :code:`pybullet` environments are :code:`gym`-based environments, and they can be wrapped with
+    :code:`garage.envs.GymEnv` as well. In such case, :code:`garage.envs.GymEnv` will detect the bullet-based
+    environment and returns a :code:`garage.envs.bullet.BulletEnv`.
 
-* **Specify** :code:`observation_space` and :code:`action_space`
-These state the set of valid observations and the set of valid actions. Find a detailed example in the next section.
+If you would like to add an existing environment to garage, you will probably need an environment wrapper to handle
+environment-specific logic.
 
-* **Implement** :code:`reset` and :code:`step`
-Allow the environment to reset and step. Find a detailed example in the next section.
+Here is an handy To-do list for adding a new environment wrapper:
+
+* **Inherit** the environment wrapper from :code:`Environment`.
+
+* **Specify** attributes: :code:`observation_space`, :code:`action_space`, :code:`spec`, and :code:`render_modes`
+
+    Note that :code:`observation_space` and :code:`action_space` need to be :code:`akro.Space`.
+
+* **Implement** public methods: :code:`reset()`, :code:`step()`, :code:`render()`, :code:`visualize()`, :code:`close()`
 
 * (Optional) **Implement** :code:`__getstate__` and :code:`__setstate__`
-Garage pickles the environment to save snapshots, whereas some attributes of your environment might not be pickle-able
-(e.g. a client-server connection). If needed, provide your own implementation to make sure your environment is
-pickle-able.
+
+    Garage pickles the environment to save snapshots, whereas some attributes of your environment might not be
+    pickle-able (e.g. a client-server connection). If needed, provide your own implementation to make sure your
+    environment is pickle-able.
 
 * (Optional) **Unit Tests**
-If you would like to contribute your own environment back to garage, make sure to add unit
-tests under the directory :code:`tests/garage/envs`. You can find examples of environment tests here as well.
+
+    If you would like to contribute your own environment back to garage, make sure to add unit
+    tests under the directory :code:`tests/garage/envs`. You can find examples of environment tests here as well.
 
 
 +++++++++++++++++++++++++++
@@ -70,8 +87,9 @@ the base environment and add some imports:
 .. code-block:: python
 
     import akro
-    import gym
     import numpy as np
+
+    from garage import Environment, EnvSpec, EnvStep, StepType
 
 
     class PointEnv(Environment):
@@ -79,14 +97,17 @@ the base environment and add some imports:
         # ...
 
 For each environment, we will need to specify the set of valid observations and the
-set of valid actions. This is done by implementing the following
-property methods:
+set of valid actions, as well as the supported render modes. This is done by implementing
+the following property methods:
 
 .. testcode::
 
     class PointEnv(Environment):
 
-        # ...
+        def __init__(self, max_episode_length=math.inf):
+            self._step_cnt = 0
+            self._max_episode_length = max_episode_length
+            self._visualize = False
 
         @property
         def observation_space(self):
@@ -96,17 +117,53 @@ property methods:
         def action_space(self):
             return akro.Box(low=-0.1, high=0.1, shape=(2,))
 
+         @property
+        def spec(self):
+            return EnvSpec(action_space=self.action_space,
+                           observation_space=self.observation_space,
+                           max_episode_length=self._max_episode_length)
+
+        @property
+        def render_modes(self):
+            return [
+                'ascii',
+            ]
+
 The :code:`Box` space means that the observations and actions are 2D vectors
 with continuous values. The observations can have arbitrary values, while the
 actions should have magnitude at most 0.1.
+
+:code:`max_episode_length` indicates the maximum number of steps an episode can contain.
+If the environment step count :code:`self._step_cnt` reaches this value, the environment
+will produce a timeout signal indicated by :codeL`StepType.TIMEOUT` (found in :code:`EnvStep`
+returned by :code:`step()`.)
+
+Next, we can implement some plotting to visualize what the MDP is doing. For
+simplicity, let's just print the current state of the MDP on the terminal:
+
+.. testcode::
+
+    class PointEnv(Environment):
+
+        # ...
+
+        def visualize(self):
+            self._visualize = True
+
+        def render(self, mode='ascii'):
+            if mode == 'ascii':
+                print ('current state:', self._state)
 
 Now onto the interesting part, where we actually implement the dynamics for the
 MDP. This is done through two methods, :code:`reset` and
 :code:`step`. The :code:`reset` method randomly initializes the state
 of the environment according to some initial state distribution. To keep things
 simple, we will just sample the coordinates from a uniform distribution. The
-method should also return the initial observation. In our case, it will be the
-same as its state.
+method should also return the initial observation and the episode level information.
+Note that the episode info dict could be needed to determine the first action
+(e.g. in the case of goal-conditioned or MTRL.)
+In our case, the initial observation will be the same as its state, and the episode
+dict is empty as it is not needed for this simple environment.
 
 .. testcode::
 
@@ -117,13 +174,15 @@ same as its state.
         def reset(self):
             self._state = np.random.uniform(-1, 1, size=(2,))
             observation = np.copy(self._state)
-            return observation
+
+            return observation, dict()
 
 The :code:`step` method takes an action and advances the state of the
-environment. It should return a :code:`Step` object (which is a wrapper around
-:code:`namedtuple`), containing the observation for the next time step, the reward,
-a flag indicating whether the episode is terminated after taking the step, and optional
-extra keyword arguments (whose values should be vectors only) for diagnostic purposes.
+environment. It should return a :code:`EnvStep` object (which is a wrapper around
+:code:`namedtuple`), containing the environment specification, observation for the next time step,
+the input action, the reward, an enum indicating the step type (could be :code:`FIRST`, :code:`MID`, :code:`TERMINAL`
+or :code:`TIMEOUT`), and optional extra keyword arguments (whose values should be vectors only) for diagnostic purposes.
+
 The procedure that interfaces with the environment is responsible for calling
 :code:`reset` after seeing that the episode is terminated.
 
@@ -135,33 +194,51 @@ The procedure that interfaces with the environment is responsible for calling
 
         def step(self, action):
             self._state = self._state + action
+
+            if self._visualize:  # print state to terminal if visualization mode is enabled
+                self.render()
+
             x, y = self._state
             reward = - (x**2 + y**2) ** 0.5
             done = abs(x) < 0.01 and abs(y) < 0.01
             next_observation = np.copy(self._state)
-            return next_observation, reward, done, None
 
-Finally, we can implement some plotting to visualize what the MDP is doing. For
-simplicity, let's just print the current state of the MDP on the terminal:
+            self._step_cnt += 1
+
+            # determine the step type based on the done signal, step count, and max episode length
+            if done:
+                return StepType.TERMINAL
+            elif step_cnt >= max_episode_length:
+                return StepType.TIMEOUT
+            elif step_cnt == 1:
+                return StepType.FIRST
+            else:
+                return StepType.MID
+
+            return EnvStep(env_spec=self.spec,
+                       action=action,
+                       reward=reward,
+                       observation=next_observation,
+                       env_info=dict(),
+                       step_type=step_type)
+
+And we're done! Lets create a simply rollout loop with this Point environment.
 
 .. testcode::
 
-    class PointEnv(Environment):
+    env = PointEnv(max_episode_length=10)
+    policy = MyPolicy()
+    first_observation, episode_info = env.reset()
+    env.visualize()  # set visualization signal to True
+    episode = []
 
-        # ...
+    first_action = policy.get_action(first_observation)
+    episode.append(env.step(first_action))
+    while not episode[-1].step_type in (StepType.TERMINAL, StepType.TIMEOUT):
+       action = policy.get_action(episode[-1].observation)
+       episode.append(env.step(action))  # prints the current state to terminal
+    env.close()
 
-        def render(self):
-            print ('current state:', self._state)
-
-And we're done! We can now simulate the environment using the following diagnostic
-script:
-
-.. code-block:: bash
-
-    python scripts/sim_env.py garage.envs.point_env --mode random
-
-It simulates an episode of the environment with random actions, sampled from a
-uniform distribution within the defined action bounds.
 
 You could also train a neural network policy to solve the task, which is probably
 overkill. To do so, create a new script with the following content (we will use
