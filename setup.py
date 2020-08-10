@@ -4,30 +4,27 @@ import os
 from setuptools import find_packages, setup
 
 GARAGE_GH_TOKEN = os.environ.get('GARAGE_GH_TOKEN') or 'git'
-GYM_VERSION = '0.15.4'
+GYM_VERSION = '0.17.2'
 
 # Required dependencies
 REQUIRED = [
     # Please keep alphabetized
     'akro',
     'click>=2.0',
-    'cloudpickle<1.5',
+    'cloudpickle==1.3',
     'cma==2.7.0',
     'dowel==0.0.3',
     f'gym[atari,box2d,classic_control]=={GYM_VERSION}',
     'numpy>=1.14.5',
     'psutil',
-    # Pyglet 1.4.0 introduces some api change which breaks some
-    # gym environments
-    # See: https://github.com/openai/gym/issues/1588
-    'pyglet<1.4.0,>=1.3.0',
+    'pyglet>=1.4.0,<=1.5.0',
     'python-dateutil',
     'ray',
     'scikit-image',
     'scipy',
     'setproctitle>=1.0',
-    'tensorflow>=1.14,<2.3.0',
-    'tensorflow-probability<=0.10.0',
+    'tensorflow>=1.14',
+    'tensorflow-probability>=0.11.0',
     'torch>=1.0.0,!=1.5.0,<1.6.0',
     'torchvision>=0.2.1,<0.7.0',
 ]
