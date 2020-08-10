@@ -60,4 +60,4 @@ batch_size = 1000
 
 ----
 
-*This page was authored by Iris Liu ([@irisliucy](https://github.com/irisliucy) with contributions from Ryan Julian ([@ryanjulian](https://github.com/ryanjulian).*
+*This page was authored by Iris Liu ([@irisliucy](https://github.com/irisliucy)) with contributions from Ryan Julian ([@ryanjulian](https://github.com/ryanjulian)).*
