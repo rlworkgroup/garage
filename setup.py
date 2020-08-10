@@ -17,7 +17,6 @@ REQUIRED = [
     f'gym[atari,box2d,classic_control]=={GYM_VERSION}',
     'numpy>=1.14.5',
     'psutil',
-    'pyglet>=1.4.0,<=1.5.0',
     'python-dateutil',
     'ray',
     'scikit-image',
