@@ -2,6 +2,7 @@ import collections
 from copy import copy
 import pickle
 
+import dm_control.mujoco
 import dm_control.suite
 import pytest
 
@@ -10,6 +11,7 @@ from tests.helpers import step_env
 
 
 class TestDmControlEnv:
+
     def test_can_step(self):
         domain_name, task_name = dm_control.suite.ALL_TASKS[0]
         env = DmControlEnv.from_suite(domain_name, task_name)
@@ -20,7 +22,9 @@ class TestDmControlEnv:
         a = act_space.sample()
         assert act_space.contains(a)
         # Skip rendering because it causes TravisCI to run out of memory
-        step_env(env, render=False)
+        # Sometimes random actions lead to physics errors
+        with env._env.physics.suppress_physics_errors():
+            step_env(env, render=False)
         env.close()
 
     @pytest.mark.nightly
@@ -35,7 +39,9 @@ class TestDmControlEnv:
         a = act_space.sample()
         assert act_space.contains(a)
         # Skip rendering because it causes TravisCI to run out of memory
-        step_env(env, render=False)
+        # Sometimes random actions lead to physics errors
+        with env._env.physics.suppress_physics_errors():
+            step_env(env, render=False)
         env.close()
 
     def test_pickleable(self):
@@ -44,7 +50,9 @@ class TestDmControlEnv:
         round_trip = pickle.loads(pickle.dumps(env))
         assert round_trip
         # Skip rendering because it causes TravisCI to run out of memory
-        step_env(round_trip, render=False)
+        # Sometimes random actions lead to physics errors
+        with env._env.physics.suppress_physics_errors():
+            step_env(env, render=False)
         round_trip.close()
         env.close()
 
@@ -56,7 +64,9 @@ class TestDmControlEnv:
         round_trip = pickle.loads(pickle.dumps(env))
         assert round_trip
         # Skip rendering because it causes TravisCI to run out of memory
-        step_env(round_trip, render=False)
+        # Sometimes random actions lead to physics errors
+        with env._env.physics.suppress_physics_errors():
+            step_env(env, render=False)
         round_trip.close()
         env.close()
 
