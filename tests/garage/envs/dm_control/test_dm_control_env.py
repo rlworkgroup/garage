@@ -11,6 +11,7 @@ from tests.helpers import step_env
 
 
 class TestDmControlEnv:
+
     def test_can_step(self):
         domain_name, task_name = dm_control.suite.ALL_TASKS[0]
         env = DmControlEnv.from_suite(domain_name, task_name)
