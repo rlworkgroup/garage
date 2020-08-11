@@ -41,11 +41,11 @@ class TestResume(TfGraphTestCase):
 
             runner.resume(n_epochs=10,
                           plot=False,
-                          store_paths=True,
+                          store_episodes=True,
                           pause_for_plot=False)
 
             assert runner._train_args.n_epochs == 10
             assert runner._train_args.batch_size == batch_size
             assert not runner._train_args.plot
-            assert runner._train_args.store_paths
+            assert runner._train_args.store_episodes
             assert not runner._train_args.pause_for_plot

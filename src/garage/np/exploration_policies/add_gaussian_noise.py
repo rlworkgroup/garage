@@ -15,8 +15,8 @@ class AddGaussianNoise(ExplorationPolicy):
             exploration.
         min_sigma (float): Action noise standard deviation at the end of the
             decay period.
-        decay_period (int): Number of paths over which to linearly decay sigma
-            from  max_sigma to min_sigma.
+        decay_period (int): Number of episodes over which to linearly decay
+            sigma from max_sigma to min_sigma.
 
     """
 

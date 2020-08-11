@@ -11,7 +11,7 @@ class Sampler(abc.ABC):
     `obtain_samples`, and `shutdown_worker`. `construct` takes a
     `WorkerFactory`, which implements most of the RL-specific functionality a
     `Sampler` needs. Specifically, it specifies how to construct `Worker`s,
-    which know how to perform rollouts and update both agents and environments.
+    which know how to collect episodes and update both agents and environments.
 
     Currently, `__init__` is also part of the interface, but calling it is
     deprecated. `start_worker` is also deprecated, and does not need to be
@@ -22,9 +22,9 @@ class Sampler(abc.ABC):
         """Construct a Sampler from an Algorithm.
 
         Args:
-            algo(garage.RLAlgorithm): The RL Algorithm controlling this
+            algo (RLAlgorithm): The RL Algorithm controlling this
                 sampler.
-            env(gym.Env): The environment being sampled from.
+            env (Environment): The environment being sampled from.
 
         Calling this method is deprecated.
 
@@ -37,18 +37,18 @@ class Sampler(abc.ABC):
         """Construct this sampler.
 
         Args:
-            worker_factory(WorkerFactory): Pickleable factory for creating
+            worker_factory (WorkerFactory): Pickleable factory for creating
                 workers. Should be transmitted to other processes / nodes where
                 work needs to be done, then workers should be constructed
                 there.
-            agents(Agent or List[Agent]): Agent(s) to use to perform rollouts.
-                If a list is passed in, it must have length exactly
+            agents (Policy or List[Policy]): Agent(s) to use to collect
+                episodes. If a list is passed in, it must have length exactly
                 `worker_factory.n_workers`, and will be spread across the
                 workers.
-            envs(gym.Env or List[gym.Env]): Environment rollouts are performed
-                in. If a list is passed in, it must have length exactly
-                `worker_factory.n_workers`, and will be spread across the
-                workers.
+            envs (Environment or List[Environment]): Environment from which
+                episodes are sampled. If a list is passed in, it must have
+                length exactly `worker_factory.n_workers`, and will be spread
+                across the workers.
 
         Returns:
             Sampler: An instance of `cls`.
@@ -71,24 +71,23 @@ class Sampler(abc.ABC):
 
     @abc.abstractmethod
     def obtain_samples(self, itr, num_samples, agent_update, env_update=None):
-        """Collect at least a given number transitions (timesteps).
+        """Collect at least a given number transitions :class:`TimeStep`s.
 
         Args:
-            itr(int): The current iteration number. Using this argument is
+            itr (int): The current iteration number. Using this argument is
                 deprecated.
-            num_samples(int): Minimum number of transitions / timesteps to
-                sample.
-            agent_update(object): Value which will be passed into the
-                `agent_update_fn` before doing rollouts. If a list is passed
+            num_samples (int): Minimum number of :class:`TimeStep`s to sample.
+            agent_update (object): Value which will be passed into the
+                `agent_update_fn` before sampling episodes. If a list is passed
                 in, it must have length exactly `factory.n_workers`, and will
                 be spread across the workers.
-            env_update(object): Value which will be passed into the
-                `env_update_fn` before doing rollouts. If a list is passed in,
-                it must have length exactly `factory.n_workers`, and will be
-                spread across the workers.
+            env_update (object): Value which will be passed into the
+                `env_update_fn` before sampling episodes. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
 
         Returns:
-            garage.TrajectoryBatch: The batch of collected trajectories.
+            EpisodeBatch: The batch of collected episodes.
 
         """
 

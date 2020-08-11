@@ -14,8 +14,8 @@ class TestRL2Worker(TfGraphTestCase):
         worker = RL2Worker(seed=1,
                            max_episode_length=100,
                            worker_number=1,
-                           n_paths_per_trial=5)
+                           n_episodes_per_trial=5)
         worker.update_agent(policy)
         worker.update_env(env)
-        rollouts = worker.rollout()
-        assert rollouts.rewards.shape[0] == 500
+        episodes = worker.rollout()
+        assert episodes.rewards.shape[0] == 500

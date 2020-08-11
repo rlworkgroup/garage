@@ -33,7 +33,7 @@ class WorkerFactory:
     Args:
         seed(int): The seed to use to intialize random number generators.
         n_workers(int): The number of workers to use.
-        max_episode_length(int): The maximum length paths which will be
+        max_episode_length(int): The maximum length episodes which will be
             sampled.
         worker_class(type): Class of the workers. Instances should implement
             the Worker interface.

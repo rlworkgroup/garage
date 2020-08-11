@@ -11,7 +11,7 @@ def paths_to_tensors(paths, max_episode_length, baseline_predictions, discount,
 
     Args:
         paths (list[dict]): A list of collected paths.
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         baseline_predictions(numpy.ndarray): : Predicted value of GAE
             (Generalized Advantage Estimation) Baseline.
         discount (float): Environment reward discount.

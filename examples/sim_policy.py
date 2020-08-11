@@ -52,7 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('--max_episode_length',
                         type=int,
                         default=1000,
-                        help='Max length of rollout')
+                        help='Max length of episode')
     parser.add_argument('--speedup', type=float, default=1, help='Speedup')
     args = parser.parse_args()
 

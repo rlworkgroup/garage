@@ -8,10 +8,10 @@ import scipy.optimize
 import tensorflow as tf
 
 from garage import (_Default,
+                    EpisodeBatch,
                     log_performance,
                     make_optimizer,
-                    StepType,
-                    TrajectoryBatch)
+                    StepType)
 from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
 from garage.tf import paths_to_tensors
@@ -35,14 +35,14 @@ class REPS(RLAlgorithm):  # noqa: D416
         $ python garage/examples/tf/reps_gym_cartpole.py
 
     Args:
-        env_spec (garage.envs.EnvSpec): Environment specification.
+        env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.StochasticPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
         scope (str): Scope for identifying the algorithm.
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -138,8 +138,7 @@ class REPS(RLAlgorithm):  # noqa: D416
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): LocalRunner is passed to give algorithm
-                the access to runner.step_epochs(), which provides services
+            runner (LocalRunner): Experiment runner, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -197,7 +196,7 @@ class REPS(RLAlgorithm):  # noqa: D416
         # -- Stage: Run and calculate performance of the algorithm
         undiscounted_returns = log_performance(
             itr,
-            TrajectoryBatch.from_trajectory_list(self._env_spec, paths),
+            EpisodeBatch.from_list(self._env_spec, paths),
             discount=self._discount)
         self._episode_reward_mean.extend(undiscounted_returns)
         tabular.record('Extras/EpisodeRewardMean',

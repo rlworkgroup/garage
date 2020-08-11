@@ -8,9 +8,9 @@ import numpy as np
 import torch
 
 from garage import (_Default,
+                    EpisodeBatch,
                     log_multitask_performance,
-                    make_optimizer,
-                    TrajectoryBatch)
+                    make_optimizer)
 from garage.misc import tensor_utils
 from garage.sampler import RaySampler
 from garage.sampler.env_update import SetTaskUpdate
@@ -38,8 +38,8 @@ class MAML:
         inner_lr (float): Adaptation learning rate.
         outer_lr (float): Meta policy learning rate.
         num_grad_updates (int): Number of adaptation gradient steps.
-        meta_evaluator (garage.experiment.MetaEvaluator): A meta evaluator for
-            meta-testing. If None, don't do meta-testing.
+        meta_evaluator (MetaEvaluator): A meta evaluator for meta-testing. If
+            None, don't do meta-testing.
         evaluate_every_n_epochs (int): Do meta-testing every this epochs.
 
     """
@@ -78,8 +78,8 @@ class MAML:
         """Obtain samples and start training for each epoch.
 
         Args:
-            runner (LocalRunner): LocalRunner is passed to give algorithm
-                the access to runner.step_epochs(), which provides services
+            runner (LocalRunner): Gives the algorithm access to
+                :method:`~LocalRunner.step_epochs()`, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -99,9 +99,9 @@ class MAML:
         """Train the algorithm once.
 
         Args:
-            runner (garage.experiment.LocalRunner): The experiment runner.
-            all_samples (list[list[MAMLTrajectoryBatch]]): A two
-                dimensional list of MAMLTrajectoryBatch of size
+            runner (LocalRunner): The experiment runner.
+            all_samples (list[list[MAMLEpisodeBatch]]): A two
+                dimensional list of MAMLEpisodeBatch of size
                 [meta_batch_size * (num_grad_updates + 1)]
             all_params (list[dict]): A list of named parameter dictionaries.
                 Each dictionary contains key value pair of names (str) and
@@ -186,7 +186,7 @@ class MAML:
 
         Returns:
             tuple: Tuple of (all_samples, all_params).
-                all_samples (list[MAMLTrajectoryBatch]): A list of size
+                all_samples (list[MAMLEpisodeBatch]): A list of size
                     [meta_batch_size * (num_grad_updates + 1)]
                 all_params (list[dict]): A list of named parameter
                     dictionaries.
@@ -201,9 +201,9 @@ class MAML:
 
             for j in range(self._num_grad_updates + 1):
                 env_up = SetTaskUpdate(None, task=task)
-                paths = runner.obtain_samples(runner.step_itr,
-                                              env_update=env_up)
-                batch_samples = self._process_samples(paths)
+                episodes = runner.obtain_samples(runner.step_itr,
+                                                 env_update=env_up)
+                batch_samples = self._process_samples(episodes)
                 all_samples[i].append(batch_samples)
 
                 # The last iteration does only sampling but no adapting
@@ -223,7 +223,7 @@ class MAML:
         """Performs one MAML inner step to update the policy.
 
         Args:
-            batch_samples (MAMLTrajectoryBatch): Samples data for one
+            batch_samples (MAMLEpisodeBatch): Samples data for one
                 task and one gradient step.
             set_grad (bool): if False, update policy parameters in-place.
                 Else, allow taking gradient of functions of updated parameters
@@ -255,8 +255,8 @@ class MAML:
         """Compute loss to meta-optimize.
 
         Args:
-            all_samples (list[list[MAMLTrajectoryBatch]]): A two
-                dimensional list of MAMLTrajectoryBatch of size
+            all_samples (list[list[MAMLEpisodeBatch]]): A two
+                dimensional list of MAMLEpisodeBatch of size
                 [meta_batch_size * (num_grad_updates + 1)]
             all_params (list[dict]): A list of named parameter dictionaries.
                 Each dictionary contains key value pair of names (str) and
@@ -295,8 +295,8 @@ class MAML:
         distribution and current policy distribution.
 
         Args:
-            all_samples (list[list[MAMLTrajectoryBatch]]): Two
-                dimensional list of MAMLTrajectoryBatch of size
+            all_samples (list[list[MAMLEpisodeBatch]]): Two
+                dimensional list of MAMLEpisodeBatch of size
                 [meta_batch_size * (num_grad_updates + 1)]
             all_params (list[dict]): A list of named parameter dictionaries.
                 Each dictionary contains key value pair of names (str) and
@@ -332,7 +332,7 @@ class MAML:
         """Compute policy entropy.
 
         Args:
-            task_samples (list[MAMLTrajectoryBatch]): Samples data for
+            task_samples (list[MAMLEpisodeBatch]): Samples data for
                 one task.
 
         Returns:
@@ -373,7 +373,7 @@ class MAML:
             paths (list[dict]): A list of collected paths.
 
         Returns:
-            MAMLTrajectoryBatch: Processed samples data.
+            MAMLEpisodeBatch: Processed samples data.
 
         """
         for path in paths:
@@ -383,8 +383,8 @@ class MAML:
         self._train_value_function(paths)
         obs, actions, rewards, _, valids, baselines \
             = self._inner_algo.process_samples(paths)
-        return MAMLTrajectoryBatch(paths, obs, actions, rewards, valids,
-                                   baselines)
+        return MAMLEpisodeBatch(paths, obs, actions, rewards, valids,
+                                baselines)
 
     def log_performance(self, itr, all_samples, loss_before, loss_after,
                         kl_before, kl, policy_entropy):
@@ -392,8 +392,8 @@ class MAML:
 
         Args:
             itr (int): Iteration number.
-            all_samples (list[list[MAMLTrajectoryBatch]]): Two
-                dimensional list of MAMLTrajectoryBatch of size
+            all_samples (list[list[MAMLEpisodeBatch]]): Two
+                dimensional list of MAMLEpisodeBatch of size
                 [meta_batch_size * (num_grad_updates + 1)]
             loss_before (float): Loss before optimization step.
             loss_after (float): Loss after optimization step.
@@ -414,7 +414,7 @@ class MAML:
 
         rtns = log_multitask_performance(
             itr,
-            TrajectoryBatch.from_trajectory_list(
+            EpisodeBatch.from_list(
                 env_spec=self._env.spec,
                 paths=[
                     path for task_paths in all_samples
@@ -440,35 +440,34 @@ class MAML:
         task.
 
         Returns:
-            garage.Policy: The policy used to obtain samples that are later
-                used for meta-RL adaptation.
+            Policy: The policy used to obtain samples that are later used for
+                meta-RL adaptation.
 
         """
         return copy.deepcopy(self._policy)
 
-    def adapt_policy(self, exploration_policy, exploration_trajectories):
+    def adapt_policy(self, exploration_policy, exploration_episodes):
         """Adapt the policy by one gradient steps for a task.
 
         Args:
-            exploration_policy (garage.Policy): A policy which was returned
-                from get_exploration_policy(), and which generated
-                exploration_trajectories by interacting with an environment.
+            exploration_policy (Policy): A policy which was returned from
+                get_exploration_policy(), and which generated
+                exploration_episodes by interacting with an environment.
                 The caller may not use this object after passing it into this
                 method.
-            exploration_trajectories (garage.TrajectoryBatch): Trajectories to
-                adapt to, generated by exploration_policy exploring the
-                environment.
+            exploration_episodes (EpisodeBatch): Episodes with which to adapt,
+                generated by exploration_policy exploring the environment.
 
         Returns:
-            garage.Policy: A policy adapted to the task represented by the
-                exploration_trajectories.
+            Policy: A policy adapted to the task represented by the
+                exploration_episodes.
 
         """
         old_policy, self._policy = self._policy, exploration_policy
         self._inner_algo.policy = exploration_policy
         self._inner_optimizer.module = exploration_policy
 
-        paths = exploration_trajectories.to_trajectory_list()
+        paths = exploration_episodes.to_list()
         batch_samples = self._process_samples(paths)
 
         self._adapt(batch_samples, set_grad=False)
@@ -478,21 +477,21 @@ class MAML:
         return exploration_policy
 
 
-class MAMLTrajectoryBatch(
-        collections.namedtuple('MAMLTrajectoryBatch', [
+class MAMLEpisodeBatch(
+        collections.namedtuple('MAMLEpisodeBatch', [
             'paths', 'observations', 'actions', 'rewards', 'valids',
             'baselines'
         ])):
-    r"""A tuple representing a batch of whole trajectories in MAML.
+    r"""A tuple representing a batch of whole episodes in MAML.
 
-    A :class:`MAMLTrajectoryBatch` represents a batch of whole trajectories
+    A :class:`MAMLEpisodeBatch` represents a batch of whole episodes
     produced from one environment.
     +-----------------------+-------------------------------------------------+
     | Symbol                | Description                                     |
     +=======================+=================================================+
-    | :math:`N`             | Trajectory index dimension                      |
+    | :math:`N`             | Episode batch dimension                         |
     +-----------------------+-------------------------------------------------+
-    | :math:`T`             | Maximum length of a trajectory                  |
+    | :math:`T`             | Maximum length of an episode                    |
     +-----------------------+-------------------------------------------------+
     | :math:`S^*`           | Single-step shape of a time-series tensor       |
     +-----------------------+-------------------------------------------------+
@@ -512,8 +511,8 @@ class MAMLTrajectoryBatch(
             :math:`(N \bullet T)` containing the rewards for all time
             steps in this batch.
         valids (numpy.ndarray): An integer numpy array of shape :math:`(N, )`
-            containing the length of each trajectory in this batch. This may be
-            used to reconstruct the individual trajectories.
+            containing the length of each episode in this batch. This may be
+            used to reconstruct the individual episodes.
         baselines (numpy.ndarray): An numpy array of shape
             :math:`(N \bullet T, )` containing the value function estimation
             at all time steps in this batch.

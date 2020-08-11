@@ -12,15 +12,15 @@ def rollout(env,
             animated=False,
             speedup=1,
             deterministic=False):
-    """Sample a single rollout of the agent in the environment.
+    """Sample a single episode of the agent in the environment.
 
     Args:
-        agent(Policy): Agent used to select actions.
-        env(gym.Env): Environment to perform actions in.
-        max_episode_length(int): If the rollout reaches this many timesteps, it
-            is terminated.
-        animated(bool): If true, render the environment after each step.
-        speedup(float): Factor by which to decrease the wait time between
+        agent (Policy): Agent used to select actions.
+        env (Environment): Environment to perform actions in.
+        max_episode_length (int): If the episode reaches this many timesteps,
+            it is truncated.
+        animated (bool): If true, render the environment after each step.
+        speedup (float): Factor by which to decrease the wait time between
             rendered steps. Only relevant, if animated == true.
         deterministic (bool): If true, use the mean action returned by the
             stochastic policy instead of sampling from the returned action
@@ -51,10 +51,10 @@ def rollout(env,
     observations = []
     last_obs = env.reset()[0]
     agent.reset()
-    path_length = 0
+    episode_length = 0
     if animated:
         env.visualize()
-    while path_length < (max_episode_length or np.inf):
+    while episode_length < (max_episode_length or np.inf):
         last_obs = env.observation_space.flatten(last_obs)
         a, agent_info = agent.get_action(last_obs)
         if deterministic and 'mean' in agent_info:
@@ -63,7 +63,7 @@ def rollout(env,
         env_steps.append(es)
         observations.append(last_obs)
         agent_infos.append(agent_info)
-        path_length += 1
+        episode_length += 1
         if es.terminal:
             break
         last_obs = es.observation

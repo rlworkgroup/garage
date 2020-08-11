@@ -9,16 +9,16 @@ class Worker(abc.ABC):
         """Initialize a worker.
 
         Args:
-            seed(int): The seed to use to intialize random number generators.
-            max_episode_length(int or float): The maximum length paths which
-                will be sampled. Can be (floating point) infinity.
-            worker_number(int): The number of the worker this update is
+            seed (int): The seed to use to intialize random number generators.
+            max_episode_length (int or float): The maximum length of episodes
+                which will be sampled. Can be (floating point) infinity.
+            worker_number (int): The number of the worker this update is
                 occurring in. This argument is used to set a different seed for
                 each worker.
 
         Should create fields the following fields:
-            agent(Policy or None): The worker's initial agent.
-            env(gym.Env or None): The worker's environment.
+            agent (Policy or None): The worker's initial agent.
+            env (Environment or None): The worker's environment.
 
         """
         self._seed = seed
@@ -29,7 +29,7 @@ class Worker(abc.ABC):
         """Update the worker's agent, using agent_update.
 
         Args:
-            agent_update(object): An agent update. The exact type of this
+            agent_update (object): An agent update. The exact type of this
                 argument depends on the `Worker` implementation.
 
         """
@@ -38,38 +38,38 @@ class Worker(abc.ABC):
         """Update the worker's env, using env_update.
 
         Args:
-            env_update(object): An environment update. The exact type of this
+            env_update (object): An environment update. The exact type of this
                 argument depends on the `Worker` implementation.
 
         """
 
     def rollout(self):
-        """Sample a single rollout of the agent in the environment.
+        """Sample a single episode of the agent in the environment.
 
         Returns:
-            garage.TrajectoryBatch: Batch of sampled trajectories. May be
-                truncated if max_episode_length is set.
+            EpisodeBatch: Batch of sampled episodes. May be truncated if
+                max_episode_length is set.
 
         """
 
-    def start_rollout(self):
-        """Begin a new rollout."""
+    def start_episode(self):
+        """Begin a new episode."""
 
-    def step_rollout(self):
-        """Take a single time-step in the current rollout.
+    def step_episode(self):
+        """Take a single time-step in the current episode.
 
         Returns:
-            True iff the path is done, either due to the environment indicating
-            termination of due to reaching `max_episode_length`.
+            True iff the episode is done, either due to the environment
+            indicating termination of due to reaching `max_episode_length`.
 
         """
 
-    def collect_rollout(self):
-        """Collect the current rollout, clearing the internal buffer.
+    def collect_episode(self):
+        """Collect the current episode, clearing the internal buffer.
 
         Returns:
-            garage.TrajectoryBatch: Batch of sampled trajectories. May be
-                truncated if the rollouts haven't completed yet.
+            EpisodeBatch: Batch of sampled episodes. May be truncated if the
+               episodes haven't completed yet.
 
         """
 

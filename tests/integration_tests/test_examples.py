@@ -64,7 +64,7 @@ def enumerate_algo_examples():
 
 @pytest.mark.mujoco
 @pytest.mark.no_cover
-@pytest.mark.timeout(70)
+@pytest.mark.timeout(140)
 @pytest.mark.parametrize('filepath', enumerate_algo_examples())
 def test_algo_examples(filepath):
     """Test algo examples.
@@ -154,12 +154,12 @@ def test_step_dm_control_env():
 
 @pytest.mark.mujoco
 @pytest.mark.no_cover
-@pytest.mark.timeout(20)
+@pytest.mark.timeout(30)
 def test_maml_halfcheetah():
     """Test maml_trpo_half_cheetah_dir.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/maml_trpo_half_cheetah_dir.py', '--epochs',
-        '1', '--rollouts_per_task', '1', '--meta_batch_size', '1'
+        '1', '--episodes_per_task', '1', '--meta_batch_size', '1'
     ],
                           check=False).returncode == 0
 
@@ -238,7 +238,7 @@ def test_maml_trpo_metaworld_ml10():
     """Test maml_trpo_ml10.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/maml_trpo_metaworld_ml10.py', '--epochs',
-        '1', '--rollouts_per_task', '1', '--meta_batch_size', '1'
+        '1', '--episodes_per_task', '1', '--meta_batch_size', '1'
     ],
                           check=False).returncode == 0
 
@@ -250,7 +250,7 @@ def test_maml_trpo():
     """Test maml_trpo_half_cheetah_dir.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/maml_trpo_half_cheetah_dir.py', '--epochs',
-        '1', '--rollouts_per_task', '1', '--meta_batch_size', '1'
+        '1', '--episodes_per_task', '1', '--meta_batch_size', '1'
     ],
                           check=False).returncode == 0
 
@@ -262,7 +262,7 @@ def test_maml_ppo():
     """Test maml_ppo_half_cheetah_dir.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/maml_ppo_half_cheetah_dir.py', '--epochs',
-        '1', '--rollouts_per_task', '1', '--meta_batch_size', '1'
+        '1', '--episodes_per_task', '1', '--meta_batch_size', '1'
     ],
                           check=False).returncode == 0
 
@@ -274,7 +274,7 @@ def test_maml_vpg():
     """Test maml_vpg_half_cheetah_dir.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/maml_vpg_half_cheetah_dir.py', '--epochs',
-        '1', '--rollouts_per_task', '1', '--meta_batch_size', '1'
+        '1', '--episodes_per_task', '1', '--meta_batch_size', '1'
     ],
                           check=False).returncode == 0
 
@@ -286,7 +286,7 @@ def test_rl2_metaworld_ml1_push():
     """Test rl2_ppo_ml1.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_metaworld_ml1_push.py', '--n_epochs',
-        '1', '--episode_per_task', '1', '--meta_batch_size', '10'
+        '1', '--episodes_per_task', '1', '--meta_batch_size', '10'
     ],
                           check=False).returncode == 0
 
@@ -298,7 +298,7 @@ def test_rl2_ppo_metaworld_ml10():
     """Test rl2_ppo_ml10.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_metaworld_ml10.py', '--n_epochs', '1',
-        '--episode_per_task', '1', '--meta_batch_size', '10'
+        '--episodes_per_task', '1', '--meta_batch_size', '10'
     ],
                           check=False).returncode == 0
 

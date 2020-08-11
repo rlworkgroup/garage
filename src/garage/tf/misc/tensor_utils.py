@@ -188,8 +188,8 @@ def flatten_tensor_variables(ts):
     Returns:
         tf.Tensor: Flattened Tensor.
     """
-    return tf.concat(axis=0,
-                     values=[tf.reshape(x, [-1]) for x in ts],
+    return tf.concat([tf.reshape(x, [-1]) for x in ts],
+                     0,
                      name='flatten_tensor_variables')
 
 
@@ -400,19 +400,19 @@ def compute_advantages(discount,
         discount (float): Discount factor.
         gae_lambda (float): Lambda, as used for Generalized Advantage
             Estimation (GAE).
-        max_len (int): Maximum length of a single rollout.
+        max_len (int): Maximum length of a single episode.
         baselines (tf.Tensor): A 2D vector of value function estimates with
             shape (N, T), where N is the batch dimension (number of episodes)
-            and T is the maximum path length experienced by the agent.
+            and T is the maximum episode length experienced by the agent.
         rewards (tf.Tensor): A 2D vector of per-step rewards with shape
             (N, T), where N is the batch dimension (number of episodes) and T
-            is the maximum path length experienced by the agent.
+            is the maximum episode length experienced by the agent.
         name (string): Name of the operation.
 
     Returns:
         tf.Tensor: A 2D vector of calculated advantage values with shape
             (N, T), where N is the batch dimension (number of episodes) and T
-            is the maximum path length experienced by the agent.
+            is the maximum episode length experienced by the agent.
     """
     with tf.name_scope(name):
 
@@ -420,7 +420,9 @@ def compute_advantages(discount,
         gamma_lambda = tf.constant(float(discount) * float(gae_lambda),
                                    dtype=tf.float32,
                                    shape=[max_len, 1, 1])
-        advantage_filter = tf.compat.v1.cumprod(gamma_lambda, exclusive=True)
+        advantage_filter = tf.compat.v1.cumprod(gamma_lambda,
+                                                axis=0,
+                                                exclusive=True)
 
         # Calculate deltas
         pad = tf.zeros_like(baselines[:, :1])
@@ -429,7 +431,7 @@ def compute_advantages(discount,
 
         # Convolve deltas with the discount filter to get advantages
         deltas_pad = tf.expand_dims(tf.concat(
-            [deltas, tf.zeros_like(deltas[:, :-1])], axis=1),
+            [deltas, tf.zeros_like(deltas[:, :-1])], 1),
                                     axis=2)
         adv = tf.nn.conv1d(deltas_pad,
                            advantage_filter,
@@ -489,10 +491,10 @@ def discounted_returns(discount, max_len, rewards, name='discounted_returns'):
 
     Args:
         discount (float): Discount factor.
-        max_len (int): Maximum length of a single rollout.
+        max_len (int): Maximum length of a single episode.
         rewards (tf.Tensor): A 2D vector of per-step rewards with shape
             (N, T), where N is the batch dimension (number of episodes) and T
-            is the maximum path length experienced by the agent.
+            is the maximum episode length experienced by the agent.
         name (string): Name of the operation. None by default.
 
     Returns:
@@ -502,9 +504,9 @@ def discounted_returns(discount, max_len, rewards, name='discounted_returns'):
         gamma = tf.constant(float(discount),
                             dtype=tf.float32,
                             shape=[max_len, 1, 1])
-        return_filter = tf.math.cumprod(gamma, exclusive=True)
+        return_filter = tf.math.cumprod(gamma, axis=0, exclusive=True)
         rewards_pad = tf.expand_dims(tf.concat(
-            [rewards, tf.zeros_like(rewards[:, :-1])], axis=1),
+            [rewards, tf.zeros_like(rewards[:, :-1])], 1),
                                      axis=2)
         returns = tf.nn.conv1d(rewards_pad,
                                return_filter,

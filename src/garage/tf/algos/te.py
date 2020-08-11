@@ -3,7 +3,7 @@ from collections import defaultdict
 
 import numpy as np
 
-from garage import StepType, TrajectoryBatch
+from garage import EpisodeBatch, StepType
 from garage.sampler import DefaultWorker
 
 
@@ -14,16 +14,16 @@ class TaskEmbeddingWorker(DefaultWorker):
     and adds latent and latent infos to agent_info.
 
     Args:
-        seed(int): The seed to use to intialize random number generators.
-        max_episode_length(int or float): The maximum length paths which will
-            be sampled. Can be (floating point) infinity.
+        seed (int): The seed to use to intialize random number generators.
+        max_episode_length (int or float): The maximum length of episodes to
+            sample. Can be (floating point) infinity.
         worker_number(int): The number of the worker where this update is
             occurring. This argument is used to set a different seed for each
             worker.
 
     Attributes:
-        agent(Policy or None): The worker's agent.
-        env(gym.Env or None): The worker's environment.
+        agent (Policy or None): The worker's agent.
+        env (Environment or None): The worker's environment.
 
     """
 
@@ -41,23 +41,23 @@ class TaskEmbeddingWorker(DefaultWorker):
                          max_episode_length=max_episode_length,
                          worker_number=worker_number)
 
-    def start_rollout(self):
-        """Begin a new rollout."""
+    def start_episode(self):
+        """Begin a new episode."""
         # pylint: disable=protected-access
         self._t = self.env._active_task_one_hot()
         self._z, self._latent_info = self.agent.get_latent(self._t)
         self._z = self.agent.latent_space.flatten(self._z)
-        super().start_rollout()
+        super().start_episode()
 
-    def step_rollout(self):
-        """Take a single time-step in the current rollout.
+    def step_episode(self):
+        """Take a single time-step in the current episode.
 
         Returns:
-            bool: True iff the path is done, either due to the environment
+            bool: True iff the episode is done, either due to the environment
                 indicating termination of due to reaching `max_episode_length`.
 
         """
-        if self._path_length < self._max_episode_length:
+        if self._eps_length < self._max_episode_length:
             a, agent_info = self.agent.get_action_given_latent(
                 self._prev_obs, self._z)
             es = self.env.step(a)
@@ -69,19 +69,19 @@ class TaskEmbeddingWorker(DefaultWorker):
                 self._latent_infos[k].append(v)
             for k, v in agent_info.items():
                 self._agent_infos[k].append(v)
-            self._path_length += 1
+            self._eps_length += 1
 
             if not es.last:
                 self._prev_obs = es.observation
                 return False
 
-        self._lengths.append(self._path_length)
+        self._lengths.append(self._eps_length)
         self._last_observations.append(self._prev_obs)
 
         return True
 
-    def collect_rollout(self):
-        """Collect the current rollout, clearing the internal buffer.
+    def collect_episode(self):
+        """Collect the current episode, clearing the internal buffer.
 
         One-hot task id is saved in env_infos['task_onehot']. Latent is saved
         in agent_infos['latent']. Latent infos are saved in
@@ -89,8 +89,8 @@ class TaskEmbeddingWorker(DefaultWorker):
         info name.
 
         Returns:
-            garage.TrajectoryBatch: A batch of the trajectories completed since
-                the last call to collect_rollout().
+            EpisodeBatch: A batch of the episodes completed since the last call
+                to collect_episode().
 
         """
         observations = self._observations
@@ -133,13 +133,12 @@ class TaskEmbeddingWorker(DefaultWorker):
         lengths = self._lengths
         self._lengths = []
 
-        return TrajectoryBatch(env_spec=self.env.spec,
-                               observations=np.asarray(observations),
-                               last_observations=np.asarray(last_observations),
-                               actions=np.asarray(actions),
-                               rewards=np.asarray(rewards),
-                               step_types=np.asarray(step_types,
-                                                     dtype=StepType),
-                               env_infos=(env_infos),
-                               agent_infos=dict(agent_infos),
-                               lengths=np.asarray(lengths, dtype='i'))
+        return EpisodeBatch(env_spec=self.env.spec,
+                            observations=np.asarray(observations),
+                            last_observations=np.asarray(last_observations),
+                            actions=np.asarray(actions),
+                            rewards=np.asarray(rewards),
+                            step_types=np.asarray(step_types, dtype=StepType),
+                            env_infos=(env_infos),
+                            agent_infos=dict(agent_infos),
+                            lengths=np.asarray(lengths, dtype='i'))

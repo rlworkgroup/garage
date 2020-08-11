@@ -17,7 +17,7 @@ class PPO(VPG):
             for policy.
         vf_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer for
             value function.
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         lr_clip_range (float): The limit on the likelihood ratio between
             policies.
         num_train_per_epoch (int): Number of train_once calls per epoch.

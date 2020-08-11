@@ -17,7 +17,7 @@ hyper_parameters = {
     'qf_hidden_sizes': [256, 256, 256],
     'n_epochs': 50,
     'steps_per_epoch': 20,
-    'n_rollout_steps': 100,
+    'n_exploration_steps': 100,
     'n_train_steps': 40,
     'discount': 0.9,
     'tau': 0.05,
@@ -31,9 +31,8 @@ def her_garage_tf(ctxt, env_id, seed):
     """Create garage TensorFlow HER model and training.
 
     Args:
-        ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the
-            snapshotter.
+        ctxt (ExperimentContext): The experiment configuration used by
+            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
 
@@ -85,4 +84,4 @@ def her_garage_tf(ctxt, env_id, seed):
 
         runner.setup(algo, env)
         runner.train(n_epochs=hyper_parameters['n_epochs'],
-                     batch_size=hyper_parameters['n_rollout_steps'])
+                     batch_size=hyper_parameters['n_exploration_steps'])

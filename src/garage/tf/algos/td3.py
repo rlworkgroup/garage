@@ -10,7 +10,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage import _Default, log_performance, make_optimizer
-from garage.np import obtain_evaluation_samples
+from garage.np import obtain_evaluation_episodes
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf.misc import tensor_utils
@@ -25,7 +25,7 @@ class TD3(RLAlgorithm):
         $ python garage/examples/tf/td3_pendulum.py
 
     Args:
-        env_spec (garage.envs.EnvSpec): Environment.
+        env_spec (EnvSpec): Environment.
         policy (garage.tf.policies.Policy): Policy.
         qf (garage.tf.q_functions.QFunction): Q-function.
         qf2 (garage.tf.q_functions.QFunction): Q function to use
@@ -49,9 +49,10 @@ class TD3(RLAlgorithm):
         max_action (float): Maximum action magnitude.
         name (str): Name of the algorithm shown in computation graph.
         steps_per_epoch (int): Number of batches of samples in each epoch.
-        max_episode_length (int): Maximum length of a path.
-        max_eval_path_length (int or None): Maximum length of paths used for
-            off-policy evaluation. If None, defaults to `max_episode_length`.
+        max_episode_length (int): Maximum length of an episode.
+        max_episode_length_eval (int or None): Maximum length of episodes used
+            for off-policy evaluation. If `None`, defaults to
+            `max_episode_length`.
         n_train_steps (int): Number of optimizations in each epoch cycle.
         buffer_batch_size (int): Size of replay buffer.
         min_buffer_size (int):
@@ -60,8 +61,7 @@ class TD3(RLAlgorithm):
         exploration_policy_sigma (float): Action noise sigma.
         exploration_policy_clip (float): Action noise clip.
         actor_update_period (int): Action update period.
-        exploration_policy (garage.np.exploration_policies.ExplorationPolicy):
-            Exploration strategy.
+        exploration_policy (ExplorationPolicy): Exploration strategy.
 
     """
 
@@ -87,7 +87,7 @@ class TD3(RLAlgorithm):
             name='TD3',
             steps_per_epoch=20,
             max_episode_length=None,
-            max_eval_path_length=None,
+            max_episode_length_eval=None,
             n_train_steps=50,
             buffer_batch_size=64,
             min_buffer_size=1e4,
@@ -138,7 +138,7 @@ class TD3(RLAlgorithm):
         self._discount = discount
         self._reward_scale = reward_scale
         self.max_episode_length = max_episode_length
-        self._max_eval_path_length = max_eval_path_length
+        self._max_episode_length_eval = max_episode_length_eval
         self._eval_env = None
 
         self.env_spec = env_spec
@@ -287,8 +287,7 @@ class TD3(RLAlgorithm):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): LocalRunner is passed to give algorithm
-                the access to runner.step_epochs(), which provides services
+            runner (LocalRunner): Experiment runner, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -302,29 +301,29 @@ class TD3(RLAlgorithm):
 
         for _ in runner.step_epochs():
             for cycle in range(self._steps_per_epoch):
-                runner.step_path = runner.obtain_trajectories(runner.step_itr)
+                runner.step_path = runner.obtain_episodes(runner.step_itr)
                 self.train_once(runner.step_itr, runner.step_path)
                 if (cycle == 0 and self.replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
                     runner.enable_logging = True
-                    eval_samples = obtain_evaluation_samples(
+                    eval_episodes = obtain_evaluation_episodes(
                         self.policy, self._eval_env)
                     last_returns = log_performance(runner.step_itr,
-                                                   eval_samples,
+                                                   eval_episodes,
                                                    discount=self._discount)
                 runner.step_itr += 1
 
         return np.mean(last_returns)
 
-    def train_once(self, itr, trajectories):
+    def train_once(self, itr, episodes):
         """Perform one step of policy optimization given one batch of samples.
 
         Args:
             itr (int): Iteration number.
-            trajectories (TrajectoryBatch): Batch of trajectories.
+            episodes (EpisodeBatch): Batch of episodes.
 
         """
-        self.replay_buffer.add_trajectory_batch(trajectories)
+        self.replay_buffer.add_episode_batch(episodes)
 
         epoch = itr / self._steps_per_epoch
 
@@ -364,10 +363,10 @@ class TD3(RLAlgorithm):
             itr(int): Iterations.
 
         Returns:
-            action_loss(float): Loss of action predicted by the policy network.
-            qval_loss(float): Loss of q value predicted by the q network.
-            ys(float): y_s.
-            qval(float): Q value predicted by the q network.
+            float: Loss of action predicted by the policy network.
+            float: Loss of q value predicted by the q network.
+            float: y_s.
+            float: Q value predicted by the q network.
 
         """
         transitions = self.replay_buffer.sample_transitions(

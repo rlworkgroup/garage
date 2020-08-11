@@ -4,7 +4,7 @@ import collections
 from dowel import logger, tabular
 import numpy as np
 
-from garage import log_performance, TrajectoryBatch
+from garage import EpisodeBatch, log_performance
 from garage.np import paths_to_tensors
 from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.sampler import RaySampler
@@ -18,18 +18,18 @@ class CEM(RLAlgorithm):
     In each epoch, CEM does the following:
     1. Sample n_samples policies from a gaussian distribution of
        mean cur_mean and std cur_std.
-    2. Do rollouts for each policy.
+    2. Collect episodes for each policy.
     3. Update cur_mean and cur_std by doing Maximum Likelihood Estimation
        over the n_best top policies in terms of return.
 
     Args:
-        env_spec (garage.envs.EnvSpec): Environment specification.
+        env_spec (EnvSpec): Environment specification.
         policy (garage.np.policies.Policy): Action policy.
         baseline(garage.np.baselines.Baseline): Baseline for GAE
             (Generalized Advantage Estimation).
         n_samples (int): Number of policies sampled in one epoch.
         discount (float): Environment reward discount.
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         best_frac (float): The best fraction.
         init_std (float): Initial std for policy param distribution.
         extra_std (float): Decaying std added to param distribution.
@@ -91,8 +91,7 @@ class CEM(RLAlgorithm):
         """Initialize variables and start training.
 
         Args:
-            runner (LocalRunner): LocalRunner is passed to give algorithm
-                the access to runner.step_epochs(), which provides services
+            runner (LocalRunner): Experiment runner, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -148,10 +147,10 @@ class CEM(RLAlgorithm):
                                         baseline_predictions, self._discount)
 
         # -- Stage: Run and calculate performance of the algorithm
-        undiscounted_returns = log_performance(
-            itr,
-            TrajectoryBatch.from_trajectory_list(self._env_spec, paths),
-            discount=self._discount)
+        undiscounted_returns = log_performance(itr,
+                                               EpisodeBatch.from_list(
+                                                   self._env_spec, paths),
+                                               discount=self._discount)
         self._episode_reward_mean.extend(undiscounted_returns)
         tabular.record('Extras/EpisodeRewardMean',
                        np.mean(self._episode_reward_mean))

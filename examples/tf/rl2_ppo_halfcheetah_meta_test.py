@@ -28,11 +28,11 @@ def rl2_ppo_halfcheetah_meta_test(ctxt, seed, max_episode_length,
     """Perform meta-testing on RL2PPO with HalfCheetah environment.
 
     Args:
-        ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+        ctxt (ExperimentContext): The experiment configuration used by
+            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
         seed (int): Used to seed the random number generator to produce
             determinism.
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         meta_batch_size (int): Meta batch size.
         n_epochs (int): Total number of epochs for training.
         episode_per_task (int): Number of training episode per task.
@@ -52,8 +52,8 @@ def rl2_ppo_halfcheetah_meta_test(ctxt, seed, max_episode_length,
         baseline = LinearFeatureBaseline(env_spec=env_spec)
 
         meta_evaluator = MetaEvaluator(test_task_sampler=tasks,
-                                       n_exploration_traj=10,
-                                       n_test_rollouts=10,
+                                       n_exploration_eps=10,
+                                       n_test_episodes=10,
                                        max_episode_length=max_episode_length,
                                        n_test_tasks=5)
 
@@ -83,7 +83,7 @@ def rl2_ppo_halfcheetah_meta_test(ctxt, seed, max_episode_length,
                      sampler_cls=LocalSampler,
                      n_workers=meta_batch_size,
                      worker_class=RL2Worker,
-                     worker_args=dict(n_paths_per_trial=episode_per_task))
+                     worker_args=dict(n_episodes_per_trial=episode_per_task))
 
         runner.train(n_epochs=n_epochs,
                      batch_size=episode_per_task * max_episode_length *

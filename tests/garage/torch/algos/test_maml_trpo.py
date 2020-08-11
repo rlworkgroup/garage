@@ -40,7 +40,7 @@ def test_maml_trpo_pendulum():
     value_function = GaussianMLPValueFunction(env_spec=env.spec,
                                               hidden_sizes=(32, 32))
 
-    rollouts_per_task = 5
+    episodes_per_task = 5
     max_episode_length = 100
 
     runner = LocalRunner(snapshot_config)
@@ -56,7 +56,7 @@ def test_maml_trpo_pendulum():
 
     runner.setup(algo, env, sampler_cls=LocalSampler)
     last_avg_ret = runner.train(n_epochs=5,
-                                batch_size=rollouts_per_task *
+                                batch_size=episodes_per_task *
                                 max_episode_length)
 
     assert last_avg_ret > -5
@@ -76,7 +76,7 @@ def test_maml_trpo_dummy_named_env():
     value_function = GaussianMLPValueFunction(env_spec=env.spec,
                                               hidden_sizes=(32, 32))
 
-    rollouts_per_task = 2
+    episodes_per_task = 2
     max_episode_length = 100
 
     runner = LocalRunner(snapshot_config)
@@ -91,4 +91,4 @@ def test_maml_trpo_dummy_named_env():
                     num_grad_updates=1)
 
     runner.setup(algo, env, sampler_cls=LocalSampler)
-    runner.train(n_epochs=2, batch_size=rollouts_per_task * max_episode_length)
+    runner.train(n_epochs=2, batch_size=episodes_per_task * max_episode_length)

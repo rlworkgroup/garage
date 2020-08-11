@@ -32,12 +32,12 @@ class TestTaskEmbeddingWorker(TfGraphTestCase):
         worker.update_agent(policy)
         worker.update_env(env)
 
-        rollouts = worker.rollout()
-        assert 'task_onehot' in rollouts.env_infos
-        assert np.array_equal(rollouts.env_infos['task_onehot'][0],
+        episodes = worker.rollout()
+        assert 'task_onehot' in episodes.env_infos
+        assert np.array_equal(episodes.env_infos['task_onehot'][0],
                               env.active_task_one_hot)
-        assert 'latent' in rollouts.agent_infos
-        assert np.array_equal(rollouts.agent_infos['latent'][0], z)
-        assert 'latent_mean' in rollouts.agent_infos
-        assert np.array_equal(rollouts.agent_infos['latent_mean'][0],
+        assert 'latent' in episodes.agent_infos
+        assert np.array_equal(episodes.agent_infos['latent'][0], z)
+        assert 'latent_mean' in episodes.agent_infos
+        assert np.array_equal(episodes.agent_infos['latent_mean'][0],
                               latent_info['mean'])

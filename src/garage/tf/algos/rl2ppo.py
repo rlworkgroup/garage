@@ -9,19 +9,19 @@ class RL2PPO(RL2):
     See https://arxiv.org/abs/1707.06347 for algorithm reference.
 
     Args:
-        rl2_max_episode_length (int): Maximum length for trajectories with
+        rl2_max_episode_length (int): Maximum length for episodes with
             respect to RL^2. Notice that it is different from the maximum
-            path length for the inner algorithm.
+            episode length for the inner algorithm.
         meta_batch_size (int): Meta batch size.
-        task_sampler (garage.experiment.TaskSampler): Task sampler.
-        env_spec (garage.envs.EnvSpec): Environment specification.
+        task_sampler (TaskSampler): Task sampler.
+        env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.StochasticPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
         scope (str): Scope for identifying the algorithm.
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.

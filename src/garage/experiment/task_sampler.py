@@ -80,7 +80,7 @@ class ConstructEnvsSampler(TaskSampler):
     environments.
 
     Args:
-        env_constructors (list[Callable[gym.Env]]): Callables that produce
+        env_constructors (list[Callable[Environment]]): Callables that produce
             environments (for example, environment types).
 
     """
@@ -122,7 +122,7 @@ class SetTaskSampler(TaskSampler):
     For example, :py:class:`~HalfCheetahVelEnv`, as implemented in Garage.
 
     Args:
-        env_constructor (Callable[gym.Env]): Callable that produces
+        env_constructor (Callable[Environment]): Callable that produces
             an environment (for example, an environment type).
 
 
@@ -166,7 +166,7 @@ class EnvPoolSampler(TaskSampler):
     in-process samplers with environments that are expensive to construct.
 
     Args:
-        envs (list[gym.Env]): List of environments to use as a pool.
+        envs (list[Environment]): List of environments to use as a pool.
 
     """
 

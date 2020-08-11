@@ -150,7 +150,7 @@ and start training from that epoch 10 in the example.
 2020-06-26 13:42:00 | n_epochs             10
 2020-06-26 13:42:00 | last_epoch           9
 2020-06-26 13:42:00 | batch_size           10000
-2020-06-26 13:42:00 | store_paths          0
+2020-06-26 13:42:00 | store_episodes       0
 2020-06-26 13:42:00 | pause_for_plot       0
 2020-06-26 13:42:00 | -- Stats --          -- Value --
 2020-06-26 13:42:00 | last_itr             10
@@ -186,7 +186,7 @@ Evaluation/TerminationRate                    0.113208
 Evaluation/Iteration                         10
 Evaluation/MaxReturn                        200
 Evaluation/MinReturn                         96
-Evaluation/NumTrajs                          53
+Evaluation/NumEpisodes                       53
 Evaluation/StdReturn                         23.1755
 Extras/EpisodeRewardMean                    195.81
 LinearFeatureBaseline/ExplainedVariance       0.898543

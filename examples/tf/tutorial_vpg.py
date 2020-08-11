@@ -3,7 +3,7 @@
 import numpy as np
 import tensorflow as tf
 
-from garage import log_performance, TrajectoryBatch, wrap_experiment
+from garage import EpisodeBatch, log_performance, wrap_experiment
 from garage.envs import PointEnv
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
@@ -16,7 +16,7 @@ class SimpleVPG:
     """Simple Vanilla Policy Gradient.
 
     Args:
-        env_spec (garage.envs.EnvSpec): Environment specification.
+        env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.StochasticPolicy): Policy.
 
     """
@@ -54,15 +54,14 @@ class SimpleVPG:
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): LocalRunner.
+            runner (LocalRunner): Experiment runner.
 
         """
         for epoch in runner.step_epochs():
             samples = runner.obtain_samples(epoch)
-            log_performance(
-                epoch,
-                TrajectoryBatch.from_trajectory_list(self.env_spec, samples),
-                self._discount)
+            log_performance(epoch,
+                            EpisodeBatch.from_list(self.env_spec, samples),
+                            self._discount)
             self._train_once(samples)
 
     def _train_once(self, samples):
@@ -121,8 +120,8 @@ def tutorial_vpg(ctxt=None):
     """Train VPG with PointEnv environment.
 
     Args:
-        ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+        ctxt (ExperimentContext): The experiment configuration used by
+            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
 
     """
     set_seed(100)

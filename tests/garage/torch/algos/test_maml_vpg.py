@@ -52,7 +52,7 @@ class TestMAMLVPG:
         """Test PPO with Pendulum environment."""
         deterministic.set_seed(0)
 
-        rollouts_per_task = 5
+        episodes_per_task = 5
         max_episode_length = 100
 
         task_sampler = SetTaskSampler(lambda: normalize(
@@ -61,7 +61,7 @@ class TestMAMLVPG:
         meta_evaluator = MetaEvaluator(test_task_sampler=task_sampler,
                                        max_episode_length=max_episode_length,
                                        n_test_tasks=1,
-                                       n_test_rollouts=10)
+                                       n_test_episodes=10)
 
         runner = LocalRunner(snapshot_config)
         algo = MAMLVPG(env=self.env,
@@ -77,7 +77,7 @@ class TestMAMLVPG:
 
         runner.setup(algo, self.env, sampler_cls=LocalSampler)
         last_avg_ret = runner.train(n_epochs=10,
-                                    batch_size=rollouts_per_task *
+                                    batch_size=episodes_per_task *
                                     max_episode_length)
 
         assert last_avg_ret > -5

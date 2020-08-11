@@ -17,7 +17,7 @@ hyper_parameters = {
     'qf_hidden_sizes': [400, 300],
     'n_epochs': 8,
     'steps_per_epoch': 20,
-    'n_rollout_steps': 250,
+    'n_exploration_steps': 250,
     'n_train_steps': 1,
     'discount': 0.99,
     'tau': 0.005,
@@ -33,9 +33,8 @@ def td3_garage_tf(ctxt, env_id, seed):
     """Create garage TensorFlow TD3 model and training.
 
     Args:
-        ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the
-            snapshotter.
+        ctxt (ExperimentContext): The experiment configuration used by
+            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
 
@@ -93,4 +92,4 @@ def td3_garage_tf(ctxt, env_id, seed):
 
         runner.setup(td3, env)
         runner.train(n_epochs=hyper_parameters['n_epochs'],
-                     batch_size=hyper_parameters['n_rollout_steps'])
+                     batch_size=hyper_parameters['n_exploration_steps'])

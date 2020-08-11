@@ -3,14 +3,14 @@ import collections
 
 import numpy as np
 
-from garage import StepType, TrajectoryBatch
+from garage import EpisodeBatch, StepType
 
 
-class InProgressTrajectory:
-    """An in-progress trajectory.
+class InProgressEpisode:
+    """An in-progress episode.
 
-    Compared to TrajectoryBatch, this datatype does less checking, only
-    contains one trajectory, and uses lists instead of numpy arrays to make
+    Compared to EpisodeBatch, this datatype does less checking, only
+    contains one episodes, and uses lists instead of numpy arrays to make
     stepping faster.
 
     Args:
@@ -33,7 +33,7 @@ class InProgressTrajectory:
         self.env_infos = collections.defaultdict(list)
 
     def step(self, action, agent_info):
-        """Step the trajectory using an action from an agent.
+        """Step the episode using an action from an agent.
 
         Args:
             action (np.ndarray): The action taken by the agent.
@@ -56,13 +56,13 @@ class InProgressTrajectory:
         return es.observation
 
     def to_batch(self):
-        """Convert this in-progress trajectory into a TrajectoryBatch.
+        """Convert this in-progress episode into a EpisodeBatch.
 
         Returns:
-            TrajectoryBatch: This trajectory as a batch.
+            EpisodeBatch: This episode as a batch.
 
         Raises:
-            AssertionError: If this trajectory contains no time steps.
+            AssertionError: If this episode contains no time steps.
 
         """
         assert len(self.rewards) > 0
@@ -72,19 +72,18 @@ class InProgressTrajectory:
             env_infos[k] = np.asarray(v)
         for k, v in agent_infos.items():
             agent_infos[k] = np.asarray(v)
-        return TrajectoryBatch(env_spec=self.env.spec,
-                               observations=np.asarray(self.observations[:-1]),
-                               last_observations=np.asarray([self.last_obs]),
-                               actions=np.asarray(self.actions),
-                               rewards=np.asarray(self.rewards),
-                               step_types=np.asarray(self.step_types,
-                                                     dtype=StepType),
-                               env_infos=env_infos,
-                               agent_infos=agent_infos,
-                               lengths=np.asarray([len(self.rewards)],
-                                                  dtype='l'))
+        return EpisodeBatch(env_spec=self.env.spec,
+                            observations=np.asarray(self.observations[:-1]),
+                            last_observations=np.asarray([self.last_obs]),
+                            actions=np.asarray(self.actions),
+                            rewards=np.asarray(self.rewards),
+                            step_types=np.asarray(self.step_types,
+                                                  dtype=StepType),
+                            env_infos=env_infos,
+                            agent_infos=agent_infos,
+                            lengths=np.asarray([len(self.rewards)], dtype='l'))
 
     @property
     def last_obs(self):
-        """np.ndarray: The last observation in the trajectory."""
+        """np.ndarray: The last observation in the epside."""
         return self.observations[-1]

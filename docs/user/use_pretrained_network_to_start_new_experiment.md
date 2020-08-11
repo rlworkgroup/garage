@@ -74,15 +74,15 @@ import click
 import gym
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv
-from garage.envs.wrappers.clip_reward import ClipReward
-from garage.envs.wrappers.episodic_life import EpisodicLife
-from garage.envs.wrappers.fire_reset import FireReset
-from garage.envs.wrappers.grayscale import Grayscale
-from garage.envs.wrappers.max_and_skip import MaxAndSkip
-from garage.envs.wrappers.noop import Noop
-from garage.envs.wrappers.resize import Resize
-from garage.envs.wrappers.stack_frames import StackFrames
+from garage.envs import GymEnv
+from garage.envs.wrappers import ClipReward
+from garage.envs.wrappers import EpisodicLife
+from garage.envs.wrappers import FireReset
+from garage.envs.wrappers import Grayscale
+from garage.envs.wrappers import MaxAndSkip
+from garage.envs.wrappers import Noop
+from garage.envs.wrappers import Resize
+from garage.envs.wrappers import StackFrames
 from garage.experiment import LocalTFRunner, Snapshotter  # Add this import!
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
@@ -125,7 +125,7 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
         env = ClipReward(env)
         env = StackFrames(env, 4)
 
-        env = GarageEnv(env, is_image=True)
+        env = GymEnv(env, is_image=True)
 
         replay_buffer = PathBuffer(capacity_in_transitions=buffer_size)
 

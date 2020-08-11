@@ -7,11 +7,11 @@ import numpy as np
 import torch
 
 from garage import (_Default,
+                    EpisodeBatch,
                     log_performance,
                     make_optimizer,
-                    TimeStepBatch,
-                    TrajectoryBatch)
-from garage.np import obtain_evaluation_samples
+                    TimeStepBatch)
+from garage.np import obtain_evaluation_episodes
 from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.np.policies import Policy
 from garage.sampler import RaySampler
@@ -27,12 +27,12 @@ class BC(RLAlgorithm):
         https://arxiv.org/abs/1605.08478
 
     Args:
-        env_spec (garage.envs.EnvSpec): Specification of environment.
+        env_spec (EnvSpec): Specification of environment.
         learner (garage.torch.Policy): Policy to train.
         batch_size (int): Size of optimization batch.
-        source (garage.Policy or Generator[garage.TimeStepBatch]): Expert to
-            clone. If a policy is passed, will set `.policy` to source and use
-            the runner to sample from the policy.
+        source (Policy or Generator[TimeStepBatch]): Expert to clone. If a
+            policy is passed, will set `.policy` to source and use the runner
+            to sample from the policy.
         max_episode_length (int or None): Required if a policy is passed as
             source.
         policy_optimizer (torch.optim.Optimizer): Optimizer to be used to
@@ -99,9 +99,8 @@ class BC(RLAlgorithm):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): LocalRunner is passed to give algorithm
-                the access to runner.step_epochs(), which provides services
-                such as snapshotting and sampler control.
+            runner (LocalRunner): Experiment runner, for services such as
+                snapshotting and sampler control.
 
         """
         if not self._eval_env:
@@ -109,7 +108,7 @@ class BC(RLAlgorithm):
         for epoch in runner.step_epochs():
             if self._eval_env is not None:
                 log_performance(epoch,
-                                obtain_evaluation_samples(
+                                obtain_evaluation_episodes(
                                     self.learner, self._eval_env),
                                 discount=1.0)
             losses = self._train_once(runner, epoch)
@@ -121,8 +120,8 @@ class BC(RLAlgorithm):
         """Obtain samplers and train for one epoch.
 
         Args:
-            runner (LocalRunner): LocalRunner to which may be used to obtain
-                samples.
+            runner (LocalRunner): Experiment runner, which may be used to
+                obtain samples.
             epoch (int): The current epoch.
 
         Returns:
@@ -147,8 +146,8 @@ class BC(RLAlgorithm):
         """Obtain samples from self._source.
 
         Args:
-            runner (LocalRunner): LocalRunner to which may be used to obtain
-                samples.
+            runner (LocalRunner): Experiment runner, which may be used to
+                obtain samples.
             epoch (int): The current epoch.
 
         Returns:
@@ -156,8 +155,8 @@ class BC(RLAlgorithm):
 
         """
         if isinstance(self._source, Policy):
-            batch = TrajectoryBatch.from_trajectory_list(
-                self.env_spec, runner.obtain_samples(epoch))
+            batch = EpisodeBatch.from_list(self.env_spec,
+                                           runner.obtain_samples(epoch))
             log_performance(epoch, batch, 1.0, prefix='Expert')
             return batch
         else:

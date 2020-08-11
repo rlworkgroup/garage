@@ -25,7 +25,7 @@ from metaworld.benchmarks import ML1
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
@@ -50,7 +50,7 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
 
     """
     set_seed(seed)
-    envs = [GarageEnv(normalize(ML1.get_train_tasks('push-v1')))]
+    envs = [normalize(GymEnv(ML1.get_train_tasks('push-v1')))]
     env = MultiEnvWrapper(envs, mode='del-onehot')
 
     latent_length = 2
@@ -59,7 +59,7 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
     policy_ent_coeff = 2e-2
     encoder_ent_coeff = 2e-4
     inference_ce_coeff = 5e-2
-    max_path_length = 100
+    max_episode_length = 100
     embedding_init_std = 0.1
     embedding_max_std = 0.2
     embedding_min_std = 1e-6
@@ -116,7 +116,7 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
                      policy=policy,
                      baseline=baseline,
                      inference=inference,
-                     max_path_length=max_path_length,
+                     max_episode_length=max_episode_length,
                      discount=0.99,
                      lr_clip_range=0.2,
                      policy_ent_coeff=policy_ent_coeff,
@@ -158,7 +158,7 @@ When performing a multi-task RL experiment, we can use multi-task learning envir
 
 ```py
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper, round_robin_strategy
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
@@ -184,7 +184,7 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task):
     """
     set_seed(seed)
     tasks = MT50.get_train_tasks().all_task_names
-    envs = [normalize(GarageEnv(MT50.from_task(task))) for task in tasks]
+    envs = [GymEnv(normalize(MT50.from_task(task))) for task in tasks]
     env = MultiEnvWrapper(envs,
                           sample_strategy=round_robin_strategy,
                           mode='del-onehot')
@@ -195,7 +195,7 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task):
     policy_ent_coeff = 2e-2
     encoder_ent_coeff = 2e-4
     inference_ce_coeff = 5e-2
-    max_path_length = 100
+    max_episode_length = 100
     embedding_init_std = 0.1
     embedding_max_std = 0.2
     embedding_min_std = 1e-6
@@ -252,7 +252,7 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task):
                      policy=policy,
                      baseline=baseline,
                      inference=inference,
-                     max_path_length=max_path_length,
+                     max_episode_length=max_episode_length,
                      discount=0.99,
                      lr_clip_range=0.2,
                      policy_ent_coeff=policy_ent_coeff,

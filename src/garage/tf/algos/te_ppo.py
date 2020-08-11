@@ -10,14 +10,14 @@ class TEPPO(TENPO):
     reference.
 
     Args:
-        env_spec (garage.envs.EnvSpec): Environment specification.
+        env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.TaskEmbeddingPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
         scope (str): Scope for identifying the algorithm.
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -44,14 +44,14 @@ class TEPPO(TENPO):
             negative.
         stop_ce_gradient (bool): Whether to stop the cross entropy gradient.
         inference (garage.tf.embedding.encoder.StochasticEncoder): A encoder
-            that infers the task embedding from trajectory.
+            that infers the task embedding from a state trajectory.
         inference_optimizer (object): The optimizer of the inference. Should be
             an optimizer in garage.tf.optimizers.
         inference_optimizer_args (dict): The arguments of the inference
             optimizer.
         inference_ce_coeff (float): The coefficient of the cross entropy of
-            task embeddings inferred from task one-hot and trajectory. This is
-            effectively the coefficient of log-prob of inference.
+            task embeddings inferred from task one-hot and state trajectory.
+            This is effectively the coefficient of log-prob of inference.
         name (str): The name of the algorithm.
 
     """

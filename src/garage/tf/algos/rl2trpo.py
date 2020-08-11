@@ -10,19 +10,19 @@ class RL2TRPO(RL2):
     See https://arxiv.org/abs/1502.05477.
 
     Args:
-        rl2_max_episode_length (int): Maximum length for trajectories with
-            respect to RL^2. Notice that it is different from the maximum
-            path length for the inner algorithm.
+        rl2_max_episode_length (int): Maximum length for episodes with respect
+            to RL^2. Notice that it is different from the maximum episode
+            length for the inner algorithm.
         meta_batch_size (int): Meta batch size.
-        task_sampler (garage.experiment.TaskSampler): Task sampler.
-        env_spec (garage.envs.EnvSpec): Environment specification.
+        task_sampler (TaskSampler): Task sampler.
+        env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.StochasticPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
         scope (str): Scope for identifying the algorithm.
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -54,8 +54,7 @@ class RL2TRPO(RL2):
             dense entropy to the reward for each time step. 'regularized' adds
             the mean entropy to the surrogate objective. See
             https://arxiv.org/abs/1805.00909 for more details.
-        meta_evaluator (garage.experiment.MetaEvaluator): Evaluator for meta-RL
-            algorithms.
+        meta_evaluator (MetaEvaluator): Evaluator for meta-RL algorithms.
         n_epochs_per_eval (int): If meta_evaluator is passed, meta-evaluation
             will be performed every `n_epochs_per_eval` epochs.
         name (str): The name of the algorithm.

@@ -7,7 +7,7 @@ import numpy as np
 import scipy.stats
 import tensorflow as tf
 
-from garage import InOutSpec, log_performance, TrajectoryBatch
+from garage import EpisodeBatch, InOutSpec, log_performance
 from garage.experiment import deterministic
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
@@ -39,14 +39,14 @@ class TENPO(RLAlgorithm):
     reference.
 
     Args:
-        env_spec (garage.envs.EnvSpec): Environment specification.
+        env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.TaskEmbeddingPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
         scope (str): Scope for identifying the algorithm.
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -73,14 +73,14 @@ class TENPO(RLAlgorithm):
             negative.
         stop_ce_gradient (bool): Whether to stop the cross entropy gradient.
         inference (garage.tf.embeddings.StochasticEncoder): A encoder
-            that infers the task embedding from trajectory.
+            that infers the task embedding from state trajectory.
         inference_optimizer (object): The optimizer of the inference. Should be
             an optimizer in garage.tf.optimizers.
         inference_optimizer_args (dict): The arguments of the inference
             optimizer.
         inference_ce_coeff (float): The coefficient of the cross entropy of
-            task embeddings inferred from task one-hot and trajectory. This is
-            effectively the coefficient of log-prob of inference.
+            task embeddings inferred from task one-hot and state trajectory.
+            This is effectively the coefficient of log-prob of inference.
         name (str): The name of the algorithm.
 
     """
@@ -229,10 +229,10 @@ class TENPO(RLAlgorithm):
             numpy.float64: Average return.
 
         """
-        undiscounted_returns = log_performance(
-            itr,
-            TrajectoryBatch.from_trajectory_list(self._env_spec, paths),
-            discount=self._discount)
+        undiscounted_returns = log_performance(itr,
+                                               EpisodeBatch.from_list(
+                                                   self._env_spec, paths),
+                                               discount=self._discount)
 
         samples_data = self.paths_to_tensors(paths)
 
@@ -751,7 +751,7 @@ class TENPO(RLAlgorithm):
             return infer_loss, infer_kl
 
     def _policy_opt_input_values(self, samples_data):
-        """Map rollout samples to the policy optimizer inputs.
+        """Map episode samples to the policy optimizer inputs.
 
         Args:
             samples_data (dict): Processed sample data.
@@ -785,7 +785,7 @@ class TENPO(RLAlgorithm):
         return flatten_inputs(policy_opt_input_values)
 
     def _inference_opt_input_values(self, samples_data):
-        """Map rollout samples to the inference optimizer inputs.
+        """Map episode samples to the inference optimizer inputs.
 
         Args:
             samples_data (dict): Processed sample data.

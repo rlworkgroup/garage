@@ -18,7 +18,7 @@ class TestMultiEnvWrapper:
         """helper function to initialize multi_env_wrapper
 
         Args:
-            env_names (list(str)): List of gym.Env names.
+            env_names (list(str)): List of Environment names.
             sample_strategy (func): A sampling strategy.
 
         Returns:

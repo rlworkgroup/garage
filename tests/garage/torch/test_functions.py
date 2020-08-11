@@ -101,16 +101,16 @@ class TestTorchAlgoUtils(TfGraphTestCase):
     """Test class for torch algo utility functions."""
     # yapf: disable
     @pytest.mark.parametrize('discount', [1, 0.95])
-    @pytest.mark.parametrize('num_trajs', [1, 5])
+    @pytest.mark.parametrize('num_eps', [1, 5])
     @pytest.mark.parametrize('gae_lambda', [0, 0.5, 1])
-    @pytest.mark.parametrize('rewards_traj, baselines_traj', [
+    @pytest.mark.parametrize('rewards_eps, baselines_eps', [
         (ONES, ZEROS),
         (PI_DIGITS, ARRANGE),
         (ONES, FIBS),
     ])
     # yapf: enable
-    def test_compute_advantages(self, num_trajs, discount, gae_lambda,
-                                rewards_traj, baselines_traj):
+    def test_compute_advantages(self, num_eps, discount, gae_lambda,
+                                rewards_eps, baselines_eps):
         """Test compute_advantage function."""
 
         def get_advantage(discount, gae_lambda, rewards, baselines):
@@ -124,10 +124,10 @@ class TestTorchAlgoUtils(TfGraphTestCase):
                     adv[i][-j - 1] = acc
             return adv
 
-        length = len(rewards_traj)
+        length = len(rewards_eps)
 
-        rewards = torch.Tensor(stack(num_trajs, rewards_traj))
-        baselines = torch.Tensor(stack(num_trajs, baselines_traj))
+        rewards = torch.Tensor(stack(num_eps, rewards_eps))
+        baselines = torch.Tensor(stack(num_eps, baselines_eps))
         expected_adv = get_advantage(discount, gae_lambda, rewards, baselines)
         computed_adv = compute_advantages(discount, gae_lambda, length,
                                           baselines, rewards)

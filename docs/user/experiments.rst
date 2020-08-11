@@ -120,7 +120,7 @@ Running the above should produce output like:
   Evaluation/Iteration                        0
   Evaluation/MaxReturn                       61
   Evaluation/MinReturn                        9
-  Evaluation/NumTrajs                       201
+  Evaluation/NumEpisodes                    201
   Evaluation/StdReturn                       10.0935
   Extras/EpisodeRewardMean                   20.43
   LinearFeatureBaseline/ExplainedVariance    -2.65605e-08

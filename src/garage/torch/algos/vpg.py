@@ -7,7 +7,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from garage import log_performance, TrajectoryBatch
+from garage import EpisodeBatch, log_performance
 from garage.misc import tensor_utils as tu
 from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.sampler import RaySampler
@@ -29,7 +29,7 @@ class VPG(RLAlgorithm):
             for policy.
         vf_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer for
             value function.
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         num_train_per_epoch (int): Number of train_once calls per epoch.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
@@ -184,18 +184,18 @@ class VPG(RLAlgorithm):
 
         self._old_policy.load_state_dict(self.policy.state_dict())
 
-        undiscounted_returns = log_performance(
-            itr,
-            TrajectoryBatch.from_trajectory_list(self._env_spec, paths),
-            discount=self.discount)
+        undiscounted_returns = log_performance(itr,
+                                               EpisodeBatch.from_list(
+                                                   self._env_spec, paths),
+                                               discount=self.discount)
         return np.mean(undiscounted_returns)
 
     def train(self, runner):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): LocalRunner is passed to give algorithm
-                the access to runner.step_epochs(), which provides services
+            runner (LocalRunner): Gives the algorithm the access to
+                :method:`~LocalRunner.step_epochs()`, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -281,7 +281,7 @@ class VPG(RLAlgorithm):
     def _compute_loss(self, obs, actions, rewards, valids, baselines):
         r"""Compute mean value of loss.
 
-        Notes: P is the maximum path length (self.max_episode_length)
+        Notes: P is the maximum episode length (self.max_episode_length)
 
         Args:
             obs (torch.Tensor): Observation from the environment
@@ -290,7 +290,7 @@ class VPG(RLAlgorithm):
                 with shape :math:`(N, P, A*)`.
             rewards (torch.Tensor): Acquired rewards
                 with shape :math:`(N, P)`.
-            valids (list[int]): Numbers of valid steps in each paths
+            valids (list[int]): Numbers of valid steps in each episode
             baselines (torch.Tensor): Value function estimation at each step
                 with shape :math:`(N, P)`.
 
@@ -335,12 +335,12 @@ class VPG(RLAlgorithm):
     def _compute_advantage(self, rewards, valids, baselines):
         r"""Compute mean value of loss.
 
-        Notes: P is the maximum path length (self.max_episode_length)
+        Notes: P is the maximum episode length (self.max_episode_length)
 
         Args:
             rewards (torch.Tensor): Acquired rewards
                 with shape :math:`(N, P)`.
-            valids (list[int]): Numbers of valid steps in each paths
+            valids (list[int]): Numbers of valid steps in each episode
             baselines (torch.Tensor): Value function estimation at each step
                 with shape :math:`(N, P)`.
 
@@ -370,7 +370,7 @@ class VPG(RLAlgorithm):
         Compute the KL divergence between the old policy distribution and
         current policy distribution.
 
-        Notes: P is the maximum path length (self.max_episode_length)
+        Notes: P is the maximum episode length (self.max_episode_length)
 
         Args:
             obs (torch.Tensor): Observation from the environment
@@ -394,7 +394,7 @@ class VPG(RLAlgorithm):
     def _compute_policy_entropy(self, obs):
         r"""Compute entropy value of probability distribution.
 
-        Notes: P is the maximum path length (self.max_episode_length)
+        Notes: P is the maximum episode length (self.max_episode_length)
 
         Args:
             obs (torch.Tensor): Observation from the environment
@@ -443,7 +443,7 @@ class VPG(RLAlgorithm):
     def process_samples(self, paths):
         r"""Process sample data based on the collected paths.
 
-        Notes: P is the maximum path length (self.max_episode_length)
+        Notes: P is the maximum episode length (self.max_episode_length)
 
         Args:
             paths (list[dict]): A list of collected paths

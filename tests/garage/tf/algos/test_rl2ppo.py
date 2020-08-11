@@ -74,7 +74,7 @@ class TestRL2PPO(TfGraphTestCase):
                 sampler_cls=LocalSampler,
                 n_workers=self.meta_batch_size,
                 worker_class=RL2Worker,
-                worker_args=dict(n_paths_per_trial=self.episode_per_task))
+                worker_args=dict(n_episodes_per_trial=self.episode_per_task))
 
             last_avg_ret = runner.train(n_epochs=1,
                                         batch_size=self.episode_per_task *
@@ -86,8 +86,8 @@ class TestRL2PPO(TfGraphTestCase):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             meta_evaluator = MetaEvaluator(
                 test_task_sampler=self.tasks,
-                n_exploration_traj=10,
-                n_test_rollouts=10,
+                n_exploration_eps=10,
+                n_test_episodes=10,
                 max_episode_length=self.max_episode_length,
                 n_test_tasks=1)
 

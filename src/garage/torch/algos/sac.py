@@ -8,7 +8,7 @@ import torch
 import torch.nn.functional as F
 
 from garage import log_performance, StepType
-from garage.np import obtain_evaluation_samples
+from garage.np import obtain_evaluation_episodes
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, RaySampler
 from garage.torch import dict_np_to_torch, global_device
@@ -41,14 +41,14 @@ class SAC(RLAlgorithm):
             Applications.
         replay_buffer (ReplayBuffer): Stores transitions that are previously
             collected by the sampler.
-        env_spec (EnvSpec): The env_spec attribute of the
-            environment that the agent is being trained in. Usually accessable
-            by calling env.spec.
-        max_episode_length (int): Max path length of the algorithm.
-        max_eval_path_length (int or None): Maximum length of paths used for
-            off-policy evaluation. If None, defaults to `max_episode_length`.
+        env_spec (EnvSpec): The env_spec attribute of the environment that the
+            agent is being trained in.
+        max_episode_length (int): Maximum length of an episode.
+        max_episode_length_eval (int or None): Maximum length of episodes used
+            for off-policy evaluation. If None, defaults to
+            `max_episode_length`.
         gradient_steps_per_itr (int): Number of optimization steps that should
-        max_episode_length(int): Max path length of the environment.
+        max_episode_length(int): Max episode length of the environment.
         gradient_steps_per_itr(int): Number of optimization steps that should
             occur before the training step is over and a new batch of
             transitions is collected by the sampler.
@@ -77,11 +77,10 @@ class SAC(RLAlgorithm):
             policy/actor, q_functions/critics, and temperature/entropy
             optimizations.
         steps_per_epoch (int): Number of train_once calls per epoch.
-        num_evaluation_trajectories (int): The number of evaluation
-            trajectories used for computing eval stats at the end of every
-            epoch.
-        eval_env (Environment): environment used for collecting
-            evaluation trajectories. If None, a copy of the train env is used.
+        num_evaluation_episodes (int): The number of evaluation episodes used
+            for computing eval stats at the end of every epoch.
+        eval_env (Environment): environment used for collecting evaluation
+            episodes. If None, a copy of the train env is used.
 
     """
 
@@ -94,7 +93,7 @@ class SAC(RLAlgorithm):
         replay_buffer,
         *,  # Everything after this is numbers.
         max_episode_length,
-        max_eval_path_length=None,
+        max_episode_length_eval=None,
         gradient_steps_per_itr,
         fixed_alpha=None,
         target_entropy=None,
@@ -108,7 +107,7 @@ class SAC(RLAlgorithm):
         reward_scale=1.0,
         optimizer=torch.optim.Adam,
         steps_per_epoch=1,
-        num_evaluation_trajectories=10,
+        num_evaluation_episodes=10,
         eval_env=None,
     ):
 
@@ -121,7 +120,7 @@ class SAC(RLAlgorithm):
         self._initial_log_entropy = initial_log_entropy
         self._gradient_steps = gradient_steps_per_itr
         self._optimizer = optimizer
-        self._num_evaluation_trajectories = num_evaluation_trajectories
+        self._num_evaluation_episodes = num_evaluation_episodes
         self._eval_env = eval_env
 
         self._min_buffer_size = min_buffer_size
@@ -130,7 +129,7 @@ class SAC(RLAlgorithm):
         self._discount = discount
         self._reward_scale = reward_scale
         self.max_episode_length = max_episode_length
-        self._max_eval_path_length = max_eval_path_length
+        self._max_episode_length_eval = max_episode_length_eval
 
         self.policy = policy
         self.env_spec = env_spec
@@ -170,8 +169,8 @@ class SAC(RLAlgorithm):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): LocalRunner is passed to give algorithm
-                the access to runner.step_epochs(), which provides services
+            runner (LocalRunner): Gives the algorithm the access to
+                :method:`~LocalRunner.step_epochs()`, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -302,10 +301,10 @@ class SAC(RLAlgorithm):
             samples_data (dict): Transitions(S,A,R,S') that are sampled from
                 the replay buffer. It should have the keys 'observation',
                 'action', 'reward', 'terminal', and 'next_observations'.
-            new_actions(torch.Tensor): Actions resampled from the policy based
+            new_actions (torch.Tensor): Actions resampled from the policy based
                 based on the Observations, obs, which were sampled from the
                 replay buffer. Shape is (action_dim, buffer_batch_size).
-            log_pi_new_actions(torch.Tensor): Log probability of the new
+            log_pi_new_actions (torch.Tensor): Log probability of the new
                 actions on the TanhNormal distributions that they were sampled
                 from. Shape is (1, buffer_batch_size).
 
@@ -448,25 +447,23 @@ class SAC(RLAlgorithm):
         return policy_loss, qf1_loss, qf2_loss
 
     def _evaluate_policy(self, epoch):
-        """Evaluate the performance of the policy via deterministic rollouts.
+        """Evaluate the performance of the policy via deterministic sampling.
 
             Statistics such as (average) discounted return and success rate are
             recorded.
 
         Args:
-            epoch(int): The current training epoch.
+            epoch (int): The current training epoch.
 
         Returns:
-            float: The average return across self._num_evaluation_trajectories
-                trajectories
+            float: The average return across self._num_evaluation_episodes
+                episodes
 
         """
-        eval_trajectories = obtain_evaluation_samples(
-            self.policy,
-            self._eval_env,
-            num_trajs=self._num_evaluation_trajectories)
+        eval_episodes = obtain_evaluation_episodes(
+            self.policy, self._eval_env, num_eps=self._num_evaluation_episodes)
         last_return = log_performance(epoch,
-                                      eval_trajectories,
+                                      eval_episodes,
                                       discount=self._discount)
         return last_return
 
@@ -474,9 +471,9 @@ class SAC(RLAlgorithm):
         """Record training statistics to dowel such as losses and returns.
 
         Args:
-            policy_loss(torch.Tensor): loss from actor/policy network.
-            qf1_loss(torch.Tensor): loss from 1st qf/critic network.
-            qf2_loss(torch.Tensor): loss from 2nd qf/critic network.
+            policy_loss (torch.Tensor): loss from actor/policy network.
+            qf1_loss (torch.Tensor): loss from 1st qf/critic network.
+            qf2_loss (torch.Tensor): loss from 2nd qf/critic network.
 
         """
         with torch.no_grad():

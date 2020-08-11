@@ -47,7 +47,7 @@ like [this](implement_env). In this example, we choose `CartPole-V1`
 environment.
 
 ```py
-env = GarageEnv(env_name='CartPole-v1')
+env = GymEnv('CartPole-v1')
 ```
 
 ### Construct a Policy and an Algorithm
@@ -107,7 +107,7 @@ which is also pasted below:
 
 ```py
 from garage import wrap_experiment
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
@@ -120,15 +120,15 @@ def trpo_cartpole(ctxt=None, seed=1):
     """Train TRPO with CartPole-v1 environment.
 
     Args:
-        ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+        ctxt (gExperimentContext): The experiment configuration used by
+            LocalRunner to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
 
     """
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
-        env = GarageEnv(env_name='CartPole-v1')
+        env = GymEnv('CartPole-v1')
 
         policy = CategoricalMLPPolicy(name='policy',
                                       env_spec=env.spec,
@@ -184,7 +184,7 @@ Evaluation/TerminationRate                  1
 Evaluation/Iteration                        0
 Evaluation/MaxReturn                       58
 Evaluation/MinReturn                        8
-Evaluation/NumTrajs                       186
+Evaluation/NumEpisodes                    186
 Evaluation/StdReturn                       10.0511
 Extras/EpisodeRewardMean                   22.22
 LinearFeatureBaseline/ExplainedVariance     4.14581e-08

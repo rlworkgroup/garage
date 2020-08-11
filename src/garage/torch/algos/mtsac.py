@@ -2,8 +2,8 @@
 import numpy as np
 import torch
 
-from garage import log_multitask_performance, TrajectoryBatch
-from garage.np import obtain_evaluation_samples
+from garage import EpisodeBatch, log_multitask_performance
+from garage.np import obtain_evaluation_episodes
 from garage.torch import global_device
 from garage.torch.algos import SAC
 
@@ -27,15 +27,14 @@ class MTSAC(SAC):
         qf2 (garage.torch.q_function.ContinuousMLPQFunction): QFunction/Critic
             used for actor/policy optimization. See Soft Actor-Critic and
             Applications.
-        replay_buffer (garage.replay_buffer.ReplayBuffer): Stores transitions
-            that are previously collected by the sampler.
-        env_spec (EnvSpec): The env_spec attribute of the
-            environment that the agent is being trained in. Usually accessable
-            by calling env.spec.
+        replay_buffer (ReplayBuffer): Stores transitions that are previously
+            collected by the sampler.
+        env_spec (EnvSpec): The env_spec attribute of the environment that the
+            agent is being trained in.
         num_tasks (int): The number of tasks being learned.
-        max_episode_length (int): The max path length of the algorithm.
-        eval_env (Environment): The environment used for collecting
-            evaluation trajectories.
+        max_episode_length (int): The max episode length of the algorithm.
+        eval_env (Environment): The environment used for collecting evaluation
+            episodes.
         gradient_steps_per_itr (int): Number of optimization steps that should
             occur before the training step is over and a new batch of
             transitions is collected by the sampler.
@@ -64,9 +63,8 @@ class MTSAC(SAC):
             policy/actor, q_functions/critics, and temperature/entropy
             optimizations.
         steps_per_epoch (int): Number of train_once calls per epoch.
-        num_evaluation_trajectories (int): The number of evaluation
-            trajectories used for computing eval stats at the end of every
-            epoch.
+        num_evaluation_episodes (int): The number of evaluation episodes used
+            for computing eval stats at the end of every epoch.
 
     """
 
@@ -93,31 +91,30 @@ class MTSAC(SAC):
         reward_scale=1.0,
         optimizer=torch.optim.Adam,
         steps_per_epoch=1,
-        num_evaluation_trajectories=5,
+        num_evaluation_episodes=5,
     ):
 
-        super().__init__(
-            policy=policy,
-            qf1=qf1,
-            qf2=qf2,
-            replay_buffer=replay_buffer,
-            env_spec=env_spec,
-            max_episode_length=max_episode_length,
-            gradient_steps_per_itr=gradient_steps_per_itr,
-            fixed_alpha=fixed_alpha,
-            target_entropy=target_entropy,
-            initial_log_entropy=initial_log_entropy,
-            discount=discount,
-            buffer_batch_size=buffer_batch_size,
-            min_buffer_size=min_buffer_size,
-            target_update_tau=target_update_tau,
-            policy_lr=policy_lr,
-            qf_lr=qf_lr,
-            reward_scale=reward_scale,
-            optimizer=optimizer,
-            steps_per_epoch=steps_per_epoch,
-            num_evaluation_trajectories=num_evaluation_trajectories,
-            eval_env=eval_env)
+        super().__init__(policy=policy,
+                         qf1=qf1,
+                         qf2=qf2,
+                         replay_buffer=replay_buffer,
+                         env_spec=env_spec,
+                         max_episode_length=max_episode_length,
+                         gradient_steps_per_itr=gradient_steps_per_itr,
+                         fixed_alpha=fixed_alpha,
+                         target_entropy=target_entropy,
+                         initial_log_entropy=initial_log_entropy,
+                         discount=discount,
+                         buffer_batch_size=buffer_batch_size,
+                         min_buffer_size=min_buffer_size,
+                         target_update_tau=target_update_tau,
+                         policy_lr=policy_lr,
+                         qf_lr=qf_lr,
+                         reward_scale=reward_scale,
+                         optimizer=optimizer,
+                         steps_per_epoch=steps_per_epoch,
+                         num_evaluation_episodes=num_evaluation_episodes,
+                         eval_env=eval_env)
         self._num_tasks = num_tasks
         self._eval_env = eval_env
         self._use_automatic_entropy_tuning = fixed_alpha is None
@@ -167,7 +164,7 @@ class MTSAC(SAC):
         return ret
 
     def _evaluate_policy(self, epoch):
-        """Evaluate the performance of the policy via deterministic rollouts.
+        """Evaluate the performance of the policy via deterministic sampling.
 
             Statistics such as (average) discounted return and success rate are
             recorded.
@@ -176,19 +173,19 @@ class MTSAC(SAC):
             epoch (int): The current training epoch.
 
         Returns:
-            float: The average return across self._num_evaluation_trajectories
-                trajectories
+            float: The average return across self._num_evaluation_episodes
+                episodes
 
         """
-        eval_trajs = []
+        eval_eps = []
         for _ in range(self._num_tasks):
-            eval_trajs.append(
-                obtain_evaluation_samples(
+            eval_eps.append(
+                obtain_evaluation_episodes(
                     self.policy,
                     self._eval_env,
-                    num_trajs=self._num_evaluation_trajectories))
-        eval_trajs = TrajectoryBatch.concatenate(*eval_trajs)
-        last_return = log_multitask_performance(epoch, eval_trajs,
+                    num_eps=self._num_evaluation_episodes))
+        eval_eps = EpisodeBatch.concatenate(*eval_eps)
+        last_return = log_multitask_performance(epoch, eval_eps,
                                                 self._discount)
         return last_return
 

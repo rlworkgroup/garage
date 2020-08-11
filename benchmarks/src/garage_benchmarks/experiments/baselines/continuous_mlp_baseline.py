@@ -13,7 +13,7 @@ hyper_params = {
     'hidden_nonlinearity': tf.nn.tanh,
     'n_envs': 8,
     'n_epochs': 20,
-    'n_rollout_steps': 2048,
+    'n_exploration_steps': 2048,
     'discount': 0.99,
     'max_episode_length': 100,
     'gae_lambda': 0.95,
@@ -29,9 +29,8 @@ def continuous_mlp_baseline(ctxt, env_id, seed):
     """Create Continuous MLP Baseline on TF-PPO.
 
     Args:
-        ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the
-            snapshotter.
+        ctxt (ExperimentContext): The experiment configuration used by
+            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
 
@@ -73,4 +72,4 @@ def continuous_mlp_baseline(ctxt, env_id, seed):
                      env,
                      sampler_args=dict(n_envs=hyper_params['n_envs']))
         runner.train(n_epochs=hyper_params['n_epochs'],
-                     batch_size=hyper_params['n_rollout_steps'])
+                     batch_size=hyper_params['n_exploration_steps'])

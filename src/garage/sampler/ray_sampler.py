@@ -13,17 +13,17 @@ import click
 import cloudpickle
 import ray
 
-from garage import TrajectoryBatch
+from garage import EpisodeBatch
 from garage.sampler.sampler import Sampler
 
 
 class RaySampler(Sampler):
-    """Collects Policy Rollouts in a data parallel fashion.
+    """Samples episodes in a data-parallel fashion using a Ray cluster.
 
     Args:
-        worker_factory(garage.sampler.WorkerFactory): Used for worker behavior.
-        agents(list[garage.Policy]): Agents to distribute across workers.
-        envs(list[gym.Env]): Environments to distribute across workers.
+        worker_factory (WorkerFactory): Used for worker behavior.
+        agents (list[Policy]): Agents to distribute across workers.
+        envs (list[Environment]): Environments to distribute across workers.
 
     """
 
@@ -44,18 +44,18 @@ class RaySampler(Sampler):
         """Construct this sampler.
 
         Args:
-            worker_factory(WorkerFactory): Pickleable factory for creating
+            worker_factory (WorkerFactory): Pickleable factory for creating
                 workers. Should be transmitted to other processes / nodes where
                 work needs to be done, then workers should be constructed
                 there.
-            agents(Agent or List[Agent]): Agent(s) to use to perform rollouts.
-                If a list is passed in, it must have length exactly
+            agents (Policy or List[Policy]): Agent(s) to use to sample
+                episodes. If a list is passed in, it must have length exactly
                 `worker_factory.n_workers`, and will be spread across the
                 workers.
-            envs(gym.Env or List[gym.Env]): Environment rollouts are performed
-                in. If a list is passed in, it must have length exactly
-                `worker_factory.n_workers`, and will be spread across the
-                workers.
+            envs (Environment or List[Environment]): Environment from which
+                episodes are sampled. If a list is passed in, it must have
+                length exactly `worker_factory.n_workers`, and will be spread
+                across the workers.
 
         Returns:
             Sampler: An instance of `cls`.
@@ -81,14 +81,14 @@ class RaySampler(Sampler):
         """Update all of the workers.
 
         Args:
-            agent_update(object): Value which will be passed into the
-                `agent_update_fn` before doing rollouts. If a list is passed
+            agent_update (object): Value which will be passed into the
+                `agent_update_fn` before sampling episodes. If a list is passed
                 in, it must have length exactly `factory.n_workers`, and will
                 be spread across the workers.
-            env_update(object): Value which will be passed into the
-                `env_update_fn` before doing rollouts. If a list is passed in,
-                it must have length exactly `factory.n_workers`, and will be
-                spread across the workers.
+            env_update (object): Value which will be passed into the
+                `env_update_fn` before sampling_episodes. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
 
         Returns:
             list[ray._raylet.ObjectID]: Remote values of worker ids.
@@ -106,22 +106,22 @@ class RaySampler(Sampler):
         return updating_workers
 
     def obtain_samples(self, itr, num_samples, agent_update, env_update=None):
-        """Sample the policy for new trajectories.
+        """Sample the policy for new episodes.
 
         Args:
-            itr(int): Iteration number.
-            num_samples(int): Number of steps the the sampler should collect.
-            agent_update(object): Value which will be passed into the
-                `agent_update_fn` before doing rollouts. If a list is passed
+            itr (int): Iteration number.
+            num_samples (int): Number of steps the the sampler should collect.
+            agent_update (object): Value which will be passed into the
+                `agent_update_fn` before sampling episodes. If a list is passed
                 in, it must have length exactly `factory.n_workers`, and will
                 be spread across the workers.
-            env_update(object): Value which will be passed into the
-                `env_update_fn` before doing rollouts. If a list is passed in,
-                it must have length exactly `factory.n_workers`, and will be
-                spread across the workers.
+            env_update (object): Value which will be passed into the
+                `env_update_fn` before sampling episodes. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
 
         Returns:
-            TrajectoryBatch: Batch of gathered trajectories.
+            EpisodeBatch: Batch of gathered episodes.
 
         """
         active_workers = []
@@ -137,8 +137,8 @@ class RaySampler(Sampler):
             while completed_samples < num_samples:
                 # if there are workers still being updated, check
                 # which ones are still updating and take the workers that
-                # are done updating, and start collecting trajectories on
-                # those workers.
+                # are done updating, and start collecting episodes on those
+                # workers.
                 if updating_workers:
                     updated, updating_workers = ray.wait(updating_workers,
                                                          num_returns=1,
@@ -146,7 +146,7 @@ class RaySampler(Sampler):
                     upd = [ray.get(up) for up in updated]
                     idle_worker_ids.extend(upd)
 
-                # if there are idle workers, use them to collect trajectories
+                # if there are idle workers, use them to collect episodes and
                 # mark the newly busy workers as active
                 while idle_worker_ids:
                     idle_worker_id = idle_worker_ids.pop()
@@ -155,47 +155,47 @@ class RaySampler(Sampler):
 
                 # check which workers are done/not done collecting a sample
                 # if any are done, send them to process the collected
-                # trajectory if they are not, keep checking if they are done
+                # episode if they are not, keep checking if they are done
                 ready, not_ready = ray.wait(active_workers,
                                             num_returns=1,
                                             timeout=0.001)
                 active_workers = not_ready
                 for result in ready:
-                    ready_worker_id, trajectory_batch = ray.get(result)
+                    ready_worker_id, episode_batch = ray.get(result)
                     idle_worker_ids.append(ready_worker_id)
-                    num_returned_samples = trajectory_batch.lengths.sum()
+                    num_returned_samples = episode_batch.lengths.sum()
                     completed_samples += num_returned_samples
-                    batches.append(trajectory_batch)
+                    batches.append(episode_batch)
                     pbar.update(num_returned_samples)
 
-        return TrajectoryBatch.concatenate(*batches)
+        return EpisodeBatch.concatenate(*batches)
 
-    def obtain_exact_trajectories(self,
-                                  n_traj_per_worker,
-                                  agent_update,
-                                  env_update=None):
-        """Sample an exact number of trajectories per worker.
+    def obtain_exact_episodes(self,
+                              n_eps_per_worker,
+                              agent_update,
+                              env_update=None):
+        """Sample an exact number of episodes per worker.
 
         Args:
-            n_traj_per_worker (int): Exact number of trajectories to gather for
+            n_eps_per_worker (int): Exact number of episodes to gather for
                 each worker.
-            agent_update(object): Value which will be passed into the
-                `agent_update_fn` before doing rollouts. If a list is passed
+            agent_update (object): Value which will be passed into the
+                `agent_update_fn` before sampling episodes. If a list is passed
                 in, it must have length exactly `factory.n_workers`, and will
                 be spread across the workers.
-            env_update(object): Value which will be passed into the
-                `env_update_fn` before doing rollouts. If a list is passed in,
-                it must have length exactly `factory.n_workers`, and will be
-                spread across the workers.
+            env_update (object): Value which will be passed into the
+                `env_update_fn` before sampling episodes. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
 
         Returns:
-            TrajectoryBatch: Batch of gathered trajectories. Always in worker
-                order. In other words, first all trajectories from worker 0,
-                then all trajectories from worker 1, etc.
+            EpisodeBatch: Batch of gathered episodes. Always in worker
+                order. In other words, first all episodes from worker 0, then
+                all episodes from worker 1, etc.
 
         """
         active_workers = []
-        trajectories = defaultdict(list)
+        episodes = defaultdict(list)
 
         # update the policy params of each worker before sampling
         # for the current iteration
@@ -205,11 +205,11 @@ class RaySampler(Sampler):
         with click.progressbar(length=self._worker_factory.n_workers,
                                label='Sampling') as pbar:
             while any(
-                    len(trajectories[i]) < n_traj_per_worker
+                    len(episodes[i]) < n_eps_per_worker
                     for i in range(self._worker_factory.n_workers)):
                 # if there are workers still being updated, check
                 # which ones are still updating and take the workers that
-                # are done updating, and start collecting trajectories on
+                # are done updating, and start collecting episodes on
                 # those workers.
                 if updating_workers:
                     updated, updating_workers = ray.wait(updating_workers,
@@ -218,7 +218,7 @@ class RaySampler(Sampler):
                     upd = [ray.get(up) for up in updated]
                     idle_worker_ids.extend(upd)
 
-                # if there are idle workers, use them to collect trajectories
+                # if there are idle workers, use them to collect episodes
                 # mark the newly busy workers as active
                 while idle_worker_ids:
                     idle_worker_id = idle_worker_ids.pop()
@@ -226,27 +226,26 @@ class RaySampler(Sampler):
                     active_workers.append(worker.rollout.remote())
 
                 # check which workers are done/not done collecting a sample
-                # if any are done, send them to process the collected
-                # trajectory if they are not, keep checking if they are done
+                # if any are done, send them to process the collected episode
+                # if they are not, keep checking if they are done
                 ready, not_ready = ray.wait(active_workers,
                                             num_returns=1,
                                             timeout=0.001)
                 active_workers = not_ready
                 for result in ready:
-                    ready_worker_id, trajectory_batch = ray.get(result)
-                    trajectories[ready_worker_id].append(trajectory_batch)
+                    ready_worker_id, episode_batch = ray.get(result)
+                    episodes[ready_worker_id].append(episode_batch)
 
-                    if len(trajectories[ready_worker_id]) < n_traj_per_worker:
+                    if len(episodes[ready_worker_id]) < n_eps_per_worker:
                         idle_worker_ids.append(ready_worker_id)
 
                     pbar.update(1)
 
-        ordered_trajectories = list(
-            itertools.chain(*[
-                trajectories[i] for i in range(self._worker_factory.n_workers)
-            ]))
+        ordered_episodes = list(
+            itertools.chain(
+                *[episodes[i] for i in range(self._worker_factory.n_workers)]))
 
-        return TrajectoryBatch.concatenate(*ordered_trajectories)
+        return EpisodeBatch.concatenate(*ordered_episodes)
 
     def shutdown_worker(self):
         """Shuts down the worker."""
@@ -259,10 +258,10 @@ class SamplerWorker:
     """Constructs a single sampler worker.
 
     Args:
-        worker_id(int): The id of the sampler_worker
-        env(gym.Env): The gym env
-        agent_pkl(bytes): The pickled agent
-        worker_factory(WorkerFactory): Factory to construct this worker's
+        worker_id (int): The ID of this worker.
+        env (Environment): Environment to sample form.
+        agent_pkl (bytes): Pickled :class:`Policy` to sample with.
+        worker_factory (WorkerFactory): Factory to construct this worker's
             behavior.
 
     """
@@ -278,8 +277,8 @@ class SamplerWorker:
         """Update the agent and environment.
 
         Args:
-            agent_update(object): Agent update.
-            env_update(object): Environment update.
+            agent_update (object): Agent update.
+            env_update (object): Environment update.
 
         Returns:
             int: The worker id.
@@ -290,10 +289,10 @@ class SamplerWorker:
         return self.worker_id
 
     def rollout(self):
-        """Compute one rollout of the agent in the environment.
+        """Sample one episode of the agent in the environment.
 
         Returns:
-            tuple[int, garage.TrajectoryBatch]: Worker ID and batch of samples.
+            tuple[int, EpisodeBatch]: Worker ID and batch of samples.
 
         """
         return (self.worker_id, self.inner_worker.rollout())

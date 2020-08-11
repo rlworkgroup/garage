@@ -7,7 +7,7 @@ from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
 
-from garage import log_performance, make_optimizer, StepType, TrajectoryBatch
+from garage import EpisodeBatch, log_performance, make_optimizer, StepType
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
@@ -28,14 +28,14 @@ class NPO(RLAlgorithm):
     """Natural Policy Gradient Optimization.
 
     Args:
-        env_spec (garage.envs.EnvSpec): Environment specification.
+        env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.StochasticPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
         scope (str): Scope for identifying the algorithm.
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -170,8 +170,7 @@ class NPO(RLAlgorithm):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): LocalRunner is passed to give algorithm
-                the access to runner.step_epochs(), which provides services
+            runner (LocalRunner): Experiment runner, which rovides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -227,10 +226,10 @@ class NPO(RLAlgorithm):
                                         self._gae_lambda)
 
         # -- Stage: Run and calculate performance of the algorithm
-        undiscounted_returns = log_performance(
-            itr,
-            TrajectoryBatch.from_trajectory_list(self._env_spec, paths),
-            discount=self._discount)
+        undiscounted_returns = log_performance(itr,
+                                               EpisodeBatch.from_list(
+                                                   self._env_spec, paths),
+                                               discount=self._discount)
         self._episode_reward_mean.extend(undiscounted_returns)
         tabular.record('Extras/EpisodeRewardMean',
                        np.mean(self._episode_reward_mean))
@@ -514,7 +513,7 @@ class NPO(RLAlgorithm):
         self._baseline.fit(paths)
 
     def _policy_opt_input_values(self, samples_data):
-        """Map rollout samples to the policy optimizer inputs.
+        """Map episode samples to the policy optimizer inputs.
 
         Args:
             samples_data (dict): Processed sample data.
