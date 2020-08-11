@@ -60,7 +60,7 @@ class TestDQN(TfGraphTestCase):
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=n_epochs,
                                         batch_size=sampler_batch_size)
-            assert last_avg_ret > 9
+            assert last_avg_ret > 8.8
 
             env.close()
 
@@ -102,7 +102,7 @@ class TestDQN(TfGraphTestCase):
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=n_epochs,
                                         batch_size=sampler_batch_size)
-            assert last_avg_ret > 9
+            assert last_avg_ret > 8.8
 
             env.close()
 
@@ -145,7 +145,7 @@ class TestDQN(TfGraphTestCase):
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=n_epochs,
                                         batch_size=sampler_batch_size)
-            assert last_avg_ret > 9
+            assert last_avg_ret > 8.8
 
             env.close()
 
