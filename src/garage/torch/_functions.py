@@ -176,7 +176,7 @@ def torch_to_np(tensors):
         `garage.torch._functions.to_numpy`.
 
     """
-    value_out = tuple(v.numpy() for v in tensors)
+    value_out = tuple(v.cpu().numpy() for v in tensors)
     return value_out
 
 
@@ -244,6 +244,28 @@ def update_module_params(module, new_params):  # noqa: D202
             update(module, name, new_param)
 
 
+# pylint: disable=missing-param-doc, missing-type-doc
+def soft_update_model(target_model, source_model, tau):
+    """Update model parameter of target and source model.
+
+    # noqa: D417
+    Args:
+        target_model
+                (garage.torch.Policy/garage.torch.QFunction):
+                    Target model to update.
+        source_model
+                (garage.torch.Policy/QFunction):
+                    Source network to update.
+        tau (float): Interpolation parameter for doing the
+            soft target update.
+
+    """
+    for target_param, param in zip(target_model.parameters(),
+                                   source_model.parameters()):
+        target_param.data.copy_(target_param.data * (1.0 - tau) +
+                                param.data * tau)
+
+
 def set_gpu_mode(mode, gpu_id=0):
     """Set GPU mode and device ID.
 
@@ -259,6 +281,14 @@ def set_gpu_mode(mode, gpu_id=0):
     _GPU_ID = gpu_id
     _USE_GPU = mode
     _DEVICE = torch.device(('cuda:' + str(_GPU_ID)) if _USE_GPU else 'cpu')
+
+
+def prefer_gpu():
+    """Prefer to use GPU(s) if GPU(s) is detected."""
+    if torch.cuda.is_available():
+        set_gpu_mode(True)
+    else:
+        set_gpu_mode(False)
 
 
 def global_device():

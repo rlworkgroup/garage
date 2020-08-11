@@ -7,6 +7,7 @@ import akro
 import numpy as np
 import torch
 
+from garage.torch import global_device
 from garage.torch.modules import MLPModule
 from garage.torch.policies.policy import Policy
 
@@ -101,5 +102,5 @@ class DeterministicMLPPolicy(Policy):
             observations = self._env_spec.observation_space.unflatten_n(
                 observations)
         with torch.no_grad():
-            x = self(torch.Tensor(observations))
-            return x.numpy(), dict()
+            x = self(torch.Tensor(observations).to(global_device()))
+            return x.cpu().numpy(), dict()

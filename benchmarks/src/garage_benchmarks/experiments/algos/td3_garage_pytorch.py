@@ -1,14 +1,17 @@
-"""A regression test for automatic benchmarking garage-TensorFlow-TD3."""
-import tensorflow as tf
+"""A regression test for automatic benchmarking garage-Pytorch-TD3."""
+import torch
+from torch.nn import functional as F
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic
 from garage.np.exploration_policies import AddGaussianNoise
+from garage.np.policies import UniformRandomPolicy
 from garage.replay_buffer import PathBuffer
-from garage.tf.algos import TD3
-from garage.tf.policies import ContinuousMLPPolicy
-from garage.tf.q_functions import ContinuousMLPQFunction
+from garage.torch import prefer_gpu
+from garage.torch.algos import TD3
+from garage.torch.policies import DeterministicMLPPolicy
+from garage.torch.q_functions import ContinuousMLPQFunction
 from garage.trainer import TFTrainer
 
 hyper_parameters = {
@@ -18,24 +21,29 @@ hyper_parameters = {
     'qf_hidden_sizes': [256, 256],
     'n_epochs': 250,
     'steps_per_epoch': 40,
-    'n_exploration_steps': 100,
-    'n_train_steps': 50,
+    'batch_size': 100,
+    'start_steps': 1000,
+    'update_after': 1000,
+    'grad_steps_per_env_step': 50,
     'discount': 0.99,
-    'tau': 0.005,
+    'target_update_tau': 0.005,
     'replay_buffer_size': int(1e6),
     'sigma': 0.1,
+    'policy_noise': 0.2,
+    'policy_noise_clip': 0.5,
     'buffer_batch_size': 100,
-    'min_buffer_size': int(1e4)
+    'min_buffer_size': int(1e4),
 }
 
 
-@wrap_experiment
-def td3_garage_tf(ctxt, env_id, seed):
+@wrap_experiment(snapshot_mode='last')
+def td3_garage_pytorch(ctxt, env_id, seed):
     """Create garage TensorFlow TD3 model and training.
 
     Args:
-        ctxt (ExperimentContext): The experiment configuration used by
-            :class:`~Trainer` to create the :class:`~Snapshotter`.
+        ctxt (garage.experiment.ExperimentContext): The experiment
+            configuration used by Localtrainer to create the
+            snapshotter.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
 
@@ -43,17 +51,15 @@ def td3_garage_tf(ctxt, env_id, seed):
     deterministic.set_seed(seed)
 
     with TFTrainer(ctxt) as trainer:
-        num_timesteps = (hyper_parameters['n_epochs'] *
-                         hyper_parameters['steps_per_epoch'] *
-                         hyper_parameters['n_exploration_steps'])
-
+        num_timesteps = hyper_parameters['n_epochs'] * hyper_parameters[
+            'steps_per_epoch'] * hyper_parameters['batch_size']
         env = normalize(GymEnv(env_id))
 
-        policy = ContinuousMLPPolicy(
+        policy = DeterministicMLPPolicy(
             env_spec=env.spec,
             hidden_sizes=hyper_parameters['policy_hidden_sizes'],
-            hidden_nonlinearity=tf.nn.relu,
-            output_nonlinearity=tf.nn.tanh)
+            hidden_nonlinearity=F.relu,
+            output_nonlinearity=torch.tanh)
 
         exploration_policy = AddGaussianNoise(
             env.spec,
@@ -62,40 +68,45 @@ def td3_garage_tf(ctxt, env_id, seed):
             max_sigma=hyper_parameters['sigma'],
             min_sigma=hyper_parameters['sigma'])
 
-        qf = ContinuousMLPQFunction(
-            name='ContinuousMLPQFunction',
+        uniform_random_policy = UniformRandomPolicy(env.spec)
+
+        qf1 = ContinuousMLPQFunction(
             env_spec=env.spec,
             hidden_sizes=hyper_parameters['qf_hidden_sizes'],
-            action_merge_layer=0,
-            hidden_nonlinearity=tf.nn.relu)
+            hidden_nonlinearity=F.relu)
 
         qf2 = ContinuousMLPQFunction(
-            name='ContinuousMLPQFunction2',
             env_spec=env.spec,
             hidden_sizes=hyper_parameters['qf_hidden_sizes'],
-            action_merge_layer=0,
-            hidden_nonlinearity=tf.nn.relu)
+            hidden_nonlinearity=F.relu)
 
         replay_buffer = PathBuffer(
             capacity_in_transitions=hyper_parameters['replay_buffer_size'])
 
-        td3 = TD3(env.spec,
+        td3 = TD3(env_spec=env.spec,
                   policy=policy,
-                  qf=qf,
+                  qf1=qf1,
                   qf2=qf2,
+                  exploration_policy=exploration_policy,
+                  uniform_random_policy=uniform_random_policy,
                   replay_buffer=replay_buffer,
                   steps_per_epoch=hyper_parameters['steps_per_epoch'],
                   policy_lr=hyper_parameters['policy_lr'],
                   qf_lr=hyper_parameters['qf_lr'],
-                  target_update_tau=hyper_parameters['tau'],
-                  n_train_steps=hyper_parameters['n_train_steps'],
+                  target_update_tau=hyper_parameters['target_update_tau'],
                   discount=hyper_parameters['discount'],
+                  grad_steps_per_env_step=hyper_parameters[
+                      'grad_steps_per_env_step'],
+                  start_steps=hyper_parameters['start_steps'],
                   min_buffer_size=hyper_parameters['min_buffer_size'],
                   buffer_batch_size=hyper_parameters['buffer_batch_size'],
-                  exploration_policy=exploration_policy,
-                  policy_optimizer=tf.compat.v1.train.AdamOptimizer,
-                  qf_optimizer=tf.compat.v1.train.AdamOptimizer)
+                  policy_optimizer=torch.optim.Adam,
+                  qf_optimizer=torch.optim.Adam,
+                  policy_noise_clip=hyper_parameters['policy_noise_clip'],
+                  policy_noise=hyper_parameters['policy_noise'])
 
+        prefer_gpu()
+        td3.to()
         trainer.setup(td3, env)
         trainer.train(n_epochs=hyper_parameters['n_epochs'],
-                      batch_size=hyper_parameters['n_exploration_steps'])
+                      batch_size=hyper_parameters['batch_size'])

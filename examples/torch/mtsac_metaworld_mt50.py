@@ -51,8 +51,8 @@ def mtsac_metaworld_mt50(ctxt=None,
     """
     deterministic.set_seed(seed)
     trainer = Trainer(ctxt)
-    mt50 = metaworld.MT50()
-    mt50_test = metaworld.MT50()
+    mt50 = metaworld.MT50()  # pylint: disable=no-member
+    mt50_test = metaworld.MT50()  # pylint: disable=no-member
     train_task_sampler = MetaWorldTaskSampler(
         mt50,
         'train',
