@@ -9,7 +9,7 @@ from garage.envs import GymEnv
 from garage.tf.policies import CategoricalCNNPolicy
 
 from tests.fixtures import TfGraphTestCase
-from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
+from tests.fixtures.envs.dummy import DummyDictEnv, DummyDiscretePixelEnv
 
 
 class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
@@ -116,3 +116,40 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
         for cloned_param, param in zip(policy_clone.parameters.values(),
                                        policy.parameters.values()):
             assert np.array_equal(cloned_param, param)
+
+    @pytest.mark.parametrize('filters, strides, padding, hidden_sizes', [
+        (((3, (32, 32)), ), (1, ), 'VALID', (4, )),
+    ])
+    def test_does_not_support_dict_obs_space(self, filters, strides, padding,
+                                             hidden_sizes):
+        """Test that policy raises error if passed a dict obs space."""
+        env = GymEnv(DummyDictEnv(act_space_type='discrete'))
+        with pytest.raises(ValueError):
+            CategoricalCNNPolicy(env_spec=env.spec,
+                                 filters=filters,
+                                 strides=strides,
+                                 padding=padding,
+                                 hidden_sizes=hidden_sizes)
+
+
+class TestCategoricalCNNPolicyImageObs(TfGraphTestCase):
+
+    def setup_method(self):
+        super().setup_method()
+        self.env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
+        self.sess.run(tf.compat.v1.global_variables_initializer())
+        self.env.reset()
+
+    @pytest.mark.parametrize('filters, strides, padding, hidden_sizes', [
+        (((3, (32, 32)), ), (1, ), 'VALID', (4, )),
+    ])
+    def test_obs_unflattened(self, filters, strides, padding, hidden_sizes):
+        self.policy = CategoricalCNNPolicy(env_spec=self.env.spec,
+                                           filters=filters,
+                                           strides=strides,
+                                           padding=padding,
+                                           hidden_sizes=hidden_sizes)
+        obs = self.env.observation_space.sample()
+        action, _ = self.policy.get_action(
+            self.env.observation_space.flatten(obs))
+        self.env.step(action)

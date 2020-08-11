@@ -84,13 +84,16 @@ class CategoricalCNNPolicy(StochasticPolicy):
                  name='CategoricalCNNPolicy'):
 
         if not isinstance(env.spec.action_space, akro.Discrete):
-            raise ValueError('CategoricalMLPPolicy only works'
+            raise ValueError('CategoricalMLPPolicy only works '
                              'with akro.Discrete action space.')
+        if isinstance(env.spec.observation_space, akro.Dict):
+            raise ValueError('CNN policies do not support '
+                             'with akro.Dict observation spaces.')
 
         super().__init__(env.spec, name)
         self._env = env
         self._obs_dim = self._env.spec.observation_space.shape
-        self._action_dim = self._env.spec.action_space.n
+        self._action_dim = self._env.spec.action_space.flat_dim
         self._kernel_sizes = kernel_sizes
         self._strides = strides
         self._hidden_nonlinearity = hidden_nonlinearity

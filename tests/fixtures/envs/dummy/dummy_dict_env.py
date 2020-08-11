@@ -1,5 +1,6 @@
 """Dummy akro.Dict environment for testing purpose."""
 import akro
+import gym
 import numpy as np
 
 from garage import EnvSpec
@@ -12,11 +13,21 @@ class DummyDictEnv(DummyEnv):
 
     Args:
         random (bool): If observations are randomly generated or not.
+        obs_space_type (str): The type of the inner spaces of the
+            dict observation space.
+        act_space_type (str): The type of action space to mock.
 
     """
 
-    def __init__(self, random=True):
+    def __init__(self,
+                 random=True,
+                 obs_space_type='box',
+                 act_space_type='box'):
+        assert obs_space_type in ['box', 'image', 'discrete']
+        assert act_space_type in ['box', 'discrete']
         super().__init__(random)
+        self.obs_space_type = obs_space_type
+        self.act_space_type = act_space_type
         self.spec = EnvSpec(action_space=self.action_space,
                             observation_space=self.observation_space)
 
@@ -27,14 +38,34 @@ class DummyDictEnv(DummyEnv):
         Returns:
             akro.Dict: Observation space.
         """
-        return akro.Dict({
-            'achieved_goal':
-            akro.Box(low=-200., high=200., shape=(3, ), dtype=np.float32),
-            'desired_goal':
-            akro.Box(low=-200., high=200., shape=(3, ), dtype=np.float32),
-            'observation':
-            akro.Box(low=-200., high=200., shape=(25, ), dtype=np.float32)
-        })
+        if self.obs_space_type == 'box':
+            return gym.spaces.Dict({
+                'achieved_goal':
+                gym.spaces.Box(low=-200.,
+                               high=200.,
+                               shape=(3, ),
+                               dtype=np.float32),
+                'desired_goal':
+                gym.spaces.Box(low=-200.,
+                               high=200.,
+                               shape=(3, ),
+                               dtype=np.float32),
+                'observation':
+                gym.spaces.Box(low=-200.,
+                               high=200.,
+                               shape=(25, ),
+                               dtype=np.float32)
+            })
+        elif self.obs_space_type == 'image':
+            return gym.spaces.Dict({
+                'dummy':
+                gym.spaces.Box(low=0,
+                               high=255,
+                               shape=(100, 100, 3),
+                               dtype=np.uint8),
+            })
+        else:
+            return gym.spaces.Dict({'dummy': gym.spaces.Discrete(5)})
 
     @property
     def action_space(self):
@@ -44,7 +75,10 @@ class DummyDictEnv(DummyEnv):
             akro.Box: Action space.
 
         """
-        return akro.Box(low=-5.0, high=5.0, shape=(1, ), dtype=np.float32)
+        if self.act_space_type == 'box':
+            return akro.Box(low=-5.0, high=5.0, shape=(1, ), dtype=np.float32)
+        else:
+            return akro.Discrete(5)
 
     def reset(self):
         """Reset the environment.

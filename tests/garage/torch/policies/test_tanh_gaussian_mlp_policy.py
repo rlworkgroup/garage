@@ -9,7 +9,10 @@ from torch import nn
 from garage.envs import GymEnv
 from garage.torch.policies import TanhGaussianMLPPolicy
 
-from tests.fixtures.envs.dummy import DummyBoxEnv
+# yapf: Disable
+from tests.fixtures.envs.dummy import DummyBoxEnv, DummyDictEnv
+
+# yapf: Enable
 
 
 class TestTanhGaussianMLPPolicy:
@@ -174,3 +177,20 @@ class TestTanhGaussianMLPPolicy:
         else:
             policy.to(None)
             assert str(next(policy.parameters()).device) == 'cpu'
+
+    def test_get_action_dict_space(self):
+        """Test if observations from dict obs spaces are properly flattened."""
+        env = GymEnv(DummyDictEnv(obs_space_type='box', act_space_type='box'))
+        policy = TanhGaussianMLPPolicy(env_spec=env.spec,
+                                       hidden_nonlinearity=None,
+                                       hidden_sizes=(1, ),
+                                       hidden_w_init=nn.init.ones_,
+                                       output_w_init=nn.init.ones_)
+        obs = env.reset()[0]
+
+        action, _ = policy.get_action(obs)
+        assert env.action_space.shape == action.shape
+
+        actions, _ = policy.get_actions(np.array([obs, obs]))
+        for action in actions:
+            assert env.action_space.shape == action.shape
