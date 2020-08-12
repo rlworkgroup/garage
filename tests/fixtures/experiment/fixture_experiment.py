@@ -1,5 +1,5 @@
 """A dummy experiment fixture."""
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
@@ -24,7 +24,7 @@ def fixture_exp(snapshot_config, sess):
 
     """
     with LocalTFRunner(snapshot_config=snapshot_config, sess=sess) as runner:
-        env = GarageEnv(env_name='CartPole-v1')
+        env = GymEnv('CartPole-v1')
 
         policy = CategoricalMLPPolicy(name='policy',
                                       env_spec=env.spec,

@@ -3,8 +3,15 @@ import gym.spaces
 import numpy as np
 import pytest
 
-from garage import StepType, TimeStep, TimeStepBatch, TrajectoryBatch
-from garage.envs import EnvSpec
+# yapf: disable
+from garage import (EnvSpec,
+                    EnvStep,
+                    StepType,
+                    TimeStep,
+                    TimeStepBatch,
+                    TrajectoryBatch)
+
+# yapf: enable
 
 
 @pytest.fixture
@@ -212,6 +219,37 @@ def test_to_trajectory_list(traj_data):
     assert start == len(traj_data['rewards'])
 
 
+def test_get_step_type():
+    step_type = StepType.get_step_type(step_cnt=1,
+                                       max_episode_length=5,
+                                       done=False)
+    assert step_type == StepType.FIRST
+    step_type = StepType.get_step_type(step_cnt=2,
+                                       max_episode_length=5,
+                                       done=False)
+    assert step_type == StepType.MID
+    step_type = StepType.get_step_type(step_cnt=2,
+                                       max_episode_length=None,
+                                       done=False)
+    assert step_type == StepType.MID
+    step_type = StepType.get_step_type(step_cnt=5,
+                                       max_episode_length=5,
+                                       done=False)
+    assert step_type == StepType.TIMEOUT
+    step_type = StepType.get_step_type(step_cnt=1,
+                                       max_episode_length=5,
+                                       done=True)
+    assert step_type == StepType.TERMINAL
+    step_type = StepType.get_step_type(step_cnt=5,
+                                       max_episode_length=5,
+                                       done=True)
+    assert step_type == StepType.TERMINAL
+    with pytest.raises(ValueError):
+        step_type = StepType.get_step_type(step_cnt=0,
+                                           max_episode_length=5,
+                                           done=False)
+
+
 @pytest.fixture
 def sample_data():
     # spaces
@@ -280,96 +318,6 @@ def test_new_time_step(sample_data):
     assert s.action is sample_data['action']
 
 
-def test_obs_env_spec_mismatch_time_step(sample_data):
-    with pytest.raises(ValueError,
-                       match='observation must conform to observation_space'):
-        sample_data['observation'] = sample_data['observation'][:, :, :1]
-        s = TimeStep(**sample_data)
-        del s
-
-    obs_space = akro.Box(low=1, high=10, shape=(4, 5, 2), dtype=np.float32)
-    act_space = gym.spaces.MultiDiscrete([2, 5])
-    env_spec = EnvSpec(obs_space, act_space)
-    sample_data['env_spec'] = env_spec
-
-    with pytest.raises(
-            ValueError,
-            match='observation should have the same dimensionality'):
-        sample_data['observation'] = sample_data['observation'][:, :, :1]
-        s = TimeStep(**sample_data)
-        del s
-
-
-def test_next_obs_env_spec_mismatch_time_step(sample_data):
-    with pytest.raises(
-            ValueError,
-            match='next_observation must conform to observation_space'):
-        sample_data['next_observation'] = sample_data[
-            'next_observation'][:, :, :1]
-        s = TimeStep(**sample_data)
-        del s
-
-    obs_space = akro.Box(low=1, high=10, shape=(4, 3, 2), dtype=np.float32)
-    act_space = gym.spaces.MultiDiscrete([2, 5])
-    env_spec = EnvSpec(obs_space, act_space)
-    sample_data['env_spec'] = env_spec
-
-    with pytest.raises(
-            ValueError,
-            match='next_observation should have the same dimensionality'):
-        sample_data['next_observation'] = sample_data[
-            'next_observation'][:, :, :1]
-        s = TimeStep(**sample_data)
-        del s
-
-
-def test_act_env_spec_mismatch_time_step(sample_data):
-    with pytest.raises(ValueError,
-                       match='action must conform to action_space'):
-        sample_data['action'] = sample_data['action'][:-1]
-        s = TimeStep(**sample_data)
-        del s
-
-    obs_space = akro.Box(low=1, high=10, shape=(4, 3, 2), dtype=np.float32)
-    act_space = akro.Discrete(5)
-    env_spec = EnvSpec(obs_space, act_space)
-    sample_data['env_spec'] = env_spec
-
-    with pytest.raises(ValueError,
-                       match='action should have the same dimensionality'):
-        sample_data['action'] = sample_data['action'][:-1]
-        s = TimeStep(**sample_data)
-        del s
-
-
-def test_reward_dtype_mismatch_time_step(sample_data):
-    with pytest.raises(ValueError, match='reward must be type'):
-        sample_data['reward'] = []
-        s = TimeStep(**sample_data)
-        del s
-
-
-def test_agent_info_dtype_mismatch_time_step(sample_data):
-    with pytest.raises(ValueError, match='agent_info must be type'):
-        sample_data['agent_info'] = []
-        s = TimeStep(**sample_data)
-        del s
-
-
-def test_env_info_dtype_mismatch_time_step(sample_data):
-    with pytest.raises(ValueError, match='env_info must be type'):
-        sample_data['env_info'] = []
-        s = TimeStep(**sample_data)
-        del s
-
-
-def test_step_type_dtype_mismatch_time_step(sample_data):
-    with pytest.raises(ValueError, match='step_type must be dtype'):
-        sample_data['step_type'] = []
-        s = TimeStep(**sample_data)
-        del s
-
-
 def test_step_type_property_time_step(sample_data):
     sample_data['step_type'] = StepType.FIRST
     s = TimeStep(**sample_data)
@@ -386,6 +334,21 @@ def test_step_type_property_time_step(sample_data):
     sample_data['step_type'] = StepType.TIMEOUT
     s = TimeStep(**sample_data)
     assert s.timeout and s.last
+
+
+def test_from_env_step_time_step(sample_data):
+    agent_info = sample_data['agent_info']
+    last_observation = sample_data['observation']
+    observation = sample_data['next_observation']
+    time_step = TimeStep(**sample_data)
+    del sample_data['agent_info']
+    del sample_data['next_observation']
+    sample_data['observation'] = observation
+    env_step = EnvStep(**sample_data)
+    time_step_new = TimeStep.from_env_step(env_step=env_step,
+                                           last_observation=last_observation,
+                                           agent_info=agent_info)
+    assert time_step == time_step_new
 
 
 @pytest.fixture

@@ -9,7 +9,7 @@ Results:
               but regression is observed in the course of training.
 """
 from garage import wrap_experiment
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.algos import CMAES
@@ -30,7 +30,7 @@ def cma_es_cartpole(ctxt=None, seed=1):
     """
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
-        env = GarageEnv(env_name='CartPole-v1')
+        env = GymEnv('CartPole-v1')
 
         policy = CategoricalMLPPolicy(name='policy',
                                       env_spec=env.spec,

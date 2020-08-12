@@ -6,7 +6,7 @@ Here it runs InvertedDoublePendulum-v2 environment with 100 iterations.
 import torch
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.torch.algos import TRPO
@@ -26,7 +26,7 @@ def trpo_pendulum(ctxt=None, seed=1):
 
     """
     set_seed(seed)
-    env = GarageEnv(env_name='InvertedDoublePendulum-v2')
+    env = GymEnv('InvertedDoublePendulum-v2')
 
     runner = LocalRunner(ctxt)
 

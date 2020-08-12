@@ -20,9 +20,9 @@ class DeterministicMLPPolicy(Policy):
         """Initialize class with multiple attributes.
 
         Args:
-            env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+            env_spec (EnvSpec): Environment specification.
             name (str): Policy name.
-            kwargs : Additional keyword arguments passed to the MLPModule.
+            **kwargs: Additional keyword arguments passed to the MLPModule.
         """
         super().__init__(env_spec, name)
 

@@ -13,12 +13,12 @@ import tensorflow as tf
 import torch
 
 from garage import (_Default,
+                    EnvSpec,
                     log_multitask_performance,
                     log_performance,
                     make_optimizer,
                     StepType,
                     TrajectoryBatch)
-from garage.envs import EnvSpec
 
 from tests.fixtures import TfGraphTestCase
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """This is an example to train multiple tasks with TRPO algorithm."""
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize, PointEnv
+from garage.envs import normalize, PointEnv
 from garage.envs.multi_env_wrapper import MultiEnvWrapper
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
@@ -23,8 +23,8 @@ def multi_env_trpo(ctxt=None, seed=1):
     """
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
-        env1 = GarageEnv(normalize(PointEnv(goal=(-1., 0.))))
-        env2 = GarageEnv(normalize(PointEnv(goal=(1., 0.))))
+        env1 = normalize(PointEnv(goal=(-1., 0.)))
+        env2 = normalize(PointEnv(goal=(1., 0.)))
         env = MultiEnvWrapper([env1, env2])
 
         policy = GaussianMLPPolicy(env_spec=env.spec)

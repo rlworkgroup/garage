@@ -10,7 +10,7 @@ class Policy(torch.nn.Module, BasePolicy, abc.ABC):
     """Policy base class.
 
     Args:
-        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        env_spec (EnvSpec): Environment specification.
         name (str): Name of policy.
 
     """

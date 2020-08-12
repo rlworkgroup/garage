@@ -2,7 +2,7 @@
 import pytest
 import torch
 
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic, LocalRunner, MetaEvaluator
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.sampler import LocalSampler
@@ -33,8 +33,8 @@ class TestMAMLVPG:
 
     def setup_method(self):
         """Setup method which is called before every test."""
-        self.env = GarageEnv(
-            normalize(HalfCheetahDirEnv(), expected_action_scale=10.))
+        self.env = normalize(GymEnv(HalfCheetahDirEnv()),
+                             expected_action_scale=10.)
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
             hidden_sizes=(64, 64),
@@ -55,8 +55,8 @@ class TestMAMLVPG:
         rollouts_per_task = 5
         max_episode_length = 100
 
-        task_sampler = SetTaskSampler(lambda: GarageEnv(
-            normalize(HalfCheetahDirEnv(), expected_action_scale=10.)))
+        task_sampler = SetTaskSampler(lambda: normalize(
+            GymEnv(HalfCheetahDirEnv()), expected_action_scale=10.))
 
         meta_evaluator = MetaEvaluator(test_task_sampler=task_sampler,
                                        max_episode_length=max_episode_length,

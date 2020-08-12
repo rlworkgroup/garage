@@ -2,11 +2,10 @@
 This script creates a test that fails when garage.tf.algos.NPO performance is
 too low.
 """
-import gym
 import pytest
 import tensorflow as tf
 
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import LocalTFRunner
 from garage.sampler import LocalSampler
 from garage.tf.algos import NPO
@@ -20,7 +19,7 @@ class TestNPO(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+        self.env = normalize(GymEnv('InvertedDoublePendulum-v2'))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
             hidden_sizes=(64, 64),

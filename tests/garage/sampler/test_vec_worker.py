@@ -2,7 +2,7 @@ import pprint
 
 import pytest
 
-from garage.envs import GarageEnv, GridWorldEnv
+from garage.envs import GridWorldEnv
 from garage.experiment.task_sampler import EnvPoolSampler
 from garage.np.policies import ScriptedPolicy
 from garage.sampler import LocalSampler, VecWorker, WorkerFactory
@@ -14,7 +14,7 @@ MAX_EPISODE_LENGTH = 9
 
 @pytest.fixture
 def env():
-    return GarageEnv(GridWorldEnv(desc='4x4'))
+    return GridWorldEnv(desc='4x4')
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ def envs():
         ['SFFF', 'FFFF', 'FFFF', 'FFFF'],
         ['SHFF', 'HHFF', 'FFFF', 'FFFF'],
     ]
-    return [GarageEnv(GridWorldEnv(desc=desc)) for desc in descs]
+    return [GridWorldEnv(desc=desc) for desc in descs]
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def other_envs():
         ['FFFF', 'FFFF', 'FSFF', 'FFFF'],
         ['HHFF', 'HHHF', 'HSHF', 'HHHF'],
     ]
-    return [GarageEnv(GridWorldEnv(desc=desc)) for desc in descs]
+    return [GridWorldEnv(desc=desc) for desc in descs]
 
 
 def assert_trajs_eq(ground_truth_traj, test_traj):
@@ -53,7 +53,7 @@ def assert_trajs_eq(ground_truth_traj, test_traj):
                         for traj in ground_truth_traj.split()}
     test_set = {(tuple(traj.actions), tuple(traj.observations))
                 for traj in test_traj.split()}
-    print()
+
     pprint.pprint(ground_truth_set)
     pprint.pprint(test_set)
     assert test_set == ground_truth_set

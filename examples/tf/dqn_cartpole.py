@@ -3,10 +3,8 @@
 
 Here it creates a gym environment CartPole, and trains a DQN with 50k steps.
 """
-import gym
-
 from garage import wrap_experiment
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
@@ -33,7 +31,7 @@ def dqn_cartpole(ctxt=None, seed=1):
         steps_per_epoch = 10
         sampler_batch_size = 500
         num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
-        env = GarageEnv(gym.make('CartPole-v0'))
+        env = GymEnv('CartPole-v0')
         replay_buffer = PathBuffer(capacity_in_transitions=int(1e4))
         qf = DiscreteMLPQFunction(env_spec=env.spec, hidden_sizes=(64, 64))
         policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)

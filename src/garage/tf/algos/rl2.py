@@ -2,94 +2,116 @@
 
 This module contains RL2, RL2Worker and the environment wrapper for RL2.
 """
+# yapf: disable
 import abc
 import collections
 
 import akro
 from dowel import logger
-import gym
 import numpy as np
 
-from garage import log_multitask_performance, TrajectoryBatch
-from garage.envs import EnvSpec
+from garage import (EnvSpec,
+                    EnvStep,
+                    log_multitask_performance,
+                    StepType,
+                    TrajectoryBatch,
+                    Wrapper)
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import MetaRLAlgorithm
 from garage.sampler import DefaultWorker
 from garage.tf.algos._rl2npo import RL2NPO
 
+# yapf: enable
 
-class RL2Env(gym.Wrapper):
+
+class RL2Env(Wrapper):
     """Environment wrapper for RL2.
 
     In RL2, observation is concatenated with previous action,
     reward and terminal signal to form new observation.
 
     Args:
-        env (gym.Env): An env that will be wrapped.
-
+        env (Environment): An env that will be wrapped.
     """
 
     def __init__(self, env):
         super().__init__(env)
-        action_space = akro.from_gym(self.env.action_space)
-        observation_space = self._create_rl2_obs_space()
-        self._spec = EnvSpec(action_space=action_space,
-                             observation_space=observation_space)
+
+        self._observation_space = self._create_rl2_obs_space()
+        self._spec = EnvSpec(
+            action_space=self.action_space,
+            observation_space=self._observation_space,
+            max_episode_length=self._env.spec.max_episode_length)
+
+    @property
+    def observation_space(self):
+        """akro.Space: The observation space specification."""
+        return self._observation_space
+
+    @property
+    def spec(self):
+        """EnvSpec: The environment specification."""
+        return self._spec
+
+    def reset(self):
+        """Call reset on wrapped env.
+
+        Returns:
+            numpy.ndarray: The first observation conforming to
+                `observation_space`.
+            dict: The episode-level information.
+                Note that this is not part of `env_info` provided in `step()`.
+                It contains information of he entire episode， which could be
+                needed to determine the first action (e.g. in the case of
+                goal-conditioned or MTRL.)
+
+        """
+        first_obs, episode_info = self._env.reset()
+        first_obs = np.concatenate(
+            [first_obs,
+             np.zeros(self._env.action_space.shape), [0], [0]])
+
+        return first_obs, episode_info
+
+    def step(self, action):
+        """Call step on wrapped env.
+
+        Args:
+            action (np.ndarray): An action provided by the agent.
+
+        Returns:
+            EnvStep: The environment step resulting from the action.
+
+        Raises:
+            RuntimeError: if `step()` is called after the environment has been
+                constructed and `reset()` has not been called.
+
+        """
+        es = self._env.step(action)
+        next_obs = es.observation
+        next_obs = np.concatenate([
+            next_obs, action, [es.reward], [es.step_type == StepType.TERMINAL]
+        ])
+
+        return EnvStep(env_spec=self.spec,
+                       action=action,
+                       reward=es.reward,
+                       observation=next_obs,
+                       env_info=es.env_info,
+                       step_type=es.step_type)
 
     def _create_rl2_obs_space(self):
         """Create observation space for RL2.
 
         Returns:
-            gym.spaces.Box: Augmented observation space.
+            akro.Box: Augmented observation space.
 
         """
-        obs_flat_dim = np.prod(self.env.observation_space.shape)
-        action_flat_dim = np.prod(self.env.action_space.shape)
+        obs_flat_dim = np.prod(self._env.observation_space.shape)
+        action_flat_dim = np.prod(self._env.action_space.shape)
         return akro.Box(low=-np.inf,
                         high=np.inf,
                         shape=(obs_flat_dim + action_flat_dim + 1 + 1, ))
-
-    def reset(self, **kwargs):
-        """gym.Env reset function.
-
-        Args:
-            kwargs: Keyword arguments.
-
-        Returns:
-            np.ndarray: augmented observation.
-
-        """
-        del kwargs
-        obs = self.env.reset()
-        return np.concatenate(
-            [obs, np.zeros(self.env.action_space.shape), [0], [0]])
-
-    def step(self, action):
-        """gym.Env step function.
-
-        Args:
-            action (int): action taken.
-
-        Returns:
-            np.ndarray: augmented observation.
-            float: reward.
-            bool: terminal signal.
-            dict: environment info.
-
-        """
-        next_obs, reward, done, info = self.env.step(action)
-        next_obs = np.concatenate([next_obs, action, [reward], [done]])
-        return next_obs, reward, done, info
-
-    @property
-    def spec(self):
-        """Environment specification.
-
-        Returns:
-            EnvSpec: Environment specification.
-
-        """
-        return self._spec
 
 
 class RL2Worker(DefaultWorker):
@@ -111,7 +133,7 @@ class RL2Worker(DefaultWorker):
 
     Attributes:
         agent(Policy or None): The worker's agent.
-        env(gym.Env or None): The worker's environment.
+        env(Environment or None): The worker's environment.
 
     """
 
@@ -130,7 +152,7 @@ class RL2Worker(DefaultWorker):
     def start_rollout(self):
         """Begin a new rollout."""
         self._path_length = 0
-        self._prev_obs = self.env.reset()
+        self._prev_obs = self.env.reset()[0]
 
     def rollout(self):
         """Sample a single rollout of the agent in the environment.
@@ -144,7 +166,7 @@ class RL2Worker(DefaultWorker):
             self.start_rollout()
             while not self.step_rollout():
                 pass
-        self._agent_infos['batch_idx'] = np.full(len(self._rewards),
+        self._agent_infos['batch_idx'] = np.full(len(self._env_steps),
                                                  self._worker_number)
         return self.collect_rollout()
 
@@ -168,7 +190,7 @@ class NoResetPolicy:
         self._policy = policy
 
     def reset(self):
-        """gym.Env reset function."""
+        """Environment reset function."""
 
     def get_action(self, obs):
         """Get a single action from this policy for the input observation.
@@ -216,7 +238,7 @@ class RL2AdaptedPolicy:
         self._policy = policy
 
     def reset(self):
-        """gym.Env reset function."""
+        """Environment reset function."""
         self._policy._prev_hiddens = self._initial_hiddens
 
     def get_action(self, obs):
@@ -436,9 +458,9 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
         name_map = None
         if hasattr(self._task_sampler, '_envs') and hasattr(
-                self._task_sampler._envs[0].env, 'all_task_names'):
+                self._task_sampler.envs[0].env, 'all_task_names'):
             names = [
-                env.env.all_task_names[0] for env in self._task_sampler._envs
+                env.env.all_task_names[0] for env in self._task_sampler.envs
             ]
             name_map = dict(enumerate(names))
 

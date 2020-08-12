@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.tf.policies import CategoricalCNNPolicy
 
 from tests.fixtures import TfGraphTestCase
@@ -20,7 +20,7 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
         (((3, (3, 3)), (3, (3, 3))), (2, 2), 'SAME', (4, 4)),
     ])
     def test_get_action(self, filters, strides, padding, hidden_sizes):
-        env = GarageEnv(DummyDiscretePixelEnv())
+        env = GymEnv(DummyDiscretePixelEnv())
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       filters=filters,
                                       strides=strides,
@@ -28,7 +28,7 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
                                       hidden_sizes=hidden_sizes)
 
         env.reset()
-        obs, _, _, _ = env.step(1)
+        obs = env.step(1).observation
 
         action, _ = policy.get_action(obs)
         assert env.action_space.contains(action)
@@ -43,14 +43,14 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
         (((3, (3, 3)), (3, (3, 3))), (2, 2), 'SAME', (4, 4)),
     ])
     def test_build(self, filters, strides, padding, hidden_sizes):
-        env = GarageEnv(DummyDiscretePixelEnv())
+        env = GymEnv(DummyDiscretePixelEnv())
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       filters=filters,
                                       strides=strides,
                                       padding=padding,
                                       hidden_sizes=hidden_sizes)
 
-        obs = env.reset()
+        obs = env.reset()[0]
 
         state_input = tf.compat.v1.placeholder(tf.float32,
                                                shape=(None, None) +
@@ -64,7 +64,7 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
         assert np.array_equal(output1, output2)
 
     def test_is_pickleable(self):
-        env = GarageEnv(DummyDiscretePixelEnv())
+        env = GymEnv(DummyDiscretePixelEnv())
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       filters=((3, (32, 32)), ),
                                       strides=(1, ),
@@ -72,7 +72,7 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
                                       hidden_sizes=(4, ))
 
         env.reset()
-        obs, _, _, _ = env.step(1)
+        obs = env.step(1).observation
 
         with tf.compat.v1.variable_scope('CategoricalCNNPolicy', reuse=True):
             cnn_bias = tf.compat.v1.get_variable('CNNModel/cnn/h0/bias')
@@ -104,7 +104,7 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
         (((3, (32, 32)), (3, (64, 64))), (2, 2), 'SAME', (4, 4)),
     ])
     def test_clone(self, filters, strides, padding, hidden_sizes):
-        env = GarageEnv(DummyDiscretePixelEnv())
+        env = GymEnv(DummyDiscretePixelEnv())
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       filters=filters,
                                       strides=strides,

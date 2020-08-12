@@ -109,7 +109,7 @@ especially when a test doesn't require `setup_method` and `teardown_method`.
 class TestVPG(...):
     def test_vpg_cartpole(self):
         ...
-        env = GarageEnv(env_name='CartPole-v1')
+        env = GymEnv('CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
                                           env_spec=env.spec,

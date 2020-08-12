@@ -27,7 +27,7 @@ class MAML:
     Args:
         inner_algo (garage.torch.algos.VPG): The inner algorithm used for
             computing loss.
-        env (garage.envs.GarageEnv): A gym environment.
+        env (Environment): An environment.
         policy (garage.torch.policies.Policy): Policy.
         meta_optimizer (Union[torch.optim.Optimizer, tuple]):
             Type of optimizer.

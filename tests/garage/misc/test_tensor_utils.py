@@ -4,7 +4,7 @@ This script creates a test that tests functions in garage.misc.tensor_utils.
 # yapf: disable
 import numpy as np
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.misc.tensor_utils import (concat_tensor_dict_list,
                                       explained_variance_1d,
                                       normalize_pixel_batch,
@@ -38,8 +38,8 @@ class TestTensorUtil:
         self.tensor = [1, 1, 1]
 
     def test_normalize_pixel_batch(self):
-        env = GarageEnv(DummyDiscretePixelEnv(), is_image=True)
-        obs = env.reset()
+        env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
+        obs, _ = env.reset()
         obs_normalized = normalize_pixel_batch(obs)
         expected = [ob / 255.0 for ob in obs]
         assert np.allclose(obs_normalized, expected)

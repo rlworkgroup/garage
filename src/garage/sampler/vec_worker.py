@@ -10,7 +10,7 @@ from garage.sampler.default_worker import DefaultWorker
 
 
 class VecWorker(DefaultWorker):
-    """Worker with a single policy and multiple environemnts.
+    """Worker with a single policy and multiple environments.
 
     Alternates between taking a single step in all environments and asking the
     policy for an action for every environment. This allows computing a batch
@@ -25,7 +25,6 @@ class VecWorker(DefaultWorker):
             occurring in. This argument is used to set a different seed for
             each worker.
         n_envs (int): Number of environment copies to use.
-
     """
 
     DEFAULT_N_ENVS = 8
@@ -47,6 +46,27 @@ class VecWorker(DefaultWorker):
         self._agents = [None] * n_envs
         self._path_lengths = [0] * self._n_envs
 
+        n = len(self._envs)
+        self._path_lengths = [0] * n
+        self._observations = [
+            [],
+        ] * n
+        self._actions = [
+            [],
+        ] * n
+        self._rewards = [
+            [],
+        ] * n
+        self._step_types = [
+            [],
+        ] * n
+        self._env_infos = [
+            collections.defaultdict(list),
+        ] * n
+        self._agent_infos = [
+            collections.defaultdict(list),
+        ] * n
+
     def update_agent(self, agent_update):
         """Update an agent, assuming it implements garage.Policy.
 
@@ -57,7 +77,6 @@ class VecWorker(DefaultWorker):
                 `policy.get_param_values`. Alternatively, a policy itself. Note
                 that other implementations of `Worker` may take different types
                 for this parameter.
-
         """
         super().update_agent(agent_update)
         self._needs_agent_reset = True
@@ -76,7 +95,6 @@ class VecWorker(DefaultWorker):
         Raises:
             TypeError: If env_update is not one of the documented types.
             ValueError: If the wrong number of updates is passed.
-
         """
         if isinstance(env_update, list):
             if len(env_update) != self._n_envs:
@@ -102,13 +120,13 @@ class VecWorker(DefaultWorker):
             self.agent.reset([True] * n)
             if self._needs_env_reset:
                 self._prev_obs = np.asarray(
-                    [env.reset() for env in self._envs])
+                    [env.reset()[0] for env in self._envs])
             else:
                 # Avoid calling reset on environments that are already at the
                 # start of a rollout.
                 for i, env in enumerate(self._envs):
                     if self._path_lengths[i] > 0:
-                        self._prev_obs[i] = env.reset()
+                        self._prev_obs[i] = env.reset()[0]
             self._path_lengths = [0 for _ in range(n)]
             self._observations = [[] for _ in range(n)]
             self._actions = [[] for _ in range(n)]
@@ -142,13 +160,14 @@ class VecWorker(DefaultWorker):
             agent_infos=dict(agent_infos),
             lengths=np.asarray([self._path_lengths[rollout_number]],
                                dtype='l'))
+
         self._completed_rollouts.append(traj)
         self._observations[rollout_number] = []
         self._actions[rollout_number] = []
         self._rewards[rollout_number] = []
         self._step_types[rollout_number] = []
         self._path_lengths[rollout_number] = 0
-        self._prev_obs[rollout_number] = self._envs[rollout_number].reset()
+        self._prev_obs[rollout_number] = self._envs[rollout_number].reset()[0]
         self._env_infos[rollout_number] = collections.defaultdict(list)
         self._agent_infos[rollout_number] = collections.defaultdict(list)
 
@@ -157,32 +176,25 @@ class VecWorker(DefaultWorker):
 
         Returns:
             bool: True iff at least one of the paths was completed.
-
         """
         finished = False
         actions, agent_info = self.agent.get_actions(self._prev_obs)
         completes = [False] * len(self._envs)
         for i, action in enumerate(actions):
             if self._path_lengths[i] < self._max_episode_length:
-                next_o, r, d, env_info = self._envs[i].step(action)
+                es = self._envs[i].step(action)
                 self._observations[i].append(self._prev_obs[i])
-                self._rewards[i].append(r)
-                self._actions[i].append(actions[i])
+                self._rewards[i].append(es.reward)
+                self._actions[i].append(es.action)
                 for k, v in agent_info.items():
                     self._agent_infos[i][k].append(v[i])
-                for k, v in env_info.items():
+                for k, v in es.env_info.items():
                     self._env_infos[i][k].append(v)
                 self._path_lengths[i] += 1
-                # Temporary solution. _step_types[i] should store the actual
-                #  step type returned from env.step() once it returns a
-                # TimeStep (to be added in future).
-                if d:
-                    self._step_types[i].append(StepType.TERMINAL)
-                else:
-                    self._step_types[i].append(StepType.MID)
-                self._prev_obs[i] = next_o
-            if self._path_lengths[i] >= self._max_episode_length or d:
-                self._gather_rollout(i, next_o)
+                self._step_types[i].append(es.step_type)
+                self._prev_obs[i] = es.observation
+            if self._path_lengths[i] >= self._max_episode_length or es.last:
+                self._gather_rollout(i, es.observation)
                 completes[i] = True
                 finished = True
         if finished:
@@ -193,9 +205,8 @@ class VecWorker(DefaultWorker):
         """Collect all completed rollouts.
 
         Returns:
-            garage.TrajectoryBatch: A batch of the trajectories completed since
+            TrajectoryBatch: A batch of the trajectories completed since
                 the last call to collect_rollout().
-
         """
         if len(self._completed_rollouts) == 1:
             result = self._completed_rollouts[0]

@@ -4,36 +4,42 @@ import pickle
 import numpy as np
 import pytest
 
+from garage import Environment
+
 from tests.quirks import KNOWN_GYM_RENDER_NOT_IMPLEMENTED
 
 
-def step_env(env, n=10, render=True):
+def step_env(env, n=10, visualize=True):
     """Step env helper.
 
     Args:
-        env (GarageEnv): Input environment.
+        env (Environment): Input environment.
         n (int): Steps.
-        render (bool): Whether render the environment.
+        visualize (bool): Whether visualize the environment.
 
     """
     env.reset()
+    if visualize and issubclass(type(env), Environment):
+        env.visualize()
     for _ in range(n):
-        _, _, done, _ = env.step(env.action_space.sample())
-        if render:
-            env.render()
-        if done:
+        print('itr:', _)
+        es = env.step(env.action_space.sample())
+        if es.last:
             break
 
 
-def step_env_with_gym_quirks(env, spec, n=10, render=True,
+def step_env_with_gym_quirks(env,
+                             spec,
+                             n=10,
+                             visualize=True,
                              serialize_env=False):
     """Step env gym helper.
 
     Args:
-        env (GarageEnv): Input environment.
+        env (GymEnv): Input environment.
         spec (EnvSpec): The environment specification.
         n (int): Steps.
-        render (bool): Whether to render the environment.
+        visualize (bool): Whether to visualize the environment.
         serialize_env (bool): Whether to serialize the environment.
 
     """
@@ -45,14 +51,14 @@ def step_env_with_gym_quirks(env, spec, n=10, render=True,
 
     env.reset()
     for _ in range(n):
-        _, _, done, _ = env.step(env.action_space.sample())
-        if render:
+        es = env.step(env.action_space.sample())
+        if visualize:
             if spec.id not in KNOWN_GYM_RENDER_NOT_IMPLEMENTED:
-                env.render()
+                env.visualize()
             else:
                 with pytest.raises(NotImplementedError):
-                    env.render()
-        if done:
+                    env.visualize()
+        if es.last:
             break
 
     env.close()
@@ -390,8 +396,9 @@ def max_pooling(_input, pool_shape, pool_stride, padding='VALID'):
                 for k in range(_input.shape[3]):
                     row = i * pool_shape
                     col = j * pool_shape
-                    results[b][i][j][k] = np.max(
-                        _input[b, row:row + pool_shape, col:col +  # noqa: W504
-                               pool_shape, k])
+                    results[b][i][j][k] = np.max(_input[b,
+                                                        row:row + pool_shape,
+                                                        col:col +  # noqa: W504
+                                                        pool_shape, k])
 
     return results

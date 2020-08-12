@@ -13,7 +13,7 @@ class GaussianMLPValueFunction(ValueFunction):
     a MLP.
 
     Args:
-        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        env_spec (EnvSpec): Environment specification.
         hidden_sizes (list[int]): Output dimension of dense layer(s) for
             the MLP for mean. For example, (32, 32) means the MLP consists
             of two hidden layers, each with 32 hidden units.

@@ -1,9 +1,8 @@
 """Benchmarking experiment of the ContinuousMLPBaseline."""
-import gym
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic, LocalTFRunner
 from garage.tf.algos import PPO
 from garage.tf.baselines import ContinuousMLPBaseline
@@ -40,7 +39,7 @@ def continuous_mlp_baseline(ctxt, env_id, seed):
     deterministic.set_seed(seed)
 
     with LocalTFRunner(ctxt) as runner:
-        env = GarageEnv(normalize(gym.make(env_id)))
+        env = normalize(GymEnv(env_id))
 
         policy = GaussianLSTMPolicy(
             env_spec=env.spec,

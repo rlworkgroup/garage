@@ -19,7 +19,7 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
     """Abstract class for Replay Buffer.
 
     Args:
-        env_spec (garage.envs.EnvSpec): Environment specification.
+        env_spec (EnvSpec): Environment specification.
         size_in_transitions (int): total size of transitions in the buffer
         time_horizon (int): time horizon of rollout.
 

@@ -7,7 +7,7 @@ import psutil
 import torch
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, MultiEnvWrapper, normalize
+from garage.envs import GymEnv, MultiEnvWrapper, normalize
 from garage.envs.multi_env_wrapper import round_robin_strategy
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
@@ -39,7 +39,7 @@ def mtppo_metaworld_mt10(ctxt, seed, epochs, batch_size, n_worker):
     tasks = mwb.MT10.get_train_tasks().all_task_names
     envs = []
     for task in tasks:
-        envs.append(normalize(GarageEnv(mwb.MT10.from_task(task))))
+        envs.append(normalize(GymEnv(mwb.MT10.from_task(task))))
     env = MultiEnvWrapper(envs,
                           sample_strategy=round_robin_strategy,
                           mode='vanilla')

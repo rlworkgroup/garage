@@ -2,10 +2,9 @@
 This script creates a test that fails when garage.tf.algos.REPS performance is
 too low.
 """
-import gym
 import pytest
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
@@ -21,7 +20,7 @@ class TestREPS(TfGraphTestCase):
     def test_reps_cartpole(self):
         """Test REPS with gym Cartpole environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = GarageEnv(gym.make('CartPole-v0'))
+            env = GymEnv('CartPole-v0')
 
             policy = CategoricalMLPPolicy(env_spec=env.spec,
                                           hidden_sizes=[32, 32])

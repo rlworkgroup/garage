@@ -5,12 +5,11 @@ Here it creates a gym environment InvertedDoublePendulum. And uses a DDPG with
 1M steps.
 
 """
-import gym
 import torch
 from torch.nn import functional as F
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
@@ -34,7 +33,7 @@ def ddpg_pendulum(ctxt=None, seed=1, lr=1e-4):
     """
     set_seed(seed)
     runner = LocalRunner(ctxt)
-    env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+    env = normalize(GymEnv('InvertedDoublePendulum-v2'))
 
     policy = DeterministicMLPPolicy(env_spec=env.spec,
                                     hidden_sizes=[64, 64],

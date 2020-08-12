@@ -1,10 +1,9 @@
 """Create a test that fails when garage.tf.algos.TD3 performance is too low."""
 
-import gym
 import pytest
 import tensorflow as tf
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner
 from garage.np.exploration_policies import AddGaussianNoise
 from garage.replay_buffer import PathBuffer
@@ -23,7 +22,7 @@ class TestTD3(TfGraphTestCase):
     def test_td3_pendulum(self):
         """Test TD3 with Pendulum environment."""
         with LocalTFRunner(snapshot_config) as runner:
-            env = GarageEnv(gym.make('InvertedDoublePendulum-v2'))
+            env = GymEnv('InvertedDoublePendulum-v2')
 
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[400, 300],

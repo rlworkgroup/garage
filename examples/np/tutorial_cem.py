@@ -3,7 +3,7 @@
 import numpy as np
 
 from garage import log_performance, TrajectoryBatch, wrap_experiment
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.misc import tensor_utils
@@ -113,7 +113,7 @@ def tutorial_cem(ctxt=None):
     """
     set_seed(100)
     with LocalTFRunner(ctxt) as runner:
-        env = GarageEnv(env_name='CartPole-v1')
+        env = GymEnv('CartPole-v1')
         policy = CategoricalMLPPolicy(env.spec)
         algo = SimpleCEM(env.spec, policy)
         runner.setup(algo, env)

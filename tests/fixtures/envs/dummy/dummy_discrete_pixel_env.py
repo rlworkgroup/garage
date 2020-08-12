@@ -1,8 +1,10 @@
 """A dummy discrete pixel env."""
 from unittest import mock
 
-import gym
+import akro
 import numpy as np
+
+from garage import EnvSpec
 
 from tests.fixtures.envs.dummy import DummyEnv
 
@@ -36,10 +38,10 @@ class DummyDiscretePixelEnv(DummyEnv):
         self.unwrapped.get_action_meanings = self._get_action_meanings
         self.unwrapped.ale = mock.Mock()
         self.unwrapped.ale.lives = self.get_lives
-        self._observation_space = gym.spaces.Box(low=0,
-                                                 high=255,
-                                                 shape=self._obs_dim,
-                                                 dtype=np.uint8)
+        self._observation_space = akro.Box(low=0,
+                                           high=255,
+                                           shape=self._obs_dim,
+                                           dtype=np.uint8)
         self.step_called = 0
         self._lives = None
         self._prev_action = None
@@ -47,7 +49,7 @@ class DummyDiscretePixelEnv(DummyEnv):
     @property
     def observation_space(self):
         """akro.Box: Observation space of this environment."""
-        return self._observation_space
+        return akro.from_gym(self._observation_space)
 
     @observation_space.setter
     def observation_space(self, observation_space):
@@ -62,7 +64,13 @@ class DummyDiscretePixelEnv(DummyEnv):
     @property
     def action_space(self):
         """akro.Discrete: an action space."""
-        return gym.spaces.Discrete(self._action_dim)
+        return akro.Discrete(self._action_dim)
+
+    @property
+    def spec(self):
+        """EnvSpec: the environment specification."""
+        return EnvSpec(observation_space=self.observation_space,
+                       action_space=self.action_space)
 
     # pylint: disable=no-self-use
     def _get_action_meanings(self):

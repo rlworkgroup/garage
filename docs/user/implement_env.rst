@@ -7,18 +7,19 @@ Adding a New Environment
 Garage uses an environment API based on the very popular OpenAI Gym interface. The main difference is that garage uses
 :code:`akro` to describe input and output spaces, which are an extension of the :code:`gym.Space` API.
 
-If you have an OpenAI Gym compatible environment, you can wrap it in :code:`garage.envs.GarageEnv` to use it with
-garage.
+If you have an OpenAI Gym compatible environment, you can wrap it in :code:`garage.envs.GymEnv` to use it with
+garage. You can also provide its environment name id (see the example below), and let `:code:`GymEnv` creates
+the environment for you.
 
 .. code-block:: python
 
     import gym
-    from garage.envs import GarageEnv
+    from garage.envs import GymEnv
 
-    myEnv = GarageEnv(gym.make('CartPole-v1'))  # Wraps a CartPole-v1 environment
+    my_env = GymEnv('CartPole-v1')  # shorthand for GymEnv(gym.make('CartPole-v1'))
 
 +++++++++++++++++++++++++++
-Add a Environment Wrapper
+Add an Environment Wrapper
 +++++++++++++++++++++++++++
 
 If you would like to add an existing environment to garage, you will probably need an environment wrapper to handle

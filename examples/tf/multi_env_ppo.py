@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """This is an example to train multiple tasks with PPO algorithm."""
-import gym
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
@@ -26,8 +25,8 @@ def multi_env_ppo(ctxt=None, seed=1):
     """
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
-        env1 = GarageEnv(normalize(gym.make('Adventure-ram-v4')))
-        env2 = GarageEnv(normalize(gym.make('Alien-ram-v4')))
+        env1 = normalize(GymEnv('Adventure-ram-v4'))
+        env2 = normalize(GymEnv('Alien-ram-v4'))
         env = MultiEnvWrapper([env1, env2])
 
         policy = CategoricalMLPPolicy(

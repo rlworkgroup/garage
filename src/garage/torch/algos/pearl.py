@@ -10,8 +10,7 @@ from dowel import logger
 import numpy as np
 import torch
 
-from garage import InOutSpec, StepType, TimeStep
-from garage.envs import EnvSpec
+from garage import EnvSpec, InOutSpec, StepType, TimeStep
 from garage.experiment import MetaEvaluator
 from garage.np.algos import MetaRLAlgorithm
 from garage.replay_buffer import PathBuffer
@@ -32,11 +31,11 @@ class PEARL(MetaRLAlgorithm):
     behavior to specific tasks.
 
     Args:
-        env (list[GarageEnv]): Batch of sampled environment updates(EnvUpdate),
-            which, when invoked on environments, will configure them with new
-            tasks.
-        policy_class (garage.torch.policies.Policy): Context-conditioned policy
-            class.
+        env (list[Environment]): Batch of sampled environment updates(
+            EnvUpdate), which, when invoked on environments, will configure
+            them with new tasks.
+        policy_class (type): Class implementing
+            :pyclass:`~ContextConditionedPolicy`
         encoder_class (garage.torch.embeddings.ContextEncoder): Encoder class
             for the encoder in context-conditioned policy.
         inner_policy (garage.torch.policies.Policy): Policy.
@@ -626,11 +625,11 @@ class PEARL(MetaRLAlgorithm):
         """Augment environment by a size of latent dimension.
 
         Args:
-            env_spec (garage.envs.EnvSpec): Environment specs to be augmented.
+            env_spec (EnvSpec): Environment specs to be augmented.
             latent_dim (int): Latent dimension.
 
         Returns:
-            garage.envs.EnvSpec: Augmented environment specs.
+            EnvSpec: Augmented environment specs.
 
         """
         obs_dim = int(np.prod(env_spec.observation_space.shape))
@@ -650,7 +649,7 @@ class PEARL(MetaRLAlgorithm):
         """Get environment specs of encoder with latent dimension.
 
         Args:
-            env_spec (garage.envs.EnvSpec): Environment specs.
+            env_spec (EnvSpec): Environment specification.
             latent_dim (int): Latent dimension.
             module (str): Module to get environment specs for.
 
@@ -719,7 +718,7 @@ class PEARLWorker(DefaultWorker):
     def start_rollout(self):
         """Begin a new rollout."""
         self._path_length = 0
-        self._prev_obs = self.env.reset()
+        self._prev_obs = self.env.reset()[0]
 
     def step_rollout(self):
         """Take a single time-step in the current rollout.
@@ -733,36 +732,21 @@ class PEARLWorker(DefaultWorker):
             a, agent_info = self.agent.get_action(self._prev_obs)
             if self._deterministic:
                 a = agent_info['mean']
-            next_o, r, d, env_info = self.env.step(a)
+            a, agent_info = self.agent.get_action(self._prev_obs)
+            es = self.env.step(a)
             self._observations.append(self._prev_obs)
-            self._rewards.append(r)
-            self._actions.append(a)
+            self._env_steps.append(es)
             for k, v in agent_info.items():
                 self._agent_infos[k].append(v)
-            for k, v in env_info.items():
-                self._env_infos[k].append(v)
             self._path_length += 1
-            # Temp solution
-            if d:
-                self._step_types.append(StepType.TERMINAL)
-            else:
-                self._step_types.append(StepType.MID)
 
             if self._accum_context:
-                # step_type should be extracted from TimeStep returned from
-                # env.step(). The population of step_type should be updated
-                # once env returns a TimeStep.
-                s = TimeStep(env_spec=self.env,
-                             observation=self._prev_obs,
-                             next_observation=next_o,
-                             action=a,
-                             reward=float(r),
-                             env_info=env_info,
-                             agent_info=agent_info,
-                             step_type=StepType.MID)
+                s = TimeStep.from_env_step(env_step=es,
+                                           last_observation=self._prev_obs,
+                                           agent_info=agent_info)
                 self.agent.update_context(s)
-            if not d:
-                self._prev_obs = next_o
+            if not es.last:
+                self._prev_obs = es.observation
                 return False
         self._lengths.append(self._path_length)
         self._last_observations.append(self._prev_obs)

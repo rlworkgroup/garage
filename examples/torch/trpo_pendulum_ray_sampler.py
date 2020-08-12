@@ -9,7 +9,7 @@ import ray
 import torch
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import deterministic, LocalRunner
 from garage.sampler import RaySampler
 from garage.torch.algos import TRPO
@@ -36,7 +36,7 @@ def trpo_pendulum_ray_sampler(ctxt=None, seed=1):
              log_to_driver=False,
              include_webui=False)
     deterministic.set_seed(seed)
-    env = GarageEnv(env_name='InvertedDoublePendulum-v2')
+    env = GymEnv('InvertedDoublePendulum-v2')
 
     runner = LocalRunner(ctxt)
 

@@ -1,11 +1,10 @@
 """This script creates a test that fails when garage.tf.algos.DDPG performance
 is too low.
 """
-import gym
 import pytest
 import tensorflow as tf
 
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import LocalTFRunner
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
@@ -23,7 +22,7 @@ class TestDDPG(TfGraphTestCase):
     def test_ddpg_double_pendulum(self):
         """Test DDPG with Pendulum environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = GarageEnv(gym.make('InvertedDoublePendulum-v2'))
+            env = GymEnv('InvertedDoublePendulum-v2')
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=tf.nn.relu,
@@ -63,7 +62,7 @@ class TestDDPG(TfGraphTestCase):
         This environment has a [-3, 3] action_space bound.
         """
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = GarageEnv(normalize(gym.make('InvertedPendulum-v2')))
+            env = normalize(GymEnv('InvertedPendulum-v2'))
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=tf.nn.relu,
@@ -104,7 +103,7 @@ class TestDDPG(TfGraphTestCase):
         This environment has a [-3, 3] action_space bound.
         """
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = GarageEnv(normalize(gym.make('InvertedPendulum-v2')))
+            env = normalize(GymEnv('InvertedPendulum-v2'))
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=tf.nn.relu,

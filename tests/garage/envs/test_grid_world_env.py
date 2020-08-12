@@ -11,7 +11,7 @@ class TestGridWorldEnv:
         env = GridWorldEnv(desc='8x8')
         round_trip = pickle.loads(pickle.dumps(env))
         assert round_trip
-        assert round_trip.start_state == env.start_state
+        assert round_trip._start_state == env._start_state
         step_env(round_trip)
         round_trip.close()
         env.close()

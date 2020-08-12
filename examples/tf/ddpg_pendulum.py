@@ -8,11 +8,10 @@ Results:
     AverageReturn: 250
     RiseTime: epoch 499
 """
-import gym
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
@@ -35,7 +34,7 @@ def ddpg_pendulum(ctxt=None, seed=1):
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        env = GarageEnv(gym.make('InvertedDoublePendulum-v2'))
+        env = GymEnv('InvertedDoublePendulum-v2')
 
         policy = ContinuousMLPPolicy(env_spec=env.spec,
                                      hidden_sizes=[64, 64],

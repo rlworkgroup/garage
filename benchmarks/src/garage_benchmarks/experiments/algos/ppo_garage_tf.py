@@ -1,9 +1,8 @@
 """A regression test for automatic benchmarking garage-TensorFlow-PPO."""
-import gym
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic, LocalTFRunner
 from garage.tf.algos import PPO as TF_PPO
 from garage.tf.baselines import GaussianMLPBaseline as TF_GMB
@@ -32,7 +31,7 @@ def ppo_garage_tf(ctxt, env_id, seed):
     deterministic.set_seed(seed)
 
     with LocalTFRunner(ctxt) as runner:
-        env = GarageEnv(normalize(gym.make(env_id)))
+        env = normalize(GymEnv(env_id))
 
         policy = TF_GMP(
             env_spec=env.spec,

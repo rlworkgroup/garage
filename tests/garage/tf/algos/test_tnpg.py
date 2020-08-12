@@ -1,7 +1,6 @@
-import gym
 import pytest
 
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
@@ -17,7 +16,7 @@ class TestTNPG(TfGraphTestCase):
     def test_tnpg_inverted_pendulum(self):
         """Test TNPG with InvertedPendulum-v2 environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = GarageEnv(normalize(gym.make('InvertedPendulum-v2')))
+            env = normalize(GymEnv('InvertedPendulum-v2'))
 
             policy = GaussianMLPPolicy(name='policy',
                                        env_spec=env.spec,

@@ -2,7 +2,7 @@ import tempfile
 
 import pytest
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import SnapshotConfig, Snapshotter
 from garage.tf.algos import VPG
 from garage.tf.policies import CategoricalMLPPolicy
@@ -35,7 +35,7 @@ class TestSnapshot(TfGraphTestCase):
         saved = snapshotter.load(self.temp_dir.name, load_mode)
 
         assert isinstance(saved['algo'], VPG)
-        assert isinstance(saved['env'], GarageEnv)
+        assert isinstance(saved['env'], GymEnv)
         assert isinstance(saved['algo'].policy, CategoricalMLPPolicy)
         assert saved['stats'].total_epoch == last_epoch
 

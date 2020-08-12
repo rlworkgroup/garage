@@ -6,7 +6,7 @@ from metaworld.benchmarks import MT50
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper, round_robin_strategy
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
@@ -37,7 +37,7 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task):
     """
     set_seed(seed)
     tasks = MT50.get_train_tasks().all_task_names
-    envs = [normalize(GarageEnv(MT50.from_task(task))) for task in tasks]
+    envs = [normalize(GymEnv(MT50.from_task(task))) for task in tasks]
     env = MultiEnvWrapper(envs,
                           sample_strategy=round_robin_strategy,
                           mode='del-onehot')

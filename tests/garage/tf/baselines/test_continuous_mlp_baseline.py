@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.tf.baselines import ContinuousMLPBaseline
 
 from tests.fixtures import TfGraphTestCase
@@ -31,7 +31,7 @@ def get_train_test_data():
 class TestContinuousMLPBaseline(TfGraphTestCase):
 
     def test_fit_normalized(self):
-        box_env_spec = GarageEnv(DummyBoxEnv(obs_dim=(2, ))).spec
+        box_env_spec = GymEnv(DummyBoxEnv(obs_dim=(2, ))).spec
         cmb = ContinuousMLPBaseline(env_spec=box_env_spec)
 
         train_paths, observations, paths, expected = get_train_test_data()
@@ -52,7 +52,7 @@ class TestContinuousMLPBaseline(TfGraphTestCase):
         assert np.allclose(x_std, x_std_expected)
 
     def test_fit_unnormalized(self):
-        box_env_spec = GarageEnv(DummyBoxEnv(obs_dim=(2, ))).spec
+        box_env_spec = GymEnv(DummyBoxEnv(obs_dim=(2, ))).spec
         cmb = ContinuousMLPBaseline(env_spec=box_env_spec,
                                     normalize_inputs=False)
         train_paths, _, paths, expected = get_train_test_data()
@@ -73,7 +73,7 @@ class TestContinuousMLPBaseline(TfGraphTestCase):
         assert np.allclose(x_std, x_std_expected)
 
     def test_is_pickleable(self):
-        box_env_spec = GarageEnv(DummyBoxEnv(obs_dim=(2, ))).spec
+        box_env_spec = GymEnv(DummyBoxEnv(obs_dim=(2, ))).spec
         cmb = ContinuousMLPBaseline(env_spec=box_env_spec)
 
         with tf.compat.v1.variable_scope('ContinuousMLPBaseline', reuse=True):
@@ -90,7 +90,7 @@ class TestContinuousMLPBaseline(TfGraphTestCase):
             assert np.array_equal(result1, result2)
 
     def test_param_values(self):
-        box_env_spec = GarageEnv(DummyBoxEnv(obs_dim=(2, ))).spec
+        box_env_spec = GymEnv(DummyBoxEnv(obs_dim=(2, ))).spec
         cmb = ContinuousMLPBaseline(env_spec=box_env_spec)
         new_cmb = ContinuousMLPBaseline(env_spec=box_env_spec,
                                         name='ContinuousMLPBaseline2')
@@ -108,7 +108,7 @@ class TestContinuousMLPBaseline(TfGraphTestCase):
         assert np.array_equal(old_param_values, new_param_values)
 
     def test_get_params(self):
-        box_env_spec = GarageEnv(DummyBoxEnv(obs_dim=(2, ))).spec
+        box_env_spec = GymEnv(DummyBoxEnv(obs_dim=(2, ))).spec
         cmb = ContinuousMLPBaseline(env_spec=box_env_spec)
         params_internal = cmb.get_params()
         trainable_params = tf.compat.v1.trainable_variables(

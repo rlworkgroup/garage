@@ -4,7 +4,7 @@ import pytest
 import torch
 from torch.nn import functional as F
 
-from garage.envs import GarageEnv, MultiEnvWrapper
+from garage.envs import GymEnv, MultiEnvWrapper
 from garage.envs.multi_env_wrapper import round_robin_strategy
 from garage.experiment import deterministic, LocalRunner
 from garage.replay_buffer import PathBuffer
@@ -25,7 +25,7 @@ def test_mtsac_get_log_alpha(monkeypatch):
 
     """
     env_names = ['CartPole-v0', 'CartPole-v1']
-    task_envs = [GarageEnv(env_name=name) for name in env_names]
+    task_envs = [GymEnv(name) for name in env_names]
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
     deterministic.set_seed(0)
     policy = TanhGaussianMLPPolicy(
@@ -64,7 +64,7 @@ def test_mtsac_get_log_alpha(monkeypatch):
                   buffer_batch_size=buffer_batch_size)
     monkeypatch.setattr(mtsac, '_log_alpha', torch.Tensor([1., 2.]))
     for i, _ in enumerate(env_names):
-        obs = torch.Tensor([env.reset()] * buffer_batch_size)
+        obs = torch.Tensor([env.reset()[0]] * buffer_batch_size)
         log_alpha = mtsac._get_log_alpha(dict(observation=obs))
         assert (log_alpha == torch.Tensor([i + 1, i + 1])).all().item()
         assert log_alpha.size() == torch.Size([mtsac._buffer_batch_size])
@@ -74,7 +74,7 @@ def test_mtsac_get_log_alpha(monkeypatch):
 def test_mtsac_inverted_double_pendulum():
     """Performance regression test of MTSAC on 2 InvDoublePendulum envs."""
     env_names = ['InvertedDoublePendulum-v2', 'InvertedDoublePendulum-v2']
-    task_envs = [GarageEnv(env_name=name) for name in env_names]
+    task_envs = [GymEnv(name) for name in env_names]
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
     test_envs = MultiEnvWrapper(task_envs,
                                 sample_strategy=round_robin_strategy)
@@ -126,7 +126,7 @@ def test_to():
 
     """
     env_names = ['CartPole-v0', 'CartPole-v1']
-    task_envs = [GarageEnv(env_name=name) for name in env_names]
+    task_envs = [GymEnv(name) for name in env_names]
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
     deterministic.set_seed(0)
     policy = TanhGaussianMLPPolicy(
@@ -182,7 +182,7 @@ def test_to():
 def test_fixed_alpha():
     """Test if using fixed_alpha ensures that alpha is non differentiable."""
     env_names = ['InvertedDoublePendulum-v2', 'InvertedDoublePendulum-v2']
-    task_envs = [GarageEnv(env_name=name) for name in env_names]
+    task_envs = [GymEnv(name) for name in env_names]
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
     test_envs = MultiEnvWrapper(task_envs,
                                 sample_strategy=round_robin_strategy)

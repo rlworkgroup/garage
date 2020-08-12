@@ -4,7 +4,7 @@ import click
 import metaworld.benchmarks as mwb
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
@@ -93,12 +93,12 @@ def pearl_metaworld_ml1_push(ctxt=None,
     encoder_hidden_sizes = (encoder_hidden_size, encoder_hidden_size,
                             encoder_hidden_size)
     # create multi-task environment and sample tasks
-    env_sampler = SetTaskSampler(lambda: GarageEnv(
-        normalize(mwb.ML1.get_train_tasks('push-v1'))))
+    env_sampler = SetTaskSampler(lambda: normalize(
+        GymEnv(mwb.ML1.get_train_tasks('push-v1'))))
     env = env_sampler.sample(num_train_tasks)
 
-    test_env_sampler = SetTaskSampler(lambda: GarageEnv(
-        normalize(mwb.ML1.get_test_tasks('push-v1'))))
+    test_env_sampler = SetTaskSampler(lambda: normalize(
+        GymEnv(mwb.ML1.get_test_tasks('push-v1'))))
 
     runner = LocalRunner(ctxt)
 

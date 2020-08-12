@@ -1,8 +1,6 @@
 """Benchmarking experiment of the CategoricalCNNPolicy."""
-import gym
-
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic, LocalTFRunner
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianCNNBaseline
@@ -38,7 +36,7 @@ def categorical_cnn_policy(ctxt, env_id, seed):
     deterministic.set_seed(seed)
 
     with LocalTFRunner(ctxt) as runner:
-        env = GarageEnv(normalize(gym.make(env_id)))
+        env = normalize(GymEnv(env_id))
 
         policy = CategoricalCNNPolicy(
             env_spec=env.spec,

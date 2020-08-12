@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.tf.q_functions import DiscreteMLPQFunction
 
 from tests.fixtures import TfGraphTestCase
@@ -20,8 +20,7 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         ((2, ), 2, (32, 32)),
     ])
     def test_get_action(self, obs_dim, action_dim, hidden_sizes):
-        env = GarageEnv(
-            DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GymEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         qf = DiscreteMLPQFunction(env_spec=env.spec,
                                   hidden_sizes=hidden_sizes,
                                   hidden_w_init=tf.ones_initializer(),
@@ -44,11 +43,10 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         ((2, ), 2),
     ])
     def test_output_shape(self, obs_dim, action_dim):
-        env = GarageEnv(
-            DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GymEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         qf = DiscreteMLPQFunction(env_spec=env.spec)
         env.reset()
-        obs, _, _, _ = env.step(1)
+        obs = env.step(1).observation
 
         outputs = self.sess.run(qf.q_vals, feed_dict={qf.input: [obs]})
         assert outputs.shape == (1, action_dim)
@@ -60,11 +58,10 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         ((2, 2), 2),
     ])
     def test_build(self, obs_dim, action_dim):
-        env = GarageEnv(
-            DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GymEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         qf = DiscreteMLPQFunction(env_spec=env.spec)
         env.reset()
-        obs, _, _, _ = env.step(1)
+        obs = env.step(1).observation
 
         output1 = self.sess.run(qf.q_vals, feed_dict={qf.input: [obs]})
 
@@ -82,11 +79,10 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         ((2, 2), 2),
     ])
     def test_is_pickleable(self, obs_dim, action_dim):
-        env = GarageEnv(
-            DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GymEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         qf = DiscreteMLPQFunction(env_spec=env.spec)
         env.reset()
-        obs, _, _, _ = env.step(1)
+        obs = env.step(1).observation
 
         with tf.compat.v1.variable_scope('DiscreteMLPQFunction', reuse=True):
             bias = tf.compat.v1.get_variable('mlp/hidden_0/bias')
@@ -110,8 +106,7 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         ((2, 2), 2, (32, 32)),
     ])
     def test_clone(self, obs_dim, action_dim, hidden_sizes):
-        env = GarageEnv(
-            DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GymEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         qf = DiscreteMLPQFunction(env_spec=env.spec, hidden_sizes=hidden_sizes)
         qf_clone = qf.clone('another_qf')
         assert qf_clone._hidden_sizes == qf._hidden_sizes

@@ -3,7 +3,7 @@
 import click
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.envs.mujoco import HalfCheetahVelEnv
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
@@ -93,11 +93,11 @@ def pearl_half_cheetah_vel(ctxt=None,
     encoder_hidden_sizes = (encoder_hidden_size, encoder_hidden_size,
                             encoder_hidden_size)
     # create multi-task environment and sample tasks
-    env_sampler = SetTaskSampler(lambda: GarageEnv(
-        normalize(HalfCheetahVelEnv())))
+    env_sampler = SetTaskSampler(lambda: normalize(GymEnv(HalfCheetahVelEnv())
+                                                   ))
     env = env_sampler.sample(num_train_tasks)
-    test_env_sampler = SetTaskSampler(lambda: GarageEnv(
-        normalize(HalfCheetahVelEnv())))
+    test_env_sampler = SetTaskSampler(lambda: normalize(
+        GymEnv(HalfCheetahVelEnv())))
 
     runner = LocalRunner(ctxt)
 

@@ -1,7 +1,7 @@
 # yapf: disable
 import tensorflow as tf
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.tf.policies import (CategoricalGRUPolicy,
                                 CategoricalLSTMPolicy,
                                 CategoricalMLPPolicy,
@@ -20,7 +20,7 @@ class TestDiscretePolicies(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = GarageEnv(DummyDiscreteEnv())
+        self.env = GymEnv(DummyDiscreteEnv())
 
     def teardown_method(self):
         self.env.close()
@@ -53,7 +53,7 @@ class TestContinuousPolicies(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = GarageEnv(DummyBoxEnv())
+        self.env = GymEnv(DummyBoxEnv())
 
     def teardown_method(self):
         self.env.close()

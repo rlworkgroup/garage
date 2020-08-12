@@ -8,7 +8,7 @@ class ValueFunction(abc.ABC, nn.Module):
     """Base class for all baselines.
 
     Args:
-        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        env_spec (EnvSpec): Environment specification.
         name (str): Value function name, also the variable scope.
 
     """

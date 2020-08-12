@@ -12,7 +12,7 @@ class DiscreteMLPQFunction(MLPModel):
     input state and action. It uses an MLP to fit the function Q(s, a).
 
     Args:
-        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        env_spec (EnvSpec): Environment specification.
         name (str): Name of the q-function, also serves as the variable scope.
         hidden_sizes (list[int]): Output dimension of dense layer(s).
             For example, (32, 32) means the MLP of this q-function consists of

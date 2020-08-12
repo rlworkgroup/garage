@@ -39,9 +39,9 @@ class SAC(RLAlgorithm):
         qf2 (garage.torch.q_function.ContinuousMLPQFunction): QFunction/Critic
             used for actor/policy optimization. See Soft Actor-Critic and
             Applications.
-        replay_buffer (garage.replay_buffer.ReplayBuffer): Stores transitions
-            that are previously collected by the sampler.
-        env_spec (garage.envs.env_spec.EnvSpec): The env_spec attribute of the
+        replay_buffer (ReplayBuffer): Stores transitions that are previously
+            collected by the sampler.
+        env_spec (EnvSpec): The env_spec attribute of the
             environment that the agent is being trained in. Usually accessable
             by calling env.spec.
         max_episode_length (int): Max path length of the algorithm.
@@ -80,7 +80,7 @@ class SAC(RLAlgorithm):
         num_evaluation_trajectories (int): The number of evaluation
             trajectories used for computing eval stats at the end of every
             epoch.
-        eval_env (garage.envs.GarageEnv): environment used for collecting
+        eval_env (Environment): environment used for collecting
             evaluation trajectories. If None, a copy of the train env is used.
 
     """

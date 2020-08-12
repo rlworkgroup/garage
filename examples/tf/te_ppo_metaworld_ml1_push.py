@@ -6,7 +6,7 @@ from metaworld.benchmarks import ML1
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
@@ -36,7 +36,7 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
 
     """
     set_seed(seed)
-    envs = [GarageEnv(normalize(ML1.get_train_tasks('push-v1')))]
+    envs = [normalize(GymEnv(ML1.get_train_tasks('push-v1')))]
     env = MultiEnvWrapper(envs, mode='del-onehot')
 
     latent_length = 2

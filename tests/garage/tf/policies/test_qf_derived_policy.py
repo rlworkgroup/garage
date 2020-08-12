@@ -2,7 +2,7 @@ import pickle
 
 import tensorflow as tf
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.tf.policies import DiscreteQfDerivedPolicy
 
 from tests.fixtures import TfGraphTestCase
@@ -14,7 +14,7 @@ class TestQfDerivedPolicy(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = GarageEnv(DummyDiscreteEnv())
+        self.env = GymEnv(DummyDiscreteEnv())
         self.qf = SimpleQFunction(self.env.spec)
         self.policy = DiscreteQfDerivedPolicy(env_spec=self.env.spec,
                                               qf=self.qf)
@@ -22,7 +22,7 @@ class TestQfDerivedPolicy(TfGraphTestCase):
         self.env.reset()
 
     def test_discrete_qf_derived_policy(self):
-        obs, _, _, _ = self.env.step(1)
+        obs = self.env.step(1).observation
         action, _ = self.policy.get_action(obs)
         assert self.env.action_space.contains(action)
         actions, _ = self.policy.get_actions([obs])
@@ -39,7 +39,7 @@ class TestQfDerivedPolicy(TfGraphTestCase):
             return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
-        obs, _, _, _ = self.env.step(1)
+        obs = self.env.step(1).observation
         action1, _ = self.policy.get_action(obs)
 
         p = pickle.dumps(self.policy)

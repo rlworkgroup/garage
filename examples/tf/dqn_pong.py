@@ -7,7 +7,7 @@ import click
 import gym
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.envs.wrappers.clip_reward import ClipReward
 from garage.envs.wrappers.episodic_life import EpisodicLife
 from garage.envs.wrappers.fire_reset import FireReset
@@ -61,7 +61,7 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
         env = ClipReward(env)
         env = StackFrames(env, 4)
 
-        env = GarageEnv(env, is_image=True)
+        env = GymEnv(env, is_image=True)
 
         replay_buffer = PathBuffer(capacity_in_transitions=buffer_size)
 

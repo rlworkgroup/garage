@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.tf.q_functions import ContinuousMLPQFunction
 
 from tests.fixtures import TfGraphTestCase
@@ -16,7 +16,7 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
     @pytest.mark.parametrize('hidden_sizes', [(1, ), (2, ), (3, ), (1, 1),
                                               (2, 2)])
     def test_q_vals(self, hidden_sizes):
-        env = GarageEnv(DummyBoxEnv())
+        env = GymEnv(DummyBoxEnv())
         obs_dim = env.spec.observation_space.flat_dim
         act_dim = env.spec.action_space.flat_dim
         qf = ContinuousMLPQFunction(env_spec=env.spec,
@@ -44,10 +44,10 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
         ((2, 2), (2, )),
     ])
     def test_output_shape(self, obs_dim, action_dim):
-        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GymEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         qf = ContinuousMLPQFunction(env_spec=env.spec)
         env.reset()
-        obs, _, _, _ = env.step(1)
+        obs = env.step(1).observation
         obs = obs.flatten()
         act = np.full(action_dim, 0.5).flatten()
 
@@ -61,7 +61,7 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
         ((2, 2), (2, )),
     ])
     def test_build(self, obs_dim, action_dim):
-        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GymEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         qf = ContinuousMLPQFunction(env_spec=env.spec,
                                     action_merge_layer=0,
                                     hidden_sizes=(1, ),
@@ -97,10 +97,10 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
         ((2, 2), (2, )),
     ])
     def test_is_pickleable(self, obs_dim, action_dim):
-        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GymEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         qf = ContinuousMLPQFunction(env_spec=env.spec)
         env.reset()
-        obs, _, _, _ = env.step(1)
+        obs = env.step(1).observation
         obs = obs.flatten()
         act = np.full(action_dim, 0.5).flatten()
 
@@ -125,7 +125,7 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
         ((2, 2), (2, ), (32, 32)),
     ])
     def test_clone(self, obs_dim, action_dim, hidden_sizes):
-        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GymEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         qf = ContinuousMLPQFunction(env_spec=env.spec,
                                     hidden_sizes=hidden_sizes)
         qf_clone = qf.clone('another_qf')

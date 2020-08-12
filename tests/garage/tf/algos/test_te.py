@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage import InOutSpec
-from garage.envs import GarageEnv, MultiEnvWrapper, PointEnv
+from garage.envs import MultiEnvWrapper, PointEnv
 from garage.envs.multi_env_wrapper import round_robin_strategy
 from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearMultiFeatureBaseline
@@ -69,7 +69,7 @@ class TestTE(TfGraphTestCase):
         task_kwargs = [tasks[t]['kwargs'] for t in task_names]
 
         task_envs = [
-            GarageEnv(PointEnv(*t_args, **t_kwargs))
+            PointEnv(*t_args, **t_kwargs)
             for t_args, t_kwargs in zip(task_args, task_kwargs)
         ]
         self.env = env = MultiEnvWrapper(task_envs,

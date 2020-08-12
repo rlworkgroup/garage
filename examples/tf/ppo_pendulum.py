@@ -9,11 +9,10 @@ Results:
     RiseTime: itr 40
 
 """
-import gym
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.tf.algos import PPO
@@ -34,7 +33,7 @@ def ppo_pendulum(ctxt=None, seed=1):
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+        env = normalize(GymEnv('InvertedDoublePendulum-v2'))
 
         policy = GaussianMLPPolicy(
             env_spec=env.spec,

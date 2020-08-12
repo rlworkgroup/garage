@@ -1,7 +1,6 @@
 """Test module for BulletEnv"""
 import pickle
 
-import gym
 import pybullet_envs
 from pybullet_utils.bullet_client import BulletClient
 import pytest
@@ -25,7 +24,7 @@ def test_can_step(env_ids):
             continue
         if env_id in _get_unsupported_env_list():
             pytest.skip('Skip unsupported Bullet environments')
-        env = BulletEnv(env_name=env_id)
+        env = BulletEnv(env_id)
         ob_space = env.observation_space
         act_space = env.action_space
         env.reset()
@@ -35,7 +34,7 @@ def test_can_step(env_ids):
         a = act_space.sample()
         assert act_space.contains(a)
         # Skip rendering because it causes TravisCI to run out of memory
-        step_env(env, render=False)
+        step_env(env, visualize=False)
         env.close()
 
 
@@ -47,7 +46,7 @@ def test_pickleable(env_ids):
         env_id = env_id.replace('- ', '')
         if env_id in _get_unsupported_env_list():
             pytest.skip('Skip unsupported Bullet environments')
-        env = BulletEnv(env_name=env_id)
+        env = BulletEnv(env_id)
         round_trip = pickle.loads(pickle.dumps(env))
         assert round_trip
         env.close()
@@ -66,19 +65,19 @@ def test_pickle_creates_new_server(env_ids):
         env_id = env_id.replace('- ', '')
         if env_id in _get_unsupported_env_list():
             pytest.skip('Skip unsupported Bullet environments')
-        bullet_env = BulletEnv(env_name=env_id)
+        bullet_env = BulletEnv(env_id)
         envs = [pickle.loads(pickle.dumps(bullet_env)) for _ in range(n_env)]
         id_set = set()
 
-        if hasattr(bullet_env.env, '_pybullet_client'):
-            id_set.add(bullet_env.env._pybullet_client._client)
+        if hasattr(bullet_env._env, '_pybullet_client'):
+            id_set.add(bullet_env._env._pybullet_client._client)
             for e in envs:
                 new_id = e._env._pybullet_client._client
                 assert new_id not in id_set
                 id_set.add(new_id)
-        elif hasattr(bullet_env.env, '_p'):
-            if isinstance(bullet_env.env._p, BulletClient):
-                id_set.add(bullet_env.env._p._client)
+        elif hasattr(bullet_env._env, '_p'):
+            if isinstance(bullet_env._env._p, BulletClient):
+                id_set.add(bullet_env._env._p._client)
                 for e in envs:
                     new_id = e._env._p._client
                     assert new_id not in id_set
@@ -95,14 +94,14 @@ def test_pickle_creates_new_server(env_ids):
 def test_time_limit_env():
     """Test BulletEnv emits done signal when time limit expiration occurs.
 
-    After setting max_episode_steps=50, info['BulletEnv.TimeLimitTerminated']
+    After setting max_episode_steps=50, info['GymEnv.TimeLimitTerminated']
     is expected to be True after 50 steps.
 
     """
-    env = BulletEnv(gym.make('MinitaurBulletEnv-v0'))
-    env.env._max_episode_steps = 50
+    env = BulletEnv('MinitaurBulletEnv-v0')
+    env._env._max_episode_steps = 50
     env.reset()
     for _ in range(50):
-        _, _, done, info = env.step(env.spec.action_space.sample())
-    assert not done and info['TimeLimit.truncated']
-    assert info['BulletEnv.TimeLimitTerminated']
+        es = env.step(env.spec.action_space.sample())
+    assert not es.terminal and es.env_info['TimeLimit.truncated']
+    assert es.env_info['GymEnv.TimeLimitTerminated']

@@ -2,6 +2,8 @@
 from gym.envs.mujoco import HalfCheetahEnv as HalfCheetahEnv_
 import numpy as np
 
+from garage import EnvSpec
+
 
 class HalfCheetahEnvMetaBase(HalfCheetahEnv_):
     """Base class of HalfCheetah meta-environments.
@@ -20,6 +22,8 @@ class HalfCheetahEnvMetaBase(HalfCheetahEnv_):
     def __init__(self, task):
         self._task = task
         super().__init__()
+        self.spec = EnvSpec(action_space=self.action_space,
+                            observation_space=self.observation_space)
 
     def _get_obs(self):
         """Get a low-dimensional observation of the state.

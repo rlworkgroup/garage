@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.tf.baselines import GaussianMLPBaseline
 
 from tests.fixtures import TfGraphTestCase
@@ -36,7 +36,7 @@ class TestGaussianMLPBaseline(TfGraphTestCase):
     # unmarked to balance test jobs
     # @pytest.mark.large
     def test_fit_normalized(self):
-        box_env_spec = GarageEnv(DummyBoxEnv(obs_dim=(2, ))).spec
+        box_env_spec = GymEnv(DummyBoxEnv(obs_dim=(2, ))).spec
         gmb = GaussianMLPBaseline(env_spec=box_env_spec)
 
         (train_paths, observations, returns, paths,
@@ -68,7 +68,7 @@ class TestGaussianMLPBaseline(TfGraphTestCase):
     # unmarked to balance test jobs
     # @pytest.mark.large
     def test_fit_unnormalized(self):
-        box_env_spec = GarageEnv(DummyBoxEnv(obs_dim=(2, ))).spec
+        box_env_spec = GymEnv(DummyBoxEnv(obs_dim=(2, ))).spec
         gmb = GaussianMLPBaseline(env_spec=box_env_spec,
                                   subsample_factor=0.9,
                                   normalize_inputs=False,
@@ -101,7 +101,7 @@ class TestGaussianMLPBaseline(TfGraphTestCase):
     # unmarked to balance test jobs
     # @pytest.mark.large
     def test_fit_smaller_subsample_factor(self):
-        box_env_spec = GarageEnv(DummyBoxEnv(obs_dim=(2, ))).spec
+        box_env_spec = GymEnv(DummyBoxEnv(obs_dim=(2, ))).spec
         gmb = GaussianMLPBaseline(env_spec=box_env_spec, subsample_factor=0.9)
 
         train_paths, _, _, paths, expected = get_train_test_data()
@@ -116,7 +116,7 @@ class TestGaussianMLPBaseline(TfGraphTestCase):
     # unmarked to balance test jobs
     # @pytest.mark.large
     def test_fit_without_trusted_region(self):
-        box_env_spec = GarageEnv(DummyBoxEnv(obs_dim=(2, ))).spec
+        box_env_spec = GymEnv(DummyBoxEnv(obs_dim=(2, ))).spec
         gmb = GaussianMLPBaseline(env_spec=box_env_spec,
                                   use_trust_region=False)
 
@@ -130,7 +130,7 @@ class TestGaussianMLPBaseline(TfGraphTestCase):
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
 
     def test_param_values(self):
-        box_env_spec = GarageEnv(DummyBoxEnv(obs_dim=(2, ))).spec
+        box_env_spec = GymEnv(DummyBoxEnv(obs_dim=(2, ))).spec
         gmb = GaussianMLPBaseline(env_spec=box_env_spec)
         new_gmb = GaussianMLPBaseline(env_spec=box_env_spec,
                                       name='GaussianMLPBaseline2')
@@ -149,7 +149,7 @@ class TestGaussianMLPBaseline(TfGraphTestCase):
         assert np.array_equal(old_param_values, new_param_values)
 
     def test_is_pickleable(self):
-        box_env_spec = GarageEnv(DummyBoxEnv(obs_dim=(2, ))).spec
+        box_env_spec = GymEnv(DummyBoxEnv(obs_dim=(2, ))).spec
         gmb = GaussianMLPBaseline(env_spec=box_env_spec)
         _, _, _, paths, _ = get_train_test_data()
 
@@ -169,7 +169,7 @@ class TestGaussianMLPBaseline(TfGraphTestCase):
             assert np.array_equal(prediction, prediction2)
 
     def test_clone(self):
-        box_env_spec = GarageEnv(DummyBoxEnv(obs_dim=(2, ))).spec
+        box_env_spec = GymEnv(DummyBoxEnv(obs_dim=(2, ))).spec
         gmb = GaussianMLPBaseline(env_spec=box_env_spec)
         cloned_gmb_model = gmb.clone_model(name='cloned_model')
         for cloned_param, param in zip(cloned_gmb_model.parameters.values(),

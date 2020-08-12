@@ -60,27 +60,19 @@ class TaskEmbeddingWorker(DefaultWorker):
         if self._path_length < self._max_episode_length:
             a, agent_info = self.agent.get_action_given_latent(
                 self._prev_obs, self._z)
-            next_o, r, d, env_info = self.env.step(a)
+            es = self.env.step(a)
             self._observations.append(self._prev_obs)
-            self._rewards.append(r)
-            self._actions.append(a)
+            self._env_steps.append(es)
             self._tasks.append(self._t)
             self._latents.append(self._z)
             for k, v in self._latent_info.items():
                 self._latent_infos[k].append(v)
             for k, v in agent_info.items():
                 self._agent_infos[k].append(v)
-            for k, v in env_info.items():
-                self._env_infos[k].append(v)
             self._path_length += 1
-            # Temporary solution
-            if d:
-                self._step_types.append(StepType.TERMINAL)
-            else:
-                self._step_types.append(StepType.MID)
 
-            if not d:
-                self._prev_obs = next_o
+            if not es.last:
+                self._prev_obs = es.observation
                 return False
 
         self._lengths.append(self._path_length)
@@ -105,18 +97,25 @@ class TaskEmbeddingWorker(DefaultWorker):
         self._observations = []
         last_observations = self._last_observations
         self._last_observations = []
-        actions = self._actions
-        self._actions = []
-        rewards = self._rewards
-        self._rewards = []
-        step_types = self._step_types
-        self._step_types = []
+
+        actions = []
+        rewards = []
+        env_infos = defaultdict(list)
+        step_types = []
+
+        for es in self._env_steps:
+            actions.append(es.action)
+            rewards.append(es.reward)
+            step_types.append(es.step_type)
+            for k, v in es.env_info.items():
+                env_infos[k].append(v)
+        self._env_steps = []
+
         latents = self._latents
         self._latents = []
         tasks = self._tasks
         self._tasks = []
-        env_infos = self._env_infos
-        self._env_infos = defaultdict(list)
+
         agent_infos = self._agent_infos
         self._agent_infos = defaultdict(list)
         latent_infos = self._latent_infos

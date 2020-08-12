@@ -6,7 +6,7 @@ import pytest
 import torch
 from torch import nn
 
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.torch.policies import GaussianMLPPolicy
 
 from tests.fixtures.envs.dummy import DummyBoxEnv
@@ -20,7 +20,7 @@ class TestGaussianMLPPolicies:
     # yapf: enable
     def test_get_action(self, hidden_sizes):
         """Test get_action function."""
-        env_spec = GarageEnv(DummyBoxEnv())
+        env_spec = GymEnv(DummyBoxEnv())
         obs_dim = env_spec.observation_space.flat_dim
         act_dim = env_spec.action_space.flat_dim
         obs = torch.ones(obs_dim, dtype=torch.float32)
@@ -51,7 +51,7 @@ class TestGaussianMLPPolicies:
     # yapf: enable
     def test_get_action_np(self, hidden_sizes):
         """Test get_action function with numpy inputs."""
-        env_spec = GarageEnv(DummyBoxEnv())
+        env_spec = GymEnv(DummyBoxEnv())
         obs_dim = env_spec.observation_space.flat_dim
         act_dim = env_spec.action_space.flat_dim
         obs = np.ones(obs_dim, dtype=np.float32)
@@ -87,7 +87,7 @@ class TestGaussianMLPPolicies:
     # yapf: enable
     def test_get_actions(self, batch_size, hidden_sizes):
         """Test get_actions function."""
-        env_spec = GarageEnv(DummyBoxEnv())
+        env_spec = GymEnv(DummyBoxEnv())
         obs_dim = env_spec.observation_space.flat_dim
         act_dim = env_spec.action_space.flat_dim
         obs = torch.ones([batch_size, obs_dim], dtype=torch.float32)
@@ -125,7 +125,7 @@ class TestGaussianMLPPolicies:
     # yapf: enable
     def test_get_actions_np(self, batch_size, hidden_sizes):
         """Test get_actions function with numpy inputs."""
-        env_spec = GarageEnv(DummyBoxEnv())
+        env_spec = GymEnv(DummyBoxEnv())
         obs_dim = env_spec.observation_space.flat_dim
         act_dim = env_spec.action_space.flat_dim
         obs = np.ones((batch_size, obs_dim), dtype=np.float32)
@@ -163,7 +163,7 @@ class TestGaussianMLPPolicies:
     # yapf: enable
     def test_is_pickleable(self, batch_size, hidden_sizes):
         """Test if policy is pickleable."""
-        env_spec = GarageEnv(DummyBoxEnv())
+        env_spec = GymEnv(DummyBoxEnv())
         obs_dim = env_spec.observation_space.flat_dim
         obs = torch.ones([batch_size, obs_dim], dtype=torch.float32)
         init_std = 2.

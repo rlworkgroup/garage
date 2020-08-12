@@ -13,7 +13,7 @@ Results:
 import click
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
@@ -44,7 +44,7 @@ def trpo_cartpole_recurrent(ctxt, seed, n_epochs, batch_size, plot):
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        env = GarageEnv(env_name='CartPole-v1')
+        env = GymEnv('CartPole-v1')
 
         policy = CategoricalLSTMPolicy(name='policy', env_spec=env.spec)
 

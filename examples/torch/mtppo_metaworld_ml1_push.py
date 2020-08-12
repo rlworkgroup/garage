@@ -6,7 +6,7 @@ import metaworld.benchmarks as mwb
 import torch
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.torch.algos import PPO
@@ -32,7 +32,7 @@ def mtppo_metaworld_ml1_push(ctxt, seed, epochs, batch_size):
 
     """
     set_seed(seed)
-    env = GarageEnv(normalize(mwb.ML1.get_train_tasks('push-v1')))
+    env = normalize(GymEnv(mwb.ML1.get_train_tasks('push-v1')))
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
