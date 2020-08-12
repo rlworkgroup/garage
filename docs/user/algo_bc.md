@@ -37,6 +37,8 @@ batch_size = 1000
 ### bc_point
 
 ```eval_rst
+.. figure:: ./images/pytorch.png
+        :scale: 10%
 .. literalinclude:: ../../examples/torch/bc_point.py
 ```
 
@@ -47,6 +49,8 @@ batch_size = 1000
 ![BC Mean Loss](images/bc_meanLoss.png) ![BC Mean Loss](images/bc_stdLoss.png)
 
 ```eval_rst
+.. figure:: ./images/pytorch.png
+        :scale: 10%
 .. literalinclude:: ../../examples/torch/bc_point_deterministic_policy.py
 ```
 
