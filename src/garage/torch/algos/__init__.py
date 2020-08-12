@@ -9,6 +9,7 @@ from garage.torch.algos.vpg import VPG
 from garage.torch.algos.maml_vpg import MAMLVPG
 from garage.torch.algos.ppo import PPO
 from garage.torch.algos.maml_ppo import MAMLPPO
+from garage.torch.algos.td3 import TD3
 from garage.torch.algos.trpo import TRPO
 from garage.torch.algos.maml_trpo import MAMLTRPO
 # SAC needs to be imported before MTSAC
@@ -17,6 +18,6 @@ from garage.torch.algos.mtsac import MTSAC
 from garage.torch.algos.pearl import PEARL
 
 __all__ = [
-    'BC', 'DDPG', 'VPG', 'PPO', 'TRPO', 'MAMLPPO', 'MAMLTRPO', 'MAMLVPG',
-    'MTSAC', 'PEARL', 'SAC'
+    'BC', 'DDPG', 'VPG', 'PPO', 'TD3', 'TRPO', 'MAMLPPO', 'MAMLTRPO',
+    'MAMLVPG', 'MTSAC', 'PEARL', 'SAC'
 ]

@@ -22,6 +22,8 @@ disable =
     invalid-name,
     line-too-long,
     wrong-import-order,
+    # Class must have 2 public methods seems arbitary
+    too-few-public-methods,
     # Algorithms and neural networks generally have a lot of variables
     too-many-instance-attributes,
     too-many-arguments,
