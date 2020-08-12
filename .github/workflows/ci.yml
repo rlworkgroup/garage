@@ -8,8 +8,6 @@ env:
   DOCKER_CACHE_REPO: "garage-ci"
 
 on:
-  push:
-    branches: [ master ]
   pull_request:
     branches: [ master ]
 
