@@ -26,7 +26,7 @@ repos:
         args: [--rcfile=tests/garage/.pylintrc]
 
   - repo: https://github.com/timothycrosley/isort
-    rev: 4.3.21-2
+    rev: 5.3.2
     hooks:
       - id: isort
         name: Sort imports with isort
@@ -42,7 +42,7 @@ repos:
       args: ['-ipr']
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.1.0
+    rev: v3.2.0
     hooks:
       - id: check-added-large-files          # Prevent giant files from being committed.
       - id: check-ast                        # Simply check whether files parse as valid python.
@@ -75,7 +75,7 @@ repos:
           - 'pydocstyle>=4.0.0'
 
   - repo: https://github.com/markdownlint/markdownlint
-    rev: v0.9.0
+    rev: v0.10.0
     hooks:
       - id: markdownlint                     # Check markdown files and flag style issues
         name: Markdownlint
