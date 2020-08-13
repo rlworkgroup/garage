@@ -1,7 +1,7 @@
 """Utility functions for NumPy-based Reinforcement learning algorithms."""
 import numpy as np
 
-from garage._dtypes import TrajectoryBatch
+from garage._dtypes import EpisodeBatch
 from garage.misc import tensor_utils
 from garage.sampler.utils import rollout
 
@@ -29,36 +29,34 @@ def samples_to_tensors(paths):
     return samples_data
 
 
-def obtain_evaluation_samples(policy,
-                              env,
-                              max_episode_length=1000,
-                              num_trajs=100):
-    """Sample the policy for num_trajs trajectories and return average values.
+def obtain_evaluation_episodes(policy,
+                               env,
+                               max_episode_length=1000,
+                               num_eps=100):
+    """Sample the policy for num_eps episodes and return average values.
 
     Args:
-        policy (Policy): Policy to use as the actor when
-            gathering samples.
-        env (Environment): The environment used to obtain
-            trajectories.
-        max_episode_length (int): Maximum path length. The episode will
-            terminate when length of trajectory reaches max_episode_length.
-        num_trajs (int): Number of trajectories.
+        policy (Policy): Policy to use as the actor when gathering samples.
+        env (Environment): The environement used to obtain episodes.
+        max_episode_length (int): Maximum episode length. The episode will
+            truncated when length of episode reaches max_episode_length.
+        num_eps (int): Number of episodes.
 
     Returns:
-        TrajectoryBatch: Evaluation trajectories, representing the best
-            current performance of the algorithm.
+        EpisodeBatch: Evaluation episodes, representing the best current
+            performance of the algorithm.
 
     """
-    paths = []
+    episodes = []
     # Use a finite length rollout for evaluation.
 
-    for _ in range(num_trajs):
-        path = rollout(env,
-                       policy,
-                       max_episode_length=max_episode_length,
-                       deterministic=True)
-        paths.append(path)
-    return TrajectoryBatch.from_trajectory_list(env.spec, paths)
+    for _ in range(num_eps):
+        eps = rollout(env,
+                      policy,
+                      max_episode_length=max_episode_length,
+                      deterministic=True)
+        episodes.append(eps)
+    return EpisodeBatch.from_list(env.spec, episodes)
 
 
 def paths_to_tensors(paths, max_episode_length, baseline_predictions,
@@ -67,7 +65,7 @@ def paths_to_tensors(paths, max_episode_length, baseline_predictions,
 
     Args:
         paths (list[dict]): A list of collected paths.
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         baseline_predictions(numpy.ndarray): : Predicted value of GAE
             (Generalized Advantage Estimation) Baseline.
         discount (float): Environment reward discount.

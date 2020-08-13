@@ -21,7 +21,7 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
     Args:
         env_spec (EnvSpec): Environment specification.
         size_in_transitions (int): total size of transitions in the buffer
-        time_horizon (int): time horizon of rollout.
+        time_horizon (int): time horizon of epsiode.
 
     """
 
@@ -40,14 +40,14 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
     def store_episode(self):
         """Add an episode to the buffer."""
         episode_buffer = self._convert_episode_to_batch_major()
-        rollout_batch_size = len(episode_buffer['observation'])
-        idx = self._get_storage_idx(rollout_batch_size)
+        episode_batch_size = len(episode_buffer['observation'])
+        idx = self._get_storage_idx(episode_batch_size)
 
         for key in self._buffer:
             self._buffer[key][idx] = episode_buffer[key]
         self._n_transitions_stored = min(
             self._size_in_transitions, self._n_transitions_stored +
-            self._time_horizon * rollout_batch_size)
+            self._time_horizon * episode_batch_size)
 
     @abstractmethod
     def sample(self, batch_size):
@@ -148,7 +148,7 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
     def _convert_episode_to_batch_major(self):
         """Convert the shape of episode_buffer.
 
-        episode_buffer: {time_horizon, algo.rollout_batch_size, flat_dim}.
+        episode_buffer: {time_horizon, algo.episode_batch_size, flat_dim}.
         buffer: {size, time_horizon, flat_dim}.
 
         Returns:

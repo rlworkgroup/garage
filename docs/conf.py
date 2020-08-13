@@ -336,6 +336,7 @@ try:
     import numpy as np
     import akro
     import gym
+    from garage import Environment
 except ImportError:
     np = None
 '''

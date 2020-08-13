@@ -74,7 +74,7 @@ the base environment and add some imports:
     import numpy as np
 
 
-    class PointEnv(gym.Env):
+    class PointEnv(Environment):
 
         # ...
 
@@ -84,7 +84,7 @@ property methods:
 
 .. testcode::
 
-    class PointEnv(gym.Env):
+    class PointEnv(Environment):
 
         # ...
 
@@ -110,7 +110,7 @@ same as its state.
 
 .. testcode::
 
-    class PointEnv(gym.Env):
+    class PointEnv(Environment):
 
         # ...
 
@@ -129,7 +129,7 @@ The procedure that interfaces with the environment is responsible for calling
 
 .. testcode::
 
-    class PointEnv(gym.Env):
+    class PointEnv(Environment):
 
         # ...
 
@@ -146,7 +146,7 @@ simplicity, let's just print the current state of the MDP on the terminal:
 
 .. testcode::
 
-    class PointEnv(gym.Env):
+    class PointEnv(Environment):
 
         # ...
 

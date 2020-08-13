@@ -87,8 +87,8 @@ class TestMAML:
 
         self.policy.apply(partial(self._set_params, 0.1))
         adapt_policy = self.algo.get_exploration_policy()
-        trajs = sampler.obtain_samples(0, 100, adapt_policy)
-        self.algo.adapt_policy(adapt_policy, trajs)
+        eps = sampler.obtain_samples(0, 100, adapt_policy)
+        self.algo.adapt_policy(adapt_policy, eps)
 
         # Old policy should remain untouched
         self.policy.apply(partial(self._test_params, 0.1))

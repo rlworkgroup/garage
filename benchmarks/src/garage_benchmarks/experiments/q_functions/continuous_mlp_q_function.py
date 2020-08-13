@@ -17,7 +17,7 @@ hyper_params = {
     'qf_hidden_sizes': [64, 64],
     'n_epochs': 300,
     'steps_per_epoch': 20,
-    'n_rollout_steps': 100,
+    'n_exploration_steps': 100,
     'n_train_steps': 50,
     'discount': 0.9,
     'tau': 1e-2,
@@ -31,9 +31,8 @@ def continuous_mlp_q_function(ctxt, env_id, seed):
     """Create Continuous MLP QFunction on TF-DDPG.
 
     Args:
-        ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the
-            snapshotter.
+        ctxt (ExperimentContext): The experiment configuration used by
+            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
 
@@ -79,4 +78,4 @@ def continuous_mlp_q_function(ctxt, env_id, seed):
 
         runner.setup(ddpg, env, sampler_args=dict(n_envs=12))
         runner.train(n_epochs=hyper_params['n_epochs'],
-                     batch_size=hyper_params['n_rollout_steps'])
+                     batch_size=hyper_params['n_exploration_steps'])

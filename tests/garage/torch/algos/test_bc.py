@@ -122,13 +122,13 @@ def test_bc_point(ray_local_session_fixture):  # NOQA
     run_bc(runner, algo, batch_size)
 
 
-def expert_source(env, goal, max_episode_length, n_traj):
+def expert_source(env, goal, max_episode_length, n_eps):
     expert = OptimalPolicy(env.spec, goal=goal)
     workers = WorkerFactory(seed=100, max_episode_length=max_episode_length)
     expert_sampler = LocalSampler.from_worker_factory(workers, expert, env)
-    for _ in range(n_traj):
-        traj_batch = expert_sampler.obtain_samples(0, max_episode_length, None)
-        yield TimeStepBatch.from_trajectory_batch(traj_batch)
+    for _ in range(n_eps):
+        eps_batch = expert_sampler.obtain_samples(0, max_episode_length, None)
+        yield TimeStepBatch.from_episode_batch(eps_batch)
 
 
 def test_bc_point_sample_batches():

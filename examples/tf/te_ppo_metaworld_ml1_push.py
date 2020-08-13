@@ -27,8 +27,8 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
     """Train Task Embedding PPO with PointEnv.
 
     Args:
-        ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+        ctxt (ExperimentContext): The experiment configuration used by
+            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
         seed (int): Used to seed the random number generator to produce
             determinism.
         n_epochs (int): Total number of epochs for training.

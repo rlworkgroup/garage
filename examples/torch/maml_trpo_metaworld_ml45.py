@@ -18,20 +18,20 @@ from garage.torch.policies import GaussianMLPPolicy
 @click.command()
 @click.option('--seed', default=1)
 @click.option('--epochs', default=300)
-@click.option('--rollouts_per_task', default=10)
+@click.option('--episodes_per_task', default=10)
 @click.option('--meta_batch_size', default=20)
 @wrap_experiment(snapshot_mode='all')
-def maml_trpo_metaworld_ml45(ctxt, seed, epochs, rollouts_per_task,
+def maml_trpo_metaworld_ml45(ctxt, seed, epochs, episodes_per_task,
                              meta_batch_size):
     """Set up environment and algorithm and run the task.
 
     Args:
-        ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+        ctxt (ExperimentContext): The experiment configuration used by
+            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
         seed (int): Used to seed the random number generator to produce
             determinism.
         epochs (int): Number of training epochs.
-        rollouts_per_task (int): Number of rollouts per epoch per task
+        episodes_per_task (int): Number of episodes per epoch per task
             for training.
         meta_batch_size (int): Number of tasks sampled per batch.
 
@@ -76,7 +76,7 @@ def maml_trpo_metaworld_ml45(ctxt, seed, epochs, rollouts_per_task,
 
     runner.setup(algo, env)
     runner.train(n_epochs=epochs,
-                 batch_size=rollouts_per_task * max_episode_length)
+                 batch_size=episodes_per_task * max_episode_length)
 
 
 maml_trpo_metaworld_ml45()

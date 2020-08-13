@@ -6,16 +6,16 @@ import pytest
 # yapf: disable
 from garage import (EnvSpec,
                     EnvStep,
+                    EpisodeBatch,
                     StepType,
                     TimeStep,
-                    TimeStepBatch,
-                    TrajectoryBatch)
+                    TimeStepBatch)
 
 # yapf: enable
 
 
 @pytest.fixture
-def traj_data():
+def eps_data():
     # spaces
     obs_space = gym.spaces.Box(low=1,
                                high=np.inf,
@@ -62,161 +62,161 @@ def traj_data():
     }
 
 
-def test_new_traj(traj_data):
-    t = TrajectoryBatch(**traj_data)
-    assert t.env_spec is traj_data['env_spec']
-    assert t.observations is traj_data['observations']
-    assert t.last_observations is traj_data['last_observations']
-    assert t.actions is traj_data['actions']
-    assert t.rewards is traj_data['rewards']
-    assert t.env_infos is traj_data['env_infos']
-    assert t.agent_infos is traj_data['agent_infos']
-    assert t.step_types is traj_data['step_types']
-    assert t.lengths is traj_data['lengths']
+def test_new_eps(eps_data):
+    t = EpisodeBatch(**eps_data)
+    assert t.env_spec is eps_data['env_spec']
+    assert t.observations is eps_data['observations']
+    assert t.last_observations is eps_data['last_observations']
+    assert t.actions is eps_data['actions']
+    assert t.rewards is eps_data['rewards']
+    assert t.env_infos is eps_data['env_infos']
+    assert t.agent_infos is eps_data['agent_infos']
+    assert t.step_types is eps_data['step_types']
+    assert t.lengths is eps_data['lengths']
 
 
-def test_lengths_shape_mismatch_traj(traj_data):
+def test_lengths_shape_mismatch_eps(eps_data):
     with pytest.raises(ValueError,
                        match='Lengths tensor must be a tensor of shape'):
-        traj_data['lengths'] = traj_data['lengths'].reshape((4, -1))
-        t = TrajectoryBatch(**traj_data)
+        eps_data['lengths'] = eps_data['lengths'].reshape((4, -1))
+        t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_lengths_dtype_mismatch_traj(traj_data):
+def test_lengths_dtype_mismatch_eps(eps_data):
     with pytest.raises(ValueError,
                        match='Lengths tensor must have an integer dtype'):
-        traj_data['lengths'] = traj_data['lengths'].astype(np.float32)
-        t = TrajectoryBatch(**traj_data)
+        eps_data['lengths'] = eps_data['lengths'].astype(np.float32)
+        t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_obs_env_spec_mismatch_traj(traj_data):
+def test_obs_env_spec_mismatch_eps(eps_data):
     with pytest.raises(ValueError, match='observations must conform'):
-        traj_data['observations'] = traj_data['observations'][:, :, :, :1]
-        t = TrajectoryBatch(**traj_data)
+        eps_data['observations'] = eps_data['observations'][:, :, :, :1]
+        t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_obs_batch_mismatch_traj(traj_data):
+def test_obs_batch_mismatch_eps(eps_data):
     with pytest.raises(ValueError, match='batch dimension of observations'):
-        traj_data['observations'] = traj_data['observations'][:-1]
-        t = TrajectoryBatch(**traj_data)
+        eps_data['observations'] = eps_data['observations'][:-1]
+        t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_last_obs_env_spec_mismatch_traj(traj_data):
+def test_last_obs_env_spec_mismatch_eps(eps_data):
     with pytest.raises(ValueError, match='last_observations must conform'):
-        traj_data['last_observations'] = \
-                traj_data['last_observations'][:, :, :, :1]
-        t = TrajectoryBatch(**traj_data)
+        eps_data['last_observations'] = \
+                eps_data['last_observations'][:, :, :, :1]
+        t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_last_obs_batch_mismatch_traj(traj_data):
+def test_last_obs_batch_mismatch_eps(eps_data):
     with pytest.raises(ValueError,
                        match='batch dimension of last_observations'):
-        traj_data['last_observations'] = traj_data['last_observations'][:-1]
-        t = TrajectoryBatch(**traj_data)
+        eps_data['last_observations'] = eps_data['last_observations'][:-1]
+        t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_act_env_spec_mismatch_traj(traj_data):
+def test_act_env_spec_mismatch_eps(eps_data):
     with pytest.raises(ValueError, match='actions must conform'):
-        traj_data['actions'] = traj_data['actions'][:, 0]
-        t = TrajectoryBatch(**traj_data)
+        eps_data['actions'] = eps_data['actions'][:, 0]
+        t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_act_box_env_spec_mismatch_traj(traj_data):
+def test_act_box_env_spec_mismatch_eps(eps_data):
     with pytest.raises(ValueError, match='actions should have'):
-        traj_data['env_spec'].action_space = akro.Box(low=1,
-                                                      high=np.inf,
-                                                      shape=(4, 3, 2),
-                                                      dtype=np.float32)
-        t = TrajectoryBatch(**traj_data)
+        eps_data['env_spec'].action_space = akro.Box(low=1,
+                                                     high=np.inf,
+                                                     shape=(4, 3, 2),
+                                                     dtype=np.float32)
+        t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_act_batch_mismatch_traj(traj_data):
+def test_act_batch_mismatch_eps(eps_data):
     with pytest.raises(ValueError, match='batch dimension of actions'):
-        traj_data['actions'] = traj_data['actions'][:-1]
-        t = TrajectoryBatch(**traj_data)
+        eps_data['actions'] = eps_data['actions'][:-1]
+        t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_rewards_shape_mismatch_traj(traj_data):
+def test_rewards_shape_mismatch_eps(eps_data):
     with pytest.raises(ValueError, match='Rewards tensor'):
-        traj_data['rewards'] = traj_data['rewards'].reshape((2, -1))
-        t = TrajectoryBatch(**traj_data)
+        eps_data['rewards'] = eps_data['rewards'].reshape((2, -1))
+        t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_env_infos_not_ndarray_traj(traj_data):
+def test_env_infos_not_ndarray_eps(eps_data):
     with pytest.raises(ValueError,
                        match='entry in env_infos must be a numpy array'):
-        traj_data['env_infos']['bar'] = []
-        t = TrajectoryBatch(**traj_data)
+        eps_data['env_infos']['bar'] = []
+        t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_env_infos_batch_mismatch_traj(traj_data):
+def test_env_infos_batch_mismatch_eps(eps_data):
     with pytest.raises(ValueError,
                        match='entry in env_infos must have a batch dimension'):
-        traj_data['env_infos']['goal'] = traj_data['env_infos']['goal'][:-1]
-        t = TrajectoryBatch(**traj_data)
+        eps_data['env_infos']['goal'] = eps_data['env_infos']['goal'][:-1]
+        t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_agent_infos_not_ndarray_traj(traj_data):
+def test_agent_infos_not_ndarray_eps(eps_data):
     with pytest.raises(ValueError,
                        match='entry in agent_infos must be a numpy array'):
-        traj_data['agent_infos']['bar'] = list()
-        t = TrajectoryBatch(**traj_data)
+        eps_data['agent_infos']['bar'] = list()
+        t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_agent_infos_batch_mismatch_traj(traj_data):
+def test_agent_infos_batch_mismatch_eps(eps_data):
     with pytest.raises(
             ValueError,
             match='entry in agent_infos must have a batch dimension'):
-        traj_data['agent_infos']['hidden'] = traj_data['agent_infos'][
+        eps_data['agent_infos']['hidden'] = eps_data['agent_infos'][
             'hidden'][:-1]
-        t = TrajectoryBatch(**traj_data)
+        t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_step_types_shape_mismatch_traj(traj_data):
+def test_step_types_shape_mismatch_eps(eps_data):
     with pytest.raises(ValueError, match='step_types tensor must have shape'):
-        traj_data['step_types'] = traj_data['step_types'].reshape((2, -1))
-        t = TrajectoryBatch(**traj_data)
+        eps_data['step_types'] = eps_data['step_types'].reshape((2, -1))
+        t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_step_types_dtype_mismatch_traj(traj_data):
+def test_step_types_dtype_mismatch_eps(eps_data):
     with pytest.raises(ValueError, match='step_types tensor must be dtype'):
-        traj_data['step_types'] = traj_data['step_types'].astype(np.float32)
-        t = TrajectoryBatch(**traj_data)
+        eps_data['step_types'] = eps_data['step_types'].astype(np.float32)
+        t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_to_trajectory_list(traj_data):
-    t = TrajectoryBatch(**traj_data)
-    t_list = t.to_trajectory_list()
-    assert len(t_list) == len(traj_data['lengths'])
+def test_to_epsectory_list(eps_data):
+    t = EpisodeBatch(**eps_data)
+    t_list = t.to_list()
+    assert len(t_list) == len(eps_data['lengths'])
     start = 0
-    for length, last_obs, s in zip(traj_data['lengths'],
-                                   traj_data['last_observations'], t_list):
+    for length, last_obs, s in zip(eps_data['lengths'],
+                                   eps_data['last_observations'], t_list):
         stop = start + length
         assert (
-            s['observations'] == traj_data['observations'][start:stop]).all()
+            s['observations'] == eps_data['observations'][start:stop]).all()
         assert (s['next_observations'] == np.concatenate(
-            (traj_data['observations'][start + 1:stop], [last_obs]))).all()
-        assert (s['actions'] == traj_data['actions'][start:stop]).all()
-        assert (s['rewards'] == traj_data['rewards'][start:stop]).all()
-        assert (s['step_types'] == traj_data['step_types'][start:stop]).all()
+            (eps_data['observations'][start + 1:stop], [last_obs]))).all()
+        assert (s['actions'] == eps_data['actions'][start:stop]).all()
+        assert (s['rewards'] == eps_data['rewards'][start:stop]).all()
+        assert (s['step_types'] == eps_data['step_types'][start:stop]).all()
         start = stop
-    assert start == len(traj_data['rewards'])
+    assert start == len(eps_data['rewards'])
 
 
 def test_get_step_type():
@@ -693,11 +693,11 @@ def test_from_time_step_list_batch(batch_data):
         assert np.array_equal(new_agent_infos[key], s.agent_infos[key])
 
 
-def test_time_step_batch_from_trajectory_batch(traj_data):
-    traj = TrajectoryBatch(**traj_data)
-    timestep_batch = TimeStepBatch.from_trajectory_batch(traj)
-    assert (timestep_batch.observations == traj.observations).all()
-    assert (timestep_batch.next_observations[:traj.lengths[0] - 1] ==
-            traj.observations[1:traj.lengths[0]]).all()
-    assert (timestep_batch.next_observations[traj.lengths[0]] ==
-            traj.last_observations[0]).all()
+def test_time_step_batch_from_episode_batch(eps_data):
+    eps = EpisodeBatch(**eps_data)
+    timestep_batch = TimeStepBatch.from_episode_batch(eps)
+    assert (timestep_batch.observations == eps.observations).all()
+    assert (timestep_batch.next_observations[:eps.lengths[0] - 1] ==
+            eps.observations[1:eps.lengths[0]]).all()
+    assert (timestep_batch.next_observations[eps.lengths[0]] ==
+            eps.last_observations[0]).all()

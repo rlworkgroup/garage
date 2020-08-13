@@ -58,9 +58,9 @@ class OptimalActionInference(MetaRLAlgorithm):
     def get_exploration_policy(self):
         return self.policy
 
-    def adapt_policy(self, exploration_policy, exploration_trajectories):
-        best_timestep = np.argmax(exploration_trajectories.rewards)
-        best_action = exploration_trajectories.actions[best_timestep]
+    def adapt_policy(self, exploration_policy, exploration_episodes):
+        best_timestep = np.argmax(exploration_episodes.rewards)
+        best_action = exploration_episodes.actions[best_timestep]
         return SingleActionPolicy(best_action)
 
 
@@ -107,12 +107,12 @@ class MockAlgo:
 
     sampler_cls = LocalSampler
 
-    def __init__(self, env, policy, max_episode_length, n_exploration_traj,
+    def __init__(self, env, policy, max_episode_length, n_exploration_eps,
                  meta_eval):
         self.env = env
         self.policy = policy
         self.max_episode_length = max_episode_length
-        self.n_exploration_traj = n_exploration_traj
+        self.n_exploration_eps = n_exploration_eps
         self.meta_eval = meta_eval
 
     def train(self, runner):
@@ -123,10 +123,9 @@ class MockAlgo:
     def get_exploration_policy(self):
         return self.policy
 
-    def adapt_policy(self, exploration_policy, exploration_trajectories):
+    def adapt_policy(self, exploration_policy, exploration_episodes):
         del exploration_policy
-        assert (len(
-            exploration_trajectories.lengths) == self.n_exploration_traj)
+        assert len(exploration_episodes.lengths) == self.n_exploration_eps
 
 
 def test_pickle_meta_evaluator():
@@ -134,7 +133,7 @@ def test_pickle_meta_evaluator():
     tasks = SetTaskSampler(PointEnv)
     max_episode_length = 200
     env = PointEnv()
-    n_traj = 3
+    n_eps = 3
     with tempfile.TemporaryDirectory() as log_dir_name:
         runner = LocalRunner(
             SnapshotConfig(snapshot_dir=log_dir_name,
@@ -143,9 +142,9 @@ def test_pickle_meta_evaluator():
         meta_eval = MetaEvaluator(test_task_sampler=tasks,
                                   max_episode_length=max_episode_length,
                                   n_test_tasks=10,
-                                  n_exploration_traj=n_traj)
+                                  n_exploration_eps=n_eps)
         policy = RandomPolicy(env.spec.action_space)
-        algo = MockAlgo(env, policy, max_episode_length, n_traj, meta_eval)
+        algo = MockAlgo(env, policy, max_episode_length, n_eps, meta_eval)
         runner.setup(algo, env)
         log_file = tempfile.NamedTemporaryFile()
         csv_output = CsvOutput(log_file.name)
@@ -161,7 +160,7 @@ def test_meta_evaluator_with_tf():
     tasks = SetTaskSampler(PointEnv)
     max_episode_length = 200
     env = PointEnv()
-    n_traj = 3
+    n_eps = 3
     with tempfile.TemporaryDirectory() as log_dir_name:
         ctxt = SnapshotConfig(snapshot_dir=log_dir_name,
                               snapshot_mode='none',
@@ -170,9 +169,9 @@ def test_meta_evaluator_with_tf():
             meta_eval = MetaEvaluator(test_task_sampler=tasks,
                                       max_episode_length=max_episode_length,
                                       n_test_tasks=10,
-                                      n_exploration_traj=n_traj)
+                                      n_exploration_eps=n_eps)
             policy = GaussianMLPPolicy(env.spec)
-            algo = MockAlgo(env, policy, max_episode_length, n_traj, meta_eval)
+            algo = MockAlgo(env, policy, max_episode_length, n_eps, meta_eval)
             runner.setup(algo, env)
             log_file = tempfile.NamedTemporaryFile()
             csv_output = CsvOutput(log_file.name)

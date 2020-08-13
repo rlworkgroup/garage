@@ -51,7 +51,7 @@ class TestMAMLPPO:
         """Test PPO with Pendulum environment."""
         deterministic.set_seed(0)
 
-        rollouts_per_task = 5
+        episodes_per_task = 5
         max_episode_length = 100
 
         runner = LocalRunner(snapshot_config)
@@ -67,7 +67,7 @@ class TestMAMLPPO:
 
         runner.setup(algo, self.env, sampler_cls=LocalSampler)
         last_avg_ret = runner.train(n_epochs=10,
-                                    batch_size=rollouts_per_task *
+                                    batch_size=episodes_per_task *
                                     max_episode_length)
 
         assert last_avg_ret > -5

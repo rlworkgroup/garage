@@ -6,7 +6,7 @@ import numpy as np
 import torch
 
 from garage import _Default, log_performance, make_optimizer
-from garage.np import obtain_evaluation_samples
+from garage.np import obtain_evaluation_episodes
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch import dict_np_to_torch, torch_to_np
@@ -25,13 +25,15 @@ class DDPG(RLAlgorithm):
         env_spec (EnvSpec): Environment specification.
         policy (garage.torch.policies.Policy): Policy.
         qf (object): Q-value network.
-        replay_buffer (garage.replay_buffer.ReplayBuffer): Replay buffer.
+        replay_buffer (ReplayBuffer): Replay buffer.
         steps_per_epoch (int): Number of train_once calls per epoch.
         n_train_steps (int): Training steps.
-        max_episode_length (int): Maximum path length. The episode will
-            terminate when length of trajectory reaches max_episode_length.
-        max_eval_path_length (int or None): Maximum length of paths used for
-            off-policy evaluation. If None, defaults to `max_episode_length`.
+        max_episode_length (int): Maximum episode length. The episode will
+            be truncated when the length of the episode reaches
+            max_episode_length.
+        max_episode_length_eval (int or None): Maximum length of episodes used
+            for off-policy evaluation. If `None`, defaults to
+            `max_episode_length`.
         buffer_batch_size (int): Batch size of replay buffer.
         min_buffer_size (int): The minimum buffer size for replay buffer.
         exploration_policy (garage.np.exploration_policies.ExplorationPolicy): # noqa: E501
@@ -73,7 +75,7 @@ class DDPG(RLAlgorithm):
             max_episode_length,
             steps_per_epoch=20,
             n_train_steps=50,
-            max_eval_path_length=None,
+            max_episode_length_eval=None,
             buffer_batch_size=64,
             min_buffer_size=int(1e4),
             exploration_policy=None,
@@ -115,7 +117,7 @@ class DDPG(RLAlgorithm):
         self._discount = discount
         self._reward_scale = reward_scale
         self.max_episode_length = max_episode_length
-        self._max_eval_path_length = max_eval_path_length
+        self._max_episode_length_eval = max_episode_length_eval
 
         self.env_spec = env_spec
         self.replay_buffer = replay_buffer
@@ -138,9 +140,7 @@ class DDPG(RLAlgorithm):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): LocalRunner is passed to give algorithm
-                the access to runner.step_epochs(), which provides services
-                such as snapshotting and sampler control.
+            runner (LocalRunner): Experiment runner.
 
         Returns:
             float: The average return in last epoch cycle.
@@ -153,29 +153,29 @@ class DDPG(RLAlgorithm):
 
         for _ in runner.step_epochs():
             for cycle in range(self._steps_per_epoch):
-                runner.step_path = runner.obtain_trajectories(runner.step_itr)
+                runner.step_path = runner.obtain_episodes(runner.step_itr)
                 self.train_once(runner.step_itr, runner.step_path)
                 if (cycle == 0 and self.replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
                     runner.enable_logging = True
-                    eval_samples = obtain_evaluation_samples(
+                    eval_eps = obtain_evaluation_episodes(
                         self.policy, self._eval_env)
                     last_returns = log_performance(runner.step_itr,
-                                                   eval_samples,
+                                                   eval_eps,
                                                    discount=self._discount)
                 runner.step_itr += 1
 
         return np.mean(last_returns)
 
-    def train_once(self, itr, trajectories):
+    def train_once(self, itr, episodes):
         """Perform one iteration of training.
 
         Args:
             itr (int): Iteration number.
-            trajectories (TrajectoryBatch): Batch of trajectories.
+            episodes (EpisodeBatch): Batch of episodes.
 
         """
-        self.replay_buffer.add_trajectory_batch(trajectories)
+        self.replay_buffer.add_episode_batch(episodes)
 
         epoch = itr / self._steps_per_epoch
 

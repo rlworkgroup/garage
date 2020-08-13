@@ -8,7 +8,7 @@ import click
 import cloudpickle
 import setproctitle
 
-from garage import TrajectoryBatch
+from garage import EpisodeBatch
 from garage.sampler.sampler import Sampler
 
 
@@ -16,17 +16,17 @@ class MultiprocessingSampler(Sampler):
     """Sampler that uses multiprocessing to distribute workers.
 
     Args:
-        worker_factory(WorkerFactory): Pickleable factory for creating
+        worker_factory (WorkerFactory): Pickleable factory for creating
             workers. Should be transmitted to other processes / nodes where
             work needs to be done, then workers should be constructed
             there.
-        agents(Agent or List[Agent]): Agent(s) to use to perform rollouts.
+        agents (Policy or List[Policy]): Agent(s) to use to sample episodes.
             If a list is passed in, it must have length exactly
             `worker_factory.n_workers`, and will be spread across the
             workers.
-        envs(gym.Env or List[gym.Env]): Environment rollouts are performed
-            in. If a list is passed in, it must have length exactly
-            `worker_factory.n_workers`, and will be spread across the
+        envs (Environment or List[Environment]): Environment from which
+            episodes are sampled. If a list is passed in, it must have length
+            exactly `worker_factory.n_workers`, and will be spread across the
             workers.
 
     """
@@ -67,18 +67,18 @@ class MultiprocessingSampler(Sampler):
         """Construct this sampler.
 
         Args:
-            worker_factory(WorkerFactory): Pickleable factory for creating
+            worker_factory (WorkerFactory): Pickleable factory for creating
                 workers. Should be transmitted to other processes / nodes where
                 work needs to be done, then workers should be constructed
                 there.
-            agents(Agent or List[Agent]): Agent(s) to use to perform rollouts.
-                If a list is passed in, it must have length exactly
+            agents (Policy or List[Policy]): Agent(s) to use to sample
+                episodes. If a list is passed in, it must have length exactly
                 `worker_factory.n_workers`, and will be spread across the
                 workers.
-            envs(gym.Env or List[gym.Env]): Environment rollouts are performed
-                in. If a list is passed in, it must have length exactly
-                `worker_factory.n_workers`, and will be spread across the
-                workers.
+            envs(Environment or List[Environment]): Environment from which
+                episodes are sampled. If a list is passed in, it must have
+                length exactly `worker_factory.n_workers`, and will be spread
+                across the workers.
 
         Returns:
             Sampler: An instance of `cls`.
@@ -90,17 +90,17 @@ class MultiprocessingSampler(Sampler):
         """Apply updates to the workers and (re)start them.
 
         Args:
-            updated_workers(set[int]): Set of workers that don't need to be
+            updated_workers (set[int]): Set of workers that don't need to be
                 updated. Successfully updated workers will be added to this
                 set.
-            agent_updates(object): Value which will be passed into the
-                `agent_update_fn` before doing rollouts. If a list is passed
+            agent_updates (object): Value which will be passed into the
+                `agent_update_fn` before sampling episodes. If a list is passed
                 in, it must have length exactly `factory.n_workers`, and will
                 be spread across the workers.
-            env_updates(object): Value which will be passed into the
-                `env_update_fn` before doing rollouts. If a list is passed in,
-                it must have length exactly `factory.n_workers`, and will be
-                spread across the workers.
+            env_updates (object): Value which will be passed into the
+                `env_update_fn` before sampling episodes. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
 
         """
         for worker_number, q in enumerate(self._to_worker):
@@ -124,19 +124,19 @@ class MultiprocessingSampler(Sampler):
         Args:
             itr(int): The current iteration number. Using this argument is
                 deprecated.
-            num_samples(int): Minimum number of transitions / timesteps to
+            num_samples (int): Minimum number of transitions / timesteps to
                 sample.
-            agent_update(object): Value which will be passed into the
-                `agent_update_fn` before doing rollouts. If a list is passed
+            agent_update (object): Value which will be passed into the
+                `agent_update_fn` before sampling episodes. If a list is passed
                 in, it must have length exactly `factory.n_workers`, and will
                 be spread across the workers.
-            env_update(object): Value which will be passed into the
-                `env_update_fn` before doing rollouts. If a list is passed in,
-                it must have length exactly `factory.n_workers`, and will be
-                spread across the workers.
+            env_update (object): Value which will be passed into the
+                `env_update_fn` before sampling episodes. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
 
         Returns:
-            garage.TrajectoryBatch: The batch of collected trajectories.
+            EpisodeBatch: The batch of collected episodes.
 
         Raises:
             AssertionError: On internal errors.
@@ -157,7 +157,7 @@ class MultiprocessingSampler(Sampler):
                 for _ in range(self._factory.n_workers):
                     try:
                         tag, contents = self._to_sampler.get_nowait()
-                        if tag == 'trajectory':
+                        if tag == 'episode':
                             batch, version, worker_n = contents
                             del worker_n
                             if version == self._agent_version:
@@ -166,8 +166,8 @@ class MultiprocessingSampler(Sampler):
                                 completed_samples += num_returned_samples
                                 pbar.update(num_returned_samples)
                             else:
-                                # Receiving paths from previous iterations is
-                                # normal.  Potentially, we could gather them
+                                # Receiving episodes from previous iterations
+                                # is normal.  Potentially, we could gather them
                                 # here, if an off-policy method wants them.
                                 pass
                         else:
@@ -182,30 +182,30 @@ class MultiprocessingSampler(Sampler):
                 except queue.Full:
                     pass
 
-        return TrajectoryBatch.concatenate(*batches)
+        return EpisodeBatch.concatenate(*batches)
 
-    def obtain_exact_trajectories(self,
-                                  n_traj_per_worker,
-                                  agent_update,
-                                  env_update=None):
-        """Sample an exact number of trajectories per worker.
+    def obtain_exact_episodes(self,
+                              n_eps_per_worker,
+                              agent_update,
+                              env_update=None):
+        """Sample an exact number of episodes per worker.
 
         Args:
-            n_traj_per_worker (int): Exact number of trajectories to gather for
+            n_eps_per_worker (int): Exact number of episodes to gather for
                 each worker.
-            agent_update(object): Value which will be passed into the
-                `agent_update_fn` before doing rollouts. If a list is passed
+            agent_update (object): Value which will be passed into the
+                `agent_update_fn` before sampling episodes. If a list is passed
                 in, it must have length exactly `factory.n_workers`, and will
                 be spread across the workers.
-            env_update(object): Value which will be passed into the
-                `env_update_fn` before doing rollouts. If a list is passed in,
-                it must have length exactly `factory.n_workers`, and will be
-                spread across the workers.
+            env_update (object): Value which will be passed into the
+                `env_update_fn` before sampling episodes. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
 
         Returns:
-            TrajectoryBatch: Batch of gathered trajectories. Always in worker
-                order. In other words, first all trajectories from worker 0,
-                then all trajectories from worker 1, etc.
+            EpisodeBatch: Batch of gathered episodes. Always in worker
+                order. In other words, first all episodes from worker 0,
+                then all episodes from worker 1, etc.
 
         Raises:
             AssertionError: On internal errors.
@@ -216,24 +216,24 @@ class MultiprocessingSampler(Sampler):
         agent_ups = self._factory.prepare_worker_messages(
             agent_update, cloudpickle.dumps)
         env_ups = self._factory.prepare_worker_messages(env_update)
-        trajectories = defaultdict(list)
+        episodes = defaultdict(list)
 
         with click.progressbar(length=self._factory.n_workers,
                                label='Sampling') as pbar:
             while any(
-                    len(trajectories[i]) < n_traj_per_worker
+                    len(episodes[i]) < n_eps_per_worker
                     for i in range(self._factory.n_workers)):
                 self._push_updates(updated_workers, agent_ups, env_ups)
                 tag, contents = self._to_sampler.get()
 
-                if tag == 'trajectory':
+                if tag == 'episode':
                     batch, version, worker_n = contents
 
                     if version == self._agent_version:
-                        if len(trajectories[worker_n]) < n_traj_per_worker:
-                            trajectories[worker_n].append(batch)
+                        if len(episodes[worker_n]) < n_eps_per_worker:
+                            episodes[worker_n].append(batch)
 
-                        if len(trajectories[worker_n]) == n_traj_per_worker:
+                        if len(episodes[worker_n]) == n_eps_per_worker:
                             pbar.update(1)
                             try:
                                 self._to_worker[worker_n].put_nowait(
@@ -251,10 +251,10 @@ class MultiprocessingSampler(Sampler):
                 except queue.Full:
                     pass
 
-        ordered_trajectories = list(
+        ordered_episodes = list(
             itertools.chain(
-                *[trajectories[i] for i in range(self._factory.n_workers)]))
-        return TrajectoryBatch.concatenate(*ordered_trajectories)
+                *[episodes[i] for i in range(self._factory.n_workers)]))
+        return EpisodeBatch.concatenate(*ordered_episodes)
 
     def shutdown_worker(self):
         """Shutdown the workers."""
@@ -308,7 +308,7 @@ def run_worker(factory, to_worker, to_sampler, worker_number, agent, env):
     Starts in the "not streaming" state.
     Enters the "streaming" state when the "start" or "continue" message is
     received.
-    While in the "streaming" state, it streams rollouts back to the parent
+    While in the "streaming" state, it streams episodes back to the parent
     process.
     When it receives a "stop" message, or the queue back to the parent process
     is full, it enters the "not streaming" state.
@@ -318,19 +318,20 @@ def run_worker(factory, to_worker, to_sampler, worker_number, agent, env):
     sampler, to ensure it remains responsive to messages.
 
     Args:
-        factory(WorkerFactory): Pickleable factory for creating workers. Should
-            be transmitted to other processes / nodes where work needs to be
-            done, then workers should be constructed there.
-        to_worker(multiprocessing.Queue): Queue to send commands to the worker.
-        to_sampler(multiprocessing.Queue): Queue to send rollouts back to the
+        factory (WorkerFactory): Pickleable factory for creating workers.
+            Should be transmitted to other processes / nodes where work needs
+            to be done, then workers should be constructed there.
+        to_worker (multiprocessing.Queue): Queue to send commands to the
+            worker.
+        to_sampler (multiprocessing.Queue): Queue to send episodes back to the
             sampler.
-        worker_number(int): Number of this worker.
-        agent(Agent): Agent to use to perform rollouts.  If a list is passed
+        worker_number (int): Number of this worker.
+        agent (Policy): Agent to use to sample episodes.  If a list is passed
             in, it must have length exactly `worker_factory.n_workers`, and
             will be spread across the workers.
-        env(gym.Env): Environment rollouts are performed in. If a list is
-            passed in, it must have length exactly `worker_factory.n_workers`,
-            and will be spread across the workers.
+        env (Environment): Environment from which episodes are sampled. If a
+            list is passed in, it must have length exactly
+            `worker_factory.n_workers`, and will be spread across the workers.
 
     Raises:
         AssertionError: On internal errors.
@@ -380,7 +381,7 @@ def run_worker(factory, to_worker, to_sampler, worker_number, agent, env):
             batch = inner_worker.rollout()
             try:
                 to_sampler.put_nowait(
-                    ('trajectory', (batch, version, worker_number)))
+                    ('episode', (batch, version, worker_number)))
             except queue.Full:
                 # Either the sampler has fallen far behind the workers, or we
                 # missed a "stop" message. Either way, stop streaming.

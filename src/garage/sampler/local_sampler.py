@@ -1,7 +1,7 @@
 """Sampler that runs workers in the main process."""
 import copy
 
-from garage import TrajectoryBatch
+from garage import EpisodeBatch
 from garage.sampler.sampler import Sampler
 
 
@@ -13,17 +13,17 @@ class LocalSampler(Sampler):
     it was called from.
 
     Args:
-        worker_factory(WorkerFactory): Pickleable factory for creating
+        worker_factory (WorkerFactory): Pickleable factory for creating
             workers. Should be transmitted to other processes / nodes where
             work needs to be done, then workers should be constructed
             there.
-        agents(Agent or List[Agent]): Agent(s) to use to perform rollouts.
+        agents (Policy or List[Policy]): Agent(s) to use to sample episodes.
             If a list is passed in, it must have length exactly
             `worker_factory.n_workers`, and will be spread across the
             workers.
-        envs(gym.Env or List[gym.Env]): Environment rollouts are performed
-            in. If a list is passed in, it must have length exactly
-            `worker_factory.n_workers`, and will be spread across the
+        envs (Environment or List[Environment]): Environment from which
+            episodes are sampled. If a list is passed in, it must have length
+            exactly `worker_factory.n_workers`, and will be spread across the
             workers.
 
     """
@@ -46,18 +46,18 @@ class LocalSampler(Sampler):
         """Construct this sampler.
 
         Args:
-            worker_factory(WorkerFactory): Pickleable factory for creating
+            worker_factory (WorkerFactory): Pickleable factory for creating
                 workers. Should be transmitted to other processes / nodes where
                 work needs to be done, then workers should be constructed
                 there.
-            agents(Agent or List[Agent]): Agent(s) to use to perform rollouts.
+            agents (Agent or List[Agent]): Agent(s) to use to sample episodes.
                 If a list is passed in, it must have length exactly
                 `worker_factory.n_workers`, and will be spread across the
                 workers.
-            envs(gym.Env or List[gym.Env]): Environment rollouts are performed
-                in. If a list is passed in, it must have length exactly
-                `worker_factory.n_workers`, and will be spread across the
-                workers.
+            envs (Environment or List[Environment]): Environment from which
+                episodes are sampled. If a list is passed in, it must have
+                length exactly `worker_factory.n_workers`, and will be spread
+                across the workers.
 
         Returns:
             Sampler: An instance of `cls`.
@@ -69,14 +69,14 @@ class LocalSampler(Sampler):
         """Apply updates to the workers.
 
         Args:
-            agent_update(object): Value which will be passed into the
-                `agent_update_fn` before doing rollouts. If a list is passed
+            agent_update (object): Value which will be passed into the
+                `agent_update_fn` before sampling episodes. If a list is passed
                 in, it must have length exactly `factory.n_workers`, and will
                 be spread across the workers.
-            env_update(object): Value which will be passed into the
-                `env_update_fn` before doing rollouts. If a list is passed in,
-                it must have length exactly `factory.n_workers`, and will be
-                spread across the workers.
+            env_update (object): Value which will be passed into the
+                `env_update_fn` before sampling episodes. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
 
         """
         agent_updates = self._factory.prepare_worker_messages(agent_update)
@@ -93,19 +93,19 @@ class LocalSampler(Sampler):
         Args:
             itr(int): The current iteration number. Using this argument is
                 deprecated.
-            num_samples(int): Minimum number of transitions / timesteps to
+            num_samples (int): Minimum number of transitions / timesteps to
                 sample.
-            agent_update(object): Value which will be passed into the
-                `agent_update_fn` before doing rollouts. If a list is passed
+            agent_update (object): Value which will be passed into the
+                `agent_update_fn` before sampling episodes. If a list is passed
                 in, it must have length exactly `factory.n_workers`, and will
                 be spread across the workers.
-            env_update(object): Value which will be passed into the
-                `env_update_fn` before doing rollouts. If a list is passed in,
-                it must have length exactly `factory.n_workers`, and will be
-                spread across the workers.
+            env_update (object): Value which will be passed into the
+                `env_update_fn` before sampling episodes. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
 
         Returns:
-            garage.TrajectoryBatch: The batch of collected trajectories.
+            EpisodeBatch: The batch of collected episodes.
 
         """
         self._update_workers(agent_update, env_update)
@@ -117,39 +117,39 @@ class LocalSampler(Sampler):
                 completed_samples += len(batch.actions)
                 batches.append(batch)
                 if completed_samples >= num_samples:
-                    return TrajectoryBatch.concatenate(*batches)
+                    return EpisodeBatch.concatenate(*batches)
 
-    def obtain_exact_trajectories(self,
-                                  n_traj_per_worker,
-                                  agent_update,
-                                  env_update=None):
-        """Sample an exact number of trajectories per worker.
+    def obtain_exact_episodes(self,
+                              n_eps_per_worker,
+                              agent_update,
+                              env_update=None):
+        """Sample an exact number of episodes per worker.
 
         Args:
-            n_traj_per_worker (int): Exact number of trajectories to gather for
+            n_eps_per_worker (int): Exact number of episodes to gather for
                 each worker.
-            agent_update(object): Value which will be passed into the
-                `agent_update_fn` before doing rollouts. If a list is passed
+            agent_update (object): Value which will be passed into the
+                `agent_update_fn` before sampling episodes. If a list is passed
                 in, it must have length exactly `factory.n_workers`, and will
                 be spread across the workers.
-            env_update(object): Value which will be passed into the
-                `env_update_fn` before doing rollouts. If a list is passed in,
-                it must have length exactly `factory.n_workers`, and will be
-                spread across the workers.
+            env_update (object): Value which will be passed into the
+                `env_update_fn` before samplin episodes. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
 
         Returns:
-            TrajectoryBatch: Batch of gathered trajectories. Always in worker
-                order. In other words, first all trajectories from worker 0,
-                then all trajectories from worker 1, etc.
+            EpisodeBatch: Batch of gathered episodes. Always in worker
+                order. In other words, first all episodes from worker 0,
+                then all episodes from worker 1, etc.
 
         """
         self._update_workers(agent_update, env_update)
         batches = []
         for worker in self._workers:
-            for _ in range(n_traj_per_worker):
+            for _ in range(n_eps_per_worker):
                 batch = worker.rollout()
                 batches.append(batch)
-        return TrajectoryBatch.concatenate(*batches)
+        return EpisodeBatch.concatenate(*batches)
 
     def shutdown_worker(self):
         """Shutdown the workers."""

@@ -6,13 +6,13 @@ import pprint
 import numpy as np
 import pytest
 
-from garage import StepType, TrajectoryBatch
+from garage import EpisodeBatch, StepType
 from garage.envs import GridWorldEnv
 from garage.np.policies import ScriptedPolicy
 from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
 
 SEED = 100
-N_TRAJ = 5
+N_EPS = 5
 MAX_EPISODE_LENGTH = 9
 
 
@@ -51,31 +51,31 @@ def other_envs():
     return [GridWorldEnv(desc=desc) for desc in descs]
 
 
-def trajs_eq(true_traj, test_traj):
-    return (np.allclose(true_traj.observations, test_traj.observations)
-            and np.allclose(true_traj.actions, test_traj.actions))
+def eps_eq(true_eps, test_eps):
+    return (np.allclose(true_eps.observations, test_eps.observations)
+            and np.allclose(true_eps.actions, test_eps.actions))
 
 
-def slice_trajectories(trajectories, slice_size):
+def slice_episodes(episodes, slice_size):
     sliced = []
-    for traj in trajectories.split():
-        splits = math.ceil(traj.lengths[0] / slice_size)
-        split_indices = np.array_split(np.arange(traj.lengths[0]), splits)
-        next_obs = traj.next_observations
+    for eps in episodes.split():
+        splits = math.ceil(eps.lengths[0] / slice_size)
+        split_indices = np.array_split(np.arange(eps.lengths[0]), splits)
+        next_obs = eps.next_observations
         for indices in split_indices:
             last_obs = np.asarray([next_obs[indices[-1]]])
-            t = TrajectoryBatch(
-                env_spec=traj.env_spec,
-                observations=traj.observations[indices],
+            t = EpisodeBatch(
+                env_spec=eps.env_spec,
+                observations=eps.observations[indices],
                 last_observations=last_obs,
-                actions=traj.actions[indices],
-                rewards=traj.rewards[indices],
-                step_types=traj.step_types[indices],
+                actions=eps.actions[indices],
+                rewards=eps.rewards[indices],
+                step_types=eps.step_types[indices],
                 env_infos={k: v[indices]
-                           for (k, v) in traj.env_infos.items()},
+                           for (k, v) in eps.env_infos.items()},
                 agent_infos={
                     k: v[indices]
-                    for (k, v) in traj.agent_infos.items()
+                    for (k, v) in eps.agent_infos.items()
                 },
                 lengths=np.asarray([len(indices)], dtype='l'))
             sliced.append(t)
@@ -88,17 +88,17 @@ def test_rollout(env, policy, timesteps_per_call):
     worker = FragmentWorker(seed=SEED,
                             max_episode_length=MAX_EPISODE_LENGTH,
                             worker_number=0,
-                            n_envs=N_TRAJ,
+                            n_envs=N_EPS,
                             timesteps_per_call=timesteps_per_call)
     worker.update_agent(policy)
     worker.update_env(env)
     n_calls = math.ceil(MAX_EPISODE_LENGTH / timesteps_per_call)
     for i in range(n_calls):
-        traj = worker.rollout()
-        assert sum(traj.lengths) == timesteps_per_call * N_TRAJ
+        eps = worker.rollout()
+        assert sum(eps.lengths) == timesteps_per_call * N_EPS
         if timesteps_per_call * i < 4:
             assert not any(step_type == StepType.TERMINAL
-                           for step_type in traj.step_types)
+                           for step_type in eps.step_types)
     worker.shutdown()
 
 
@@ -106,10 +106,10 @@ def test_rollout(env, policy, timesteps_per_call):
 @pytest.mark.parametrize('timesteps_per_call', [1, 2])
 def test_in_local_sampler(policy, envs, other_envs, timesteps_per_call):
     true_workers = WorkerFactory(seed=100,
-                                 n_workers=N_TRAJ,
+                                 n_workers=N_EPS,
                                  max_episode_length=MAX_EPISODE_LENGTH)
     true_sampler = LocalSampler.from_worker_factory(true_workers, policy, envs)
-    worker_args = dict(n_envs=N_TRAJ, timesteps_per_call=timesteps_per_call)
+    worker_args = dict(n_envs=N_EPS, timesteps_per_call=timesteps_per_call)
     vec_workers = WorkerFactory(seed=100,
                                 n_workers=1,
                                 worker_class=FragmentWorker,
@@ -118,27 +118,22 @@ def test_in_local_sampler(policy, envs, other_envs, timesteps_per_call):
     vec_sampler = LocalSampler.from_worker_factory(vec_workers, policy, [envs])
     n_samples = 400
 
-    true_trajs = true_sampler.obtain_samples(0, n_samples, None)
-    sliced_true_trajs = slice_trajectories(true_trajs, timesteps_per_call)
+    true_eps = true_sampler.obtain_samples(0, n_samples, None)
+    sliced_true_eps = slice_episodes(true_eps, timesteps_per_call)
 
-    vec_trajs = vec_sampler.obtain_samples(0, 50, None)
-    for test_traj in vec_trajs.split():
-        assert any(
-            trajs_eq(true_traj, test_traj) for true_traj in sliced_true_trajs)
+    vec_eps = vec_sampler.obtain_samples(0, 50, None)
+    for test_eps in vec_eps.split():
+        assert any(eps_eq(true_eps, test_eps) for true_eps in sliced_true_eps)
 
-    true_trajs = true_sampler.obtain_samples(0,
-                                             n_samples,
-                                             None,
-                                             env_update=other_envs)
-    sliced_true_trajs = slice_trajectories(true_trajs, timesteps_per_call)
-
-    vec_trajs = vec_sampler.obtain_samples(0,
-                                           50,
+    true_eps = true_sampler.obtain_samples(0,
+                                           n_samples,
                                            None,
-                                           env_update=[other_envs])
-    for test_traj in vec_trajs.split():
-        assert any(
-            trajs_eq(true_traj, test_traj) for true_traj in sliced_true_trajs)
+                                           env_update=other_envs)
+    sliced_true_eps = slice_episodes(true_eps, timesteps_per_call)
+
+    vec_eps = vec_sampler.obtain_samples(0, 50, None, env_update=[other_envs])
+    for test_eps in vec_eps.split():
+        assert any(eps_eq(true_eps, test_eps) for true_eps in sliced_true_eps)
 
     true_sampler.shutdown_worker()
     vec_sampler.shutdown_worker()

@@ -25,17 +25,17 @@ Message = namedtuple('Message', ['op', 'args', 'kwargs'])
 
 
 class Plotter:
-    """Renders rollouts of the policy as it trains.
+    """Visualizes episodes of the policy as it trains.
 
     Usually, this class is used by sending plot=True to LocalRunner.train().
 
     Args:
-        env (gym.Env): The environment to perform rollouts in. This will be
-        used without copying in the current process but in a separate thread,
-        so it should be given a unique copy (in particular, do not pass the
-        environment here, then try to pickle it, or you will occasionally get
-        crashes).
-        policy (garage.tf.Policy): The policy to do the rollouts with.
+        env (gym.Env): Environment from which to visualize episodes. This will
+        be used without copying in the current process but in a separate
+        thread, so it should be given a unique copy (in particular, do not pass
+        the training environment here, then try to pickle it, or you will
+        occasionally get crashes).
+        policy (garage.tf.Policy): Policy used to visualize episodes.
         sess (tf.Session): The TensorFlow session to use.
         graph (tf.Graph): The TensorFlow graph to use.
         rollout (callable): The rollout function to call.
@@ -154,9 +154,9 @@ class Plotter:
         """Update the policy being plotted.
 
         Args:
-            policy (garage.tf.Policy): The policy to rollout.
-            max_length (int or float): The maximum length to allow a rollout to
-                be. Defaults to infinity.
+            policy (garage.tf.Policy): Policy to visualize.
+            max_length (int or float): The maximum length to allow an episode
+                to be. Defaults to infinity.
 
         """
         if self.worker_thread.is_alive():

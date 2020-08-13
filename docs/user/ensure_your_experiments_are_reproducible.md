@@ -9,7 +9,6 @@ There are some important details in this example launcher file.
 
 ```python
 from garage import wrap_experiment
-from garage.envs import GarageEnv
 from garage.experiment import deterministic, LocalRunner
 import a.b.c
 
@@ -17,7 +16,7 @@ import a.b.c
 def experiment(ctxt=None, seed):
     deterministic.set_seed(seed)
     runner = LocalRunner(snapshot_config=ctxt)
-    env = GarageEnv(YOUR_ENV)
+    env = YOUR_ENV
 
     # Initialize algorithm dependencies (policy, Q-functions,
     # replay buffers, etc.)

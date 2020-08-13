@@ -51,24 +51,24 @@ def compute_advantages(discount, gae_lambda, max_episode_length, baselines,
         discount (float): RL discount factor (i.e. gamma).
         gae_lambda (float): Lambda, as used for Generalized Advantage
             Estimation (GAE).
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         baselines (torch.Tensor): A 2D vector of value function estimates with
             shape (N, T), where N is the batch dimension (number of episodes)
-            and T is the maximum path length experienced by the agent. If an
+            and T is the maximum episode length experienced by the agent. If an
             episode terminates in fewer than T time steps, the remaining
             elements in that episode should be set to 0.
         rewards (torch.Tensor): A 2D vector of per-step rewards with shape
             (N, T), where N is the batch dimension (number of episodes) and T
-            is the maximum path length experienced by the agent. If an episode
-            terminates in fewer than T time steps, the remaining elements in
-            that episode should be set to 0.
+            is the maximum episode length experienced by the agent. If an
+            episode terminates in fewer than T time steps, the remaining
+            elements in that episode should be set to 0.
 
     Returns:
         torch.Tensor: A 2D vector of calculated advantage values with shape
             (N, T), where N is the batch dimension (number of episodes) and T
-            is the maximum path length experienced by the agent. If an episode
-            terminates in fewer than T time steps, the remaining values in that
-            episode should be set to 0.
+            is the maximum episode length experienced by the agent. If an
+            episode terminates in fewer than T time steps, the remaining values
+            in that episode should be set to 0.
 
     """
     adv_filter = torch.full((1, 1, 1, max_episode_length - 1),
@@ -345,7 +345,7 @@ class TransposeImage(gym.ObservationWrapper):
         in pytorch format.
 
         Args:
-            env (garage.envs): environment.
+            env (Environment): environment.
         """
         super().__init__(env)
         obs_shape = self.observation_space.shape

@@ -10,8 +10,8 @@ from garage.misc import tensor_utils
 # pylint: disable=too-many-lines
 
 
-class TrajectoryBatch(
-        collections.namedtuple('TrajectoryBatch', [
+class EpisodeBatch(
+        collections.namedtuple('EpisodeBatch', [
             'env_spec',
             'observations',
             'last_observations',
@@ -23,20 +23,20 @@ class TrajectoryBatch(
             'lengths',
         ])):
     # pylint: disable=missing-return-doc, missing-return-type-doc, missing-param-doc, missing-type-doc  # noqa: E501
-    r"""A tuple representing a batch of whole trajectories.
+    r"""A tuple representing a batch of whole episodes.
 
     Data type for on-policy algorithms.
 
-    A :class:`TrajectoryBatch` represents a batch of whole trajectories
-    produced when one or more agents interacts with one or more environments.
+    A :class:`~EpisodeBatch` represents a batch of whole episodes, produced
+    when one or more agents interacts with one or more environments.
 
     +-----------------------+-------------------------------------------------+
     | Symbol                | Description                                     |
     +=======================+=================================================+
-    | :math:`N`             | Trajectory index dimension                      |
+    | :math:`N`             | Episode batch dimension                         |
     +-----------------------+-------------------------------------------------+
     | :math:`[T]`           | Variable-length time dimension of each          |
-    |                       | trajectory                                      |
+    |                       | episode                                         |
     +-----------------------+-------------------------------------------------+
     | :math:`S^*`           | Single-step shape of a time-series tensor       |
     +-----------------------+-------------------------------------------------+
@@ -54,9 +54,9 @@ class TrajectoryBatch(
             multi-dimensional) observations for all time steps in this batch.
             These must conform to :obj:`EnvStep.observation_space`.
         last_observations (numpy.ndarray): A numpy array of shape
-            :math:`(N, O^*)` containing the last observation of each
-            trajectory.  This is necessary since there are one more
-            observations than actions every trajectory.
+            :math:`(N, O^*)` containing the last observation of each episode.
+            This is necessary since there are one more observations than
+            actions every episode.
         actions (numpy.ndarray): A  numpy array of shape
             :math:`(N \bullet [T], A^*)` containing the (possibly
             multi-dimensional) actions for all time steps in this batch. These
@@ -75,8 +75,8 @@ class TrajectoryBatch(
             :math:`(N,)` containing the time step types for all transitions in
             this batch.
         lengths (numpy.ndarray): An integer numpy array of shape :math:`(N,)`
-            containing the length of each trajectory in this batch. This may be
-            used to reconstruct the individual trajectories.
+            containing the length of each episode in this batch. This may be
+            used to reconstruct the individual episodes.
 
     Raises:
         ValueError: If any of the above attributes do not conform to their
@@ -230,19 +230,19 @@ class TrajectoryBatch(
                 'step_types tensor must be dtype `StepType`, but got tensor '
                 'of dtype {} instead.'.format(step_types.dtype))
 
-        return super().__new__(TrajectoryBatch, env_spec, observations,
+        return super().__new__(EpisodeBatch, env_spec, observations,
                                last_observations, actions, rewards, env_infos,
                                agent_infos, step_types, lengths)
 
     @classmethod
     def concatenate(cls, *batches):
-        """Create a TrajectoryBatch by concatenating TrajectoryBatches.
+        """Create a EpisodeBatch by concatenating EpisodeBatches.
 
         Args:
-            batches (list[TrajectoryBatch]): Batches to concatenate.
+            batches (list[EpisodeBatch]): Batches to concatenate.
 
         Returns:
-            TrajectoryBatch: The concatenation of the batches.
+            EpisodeBatch: The concatenation of the batches.
 
         """
         if __debug__:
@@ -273,36 +273,36 @@ class TrajectoryBatch(
             lengths=np.concatenate([batch.lengths for batch in batches]))
 
     def split(self):
-        """Split a TrajectoryBatch into a list of TrajectoryBatches.
+        """Split an EpisodeBatch into a list of EpisodeBatches.
 
         The opposite of concatenate.
 
         Returns:
-            list[TrajectoryBatch]: A list of TrajectoryBatches, with one
-                trajectory per batch.
+            list[EpisodeBatch]: A list of EpisodeBatches, with one
+                episode per batch.
 
         """
-        trajectories = []
+        episodes = []
         start = 0
         for i, length in enumerate(self.lengths):
             stop = start + length
-            traj = TrajectoryBatch(env_spec=self.env_spec,
-                                   observations=self.observations[start:stop],
-                                   last_observations=np.asarray(
-                                       [self.last_observations[i]]),
-                                   actions=self.actions[start:stop],
-                                   rewards=self.rewards[start:stop],
-                                   env_infos=tensor_utils.slice_nested_dict(
-                                       self.env_infos, start, stop),
-                                   agent_infos=tensor_utils.slice_nested_dict(
-                                       self.agent_infos, start, stop),
-                                   step_types=self.step_types[start:stop],
-                                   lengths=np.asarray([length]))
-            trajectories.append(traj)
+            eps = EpisodeBatch(env_spec=self.env_spec,
+                               observations=self.observations[start:stop],
+                               last_observations=np.asarray(
+                                   [self.last_observations[i]]),
+                               actions=self.actions[start:stop],
+                               rewards=self.rewards[start:stop],
+                               env_infos=tensor_utils.slice_nested_dict(
+                                   self.env_infos, start, stop),
+                               agent_infos=tensor_utils.slice_nested_dict(
+                                   self.agent_infos, start, stop),
+                               step_types=self.step_types[start:stop],
+                               lengths=np.asarray([length]))
+            episodes.append(eps)
             start = stop
-        return trajectories
+        return episodes
 
-    def to_trajectory_list(self):
+    def to_list(self):
         """Convert the batch into a list of dictionaries.
 
         Returns:
@@ -329,10 +329,10 @@ class TrajectoryBatch(
 
         """
         start = 0
-        trajectories = []
+        episodes = []
         for i, length in enumerate(self.lengths):
             stop = start + length
-            trajectories.append({
+            episodes.append({
                 'observations':
                 self.observations[start:stop],
                 'next_observations':
@@ -352,15 +352,15 @@ class TrajectoryBatch(
                 self.step_types[start:stop]
             })
             start = stop
-        return trajectories
+        return episodes
 
     @classmethod
-    def from_trajectory_list(cls, env_spec, paths):
-        """Create a TrajectoryBatch from a list of trajectories.
+    def from_list(cls, env_spec, paths):
+        """Create a EpisodeBatch from a list of episodes.
 
         Args:
-            env_spec (EnvSpec): Specification for the environment
-                from which this data was sampled.
+            env_spec (EnvSpec): Specification for the environment from which
+                this data was sampled.
             paths (list[dict[str, np.ndarray or dict[str, np.ndarray]]]): Keys:
                 * observations (np.ndarray): Non-flattened array of
                     observations. Typically has shape (T, S^*) (the unflattened
@@ -434,9 +434,9 @@ class TrajectoryBatch(
     def next_observations(self):
         """Get the observations seen after actions are performed.
 
-        Usually, in a TrajectoryBatch, next_observations don't need to be
-        stored explicitly, since the next observation is already stored in the
-        batch.
+        Usually, in an :class:`~EpisodeBatch`, next_observations don't need to
+        be stored explicitly, since the next observation is already stored in
+        the batch.
 
         Returns:
             np.ndarray: The "next_observations".
@@ -444,16 +444,16 @@ class TrajectoryBatch(
         """
         return np.concatenate(
             tuple([
-                np.concatenate((traj.observations[1:], traj.last_observations))
-                for traj in self.split()
+                np.concatenate((eps.observations[1:], eps.last_observations))
+                for eps in self.split()
             ]))
 
 
 class StepType(enum.IntEnum):
-    """Defines the status of a `TimeStep` within a sequence.
+    """Defines the status of a :class:`~TimeStep` within a sequence.
 
-    Note that the last `TimeStep` in a sequence can either be TERMINAL or
-    TIMEOUT.
+    Note that the last :class:`~TimeStep` in a sequence can either be
+    :attribute:`StepType.TERMINAL` or :attribute:`StepType.TIMEOUT`.
 
     Suppose max_episode_length = 5:
     * A success sequence terminated at step 4 will look like:
@@ -463,14 +463,16 @@ class StepType(enum.IntEnum):
     * An unsuccessful sequence truncated by time limit will look like:
         FIRST, MID, MID, MID, TIMEOUT
     """
-    # Denotes the first `TimeStep` in a sequence.
+    # Denotes the first :class:`~TimeStep` in a sequence.
     FIRST = 0
-    # Denotes any `TimeStep` in the middle of a sequence (i.e. not the first or
-    # last one).
+    # Denotes any :class:`~TimeStep` in the middle of a sequence (i.e. not the
+    # first or last one).
     MID = 1
-    # Denotes the last `TimeStep` in a sequence that terminates successfully.
+    # Denotes the last :class:`~TimeStep` in a sequence that terminates
+    # successfully.
     TERMINAL = 2
-    # Denotes the last `TimeStep` in a sequence truncated by time limit.
+    # Denotes the last :class:`~TimeStep` in a sequence truncated by time
+    # limit.
     TIMEOUT = 3
 
     @classmethod
@@ -480,7 +482,7 @@ class StepType(enum.IntEnum):
         Args:
             step_cnt (int): current step cnt of the environment.
             max_episode_length (int): maximum episode length.
-            done (bool): the done signal returned by gym.Env.
+            done (bool): the done signal returned by Environment.
 
         Returns:
             StepType: the step type.
@@ -511,13 +513,13 @@ class TimeStep(
     # pylint: disable=missing-return-doc, missing-return-type-doc, missing-param-doc, missing-type-doc  # noqa: E501
     r"""A tuple representing a single TimeStep.
 
-    A :class:`TimeStep` represents a single sample when an agent interacts with
-        an environment. It describes as SARS (State–action–reward–state) tuple
-        that characterizes the evolution of a MDP.
+    A :class:`~TimeStep` represents a single sample when an agent interacts
+        with an environment. It describes as SARS (State–action–reward–state)
+        tuple that characterizes the evolution of a MDP.
 
     Attributes:
-        env_spec (EnvSpec): Specification for the environment from
-            which this data was sampled.
+        env_spec (EnvSpec): Specification for the environment from which this
+            data was sampled.
         observation (numpy.ndarray): A numpy array of shape :math:`(O^*)`
             containing the observation for the this time step in the
             environment. These must conform to
@@ -543,34 +545,35 @@ class TimeStep(
         agent_info (dict): A dict of arbitrary agent
             state information. For example, this may contain the hidden states
             from an RNN policy.
-        step_type (StepType): a `StepType` enum value. Can either be
-            StepType.FIRST, StepType.MID, StepType.TERMINAL, StepType.TIMEOUT.
+        step_type (StepType): a :class:`~StepType` enum value. Can be one of
+            :attribute:`~StepType.FIRST`, :attribute:`~StepType.MID`,
+            :attribute:`~StepType.TERMINAL`, or :attribute:`~StepType.TIMEOUT`.
 
     """
 
     @property
     def first(self):
-        """bool: Whether this `TimeStep` is the first of a sequence."""
+        """bool: Whether this step is the first of its episode."""
         return self.step_type is StepType.FIRST
 
     @property
     def mid(self):
-        """bool: Whether this `TimeStep` is in the mid of a sequence."""
+        """bool: Whether this step is in the middle of its episode."""
         return self.step_type is StepType.MID
 
     @property
     def terminal(self):
-        """bool: Whether this `TimeStep` records a termination condition."""
+        """bool: Whether this step records a termination condition."""
         return self.step_type is StepType.TERMINAL
 
     @property
     def timeout(self):
-        """bool: Whether this `TimeStep` records a time out condition."""
+        """bool: Whether this step records a timeout condition."""
         return self.step_type is StepType.TIMEOUT
 
     @property
     def last(self):
-        """bool: Whether this `TimeStep` is the last of a sequence."""
+        """bool: Whether this step is the last of its episode."""
         return self.step_type is StepType.TERMINAL or self.step_type \
             is StepType.TIMEOUT
 
@@ -646,7 +649,7 @@ class TimeStepBatch(
     Data type for off-policy algorithms, imitation learning and batch-RL.
 
     Attributes:
-        env_spec (garage.envs.EnvSpec): Specification for the environment from
+        env_spec (EnvSpec): Specification for the environment from
             which this data was sampled.
         observations (numpy.ndarray): Non-flattened array of observations.
             Typically has shape (batch_size, S^*) (the unflattened state space
@@ -811,7 +814,7 @@ class TimeStepBatch(
 
     @classmethod
     def concatenate(cls, *batches):
-        """Create a TimeStepBatch by concatenating TimeStepBatches.
+        """Concatenate two or more :class:`TimeStepBatch`s.
 
         Args:
             batches (list[TimeStepBatch]): Batches to concatenate.
@@ -848,13 +851,13 @@ class TimeStepBatch(
             step_types=np.concatenate([batch.step_types for batch in batches]))
 
     def split(self):
-        """Split a TimeStepBatch into a list of TimeStepBatches.
+        """Split a :class:`~TimeStepBatch` into a list of :class:`~TimeStepBatch`s.
 
         The opposite of concatenate.
 
         Returns:
-            list[TimeStepBatch]: A list of TimeStepBatches, with one
-                TimeStep per TimeStepBatch.
+            list[TimeStepBatch]: A list of :class:`TimeStepBatch`s, with one
+                :class:`~TimeStep` per :class:`~TimeStepBatch`.
 
         """
         time_steps = []
@@ -881,10 +884,9 @@ class TimeStepBatch(
     def to_time_step_list(self):
         """Convert the batch into a list of dictionaries.
 
-        This breaks the TimeStepBatch object into a list of single
-        time step sample dictionaries. len(rewards) (or the number of
-        discrete time step) dictionaries are returned
-
+        Breaks the :class:`~TimeStepBatch` into a list of single time step
+        sample dictionaries. len(rewards) (or the number of discrete time step)
+        dictionaries are returned
 
         Returns:
             list[dict[str, np.ndarray or dict[str, np.ndarray]]]: Keys:
@@ -937,11 +939,11 @@ class TimeStepBatch(
 
     @classmethod
     def from_time_step_list(cls, env_spec, ts_samples):
-        """Create a TimeStepBatch from a list of time step dictionaries.
+        """Create a :class:`~TimeStepBatch` from a list of time step dictionaries.
 
         Args:
-            env_spec (garage.envs.EnvSpec): Specification for the environment
-                from which this data was sampled.
+            env_spec (EnvSpec): Specification for the environment from which
+                this data was sampled.
             ts_samples (list[dict[str, np.ndarray or dict[str, np.ndarray]]]):
                 keys:
                 * observations (numpy.ndarray): Non-flattened array of
@@ -992,11 +994,11 @@ class TimeStepBatch(
         return TimeStepBatch.concatenate(*ts_batches)
 
     @classmethod
-    def from_trajectory_batch(cls, batch):
-        """Construct a TimeStepBatch from a TrajectoryBatch.
+    def from_episode_batch(cls, batch):
+        """Construct a :class:`~TimeStepBatch` from an :class:`~EpisodeBatch`.
 
         Args:
-            batch (TrajectoryBatch): TrajectoryBatch to convert.
+            batch (EpisodeBatch): Episode batch to convert.
 
         Returns:
             TimeStepBatch: The converted batch.
@@ -1004,8 +1006,8 @@ class TimeStepBatch(
         """
         next_observations = np.concatenate(
             tuple([
-                np.concatenate((traj.observations[1:], traj.last_observations))
-                for traj in batch.split()
+                np.concatenate((eps.observations[1:], eps.last_observations))
+                for eps in batch.split()
             ]))
         return cls(env_spec=batch.env_spec,
                    observations=batch.observations,

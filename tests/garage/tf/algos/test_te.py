@@ -131,14 +131,14 @@ class TestTE(TfGraphTestCase):
                                      worker_number=1)
         worker.update_env(self.env)
         worker.update_agent(self.policy)
-        worker.start_rollout()
-        while not worker.step_rollout():
+        worker.start_episode()
+        while not worker.step_episode():
             pass
-        paths = worker.collect_rollout()
-        assert 'task_onehot' in paths.env_infos.keys()
-        assert paths.env_infos['task_onehot'][0].shape == (4, )
-        assert 'latent' in paths.agent_infos.keys()
-        assert paths.agent_infos['latent'][0].shape == (1, )
+        episodes = worker.collect_episode()
+        assert 'task_onehot' in episodes.env_infos.keys()
+        assert episodes.env_infos['task_onehot'][0].shape == (4, )
+        assert 'latent' in episodes.agent_infos.keys()
+        assert episodes.agent_infos['latent'][0].shape == (1, )
 
     def test_te_ppo(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:

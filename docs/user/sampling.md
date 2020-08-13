@@ -1,6 +1,6 @@
 # Sampling
 
-`LocalRunner` gets trajectories through Sampling to train the policy. In
+`LocalRunner` gets episodes through Sampling to train the policy. In
 Garage, [`LocalRunner`](https://github.com/rlworkgroup/garage/blob/a767dcb95988abc14165a2a320ee39932a1c85ca/src/garage/experiment/local_runner.py)
 uses [`Sampler`](https://github.com/rlworkgroup/garage/blob/a767dcb95988abc14165a2a320ee39932a1c85ca/src/garage/sampler/sampler.py)
 to perform sampling. `Sampler` manages [`Worker`](https://github.com/rlworkgroup/garage/blob/a767dcb95988abc14165a2a320ee39932a1c85ca/src/garage/sampler/worker.py)s

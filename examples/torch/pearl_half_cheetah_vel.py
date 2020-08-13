@@ -84,7 +84,7 @@ def pearl_half_cheetah_vel(ctxt=None,
         embedding_mini_batch_size (int): Number of transitions in mini context
             batch; should be same as embedding_batch_size for non-recurrent
             encoder.
-        max_episode_length (int): Maximum path length.
+        max_episode_length (int): Maximum episode length.
         reward_scale (int): Reward scale.
         use_gpu (bool): Whether or not to use GPU for training.
 

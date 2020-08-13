@@ -19,7 +19,7 @@ class MAMLTRPO(MAML):
         outer_lr (float): Meta policy learning rate.
         max_kl_step (float): The maximum KL divergence between old and new
             policies.
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.

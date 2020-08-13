@@ -60,11 +60,11 @@ def test_methods():
                           worker_number=1)
     worker1.update_agent(context_policy)
     worker1.update_env(env_spec)
-    rollouts = worker1.rollout()
+    episodes = worker1.rollout()
 
-    assert rollouts.observations.shape == (max_episode_length, obs_dim)
-    assert rollouts.actions.shape == (max_episode_length, action_dim)
-    assert rollouts.rewards.shape == (max_episode_length, )
+    assert episodes.observations.shape == (max_episode_length, obs_dim)
+    assert episodes.actions.shape == (max_episode_length, action_dim)
+    assert episodes.rewards.shape == (max_episode_length, )
 
     worker2 = PEARLWorker(seed=1,
                           max_episode_length=max_episode_length,
@@ -73,10 +73,10 @@ def test_methods():
                           accum_context=True)
     worker2.update_agent(context_policy)
     worker2.update_env(env_spec)
-    rollouts = worker2.rollout()
+    episodes = worker2.rollout()
 
     assert context_policy.context.shape == (1, max_episode_length,
                                             encoder_input_dim)
-    assert rollouts.observations.shape == (max_episode_length, obs_dim)
-    assert rollouts.actions.shape == (max_episode_length, action_dim)
-    assert rollouts.rewards.shape == (max_episode_length, )
+    assert episodes.observations.shape == (max_episode_length, obs_dim)
+    assert episodes.actions.shape == (max_episode_length, action_dim)
+    assert episodes.rewards.shape == (max_episode_length, )

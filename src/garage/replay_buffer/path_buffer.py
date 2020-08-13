@@ -7,7 +7,7 @@ from garage import StepType
 
 
 class PathBuffer:
-    """A replay buffer that stores and can sample whole paths.
+    """A replay buffer that stores and can sample whole episodes.
 
     This buffer only stores valid steps, and doesn't require paths to
     have a maximum length.
@@ -24,30 +24,30 @@ class PathBuffer:
         # Each path in the buffer has a tuple of two ranges in
         # self._path_segments. If the path is stored in a single contiguous
         # region of the buffer, the second range will be range(0, 0).
-        # The "left" side of the deque contains the oldest path.
+        # The "left" side of the deque contains the oldest episode.
         self._path_segments = collections.deque()
         self._buffer = {}
 
-    def add_trajectory_batch(self, trajectories):
-        """Add a TrajectoryBatch to the buffer.
+    def add_episode_batch(self, episodes):
+        """Add a EpisodeBatch to the buffer.
 
         Args:
-            trajectories (TrajectoryBatch): Trajectories to add.
+            episodes (EpisodeBatch): Episodes to add.
 
         """
-        env_spec = trajectories.env_spec
+        env_spec = episodes.env_spec
         obs_space = env_spec.observation_space
-        for traj in trajectories.split():
+        for eps in episodes.split():
             terminals = np.array([
-                step_type == StepType.TERMINAL for step_type in traj.step_types
+                step_type == StepType.TERMINAL for step_type in eps.step_types
             ],
                                  dtype=bool)
             path = {
-                'observations': obs_space.flatten_n(traj.observations),
+                'observations': obs_space.flatten_n(eps.observations),
                 'next_observations':
-                obs_space.flatten_n(traj.next_observations),
-                'actions': env_spec.action_space.flatten_n(traj.actions),
-                'rewards': traj.rewards.reshape(-1, 1),
+                obs_space.flatten_n(eps.next_observations),
+                'actions': env_spec.action_space.flatten_n(eps.actions),
+                'rewards': eps.rewards.reshape(-1, 1),
                 'terminals': terminals.reshape(-1, 1),
             }
             self.add_path(path)
@@ -83,7 +83,6 @@ class PathBuffer:
             buf_arr = self._get_or_allocate_key(key, array)
             # numpy doesn't special case range indexing, so it's very slow.
             # Slice manually instead, which is faster than any other method.
-            # pylint: disable=invalid-slice-index
             buf_arr[first_seg.start:first_seg.stop] = array[:len(first_seg)]
             buf_arr[second_seg.start:second_seg.stop] = array[len(first_seg):]
         if second_seg.stop != 0:

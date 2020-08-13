@@ -5,7 +5,7 @@ import cma
 from dowel import logger, tabular
 import numpy as np
 
-from garage import log_performance, TrajectoryBatch
+from garage import EpisodeBatch, log_performance
 from garage.np import paths_to_tensors
 from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.sampler import RaySampler
@@ -20,13 +20,13 @@ class CMAES(RLAlgorithm):
         original rllab paper.
 
     Args:
-        env_spec (garage.envs.EnvSpec): Environment specification.
+        env_spec (EnvSpec): Environment specification.
         policy (garage.np.policies.Policy): Action policy.
-        baseline (garage.np.baselines.Baseline): Baseline for GAE
-            (Generalized Advantage Estimation).
+        baseline (garage.np.baselines.Baseline): Baseline for GAE (Generalized
+            Advantage Estimation).
         n_samples (int): Number of policies sampled in one epoch.
         discount (float): Environment reward discount.
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         sigma0 (float): Initial std for param distribution.
 
     """
@@ -120,10 +120,10 @@ class CMAES(RLAlgorithm):
                                         baseline_predictions, self._discount)
 
         # -- Stage: Run and calculate performance of the algorithm
-        undiscounted_returns = log_performance(
-            itr,
-            TrajectoryBatch.from_trajectory_list(self._env_spec, paths),
-            discount=self._discount)
+        undiscounted_returns = log_performance(itr,
+                                               EpisodeBatch.from_list(
+                                                   self._env_spec, paths),
+                                               discount=self._discount)
         self._episode_reward_mean.extend(undiscounted_returns)
         tabular.record('Extras/EpisodeRewardMean',
                        np.mean(self._episode_reward_mean))

@@ -14,11 +14,11 @@ import torch
 
 from garage import (_Default,
                     EnvSpec,
+                    EpisodeBatch,
                     log_multitask_performance,
                     log_performance,
                     make_optimizer,
-                    StepType,
-                    TrajectoryBatch)
+                    StepType)
 
 from tests.fixtures import TfGraphTestCase
 
@@ -28,7 +28,7 @@ from tests.fixtures import TfGraphTestCase
 @pytest.mark.serial
 def test_log_performance():
     lengths = np.array([10, 5, 1, 1])
-    batch = TrajectoryBatch(
+    batch = EpisodeBatch(
         EnvSpec(akro.Box(np.array([0., 0., 0.]), np.array([1., 1., 1.])),
                 akro.Box(np.array([-1., -1.]), np.array([0., 0.]))),
         observations=np.ones((sum(lengths), 3), dtype=np.float32),
@@ -64,7 +64,7 @@ def test_log_performance():
         rows = list(csv.DictReader(file))
     res = {k: float(r) for (k, r) in rows[0].items()}
     assert res['test_log_performance/Iteration'] == 7
-    assert res['test_log_performance/NumTrajs'] == 4
+    assert res['test_log_performance/NumEpisodes'] == 4
     assert math.isclose(res['test_log_performance/SuccessRate'], 0.75)
     assert math.isclose(res['test_log_performance/TerminationRate'], 0.5)
     assert math.isclose(res['test_log_performance/AverageDiscountedReturn'],
@@ -78,7 +78,7 @@ def test_log_performance():
 @pytest.mark.serial
 def test_log_multitask_performance_task_name():
     lengths = np.array([10, 5, 1, 1])
-    batch = TrajectoryBatch(
+    batch = EpisodeBatch(
         EnvSpec(akro.Box(np.array([0., 0., 0.]), np.array([1., 1., 1.])),
                 akro.Box(np.array([-1., -1.]), np.array([0., 0.]))),
         observations=np.ones((sum(lengths), 3), dtype=np.float32),
@@ -113,9 +113,9 @@ def test_log_multitask_performance_task_name():
     assert res['env1/Iteration'] == 7
     assert res['env2/Iteration'] == 7
     assert res['env3/Iteration'] == 7
-    assert res['env1/NumTrajs'] == 2
-    assert res['env2/NumTrajs'] == 1
-    assert res['env3/NumTrajs'] == 1
+    assert res['env1/NumEpisodes'] == 2
+    assert res['env2/NumEpisodes'] == 1
+    assert res['env3/NumEpisodes'] == 1
     assert math.isclose(res['env1/SuccessRate'], 0.5)
     assert math.isclose(res['env2/SuccessRate'], 1.0)
     assert math.isclose(res['env3/SuccessRate'], 1.0)
@@ -124,7 +124,7 @@ def test_log_multitask_performance_task_name():
 @pytest.mark.serial
 def test_log_multitask_performance_task_id():
     lengths = np.array([10, 5, 1, 1])
-    batch = TrajectoryBatch(
+    batch = EpisodeBatch(
         EnvSpec(akro.Box(np.array([0., 0., 0.]), np.array([1., 1., 1.])),
                 akro.Box(np.array([-1., -1.]), np.array([0., 0.]))),
         observations=np.ones((sum(lengths), 3), dtype=np.float32),
@@ -165,10 +165,10 @@ def test_log_multitask_performance_task_id():
     assert res['env2/Iteration'] == 7
     assert res['env3/Iteration'] == 7
     assert res['env4/Iteration'] == 7
-    assert res['env1/NumTrajs'] == 2
-    assert res['env2/NumTrajs'] == 1
-    assert res['env3/NumTrajs'] == 1
-    assert res['env4/NumTrajs'] == 0
+    assert res['env1/NumEpisodes'] == 2
+    assert res['env2/NumEpisodes'] == 1
+    assert res['env3/NumEpisodes'] == 1
+    assert res['env4/NumEpisodes'] == 0
     assert math.isclose(res['env1/SuccessRate'], 0.5)
     assert math.isclose(res['env2/SuccessRate'], 1.0)
     assert math.isclose(res['env3/SuccessRate'], 1.0)

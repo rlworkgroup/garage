@@ -8,11 +8,11 @@ class TFWorkerClassWrapper:
     """Acts like a Worker class, but is actually an object.
 
     When called, constructs the wrapped class and wraps it in a
-    TFWorkerWrapper.
+    :class:`~TFWorkerWrapper`.
 
     Args:
         wrapped_class (type): The class to wrap. Should be a subclass of
-            garage.sampler.Worker.
+            :class:`~Worker`.
 
     """
 
@@ -68,50 +68,28 @@ class TFWorkerWrapper(Worker):
 
     @property
     def agent(self):
-        """Returns the worker's agent.
-
-        Returns:
-            garage.Policy: the worker's agent.
-
-        """
+        """Policy: the worker's agent."""
         return self._inner_worker.agent
 
     @agent.setter
     def agent(self, agent):
-        """Sets the worker's agent.
-
-        Args:
-            agent (garage.Policy): The agent.
-
-        """
         self._inner_worker.agent = agent
 
     @property
     def env(self):
-        """Returns the worker's environment.
-
-        Returns:
-            gym.Env: the worker's environment.
-
-        """
+        """Environment: Worker's environment."""
         return self._inner_worker.env
 
     @env.setter
     def env(self, env):
-        """Sets the worker's environment.
-
-        Args:
-            env (gym.Env): The environment.
-
-        """
         self._inner_worker.env = env
 
     def update_agent(self, agent_update):
         """Update the worker's agent, using agent_update.
 
         Args:
-            agent_update(object): An agent update. The exact type of this
-                argument depends on the `Worker` implementation.
+            agent_update (object): An agent update. The exact type of this
+                argument depends on the :class:`~Worker` implementation.
 
         """
         self._inner_worker.update_agent(agent_update)
@@ -120,42 +98,42 @@ class TFWorkerWrapper(Worker):
         """Update the worker's env, using env_update.
 
         Args:
-            env_update(object): An environment update. The exact type of this
-                argument depends on the `Worker` implementation.
+            env_update (object): An environment update. The exact type of this
+                argument depends on the :class:`~Worker` implementation.
 
         """
         self._inner_worker.update_env(env_update)
 
     def rollout(self):
-        """Sample a single rollout of the agent in the environment.
+        """Sample a single episode of the agent in the environment.
 
         Returns:
-            garage.TrajectoryBatch: Batch of sampled trajectories. May be
-                truncated if max_episode_length is set.
+            EpisodeBatch: Batch of sampled episodes. May be truncated if
+                `max_episode_length` is set.
 
         """
         return self._inner_worker.rollout()
 
-    def start_rollout(self):
-        """Begin a new rollout."""
-        self._inner_worker.start_rollout()
+    def start_episode(self):
+        """Begin a new episode."""
+        self._inner_worker.start_episode()
 
-    def step_rollout(self):
-        """Take a single time-step in the current rollout.
+    def step_episode(self):
+        """Take a single time-step in the current episode.
 
         Returns:
-            bool: True iff the path is done, either due to the environment
+            bool: True iff the episode is done, either due to the environment
                 indicating termination of due to reaching `max_episode_length`.
 
         """
-        return self._inner_worker.step_rollout()
+        return self._inner_worker.step_episode()
 
-    def collect_rollout(self):
-        """Collect the current rollout, clearing the internal buffer.
+    def collect_episode(self):
+        """Collect the current episode, clearing the internal buffer.
 
         Returns:
-            garage.TrajectoryBatch: Batch of sampled trajectories. May be
-                truncated if the rollouts haven't completed yet.
+            EpisodeBatch: Batch of sampled episodes. May be truncated if the
+                episodes haven't completed yet.
 
         """
-        return self._inner_worker.collect_rollout()
+        return self._inner_worker.collect_episode()

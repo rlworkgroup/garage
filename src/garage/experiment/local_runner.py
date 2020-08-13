@@ -22,15 +22,15 @@ class ExperimentStats:
         total_epoch (int): Total epoches.
         total_itr (int): Total Iterations.
         total_env_steps (int): Total environment steps collected.
-        last_path (list[dict]): Last sampled paths.
+        last_episode (list[dict]): Last sampled episodes.
 
     """
 
-    def __init__(self, total_epoch, total_itr, total_env_steps, last_path):
+    def __init__(self, total_epoch, total_itr, total_env_steps, last_episode):
         self.total_epoch = total_epoch
         self.total_itr = total_itr
         self.total_env_steps = total_env_steps
-        self.last_path = last_path
+        self.last_episode = last_episode
 
 
 class SetupArgs:
@@ -38,7 +38,7 @@ class SetupArgs:
     """Arguments to setup a runner.
 
     Args:
-        sampler_cls (garage.sampler.Sampler): A sampler class.
+        sampler_cls (Sampler): A sampler class.
         sampler_args (dict): Arguments to be passed to sampler constructor.
         seed (int): Random seed.
 
@@ -57,19 +57,19 @@ class TrainArgs:
     Args:
         n_epochs (int): Number of epochs.
         batch_size (int): Number of environment steps in one batch.
-        plot (bool): Visualize policy by doing rollout after each epoch.
-        store_paths (bool): Save paths in snapshot.
+        plot (bool): Visualize an episode of the policy after after each epoch.
+        store_episodes (bool): Save episodes in snapshot.
         pause_for_plot (bool): Pause for plot.
         start_epoch (int): The starting epoch. Used for resume().
 
     """
 
-    def __init__(self, n_epochs, batch_size, plot, store_paths, pause_for_plot,
-                 start_epoch):
+    def __init__(self, n_epochs, batch_size, plot, store_episodes,
+                 pause_for_plot, start_epoch):
         self.n_epochs = n_epochs
         self.batch_size = batch_size
         self.plot = plot
-        self.store_paths = store_paths
+        self.store_episodes = store_episodes
         self.pause_for_plot = pause_for_plot
         self.start_epoch = start_epoch
 
@@ -126,7 +126,7 @@ class LocalRunner:
         self._stats = ExperimentStats(total_itr=0,
                                       total_env_steps=0,
                                       total_epoch=0,
-                                      last_path=None)
+                                      last_episode=None)
 
         self._algo = None
         self._env = None
@@ -136,7 +136,7 @@ class LocalRunner:
         self._start_time = None
         self._itr_start_time = None
         self.step_itr = None
-        self.step_path = None
+        self.step_episode = None
 
         # only used for off-policy algorithms
         self.enable_logging = True
@@ -159,8 +159,8 @@ class LocalRunner:
         Args:
             sampler_cls (type): The type of sampler to construct.
             seed (int): Seed to use in sampler workers.
-            max_episode_length (int): Maximum path length to be sampled by the
-                sampler. Paths longer than this will be truncated.
+            max_episode_length (int): Maximum episode length to be sampled by
+                the sampler. Epsiodes longer than this will be truncated.
             n_workers (int): The number of workers the sampler should use.
             worker_class (type): Type of worker the Sampler should use.
             sampler_args (dict or None): Additional arguments that should be
@@ -282,32 +282,32 @@ class LocalRunner:
         if self._plot:
             self._plotter.close()
 
-    def obtain_trajectories(self,
-                            itr,
-                            batch_size=None,
-                            agent_update=None,
-                            env_update=None):
-        """Obtain one batch of trajectories.
+    def obtain_episodes(self,
+                        itr,
+                        batch_size=None,
+                        agent_update=None,
+                        env_update=None):
+        """Obtain one batch of episodes.
 
         Args:
             itr (int): Index of iteration (epoch).
-            batch_size (int): Number of steps in batch.
-                This is a hint that the sampler may or may not respect.
+            batch_size (int): Number of steps in batch. This is a hint that the
+                sampler may or may not respect.
             agent_update (object): Value which will be passed into the
-                `agent_update_fn` before doing rollouts. If a list is passed
+                `agent_update_fn` before doing sampling episodes. If a list is
+                passed in, it must have length exactly `factory.n_workers`, and
+                will be spread across the workers.
+            env_update (object): Value which will be passed into the
+                `env_update_fn` before sampling episodes. If a list is passed
                 in, it must have length exactly `factory.n_workers`, and will
                 be spread across the workers.
-            env_update (object): Value which will be passed into the
-                `env_update_fn` before doing rollouts. If a list is passed in,
-                it must have length exactly `factory.n_workers`, and will be
-                spread across the workers.
 
         Raises:
-            ValueError: Raised if the runner was initialized without a sampler,
-                        or batch_size wasn't provided here or to train.
+            ValueError: If the runner was initialized without a sampler, or
+                batch_size wasn't provided here or to train.
 
         Returns:
-            TrajectoryBatch: Batch of trajectories.
+            EpisodeBatch: Batch of episodes.
 
         """
         if self._sampler is None:
@@ -318,15 +318,15 @@ class LocalRunner:
             raise ValueError('Runner was not initialized with `batch_size`. '
                              'Either provide `batch_size` to runner.train, '
                              ' or pass `batch_size` to runner.obtain_samples.')
-        paths = None
+        episodes = None
         if agent_update is None:
             agent_update = self._algo.policy.get_param_values()
-        paths = self._sampler.obtain_samples(
+        episodes = self._sampler.obtain_samples(
             itr, (batch_size or self._train_args.batch_size),
             agent_update=agent_update,
             env_update=env_update)
-        self._stats.total_env_steps += sum(paths.lengths)
-        return paths
+        self._stats.total_env_steps += sum(episodes.lengths)
+        return episodes
 
     def obtain_samples(self,
                        itr,
@@ -340,13 +340,13 @@ class LocalRunner:
             batch_size (int): Number of steps in batch.
                 This is a hint that the sampler may or may not respect.
             agent_update (object): Value which will be passed into the
-                `agent_update_fn` before doing rollouts. If a list is passed
+                `agent_update_fn` before sampling episodes. If a list is passed
                 in, it must have length exactly `factory.n_workers`, and will
                 be spread across the workers.
             env_update (object): Value which will be passed into the
-                `env_update_fn` before doing rollouts. If a list is passed in,
-                it must have length exactly `factory.n_workers`, and will be
-                spread across the workers.
+                `env_update_fn` before sampling episodes. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
 
         Raises:
             ValueError: Raised if the runner was initialized without a sampler,
@@ -356,9 +356,8 @@ class LocalRunner:
             list[dict]: One batch of samples.
 
         """
-        trajs = self.obtain_trajectories(itr, batch_size, agent_update,
-                                         env_update)
-        return trajs.to_trajectory_list()
+        eps = self.obtain_episodes(itr, batch_size, agent_update, env_update)
+        return eps.to_list()
 
     def save(self, epoch):
         """Save snapshot of current batch.
@@ -427,7 +426,7 @@ class LocalRunner:
         last_itr = self._stats.total_itr
         total_env_steps = self._stats.total_env_steps
         batch_size = self._train_args.batch_size
-        store_paths = self._train_args.store_paths
+        store_episodes = self._train_args.store_episodes
         pause_for_plot = self._train_args.pause_for_plot
 
         fmt = '{:<20} {:<15}'
@@ -437,7 +436,7 @@ class LocalRunner:
         logger.log(fmt.format('n_epochs', n_epochs))
         logger.log(fmt.format('last_epoch', last_epoch))
         logger.log(fmt.format('batch_size', batch_size))
-        logger.log(fmt.format('store_paths', store_paths))
+        logger.log(fmt.format('store_episodes', store_episodes))
         logger.log(fmt.format('pause_for_plot', pause_for_plot))
         logger.log(fmt.format('-- Stats --', '-- Value --'))
         logger.log(fmt.format('last_itr', last_itr))
@@ -468,15 +467,15 @@ class LocalRunner:
               n_epochs,
               batch_size=None,
               plot=False,
-              store_paths=False,
+              store_episodes=False,
               pause_for_plot=False):
         """Start training.
 
         Args:
             n_epochs (int): Number of epochs.
             batch_size (int or None): Number of environment steps in one batch.
-            plot (bool): Visualize policy by doing rollout after each epoch.
-            store_paths (bool): Save paths in snapshot.
+            plot (bool): Visualize an episode from the policy after each epoch.
+            store_episodes (bool): Save episodes in snapshot.
             pause_for_plot (bool): Pause for plot.
 
         Raises:
@@ -493,7 +492,7 @@ class LocalRunner:
         self._train_args = TrainArgs(n_epochs=n_epochs,
                                      batch_size=batch_size,
                                      plot=plot,
-                                     store_paths=store_paths,
+                                     store_episodes=store_episodes,
                                      pause_for_plot=pause_for_plot,
                                      start_epoch=0)
 
@@ -512,7 +511,7 @@ class LocalRunner:
         management. It is used inside train() in each algorithm.
 
         The generator initializes two variables: `self.step_itr` and
-        `self.step_path`. To use the generator, these two have to be
+        `self.step_episode`. To use the generator, these two have to be
         updated manually in each epoch, as the example shows below.
 
         Yields:
@@ -520,7 +519,7 @@ class LocalRunner:
 
         Examples:
             for epoch in runner.step_epochs():
-                runner.step_path = runner.obtain_samples(...)
+                runner.step_episode = runner.obtain_samples(...)
                 self.train_once(...)
                 runner.step_itr += 1
 
@@ -528,7 +527,7 @@ class LocalRunner:
         self._start_worker()
         self._start_time = time.time()
         self.step_itr = self._stats.total_itr
-        self.step_path = None
+        self.step_episode = None
 
         # Used by integration tests to ensure examples can run one epoch.
         n_epochs = int(
@@ -541,10 +540,10 @@ class LocalRunner:
             self._itr_start_time = time.time()
             with logger.prefix('epoch #%d | ' % epoch):
                 yield epoch
-                save_path = (self.step_path
-                             if self._train_args.store_paths else None)
+                save_episode = (self.step_episode
+                                if self._train_args.store_episodes else None)
 
-                self._stats.last_path = save_path
+                self._stats.last_episode = save_episode
                 self._stats.total_epoch = epoch
                 self._stats.total_itr = self.step_itr
 
@@ -559,7 +558,7 @@ class LocalRunner:
                n_epochs=None,
                batch_size=None,
                plot=None,
-               store_paths=None,
+               store_episodes=None,
                pause_for_plot=None):
         """Resume from restored experiment.
 
@@ -571,8 +570,8 @@ class LocalRunner:
         Args:
             n_epochs (int): Number of epochs.
             batch_size (int): Number of environment steps in one batch.
-            plot (bool): Visualize policy by doing rollout after each epoch.
-            store_paths (bool): Save paths in snapshot.
+            plot (bool): Visualize an episode from the policy after each epoch.
+            store_episodes (bool): Save episodes in snapshot.
             pause_for_plot (bool): Pause for plot.
 
         Raises:
@@ -590,8 +589,8 @@ class LocalRunner:
 
         if plot is not None:
             self._train_args.plot = plot
-        if store_paths is not None:
-            self._train_args.store_paths = store_paths
+        if store_episodes is not None:
+            self._train_args.store_episodes = store_episodes
         if pause_for_plot is not None:
             self._train_args.pause_for_plot = pause_for_plot
 

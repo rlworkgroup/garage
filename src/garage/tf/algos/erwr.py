@@ -20,14 +20,14 @@ class ERWR(VPG):
                 2007. ADPRL 2007. IEEE International Symposium on. IEEE, 2007.
 
     Args:
-        env_spec (garage.envs.EnvSpec): Environment specification.
+        env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.StochasticPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
         scope (str): Scope for identifying the algorithm.
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.

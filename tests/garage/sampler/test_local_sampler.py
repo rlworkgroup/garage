@@ -21,15 +21,15 @@ def test_update_envs_env_update():
                             max_episode_length=max_episode_length,
                             n_workers=n_workers)
     sampler = LocalSampler.from_worker_factory(workers, policy, env)
-    rollouts = sampler.obtain_samples(0,
+    episodes = sampler.obtain_samples(0,
                                       161,
                                       np.asarray(policy.get_param_values()),
                                       env_update=tasks.sample(n_workers))
     mean_rewards = []
     goals = []
-    for rollout in rollouts.split():
-        mean_rewards.append(rollout.rewards.mean())
-        goals.append(rollout.env_infos['task'][0]['goal'])
+    for eps in episodes.split():
+        mean_rewards.append(eps.rewards.mean())
+        goals.append(eps.env_infos['task'][0]['goal'])
     assert len(mean_rewards) == 11
     assert len(goals) == 11
     assert np.var(mean_rewards) > 1e-2
@@ -57,11 +57,11 @@ def test_init_with_env_updates():
     sampler = LocalSampler.from_worker_factory(workers,
                                                policy,
                                                envs=tasks.sample(n_workers))
-    rollouts = sampler.obtain_samples(0, 160, policy)
-    assert sum(rollouts.lengths) >= 160
+    episodes = sampler.obtain_samples(0, 160, policy)
+    assert sum(episodes.lengths) >= 160
 
 
-def test_obtain_exact_trajectories():
+def test_obtain_exact_episodes():
     max_episode_length = 15
     n_workers = 8
     env = PointEnv()
@@ -74,18 +74,18 @@ def test_obtain_exact_trajectories():
                             max_episode_length=max_episode_length,
                             n_workers=n_workers)
     sampler = LocalSampler.from_worker_factory(workers, policies, envs=env)
-    n_traj_per_worker = 3
-    rollouts = sampler.obtain_exact_trajectories(n_traj_per_worker,
-                                                 agent_update=policies)
-    # At least one action per trajectory.
-    assert sum(rollouts.lengths) >= n_workers * n_traj_per_worker
-    # All of the trajectories.
-    assert len(rollouts.lengths) == n_workers * n_traj_per_worker
+    n_eps_per_worker = 3
+    episodes = sampler.obtain_exact_episodes(n_eps_per_worker,
+                                             agent_update=policies)
+    # At least one action per episode.
+    assert sum(episodes.lengths) >= n_workers * n_eps_per_worker
+    # All of the episodes.
+    assert len(episodes.lengths) == n_workers * n_eps_per_worker
     worker = -1
-    for count, rollout in enumerate(rollouts.split()):
-        if count % n_traj_per_worker == 0:
+    for count, eps in enumerate(episodes.split()):
+        if count % n_eps_per_worker == 0:
             worker += 1
-        assert (rollout.actions == per_worker_actions[worker]).all()
+        assert (eps.actions == per_worker_actions[worker]).all()
 
 
 def test_no_seed():
@@ -101,5 +101,5 @@ def test_no_seed():
                             max_episode_length=max_episode_length,
                             n_workers=n_workers)
     sampler = LocalSampler.from_worker_factory(workers, policy, env)
-    rollouts = sampler.obtain_samples(0, 160, policy)
-    assert sum(rollouts.lengths) >= 160
+    episodes = sampler.obtain_samples(0, 160, policy)
+    assert sum(episodes.lengths) >= 160

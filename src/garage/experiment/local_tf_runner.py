@@ -118,8 +118,8 @@ class LocalTFRunner(LocalRunner):
         Args:
             sampler_cls (type): The type of sampler to construct.
             seed (int): Seed to use in sampler workers.
-            max_episode_length (int): Maximum path length to be sampled by the
-                sampler. Paths longer than this will be truncated.
+            max_episode_length (int): Maximum episode length to be sampled by
+                the sampler. Paths longer than this will be truncated.
             n_workers (int): The number of workers the sampler should use.
             worker_class (type): Type of worker the sampler should use.
             sampler_args (dict or None): Additional arguments that should be

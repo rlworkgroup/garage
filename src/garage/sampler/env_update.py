@@ -22,21 +22,21 @@ class EnvUpdate:
         Note that this implementation does nothing.
 
         Args:
-            old_env (gym.Env or None): Previous environment. Should not be used
-                after being passed in, and should not be closed.
+            old_env (Environment or None): Previous environment. Should not be
+                used after being passed in, and should not be closed.
 
         Returns:
-            gym.Env: The new, updated environment.
+            Environment: The new, updated environment.
 
         """
         return old_env
 
 
 class NewEnvUpdate(EnvUpdate):
-    """`~EnvUpdate` that creates a new environment every update.
+    """:class:`~EnvUpdate` that creates a new environment every update.
 
     Args:
-        env_constructor (Callable[gym.Env]): Callable that constructs an
+        env_constructor (Callable[Environment]): Callable that constructs an
             environment.
 
     """
@@ -50,11 +50,11 @@ class NewEnvUpdate(EnvUpdate):
         """Update an environment.
 
         Args:
-            old_env (gym.Env or None): Previous environment. Should not be used
-                after being passed in, and should not be closed.
+            old_env (Environment or None): Previous environment. Should not be
+                used after being passed in, and should not be closed.
 
         Returns:
-            gym.Env: The new, updated environment.
+            Environment: The new, updated environment.
 
         """
         if old_env:
@@ -63,10 +63,10 @@ class NewEnvUpdate(EnvUpdate):
 
 
 class SetTaskUpdate(EnvUpdate):
-    """`~EnvUpdate` that calls set_task with the provided task.
+    """:class:`~EnvUpdate` that calls set_task with the provided task.
 
     Args:
-        env_constructor (Callable[gym.Env]): Callable that constructs an
+        env_constructor (Callable[Environment]): Callable that constructs an
             environment.
         task (object): Opaque task type.
 
@@ -82,11 +82,11 @@ class SetTaskUpdate(EnvUpdate):
         """Update an environment.
 
         Args:
-            old_env (gym.Env or None): Previous environment. Should not be used
-                after being passed in, and should not be closed.
+            old_env (Environment or None): Previous environment. Should not be
+                used after being passed in, and should not be closed.
 
         Returns:
-            gym.Env: The new, updated environment.
+            Environment: The new, updated environment.
 
         """
         if old_env is None:
@@ -96,10 +96,10 @@ class SetTaskUpdate(EnvUpdate):
 
 
 class ExistingEnvUpdate(EnvUpdate):
-    """`~EnvUpdate` that carries an already constructed environment.
+    """:class:`~EnvUpdate` that carries an already constructed environment.
 
     Args:
-        env (gym.Env): The environment.
+        env (Environment): The environment.
 
     """
 
@@ -112,11 +112,11 @@ class ExistingEnvUpdate(EnvUpdate):
         This implementation does not close the old environment.
 
         Args:
-            old_env (gym.Env or None): Previous environment. Should not be used
-                after being passed in, and should not be closed.
+            old_env (Environment or None): Previous environment. Should not be
+                used after being passed in, and should not be closed.
 
         Returns:
-            gym.Env: The new, updated environment.
+            Environment: The new, updated environment.
 
         """
         return self._env

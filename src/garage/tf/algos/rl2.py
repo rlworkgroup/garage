@@ -12,9 +12,9 @@ import numpy as np
 
 from garage import (EnvSpec,
                     EnvStep,
+                    EpisodeBatch,
                     log_multitask_performance,
                     StepType,
-                    TrajectoryBatch,
                     Wrapper)
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import MetaRLAlgorithm
@@ -117,19 +117,19 @@ class RL2Env(Wrapper):
 class RL2Worker(DefaultWorker):
     """Initialize a worker for RL2.
 
-    In RL2, policy does not reset between trajectories in each meta batch.
+    In RL2, policy does not reset between epsiodes in each meta batch.
     Policy only resets once at the beginning of a trial/meta batch.
 
     Args:
-        seed(int): The seed to use to intialize random number generators.
-        max_episode_length(int or float): The maximum length paths which will
-            be sampled. Can be (floating point) infinity.
-        worker_number(int): The number of the worker where this update is
+        seed (int): The seed to use to intialize random number generators.
+        max_episode_length (int or float): The maximum length of episodes to
+            sample. Can be (floating point) infinity.
+        worker_number (int): The number of the worker where this update is
             occurring. This argument is used to set a different seed for each
             worker.
-        n_paths_per_trial (int): Number of trajectories sampled per trial/
-            meta batch. Policy resets in the beginning of a meta batch,
-            and obtain `n_paths_per_trial` trajectories in one meta batch.
+        n_episodes_per_trial (int): Number of episodes sampled per
+            trial/meta-batch. Policy resets in the beginning of a meta batch,
+            and obtain `n_episodes_per_trial` episodes in one meta batch.
 
     Attributes:
         agent(Policy or None): The worker's agent.
@@ -143,32 +143,32 @@ class RL2Worker(DefaultWorker):
             seed,
             max_episode_length,
             worker_number,
-            n_paths_per_trial=2):
-        self._n_paths_per_trial = n_paths_per_trial
+            n_episodes_per_trial=2):
+        self._n_episodes_per_trial = n_episodes_per_trial
         super().__init__(seed=seed,
                          max_episode_length=max_episode_length,
                          worker_number=worker_number)
 
-    def start_rollout(self):
-        """Begin a new rollout."""
-        self._path_length = 0
+    def start_episode(self):
+        """Begin a new episode."""
+        self._eps_length = 0
         self._prev_obs = self.env.reset()[0]
 
     def rollout(self):
-        """Sample a single rollout of the agent in the environment.
+        """Sample a single episode of the agent in the environment.
 
         Returns:
-            garage.TrajectoryBatch: The collected trajectory.
+            EpisodeBatch: The collected episode.
 
         """
         self.agent.reset()
-        for _ in range(self._n_paths_per_trial):
-            self.start_rollout()
-            while not self.step_rollout():
+        for _ in range(self._n_episodes_per_trial):
+            self.start_episode()
+            while not self.step_episode():
                 pass
         self._agent_infos['batch_idx'] = np.full(len(self._env_steps),
                                                  self._worker_number)
-        return self.collect_rollout()
+        return self.collect_episode()
 
 
 class NoResetPolicy:
@@ -182,7 +182,7 @@ class NoResetPolicy:
         policy (garage.tf.policies.Policy): Policy itself.
 
     Returns:
-        object: The wrapped policy that does not reset.
+        garage.tf.policies.Policy: The wrapped policy that does not reset.
 
     """
 
@@ -199,8 +199,8 @@ class NoResetPolicy:
             obs (numpy.ndarray): Observation from environment.
 
         Returns:
-            tuple[numpy.ndarray, dict]: Predicted action and agent
-                info.
+            numpy.ndarray: Predicted action
+            dict: Agent into
 
         """
         return self._policy.get_action(obs)
@@ -248,7 +248,8 @@ class RL2AdaptedPolicy:
             obs (numpy.ndarray): Observation from environment.
 
         Returns:
-            tuple(numpy.ndarray, dict): Predicted action and agent info.
+            numpy.ndarray: Predicated action
+            dict: Agent info.
 
         """
         return self._policy.get_action(obs)
@@ -257,8 +258,8 @@ class RL2AdaptedPolicy:
         """Return values of params.
 
         Returns:
-            tuple(np.ndarray, np.ndarray): Policy parameters values
-                and initial hidden state that will be set every time
+            np.ndarray: Policy parameter values
+            np.ndarray: Initial hidden state, which will be set every time
                 the policy is used for meta-test.
 
         """
@@ -268,7 +269,7 @@ class RL2AdaptedPolicy:
         """Set param values.
 
         Args:
-            params (tuple(np.ndarray, np.ndarray)): Two numpy array of
+            params (Tuple[np.ndarray, np.ndarray]): Two numpy array of
                 parameter values, one of the network parameters, one
                 for the initial hidden state.
 
@@ -285,9 +286,9 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
     When sampling for RL^2, there are more than one environments to be
     sampled from. In the original implementation, within each task/environment,
-    all rollouts sampled will be concatenated into one single rollout, and fed
+    all episodes sampled will be concatenated into one single episode, and fed
     to the inner algorithm. Thus, returns and advantages are calculated across
-    the rollout.
+    the episode.
 
     RL2Worker is required in sampling for RL2.
     See example/tf/rl2_ppo_halfcheetah.py for reference.
@@ -297,13 +298,12 @@ class RL2(MetaRLAlgorithm, abc.ABC):
     garage/tf/algos/rl2ppo.py and garage/tf/algos/rl2trpo.py.
 
     Args:
-        rl2_max_episode_length (int): Maximum length for trajectories with
-            respect to RL^2. Notice that it is different from the maximum
-            path length for the inner algorithm.
+        rl2_max_episode_length (int): Maximum length for episodess with
+            respect to RL^2. Note that it is different from the maximum episode
+            length for the inner algorithm.
         meta_batch_size (int): Meta batch size.
-        task_sampler (garage.experiment.TaskSampler): Task sampler.
-        meta_evaluator (garage.experiment.MetaEvaluator): Evaluator for meta-RL
-            algorithms.
+        task_sampler (TaskSampler): Task sampler.
+        meta_evaluator (MetaEvaluator): Evaluator for meta-RL algorithms.
         n_epochs_per_eval (int): If meta_evaluator is passed, meta-evaluation
             will be performed every `n_epochs_per_eval` epochs.
         inner_algo_args (dict): Arguments for inner algorithm.
@@ -326,8 +326,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): LocalRunner is passed to give algorithm
-                the access to runner.step_epochs(), which provides services
+            runner (LocalRunner): Experiment runner, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -340,10 +339,10 @@ class RL2(MetaRLAlgorithm, abc.ABC):
             if runner.step_itr % self._n_epochs_per_eval == 0:
                 if self._meta_evaluator is not None:
                     self._meta_evaluator.evaluate(self)
-            runner.step_path = runner.obtain_samples(
+            runner.step_episode = runner.obtain_samples(
                 runner.step_itr,
                 env_update=self._task_sampler.sample(self._meta_batch_size))
-            last_return = self.train_once(runner.step_itr, runner.step_path)
+            last_return = self.train_once(runner.step_itr, runner.step_episode)
             runner.step_itr += 1
 
         return last_return
@@ -371,30 +370,30 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         task.
 
         Returns:
-            object: The policy used to obtain samples that are later
-                used for meta-RL adaptation.
+            Policy: The policy used to obtain samples that are later used for
+                meta-RL adaptation.
 
         """
         self._policy.reset()
         return NoResetPolicy(self._policy)
 
     # pylint: disable=protected-access
-    def adapt_policy(self, exploration_policy, exploration_trajectories):
+    def adapt_policy(self, exploration_policy, exploration_episodes):
         """Produce a policy adapted for a task.
 
         Args:
-            exploration_policy (garage.Policy): A policy which was returned
-                from get_exploration_policy(), and which generated
-                exploration_trajectories by interacting with an environment.
-                The caller may not use this object after passing it into this
+            exploration_policy (Policy): A policy which was returned from
+                get_exploration_policy(), and which generated
+                exploration_episodes by interacting with an environment. The
+                caller may not use this object after passing it into this
                 method.
-            exploration_trajectories (garage.TrajectoryBatch): Trajectories to
-                adapt to, generated by exploration_policy exploring the
+            exploration_episodes (EpisodeBatch): episodes to adapt to,
+                generated by exploration_policy exploring the
                 environment.
 
         Returns:
-            garage.tf.policies.Policy: A policy adapted to the task represented
-                by the exploration_trajectories.
+            Policy: A policy adapted to the task represented by the
+                exploration_episodes.
 
         """
         return RL2AdaptedPolicy(exploration_policy._policy)
@@ -466,7 +465,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
         undiscounted_returns = log_multitask_performance(
             itr,
-            TrajectoryBatch.from_trajectory_list(self.env_spec, paths),
+            EpisodeBatch.from_list(self.env_spec, paths),
             self._inner_algo._discount,
             name_map=name_map)
 
@@ -479,12 +478,12 @@ class RL2(MetaRLAlgorithm, abc.ABC):
     def _concatenate_paths(self, paths):
         """Concatenate paths.
 
-        The input paths are from different rollouts but same task/environment.
+        The input paths are from different episodes but same task/environment.
         In RL^2, paths within each meta batch are all concatenate into a single
         path and fed to the policy.
 
         Args:
-            paths (dict): Input paths. All paths are from different rollouts,
+            paths (dict): Input paths. All paths are from different episodes,
                 but the same task/environment.
 
         Returns:
@@ -515,20 +514,10 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
     @property
     def policy(self):
-        """Policy.
-
-        Returns:
-            garage.Policy: Policy to be used.
-
-        """
+        """Policy: Policy to be used."""
         return self._inner_algo.policy
 
     @property
     def max_episode_length(self):
-        """Max path length.
-
-        Returns:
-            int: Maximum path length in a trajectory.
-
-        """
+        """int: Maximum length of an episode."""
         return self._rl2_max_episode_length

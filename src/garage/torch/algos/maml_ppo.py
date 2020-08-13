@@ -18,7 +18,7 @@ class MAMLPPO(MAML):
         outer_lr (float): Meta policy learning rate.
         lr_clip_range (float): The limit on the likelihood ratio between
             policies.
-        max_episode_length (int): Maximum length of a single rollout.
+        max_episode_length (int): Maximum length of a single episode.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.

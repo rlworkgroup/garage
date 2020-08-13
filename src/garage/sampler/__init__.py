@@ -1,6 +1,6 @@
 """Samplers which run agents in environments."""
 # yapf: disable
-from garage.sampler._dtypes import InProgressTrajectory
+from garage.sampler._dtypes import InProgressEpisode
 from garage.sampler._functions import _apply_env_update
 from garage.sampler.default_worker import DefaultWorker
 from garage.sampler.env_update import (EnvUpdate,
@@ -20,7 +20,7 @@ from garage.sampler.worker_factory import WorkerFactory
 
 __all__ = [
     '_apply_env_update',
-    'InProgressTrajectory',
+    'InProgressEpisode',
     'FragmentWorker',
     'Sampler',
     'LocalSampler',

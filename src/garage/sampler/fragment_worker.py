@@ -3,22 +3,22 @@ import copy
 
 import numpy as np
 
-from garage import StepType, TrajectoryBatch
-from garage.sampler import _apply_env_update, InProgressTrajectory
+from garage import EpisodeBatch, StepType
+from garage.sampler import _apply_env_update, InProgressEpisode
 from garage.sampler.default_worker import DefaultWorker
 
 
 class FragmentWorker(DefaultWorker):
-    """Vectorized Worker that collects partial trajectories.
+    """Vectorized Worker that collects partial episodes.
 
     Useful for off-policy RL.
 
     Args:
-        seed(int): The seed to use to intialize random number generators.
-        max_episode_length(int or float): The maximum length paths which
+        seed (int): The seed to use to intialize random number generators.
+        max_episode_length (int or float): The maximum length of episodes which
             will be sampled. Can be (floating point) infinity.
         length of fragments before they're transmitted out of
-        worker_number(int): The number of the worker this update is
+        worker_number (int): The number of the worker this update is
             occurring in. This argument is used to set a different seed for
             each worker.
         n_envs (int): Number of environment copies to use.
@@ -45,9 +45,9 @@ class FragmentWorker(DefaultWorker):
         self._needs_env_reset = True
         self._envs = [None] * n_envs
         self._agents = [None] * n_envs
-        self._path_lengths = [0] * self._n_envs
+        self._episode_lengths = [0] * self._n_envs
         self._complete_fragments = []
-        # Initialized in start_rollout
+        # Initialized in start_episode
         self._fragments = None
 
     def update_env(self, env_update):
@@ -57,7 +57,7 @@ class FragmentWorker(DefaultWorker):
         distributes the environments across the "vectorization" dimension.
 
         Args:
-            env_update(gym.Env or EnvUpdate or None): The environment to
+            env_update(Environment or EnvUpdate or None): The environment to
                 replace the existing env with. Note that other implementations
                 of `Worker` may take different types for this parameter.
 
@@ -83,19 +83,19 @@ class FragmentWorker(DefaultWorker):
                     self._envs[env_index], env_up)
                 self._needs_env_reset |= up
 
-    def start_rollout(self):
+    def start_episode(self):
         """Resets all agents if the environment was updated."""
         if self._needs_env_reset:
             self._needs_env_reset = False
             self.agent.reset([True] * len(self._envs))
-            self._path_lengths = [0] * len(self._envs)
-            self._fragments = [InProgressTrajectory(env) for env in self._envs]
+            self._episode_lengths = [0] * len(self._envs)
+            self._fragments = [InProgressEpisode(env) for env in self._envs]
 
-    def step_rollout(self):
-        """Take a single time-step in the current rollout.
+    def step_episode(self):
+        """Take a single time-step in the current episode.
 
         Returns:
-            bool: True iff at least one of the paths was completed.
+            bool: True iff at least one of the episodes was completed.
 
         """
         prev_obs = np.asarray([frag.last_obs for frag in self._fragments])
@@ -103,26 +103,26 @@ class FragmentWorker(DefaultWorker):
         completes = [False] * len(self._envs)
         for i, action in enumerate(actions):
             frag = self._fragments[i]
-            if self._path_lengths[i] < self._max_episode_length:
+            if self._episode_lengths[i] < self._max_episode_length:
                 agent_info = {k: v[i] for (k, v) in agent_infos.items()}
                 frag.step(action, agent_info)
-                self._path_lengths[i] += 1
-            if (self._path_lengths[i] >= self._max_episode_length
+                self._episode_lengths[i] += 1
+            if (self._episode_lengths[i] >= self._max_episode_length
                     or frag.step_types[-1] == StepType.TERMINAL):
-                self._path_lengths[i] = 0
+                self._episode_lengths[i] = 0
                 complete_frag = frag.to_batch()
                 self._complete_fragments.append(complete_frag)
-                self._fragments[i] = InProgressTrajectory(self._envs[i])
+                self._fragments[i] = InProgressEpisode(self._envs[i])
                 completes[i] = True
         if any(completes):
             self.agent.reset(completes)
         return any(completes)
 
-    def collect_rollout(self):
-        """Gather fragments from all in-progress rollouts.
+    def collect_episode(self):
+        """Gather fragments from all in-progress episodes.
 
         Returns:
-            garage.TrajectoryBatch: A batch of the trajectory fragments.
+            EpisodeBatch: A batch of the episode fragments.
 
         """
         for i, frag in enumerate(self._fragments):
@@ -130,24 +130,23 @@ class FragmentWorker(DefaultWorker):
             if len(frag.rewards) > 0:
                 complete_frag = frag.to_batch()
                 self._complete_fragments.append(complete_frag)
-                self._fragments[i] = InProgressTrajectory(
-                    frag.env, frag.last_obs)
+                self._fragments[i] = InProgressEpisode(frag.env, frag.last_obs)
         assert len(self._complete_fragments) > 0
-        result = TrajectoryBatch.concatenate(*self._complete_fragments)
+        result = EpisodeBatch.concatenate(*self._complete_fragments)
         self._complete_fragments = []
         return result
 
     def rollout(self):
-        """Sample a single rollout of the agent in the environment.
+        """Sample a single episode of the agent in the environment.
 
         Returns:
-            garage.TrajectoryBatch: The collected trajectory.
+            EpisodeBatch: The collected episode.
 
         """
-        self.start_rollout()
+        self.start_episode()
         for _ in range(self._timesteps_per_call):
-            self.step_rollout()
-        complete_frag = self.collect_rollout()
+            self.step_episode()
+        complete_frag = self.collect_episode()
         return complete_frag
 
     def shutdown(self):

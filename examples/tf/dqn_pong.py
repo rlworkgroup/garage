@@ -38,9 +38,9 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
         seed (int): Used to seed the random number generator to produce
             determinism.
         buffer_size (int): Number of timesteps to store in replay buffer.
-        max_episode_length (int): Maximum length of a path after which a path
-            is considered complete. This is used during testing to minimize
-            the memory required to store a single path.
+        max_episode_length (int): Maximum length of an episode, after which an
+            episode is considered complete. This is used during testing to
+            minimize the memory required to store a single episode.
 
     """
     set_seed(seed)

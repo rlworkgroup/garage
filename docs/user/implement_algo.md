@@ -84,13 +84,13 @@ We'll also want an environment to test our algorithm with.
 
 ```py
 from garage import wrap_experiment
-from garage.envs import PointEnv, GarageEnv
+from garage.envs import PointEnv
 from garage.experiment import LocalRunner
 
 @wrap_experiment
 def debug_my_algorithm(ctxt):
     runner = LocalRunner(ctxt)
-    env = GarageEnv(PointEnv())
+    env = PointEnv()
     algo = MyAlgorithm()
     runner.setup(algo, env)
     runner.train(n_epochs=3)
@@ -159,7 +159,7 @@ class SimpleVPG:
             samples = runner.obtain_samples(epoch)
 
 from garage import wrap_experiment
-from garage.envs import PointEnv, GarageEnv
+from garage.envs import PointEnv
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.torch.policies import GaussianMLPPolicy
@@ -168,7 +168,7 @@ from garage.torch.policies import GaussianMLPPolicy
 def debug_my_algorithm(ctxt):
     set_seed(100)
     runner = LocalRunner(ctxt)
-    env = GarageEnv(PointEnv())
+    env = PointEnv()
     policy = GaussianMLPPolicy(env.spec)
     algo = SimpleVPG(policy)
     runner.setup(algo, env)
@@ -234,7 +234,7 @@ That lets us train a policy, but it doesn't let us confirm that it actually work
 We can add a little logging to the `train()` method.
 
 ```py
-from garage import log_performance, TrajectoryBatch
+from garage import log_performance, EpisodeBatch
 
 ...
     def train(self, runner):
@@ -242,7 +242,7 @@ from garage import log_performance, TrajectoryBatch
             samples = runner.obtain_samples(epoch)
             log_performance(
                 epoch,
-                TrajectoryBatch.from_trajectory_list(self.env_spec, samples),
+                EpisodeBatch.from_episode_list(self.env_spec, samples),
                 self._discount)
             self._train_once(samples)
 ```
@@ -271,7 +271,7 @@ Evaluation/AverageReturn            -180.404
 Evaluation/Iteration                   0
 Evaluation/MaxReturn                 -36.996
 Evaluation/MinReturn                -625.757
-Evaluation/NumTrajs                   26
+Evaluation/NumEpisodes                26
 Evaluation/StdReturn                 143.39
 Evaluation/SuccessRate                 0.384615
 Evaluation/TerminationRate             0.384615
@@ -287,7 +287,7 @@ Evaluation/AverageReturn            -186.052
 Evaluation/Iteration                   1
 Evaluation/MaxReturn                 -19.9412
 Evaluation/MinReturn                -458.353
-Evaluation/NumTrajs                   28
+Evaluation/NumEpisodes                28
 Evaluation/StdReturn                 134.528
 Evaluation/SuccessRate                 0.428571
 Evaluation/TerminationRate             0.428571
@@ -306,7 +306,7 @@ policy when training, you can solve an Gym environment, for example
 def tutorial_vpg(ctxt=None):
     set_seed(100)
     runner = LocalRunner(ctxt)
-    env = GarageEnv(env_name='LunarLanderContinuous-v2')
+    env = GymEnv('LunarLanderContinuous-v2')
     policy = GaussianMLPPolicy(env.spec)
     algo = SimpleVPG(env.spec, policy)
     runner.setup(algo, env)
@@ -322,7 +322,7 @@ except for the replacement of `LocalRunner` with `LocalTFRunner`.
 ```py
 ...
 from garage import wrap_experiment
-from garage.envs import PointEnv, GarageEnv
+from garage.envs import PointEnv
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.tf.policies import GaussianMLPPolicy
@@ -331,7 +331,7 @@ from garage.tf.policies import GaussianMLPPolicy
 def tutorial_vpg(ctxt=None):
     set_seed(100)
     with LocalTFRunner(ctxt) as runner:
-        env = GarageEnv(PointEnv())
+        env = PointEnv()
         policy = GaussianMLPPolicy(env.spec)
         algo = SimpleVPG(env.spec, policy)
         runner.setup(algo, env)
@@ -387,7 +387,7 @@ the inputs with sample data.
             samples = runner.obtain_samples(epoch)
             log_performance(
                 epoch,
-                TrajectoryBatch.from_trajectory_list(self.env_spec, samples),
+                EpisodeBatch.from_list(self.env_spec, samples),
                 self._discount)
             self._train_once(samples)
 
@@ -453,7 +453,7 @@ Evaluation/AverageReturn            -1035.36
 Evaluation/Iteration                    0
 Evaluation/MaxReturn                 -969.42
 Evaluation/MinReturn                -1090.39
-Evaluation/NumTrajs                    20
+Evaluation/NumEpisodes                 20
 Evaluation/StdReturn                   35.3741
 Evaluation/SuccessRate                  0
 Evaluation/TerminationRate              0
@@ -470,7 +470,7 @@ Evaluation/AverageReturn            -1044.4
 Evaluation/Iteration                    1
 Evaluation/MaxReturn                 -865.945
 Evaluation/MinReturn                -1154.95
-Evaluation/NumTrajs                    20
+Evaluation/NumEpisodes                 20
 Evaluation/StdReturn                   69.6729
 Evaluation/SuccessRate                  0
 Evaluation/TerminationRate              0
@@ -487,7 +487,7 @@ experiment function is similar to that of TensorFlow:
 
 ```py
 from garage import wrap_experiment
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.tf.policies import CategoricalMLPPolicy
@@ -496,7 +496,7 @@ from garage.tf.policies import CategoricalMLPPolicy
 def tutorial_cem(ctxt=None):
     set_seed(100)
     with LocalTFRunner(ctxt) as runner:
-        env = GarageEnv(env_name='CartPole-v1')
+        env = GymEnv('CartPole-v1')
         policy = CategoricalMLPPolicy(env.spec)
         algo = SimpleCEM(env.spec, policy)
         runner.setup(algo, env)
@@ -535,7 +535,7 @@ class SimpleCEM:
             samples = runner.obtain_samples(epoch)
             log_performance(
                 epoch,
-                TrajectoryBatch.from_trajectory_list(self.env_spec, samples),
+                EpisodeBatch.from_list(self.env_spec, samples),
                 self._discount)
             self._train_once(epoch, samples)
 
@@ -589,7 +589,7 @@ Evaluation/AverageReturn              22.5333
 Evaluation/Iteration                   0
 Evaluation/MaxReturn                  52
 Evaluation/MinReturn                  10
-Evaluation/NumTrajs                   45
+Evaluation/NumEpisodes                45
 Evaluation/StdReturn                   7.9822
 Evaluation/TerminationRate             1
 TotalEnvSteps                       1014
@@ -604,7 +604,7 @@ Evaluation/AverageReturn              17.1017
 Evaluation/Iteration                   1
 Evaluation/MaxReturn                  24
 Evaluation/MinReturn                  13
-Evaluation/NumTrajs                   59
+Evaluation/NumEpisodes                59
 Evaluation/StdReturn                   2.75985
 Evaluation/TerminationRate             1
 TotalEnvSteps                       2023

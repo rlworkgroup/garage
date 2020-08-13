@@ -89,9 +89,6 @@ successfully into environments defined using
 [Pipenv](https://pipenv.readthedocs.io/en/latest/), and
 [virtualenv](https://virtualenv.pypa.io/en/latest/).
 
-All components use the popular [`gym.Env`](https://github.com/openai/gym)
-interface for RL environments.
-
 ## Testing
 
 The most important feature of garage is its comprehensive automated unit test
