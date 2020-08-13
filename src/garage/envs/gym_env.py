@@ -44,6 +44,8 @@ def _get_time_limit(env, max_episode_length):
     if hasattr(env, 'spec') and env.spec and hasattr(env.spec,
                                                      'max_episode_steps'):
         spec_steps = env.spec.max_episode_steps
+    elif hasattr(env, '_max_episode_steps'):
+        spec_steps = getattr(env, '_max_episode_steps')
 
     if spec_steps:
         if max_episode_length is not None and max_episode_length != spec_steps:

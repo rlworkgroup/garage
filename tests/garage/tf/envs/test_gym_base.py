@@ -22,8 +22,13 @@ class TestGymEnv:
         if spec._env_name.startswith('Defender'):
             pytest.skip(
                 'Defender-* envs bundled in atari-py 0.2.x don\'t load')
-        if any(name == spec.id for name in _get_unsupported_env_list()):
+        if spec.id in _get_unsupported_env_list():
             pytest.skip('Skip unsupported Bullet environments')
+        if 'Kuka' in spec.id:
+            # Kuka environments calls py_bullet.resetSimulation() in reset()
+            # unconditionally, which globally resets other simulations. So
+            # only one Kuka environment can be tested.
+            pytest.skip('Skip Kuka Bullet environments')
         env = GymEnv(spec.id)
         step_env_with_gym_quirks(env, spec)
 
@@ -33,8 +38,13 @@ class TestGymEnv:
         if spec._env_name.startswith('Defender'):
             pytest.skip(
                 'Defender-* envs bundled in atari-py 0.2.x don\'t load')
-        if any(name == spec.id for name in _get_unsupported_env_list()):
+        if spec.id in _get_unsupported_env_list():
             pytest.skip('Skip unsupported Bullet environments')
+        if 'Kuka' in spec.id:
+            # Kuka environments calls py_bullet.resetSimulation() in reset()
+            # unconditionally, which globally resets other simulations. So
+            # only one Kuka environment can be tested.
+            pytest.skip('Skip Kuka Bullet environments')
         env = GymEnv(spec.id)
         step_env_with_gym_quirks(env,
                                  spec,
