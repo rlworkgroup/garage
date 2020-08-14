@@ -47,11 +47,7 @@ like [this](implement_env). In this example, we choose `CartPole-V1`
 environment.
 
 ```py
-<<<<<<< HEAD
 env = GymEnv('CartPole-v1')
-=======
-env = GymEnv(env_name='CartPole-v1')
->>>>>>> a1877525... Flatten observations if necessary
 ```
 
 ### Construct a Policy and an Algorithm
@@ -132,11 +128,7 @@ def trpo_cartpole(ctxt=None, seed=1):
     """
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
-<<<<<<< HEAD
         env = GymEnv('CartPole-v1')
-=======
-        env = GymEnv(env_name='CartPole-v1')
->>>>>>> a1877525... Flatten observations if necessary
 
         policy = CategoricalMLPPolicy(name='policy',
                                       env_spec=env.spec,

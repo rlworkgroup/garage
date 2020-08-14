@@ -75,7 +75,6 @@ import gym
 
 from garage import wrap_experiment
 from garage.envs import GymEnv
-<<<<<<< HEAD
 from garage.envs.wrappers import ClipReward
 from garage.envs.wrappers import EpisodicLife
 from garage.envs.wrappers import FireReset
@@ -84,16 +83,6 @@ from garage.envs.wrappers import MaxAndSkip
 from garage.envs.wrappers import Noop
 from garage.envs.wrappers import Resize
 from garage.envs.wrappers import StackFrames
-=======
-from garage.envs.wrappers.clip_reward import ClipReward
-from garage.envs.wrappers.episodic_life import EpisodicLife
-from garage.envs.wrappers.fire_reset import FireReset
-from garage.envs.wrappers.grayscale import Grayscale
-from garage.envs.wrappers.max_and_skip import MaxAndSkip
-from garage.envs.wrappers.noop import Noop
-from garage.envs.wrappers.resize import Resize
-from garage.envs.wrappers.stack_frames import StackFrames
->>>>>>> a1877525... Flatten observations if necessary
 from garage.experiment import LocalTFRunner, Snapshotter  # Add this import!
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
