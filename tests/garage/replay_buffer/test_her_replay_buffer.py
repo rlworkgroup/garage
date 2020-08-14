@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 import pytest
 
+from garage.envs import GymEnv
 from garage.replay_buffer import HERReplayBuffer
 
 from tests.fixtures.envs.dummy import DummyDictEnv
@@ -11,8 +12,8 @@ from tests.fixtures.envs.dummy import DummyDictEnv
 class TestHerReplayBuffer:
 
     def setup_method(self):
-        self.env = DummyDictEnv()
-        self.obs = self.env.reset()
+        self.env = GymEnv(DummyDictEnv())
+        self.obs = self.env.reset()[0]
         self._replay_k = 4
         self.replay_buffer = HERReplayBuffer(env_spec=self.env.spec,
                                              capacity_in_transitions=10,

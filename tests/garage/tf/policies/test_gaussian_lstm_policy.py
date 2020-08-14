@@ -7,8 +7,13 @@ import tensorflow as tf
 from garage.envs import GymEnv
 from garage.tf.policies import GaussianLSTMPolicy
 
+# yapf: disable
 from tests.fixtures import TfGraphTestCase
-from tests.fixtures.envs.dummy import DummyBoxEnv, DummyDiscreteEnv
+from tests.fixtures.envs.dummy import (DummyBoxEnv,
+                                       DummyDictEnv,
+                                       DummyDiscreteEnv)
+
+# yapf: enable
 
 
 class TestGaussianLSTMPolicy(TfGraphTestCase):
@@ -40,6 +45,21 @@ class TestGaussianLSTMPolicy(TfGraphTestCase):
         policy.reset()
 
         actions, _ = policy.get_actions([obs.flatten()])
+        for action in actions:
+            assert env.action_space.contains(action)
+
+    def test_get_action_dict_space(self):
+        env = GymEnv(DummyDictEnv(obs_space_type='box', act_space_type='box'))
+        policy = GaussianLSTMPolicy(env_spec=env.spec,
+                                    hidden_dim=4,
+                                    state_include_action=False)
+        policy.reset(do_resets=None)
+        obs = env.reset()[0]
+
+        action, _ = policy.get_action(obs)
+        assert env.action_space.contains(action)
+
+        actions, _ = policy.get_actions([obs, obs])
         for action in actions:
             assert env.action_space.contains(action)
 

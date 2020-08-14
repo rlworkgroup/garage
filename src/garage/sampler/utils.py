@@ -55,7 +55,6 @@ def rollout(env,
     if animated:
         env.visualize()
     while episode_length < (max_episode_length or np.inf):
-        last_obs = env.observation_space.flatten(last_obs)
         a, agent_info = agent.get_action(last_obs)
         if deterministic and 'mean' in agent_info:
             a = agent_info['mean']

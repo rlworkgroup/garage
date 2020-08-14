@@ -10,35 +10,42 @@ from garage.envs import GymEnv
 from garage.tf.policies import ContinuousMLPPolicy
 
 from tests.fixtures import TfGraphTestCase
-from tests.fixtures.envs.dummy import DummyBoxEnv
+from tests.fixtures.envs.dummy import DummyBoxEnv, DummyDictEnv
 
 
 class TestContinuousMLPPolicy(TfGraphTestCase):
     """Test class for ContinuousMLPPolicy"""
 
-    @pytest.mark.parametrize('obs_dim, action_dim', [
-        ((1, ), (1, )),
-        ((1, ), (2, )),
-        ((2, ), (2, )),
-        ((1, 1), (1, 1)),
-        ((1, 1), (2, 2)),
-        ((2, 2), (2, 2)),
+    @pytest.mark.parametrize('obs_dim, action_dim, obs_type', [
+        ((1, ), (1, ), 'box'),
+        ((1, ), (2, ), 'box'),
+        ((2, ), (2, ), 'box'),
+        ((1, 1), (1, 1), 'box'),
+        ((1, 1), (2, 2), 'box'),
+        ((2, 2), (2, 2), 'box'),
+        ((1, ), (1, ), 'dict'),
     ])
-    def test_get_action(self, obs_dim, action_dim):
+    def test_get_action(self, obs_dim, action_dim, obs_type):
         """Test get_action method"""
-        env = GymEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        assert obs_type in ['box', 'dict']
+        if obs_type == 'box':
+            env = GymEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        else:
+            env = GymEnv(
+                DummyDictEnv(obs_space_type='box', act_space_type='box'))
+
         policy = ContinuousMLPPolicy(env_spec=env.spec)
 
         env.reset()
         obs = env.step(1).observation
+        if obs_type == 'box':
+            obs = obs.flatten()
 
-        action, _ = policy.get_action(obs.flatten())
+        action, _ = policy.get_action(obs)
 
         assert env.action_space.contains(action)
 
-        actions, _ = policy.get_actions(
-            [obs.flatten(), obs.flatten(),
-             obs.flatten()])
+        actions, _ = policy.get_actions([obs, obs, obs])
         for action in actions:
             assert env.action_space.contains(action)
 

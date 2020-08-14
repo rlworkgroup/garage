@@ -211,7 +211,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `garage.np.OffPolicyRLAlgorithm` ([#1552](https://github.com/rlworkgroup/garage/pull/1552))
 
 ### Fixed
-- Bug where `GarageEnv` did not pickle ([#1029](https://github.com/rlworkgroup/garage/pull/1029))
+- Bug where `GymEnv` did not pickle ([#1029](https://github.com/rlworkgroup/garage/pull/1029))
 - Bug where `VecEnvExecutor` conflated terminal state and time limit signal (
   [#1178](https://github.com/rlworkgroup/garage/pull/1178),
   [#1570](https://github.com/rlworkgroup/garage/pull/1570))

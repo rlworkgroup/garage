@@ -7,8 +7,13 @@ import tensorflow as tf
 from garage.envs import GymEnv
 from garage.tf.policies import CategoricalMLPPolicy
 
+# yapf: disable
 from tests.fixtures import TfGraphTestCase
-from tests.fixtures.envs.dummy import DummyBoxEnv, DummyDiscreteEnv
+from tests.fixtures.envs.dummy import (DummyBoxEnv,
+                                       DummyDictEnv,
+                                       DummyDiscreteEnv)
+
+# yapf: enable
 
 
 class TestCategoricalMLPPolicy(TfGraphTestCase):
@@ -18,23 +23,29 @@ class TestCategoricalMLPPolicy(TfGraphTestCase):
         with pytest.raises(ValueError):
             CategoricalMLPPolicy(env_spec=env.spec)
 
-    @pytest.mark.parametrize('obs_dim, action_dim', [
-        ((1, ), 1),
-        ((2, ), 2),
-        ((1, 1), 1),
-        ((2, 2), 2),
+    @pytest.mark.parametrize('obs_dim, action_dim, obs_type', [
+        ((1, ), 1, 'discrete'),
+        ((2, ), 2, 'discrete'),
+        ((1, 1), 1, 'discrete'),
+        ((2, 2), 2, 'discrete'),
+        ((1, ), 1, 'dict'),
     ])
-    def test_get_action(self, obs_dim, action_dim):
-        env = GymEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+    def test_get_action(self, obs_dim, action_dim, obs_type):
+        assert obs_type in ['discrete', 'dict']
+        if obs_type == 'discrete':
+            env = GymEnv(
+                DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        else:
+            env = GymEnv(
+                DummyDictEnv(obs_space_type='box', act_space_type='discrete'))
         policy = CategoricalMLPPolicy(env_spec=env.spec)
         obs = env.reset()[0]
-
-        action, _ = policy.get_action(obs.flatten())
+        if obs_type == 'discrete':
+            obs = obs.flatten()
+        action, _ = policy.get_action(obs)
         assert env.action_space.contains(action)
 
-        actions, _ = policy.get_actions(
-            [obs.flatten(), obs.flatten(),
-             obs.flatten()])
+        actions, _ = policy.get_actions([obs, obs, obs])
         for action in actions:
             assert env.action_space.contains(action)
 

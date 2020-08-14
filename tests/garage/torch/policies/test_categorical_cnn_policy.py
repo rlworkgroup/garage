@@ -1,11 +1,13 @@
 """Test categoricalCNNPolicy in PyTorch."""
 import cloudpickle
 import pytest
+import torch
 
+from garage.envs import GymEnv
 from garage.torch import TransposeImage
 from garage.torch.policies import CategoricalCNNPolicy
 
-from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
+from tests.fixtures.envs.dummy import DummyDictEnv, DummyDiscretePixelEnv
 
 
 class TestCategoricalCNNPolicy:
@@ -42,7 +44,6 @@ class TestCategoricalCNNPolicy:
                                       hidden_sizes=hidden_sizes)
         env.reset()
         obs, _, _, _ = env.step(1)
-
         action, _ = policy.get_action(obs)
         assert env.action_space.contains(action)
 
@@ -55,15 +56,15 @@ class TestCategoricalCNNPolicy:
     def test_get_action_img_obs(self, hidden_channels, kernel_sizes, strides,
                                 hidden_sizes):
         """Test get_action function with akro.Image observation space."""
-        env = DummyDiscretePixelEnv()
-        env = self._initialize_obs_env(env)
+        env = GymEnv(self._initialize_obs_env(DummyDiscretePixelEnv()),
+                     is_image=True)
         policy = CategoricalCNNPolicy(env=env,
                                       kernel_sizes=kernel_sizes,
                                       hidden_channels=hidden_channels,
                                       strides=strides,
                                       hidden_sizes=hidden_sizes)
         env.reset()
-        obs, _, _, _ = env.step(1)
+        obs = env.step(1).observation
 
         action, _ = policy.get_action(obs)
         assert env.action_space.contains(action)
@@ -88,6 +89,10 @@ class TestCategoricalCNNPolicy:
         obs, _, _, _ = env.step(1)
 
         actions, _ = policy.get_actions([obs, obs, obs])
+        for action in actions:
+            assert env.action_space.contains(action)
+        torch_obs = torch.Tensor(obs)
+        actions, _ = policy.get_actions([torch_obs, torch_obs, torch_obs])
         for action in actions:
             assert env.action_space.contains(action)
 
@@ -119,3 +124,44 @@ class TestCategoricalCNNPolicy:
         assert env.action_space.contains(output_action_1)
         assert env.action_space.contains(output_action_2)
         assert output_action_1.shape == output_action_2.shape
+
+    def test_does_not_support_dict_obs_space(self):
+        """Test that policy raises error if passed a dict obs space."""
+        env = GymEnv(DummyDictEnv(act_space_type='discrete'))
+        with pytest.raises(ValueError,
+                           match=('CNN policies do not support '
+                                  'with akro.Dict observation spaces.')):
+            CategoricalCNNPolicy(env=env,
+                                 kernel_sizes=(3, ),
+                                 hidden_channels=(3, ))
+
+    def test_invalid_action_spaces(self):
+        """Test that policy raises error if passed a box obs space."""
+        env = GymEnv(DummyDictEnv(act_space_type='box'))
+        with pytest.raises(ValueError):
+            CategoricalCNNPolicy(env=env,
+                                 kernel_sizes=(3, ),
+                                 hidden_channels=(3, ))
+
+    @pytest.mark.parametrize(
+        'hidden_channels, kernel_sizes, strides, hidden_sizes', [
+            ((3, ), (3, ), (1, ), (4, )),
+            ((3, 3), (3, 3), (1, 1), (4, 4)),
+            ((3, 3), (3, 3), (2, 2), (4, 4)),
+        ])
+    def test_obs_unflattened(self, hidden_channels, kernel_sizes, strides,
+                             hidden_sizes):
+        """Test if a flattened image obs is passed to get_action
+           then it is unflattened.
+        """
+        env = GymEnv(self._initialize_obs_env(DummyDiscretePixelEnv()),
+                     is_image=True)
+        env.reset()
+        policy = CategoricalCNNPolicy(env=env,
+                                      kernel_sizes=kernel_sizes,
+                                      hidden_channels=hidden_channels,
+                                      strides=strides,
+                                      hidden_sizes=hidden_sizes)
+        obs = env.observation_space.sample()
+        action, _ = policy.get_action(env.observation_space.flatten(obs))
+        env.step(action)
