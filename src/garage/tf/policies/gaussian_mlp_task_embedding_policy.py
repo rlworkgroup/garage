@@ -90,6 +90,7 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
                  std_parameterization='exp',
                  layer_normalization=False):
         assert isinstance(env_spec.action_space, akro.Box)
+        assert not isinstance(env_spec.observation_space, akro.Dict)
         super().__init__(name, env_spec, encoder)
         self._hidden_sizes = hidden_sizes
         self._hidden_nonlinearity = hidden_nonlinearity
@@ -237,8 +238,8 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
                     A is the dimension of action.
 
         """
-        obs, task = self.split_augmented_observation(observation)
-        return self.get_action_given_task(obs, task)
+        actions, agent_infos = self.get_actions([observation])
+        return actions[0], {k: v[0] for k, v in agent_infos.items()}
 
     def get_actions(self, observations):
         """Get actions sampled from the policy.

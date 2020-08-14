@@ -81,6 +81,11 @@ class CategoricalCNNPolicy(StochasticPolicy):
             'CategoricalCNNPolicy only works with akro.Discrete action '
             'space.')
         super().__init__(name, env_spec)
+        if isinstance(env_spec.observation_space, akro.Dict):
+            raise ValueError('CNN policies do not support'
+                             'with akro.Dict observation spaces.')
+
+        self._env_spec = env_spec
         self._obs_dim = env_spec.observation_space.shape
         self._action_dim = env_spec.action_space.n
         self._filters = filters
@@ -191,8 +196,8 @@ class CategoricalCNNPolicy(StochasticPolicy):
             dict(numpy.ndarray): Distribution parameters.
 
         """
-        sample, prob = self._f_prob(np.expand_dims([observation], 1))
-        return np.squeeze(sample), dict(prob=np.squeeze(prob, axis=1)[0])
+        sample, prob = self.get_actions([observation])
+        return sample, {k: v[0] for k, v in prob.items()}
 
     def get_actions(self, observations):
         """Return multiple actions.
@@ -205,6 +210,11 @@ class CategoricalCNNPolicy(StochasticPolicy):
             dict(numpy.ndarray): Distribution parameters.
 
         """
+        if isinstance(self.env_spec.observation_space, akro.Image) and \
+                len(observations[0].shape) < \
+                len(self.env_spec.observation_space.shape):
+            observations = self.env_spec.observation_space.unflatten_n(
+                observations)
         samples, probs = self._f_prob(np.expand_dims(observations, 1))
         return np.squeeze(samples), dict(prob=np.squeeze(probs, axis=1))
 

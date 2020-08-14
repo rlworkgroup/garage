@@ -18,6 +18,7 @@ NON_ALGO_EXAMPLES = [
 LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'tf/ppo_memorize_digits.py',
     EXAMPLES_ROOT_DIR / 'tf/dqn_pong.py',
+    EXAMPLES_ROOT_DIR / 'tf/her_ddpg_fetchreach.py',
     EXAMPLES_ROOT_DIR / 'tf/trpo_cubecrash.py',
     EXAMPLES_ROOT_DIR / 'torch/maml_ppo_half_cheetah_dir.py',
     EXAMPLES_ROOT_DIR / 'torch/maml_trpo_half_cheetah_dir.py',
@@ -73,9 +74,6 @@ def test_algo_examples(filepath):
         filepath (str): path string of example
 
     """
-    if filepath == str(EXAMPLES_ROOT_DIR / 'tf/her_ddpg_fetchreach.py'):
-        pytest.skip('Temporarily skipped because it is broken')
-
     env = os.environ.copy()
     env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
     # Don't use check=True, since that causes subprocess to throw an error

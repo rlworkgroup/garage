@@ -16,7 +16,9 @@ class SimpleQFunction(QFunction):
 
     def __init__(self, env_spec, name='SimpleQFunction'):
         super().__init__(name)
-        self.obs_dim = env_spec.observation_space.shape
+        # avnish
+        # self.obs_dim = env_spec.observation_space.shape
+        self.obs_dim = (env_spec.observation_space.flat_dim, )
         action_dim = env_spec.observation_space.flat_dim
         self.model = SimpleMLPModel(output_dim=action_dim)
 

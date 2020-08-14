@@ -210,11 +210,8 @@ class GaussianMLPPolicy(StochasticPolicy):
                 distribution.
 
         """
-        sample, mean, log_std = self._f_dist(np.expand_dims([observation], 1))
-        sample = self.action_space.unflatten(np.squeeze(sample, 1)[0])
-        mean = self.action_space.unflatten(np.squeeze(mean, 1)[0])
-        log_std = self.action_space.unflatten(np.squeeze(log_std, 1)[0])
-        return sample, dict(mean=mean, log_std=log_std)
+        actions, agent_infos = self.get_actions([observation])
+        return actions[0], {k: v[0] for k, v in agent_infos.items()}
 
     def get_actions(self, observations):
         """Get multiple actions from this policy for the input observations.
@@ -233,6 +230,8 @@ class GaussianMLPPolicy(StochasticPolicy):
                 distribution.
 
         """
+        if not isinstance(observations[0], np.ndarray):
+            observations = self.observation_space.flatten_n(observations)
         samples, means, log_stds = self._f_dist(np.expand_dims(
             observations, 1))
         samples = self.action_space.unflatten_n(np.squeeze(samples, 1))
