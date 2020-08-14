@@ -34,7 +34,7 @@ def trpo_pendulum_ray_sampler(ctxt=None, seed=1):
              object_store_memory=78643200,
              ignore_reinit_error=True,
              log_to_driver=False,
-             include_webui=False)
+             include_dashboard=False)
     deterministic.set_seed(seed)
     env = GarageEnv(env_name='InvertedDoublePendulum-v2')
 

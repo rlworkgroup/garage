@@ -27,11 +27,6 @@ class TestRollout:
         # dummy is the env_info_key
         assert path['env_infos']['dummy'].shape[0] == 3
 
-    def test_does_flatten(self):
-        path = utils.rollout(self.env, self.policy, max_path_length=5)
-        assert path['observations'][0].shape == (16, )
-        assert path['actions'][0].shape == (2, 2)
-
     def test_deterministic_action(self):
         path = utils.rollout(self.env,
                              self.policy,

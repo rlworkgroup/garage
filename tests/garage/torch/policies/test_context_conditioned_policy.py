@@ -32,9 +32,8 @@ class TestContextConditionedPolicy:
             (self.env_spec.observation_space, latent_space))
         augmented_env_spec = EnvSpec(augmented_obs_space,
                                      self.env_spec.action_space)
-
-        self.obs_dim = int(np.prod(self.env_spec.observation_space.shape))
-        self.action_dim = int(np.prod(self.env_spec.action_space.shape))
+        self.obs_dim = self.env_spec.observation_space.flat_dim
+        self.action_dim = self.env_spec.action_space.flat_dim
         reward_dim = 1
         self.encoder_input_dim = self.obs_dim + self.action_dim + reward_dim
         encoder_output_dim = self.latent_dim * 2

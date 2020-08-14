@@ -4,6 +4,7 @@ A continuous MLP network can be used as policy method in different RL
 algorithms. It accepts an observation of the environment and predicts a
 continuous action.
 """
+import numpy as np
 import tensorflow as tf
 
 from garage.experiment import deterministic
@@ -124,9 +125,9 @@ class ContinuousMLPPolicy(Policy):
             dict: Empty dict since this policy does not model a distribution.
 
         """
-        action = self._f_prob([observation])
-        action = self.action_space.unflatten(action)
-        return action, dict()
+        actions, agent_infos = self.get_actions([observation])
+        action = actions[0]
+        return action, {k: v[0] for k, v in agent_infos.items()}
 
     def get_actions(self, observations):
         """Get multiple actions from this policy for the input observations.
@@ -139,6 +140,8 @@ class ContinuousMLPPolicy(Policy):
             dict: Empty dict since this policy does not model a distribution.
 
         """
+        if not isinstance(observations[0], np.ndarray):
+            observations = self.observation_space.flatten_n(observations)
         actions = self._f_prob(observations)
         actions = self.action_space.unflatten_n(actions)
         return actions, dict()
