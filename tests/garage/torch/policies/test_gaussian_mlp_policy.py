@@ -40,12 +40,15 @@ class TestGaussianMLPPolicies:
         dist = policy(obs)[0]
 
         expected_mean = torch.full(
-            (act_dim, ), obs_dim * (torch.Tensor(hidden_sizes).prod().item()))
+            (act_dim, ),
+            obs_dim * (torch.Tensor(hidden_sizes).prod().item()),
+            dtype=torch.float)
         expected_variance = init_std**2
         action, prob = policy.get_action(obs)
 
         assert np.array_equal(prob['mean'], expected_mean.numpy())
-        assert dist.variance.equal(torch.full((act_dim, ), expected_variance))
+        assert dist.variance.equal(
+            torch.full((act_dim, ), expected_variance, dtype=torch.float))
         assert action.shape == (act_dim, )
 
     # yapf: disable
@@ -71,12 +74,15 @@ class TestGaussianMLPPolicies:
         dist = policy(torch.from_numpy(obs))[0]
 
         expected_mean = torch.full(
-            (act_dim, ), obs_dim * (torch.Tensor(hidden_sizes).prod().item()))
+            (act_dim, ),
+            obs_dim * (torch.Tensor(hidden_sizes).prod().item()),
+            dtype=torch.float)
         expected_variance = init_std**2
         action, prob = policy.get_action(obs)
 
         assert np.array_equal(prob['mean'], expected_mean.numpy())
-        assert dist.variance.equal(torch.full((act_dim, ), expected_variance))
+        assert dist.variance.equal(
+            torch.full((act_dim, ), expected_variance, dtype=torch.float))
         assert action.shape == (act_dim, )
 
     # yapf: disable
@@ -108,13 +114,16 @@ class TestGaussianMLPPolicies:
 
         expected_mean = torch.full([batch_size, act_dim],
                                    obs_dim *
-                                   (torch.Tensor(hidden_sizes).prod().item()))
+                                   (torch.Tensor(hidden_sizes).prod().item()),
+                                   dtype=torch.float)
         expected_variance = init_std**2
         action, prob = policy.get_actions(obs)
 
         assert np.array_equal(prob['mean'], expected_mean.numpy())
         assert dist.variance.equal(
-            torch.full((batch_size, act_dim), expected_variance))
+            torch.full((batch_size, act_dim),
+                       expected_variance,
+                       dtype=torch.float))
         assert action.shape == (batch_size, act_dim)
 
     # yapf: disable
@@ -146,13 +155,16 @@ class TestGaussianMLPPolicies:
 
         expected_mean = torch.full([batch_size, act_dim],
                                    obs_dim *
-                                   (torch.Tensor(hidden_sizes).prod().item()))
+                                   (torch.Tensor(hidden_sizes).prod().item()),
+                                   dtype=torch.float)
         expected_variance = init_std**2
         action, prob = policy.get_actions(obs)
 
         assert np.array_equal(prob['mean'], expected_mean.numpy())
         assert dist.variance.equal(
-            torch.full((batch_size, act_dim), expected_variance))
+            torch.full((batch_size, act_dim),
+                       expected_variance,
+                       dtype=torch.float))
         assert action.shape == (batch_size, act_dim)
 
     # yapf: disable
