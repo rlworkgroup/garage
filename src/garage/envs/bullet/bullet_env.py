@@ -123,8 +123,6 @@ class BulletEnv(GymEnv):
         args['id'] = env.spec.id
         args['max_episode_length'] = self._max_episode_length
 
-        if 'args' in args:
-            del args['args']
         if 'kwargs' in args:
             del args['kwargs']
 
