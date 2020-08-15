@@ -16,8 +16,7 @@ def ray_local_session_fixture():
     if not ray.is_initialized():
         ray.init(local_mode=True,
                  ignore_reinit_error=True,
-                 log_to_driver=False,
-                 include_dashboard=False)
+                 log_to_driver=False)
     yield
     if ray.is_initialized():
         ray.shutdown()
@@ -37,8 +36,7 @@ def ray_session_fixture():
         ray.init(memory=52428800,
                  object_store_memory=78643200,
                  ignore_reinit_error=True,
-                 log_to_driver=False,
-                 include_dashboard=False)
+                 log_to_driver=False)
     yield
     if ray.is_initialized():
         ray.shutdown()

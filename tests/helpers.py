@@ -1,6 +1,5 @@
 """helper functions for tests and benchmarks."""
-import pickle
-
+import cloudpickle
 import numpy as np
 import pytest
 
@@ -33,10 +32,10 @@ def step_env_with_gym_quirks(env,
                              n=10,
                              visualize=True,
                              serialize_env=False):
-    """Step env gym helper.
+    """Step env helper.
 
     Args:
-        env (GymEnv): Input environment.
+        env (Environment): Input environment.
         spec (EnvSpec): The environment specification.
         n (int): Steps.
         visualize (bool): Whether to visualize the environment.
@@ -45,8 +44,8 @@ def step_env_with_gym_quirks(env,
     """
     if serialize_env:
         # Roundtrip serialization
-        round_trip = pickle.loads(pickle.dumps(env))
-        assert round_trip.env.spec == env.env.spec
+        round_trip = cloudpickle.loads(cloudpickle.dumps(env))
+        assert round_trip.spec == env.spec
         env = round_trip
 
     env.reset()
@@ -62,11 +61,6 @@ def step_env_with_gym_quirks(env,
             break
 
     env.close()
-
-    if serialize_env:
-        # Roundtrip serialization
-        round_trip = pickle.loads(pickle.dumps(env))
-        assert round_trip.env.spec == env.env.spec
 
 
 def convolve(_input, filter_weights, filter_bias, strides, filters,

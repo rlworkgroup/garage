@@ -5,6 +5,7 @@ import click
 import metaworld.benchmarks as mwb
 
 from garage import wrap_experiment
+from garage.envs import GymEnv
 from garage.experiment import LocalTFRunner, task_sampler
 from garage.experiment.deterministic import set_seed
 from garage.experiment.meta_evaluator import MetaEvaluator
@@ -41,14 +42,14 @@ def rl2_ppo_metaworld_ml10_meta_test(ctxt, seed, max_episode_length,
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
         ml10_train_envs = [
-            RL2Env(mwb.ML10.from_task(task_name))
+            RL2Env(GymEnv(mwb.ML10.from_task(task_name)))
             for task_name in mwb.ML10.get_train_tasks().all_task_names
         ]
         tasks = task_sampler.EnvPoolSampler(ml10_train_envs)
         tasks.grow_pool(meta_batch_size)
 
         ml10_test_envs = [
-            RL2Env(mwb.ML10.from_task(task_name))
+            RL2Env(GymEnv(mwb.ML10.from_task(task_name)))
             for task_name in mwb.ML10.get_test_tasks().all_task_names
         ]
         test_tasks = task_sampler.EnvPoolSampler(ml10_test_envs)
