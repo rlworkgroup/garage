@@ -5,7 +5,7 @@ import pybullet_envs
 from pybullet_utils.bullet_client import BulletClient
 import pytest
 
-from garage.envs.bullet import _get_unsupported_env_list, BulletEnv
+from garage.envs.bullet import BulletEnv
 
 from tests.helpers import step_env
 
@@ -17,13 +17,11 @@ def test_can_step(env_ids):
     for env_id in env_ids:
         # extract id string
         env_id = env_id.replace('- ', '')
-        if env_id == 'KukaCamBulletEnv-v0':
-            # Kuka environments calls py_bullet.resetSimulation() in reset()
+        if env_id in ('KukaCamBulletEnv-v0', 'KukaDiverseObjectGrasping-v0'):
+            # Kuka environments calls pybullet.resetSimulation() in reset()
             # unconditionally, which globally resets other simulations. So
             # only one Kuka environment is tested.
             continue
-        if env_id in _get_unsupported_env_list():
-            pytest.skip('Skip unsupported Bullet environments')
         env = BulletEnv(env_id)
         ob_space = env.observation_space
         act_space = env.action_space
@@ -44,8 +42,6 @@ def test_pickleable(env_ids):
     for env_id in env_ids:
         # extract id string
         env_id = env_id.replace('- ', '')
-        if env_id in _get_unsupported_env_list():
-            pytest.skip('Skip unsupported Bullet environments')
         env = BulletEnv(env_id)
         round_trip = pickle.loads(pickle.dumps(env))
         assert round_trip
@@ -63,8 +59,6 @@ def test_pickle_creates_new_server(env_ids):
     for env_id in env_ids:
         # extract id string
         env_id = env_id.replace('- ', '')
-        if env_id in _get_unsupported_env_list():
-            pytest.skip('Skip unsupported Bullet environments')
         bullet_env = BulletEnv(env_id)
         envs = [pickle.loads(pickle.dumps(bullet_env)) for _ in range(n_env)]
         id_set = set()
