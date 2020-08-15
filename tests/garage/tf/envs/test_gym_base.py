@@ -4,7 +4,6 @@ import gym
 import pytest
 
 from garage.envs import GymEnv
-from garage.envs.bullet import _get_unsupported_env_list
 
 from tests.helpers import step_env_with_gym_quirks
 
@@ -22,8 +21,6 @@ class TestGymEnv:
         if spec._env_name.startswith('Defender'):
             pytest.skip(
                 'Defender-* envs bundled in atari-py 0.2.x don\'t load')
-        if spec.id in _get_unsupported_env_list():
-            pytest.skip('Skip unsupported Bullet environments')
         if 'Kuka' in spec.id:
             # Kuka environments calls py_bullet.resetSimulation() in reset()
             # unconditionally, which globally resets other simulations. So
@@ -38,8 +35,6 @@ class TestGymEnv:
         if spec._env_name.startswith('Defender'):
             pytest.skip(
                 'Defender-* envs bundled in atari-py 0.2.x don\'t load')
-        if spec.id in _get_unsupported_env_list():
-            pytest.skip('Skip unsupported Bullet environments')
         if 'Kuka' in spec.id:
             # Kuka environments calls py_bullet.resetSimulation() in reset()
             # unconditionally, which globally resets other simulations. So

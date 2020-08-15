@@ -11,19 +11,3 @@ except Exception as e:
 from garage.envs.bullet.bullet_env import BulletEnv
 
 __all__ = ['BulletEnv']
-
-
-def _get_unsupported_env_list():
-    """Return a list of unsupported Bullet Gym environments.
-
-    See https://github.com/rlworkgroup/garage/issues/1668
-
-    Returns:
-        list: a list of bullet environment id (str)
-    """
-    return [
-        'MinitaurExtendedEnv-v0', 'MinitaurReactiveEnv-v0',
-        'MinitaurBallGymEnv-v0', 'MinitaurTrottingEnv-v0',
-        'MinitaurStandGymEnv-v0', 'MinitaurAlternatingLegsEnv-v0',
-        'MinitaurFourLegStandEnv-v0', 'KukaDiverseObjectGrasping-v0'
-    ]

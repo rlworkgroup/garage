@@ -131,6 +131,7 @@ class GymEnv(Environment):
             RuntimeError: if the environment is wrapped by a TimeLimit and its
                 max_episode_steps is not equal to its spec's time limit value.
         """
+        self._env = None
         if isinstance(env, str):
             self._env = gym.make(env)
         elif isinstance(env, gym.Env):
