@@ -1,6 +1,8 @@
 """Benchmarking for algorithms."""
 # yapf: disable
-from garage_benchmarks.experiments.algos import (ddpg_garage_tf,
+from garage_benchmarks.experiments.algos import (a2c_garage_pytorch,
+                                                 a2c_garage_tf,
+                                                 ddpg_garage_tf,
                                                  her_garage_tf,
                                                  ppo_garage_pytorch,
                                                  ppo_garage_tf,
@@ -56,3 +58,10 @@ def vpg_benchmarks():
     """Run experiments for VPG benchmarking."""
     iterate_experiments(vpg_garage_pytorch, MuJoCo1M_ENV_SET)
     iterate_experiments(vpg_garage_tf, MuJoCo1M_ENV_SET)
+
+
+@benchmark
+def a2c_benchmarks():
+    """Run experiments for A2C benchmarking."""
+    iterate_experiments(a2c_garage_pytorch, MuJoCo1M_ENV_SET)
+    iterate_experiments(a2c_garage_tf, MuJoCo1M_ENV_SET)

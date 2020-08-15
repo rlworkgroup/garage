@@ -43,6 +43,7 @@ def a2c_pendulum(ctxt=None, seed=1):
         baseline = GaussianMLPBaseline(
             env_spec=env.spec,
             hidden_sizes=(32, 32),
+            hidden_nonlinearity=tf.nn.tanh,
             use_trust_region=True,
         )
 
@@ -52,16 +53,12 @@ def a2c_pendulum(ctxt=None, seed=1):
             baseline=baseline,
             max_episode_length=100,
             discount=0.99,
-            gae_lambda=0.95,
             optimizer_args=dict(learning_rate=0.01),
-            stop_entropy_gradient=True,
-            policy_ent_coeff=0.02,
-            center_adv=False,
         )
 
         runner.setup(algo, env)
 
-        runner.train(n_epochs=100, batch_size=10000)
+        runner.train(n_epochs=100, batch_size=2048)
 
 
 a2c_pendulum(seed=1)

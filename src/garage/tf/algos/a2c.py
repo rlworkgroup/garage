@@ -21,8 +21,6 @@ class A2C(VPG):
             and policies.
         max_episode_length (int): Maximum length of a single rollout.
         discount (float): Discount.
-        gae_lambda (float): Lambda used for generalized advantage
-            estimation.
         center_adv (bool): Whether to rescale the advantages
             so that they have mean 0 and standard deviation 1.
         positive_adv (bool): Whether to shift the advantages
@@ -37,8 +35,6 @@ class A2C(VPG):
         use_softplus_entropy (bool): Whether to estimate the softmax
             distribution of the entropy to prevent the entropy from being
             negative.
-        use_neg_logli_entropy (bool): Whether to estimate the entropy as the
-            negative log likelihood of the action.
         stop_entropy_gradient (bool): Whether to stop the entropy gradient.
         entropy_method (str): A string from: 'max', 'regularized',
             'no_entropy'. The type of entropy method to use. 'max' adds the
@@ -56,14 +52,12 @@ class A2C(VPG):
                  scope=None,
                  max_episode_length=500,
                  discount=0.99,
-                 gae_lambda=1,
                  center_adv=True,
                  positive_adv=False,
                  optimizer=None,
                  optimizer_args=None,
                  policy_ent_coeff=0.01,
                  use_softplus_entropy=False,
-                 use_neg_logli_entropy=False,
                  stop_entropy_gradient=False,
                  entropy_method='regularized',
                  name='A2C'):
@@ -74,7 +68,7 @@ class A2C(VPG):
                          scope=scope,
                          max_episode_length=max_episode_length,
                          discount=discount,
-                         gae_lambda=gae_lambda,
+                         gae_lambda=1,
                          center_adv=center_adv,
                          positive_adv=positive_adv,
                          optimizer=optimizer,

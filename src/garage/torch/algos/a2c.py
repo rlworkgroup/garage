@@ -24,8 +24,6 @@ class A2C(VPG):
         max_episode_length (int): Maximum length of a single rollout.
         num_train_per_epoch (int): Number of train_once calls per epoch.
         discount (float): Discount.
-        gae_lambda (float): Lambda used for generalized advantage
-            estimation.
         center_adv (bool): Whether to rescale the advantages
             so that they have mean 0 and standard deviation 1.
         positive_adv (bool): Whether to shift the advantages
@@ -56,7 +54,6 @@ class A2C(VPG):
         max_episode_length=500,
         num_train_per_epoch=1,
         discount=0.99,
-        gae_lambda=1,
         center_adv=True,
         positive_adv=False,
         policy_ent_coeff=0.01,
@@ -70,7 +67,7 @@ class A2C(VPG):
                          value_function=value_function,
                          max_episode_length=max_episode_length,
                          discount=discount,
-                         gae_lambda=gae_lambda,
+                         gae_lambda=1,
                          center_adv=center_adv,
                          num_train_per_epoch=num_train_per_epoch,
                          positive_adv=positive_adv,
