@@ -4,8 +4,8 @@ import tensorflow as tf
 
 from garage.envs import GarageEnv, normalize
 from garage.experiment import deterministic, LocalTFRunner
-from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import A2C as TF_A2C
+from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.policies import GaussianMLPPolicy as TF_GMP
 from garage import wrap_experiment
 
@@ -14,8 +14,9 @@ hyper_parameters = {
     'learning_rate': 1e-2,
     'discount': 0.99,
     'n_epochs': 250,
+    'policy_ent_coeff': 0.02,
     'max_episode_length': 100,
-    'batch_size': 2048,
+    'batch_size': 10000,
 }
 
 
@@ -43,12 +44,19 @@ def a2c_garage_tf(ctxt, env_id, seed):
             output_nonlinearity=None,
         )
 
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
+        baseline = GaussianMLPBaseline(
+            env_spec=env.spec,
+            hidden_sizes=(32, 32),
+            hidden_nonlinearity=tf.nn.tanh,
+            use_trust_region=True,
+        )
 
         algo = TF_A2C(
             env_spec=env.spec,
             policy=policy,
             baseline=baseline,
+            policy_ent_coeff=hyper_parameters['policy_ent_coeff'],
+            stop_entropy_gradient=True,
             max_episode_length=hyper_parameters['max_episode_length'],
             discount=hyper_parameters['discount'],
             optimizer_args=dict(

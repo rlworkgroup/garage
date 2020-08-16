@@ -15,8 +15,9 @@ hyper_parameters = {
     'learning_rate': 1e-2,
     'discount': 0.99,
     'n_epochs': 250,
+    'policy_ent_coeff': 0.02,
     'max_episode_length': 100,
-    'batch_size': 2048,
+    'batch_size': 10000,
 }
 
 
@@ -48,14 +49,14 @@ def a2c_garage_pytorch(ctxt, env_id, seed):
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
-    policy_optimizer = OptimizerWrapper((torch.optim.Adam, dict(lr=2.5e-4)),
-                                        policy,
-                                        max_optimization_epochs=10,
-                                        minibatch_size=64)
-    vf_optimizer = OptimizerWrapper((torch.optim.Adam, dict(lr=2.5e-4)),
-                                    value_function,
-                                    max_optimization_epochs=10,
-                                    minibatch_size=64)
+    policy_optimizer = OptimizerWrapper(
+        (torch.optim.Adam, dict(lr=hyper_parameters['learning_rate'])),
+        policy,
+    )
+    vf_optimizer = OptimizerWrapper(
+        (torch.optim.Adam, dict(lr=hyper_parameters['learning_rate'])),
+        value_function,
+    )
 
     algo = A2C(
         env_spec=env.spec,
@@ -63,6 +64,8 @@ def a2c_garage_pytorch(ctxt, env_id, seed):
         value_function=value_function,
         policy_optimizer=policy_optimizer,
         vf_optimizer=vf_optimizer,
+        policy_ent_coeff=hyper_parameters['policy_ent_coeff'],
+        stop_entropy_gradient=True,
         max_episode_length=hyper_parameters['max_episode_length'],
         discount=hyper_parameters['discount'],
     )

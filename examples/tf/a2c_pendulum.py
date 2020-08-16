@@ -53,12 +53,15 @@ def a2c_pendulum(ctxt=None, seed=1):
             baseline=baseline,
             max_episode_length=100,
             discount=0.99,
+            center_adv=False,
+            stop_entropy_gradient=True,
+            policy_ent_coeff=0.02,
             optimizer_args=dict(learning_rate=0.01),
         )
 
         runner.setup(algo, env)
 
-        runner.train(n_epochs=100, batch_size=2048)
+        runner.train(n_epochs=100, batch_size=10000)
 
 
 a2c_pendulum(seed=1)
