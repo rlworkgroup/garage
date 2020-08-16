@@ -63,7 +63,8 @@ def rollout(env,
         observations.append(last_obs)
         agent_infos.append(agent_info)
         episode_length += 1
-        if es.last:
+
+        if es.terminal or es.timeout:
             break
         last_obs = es.observation
 

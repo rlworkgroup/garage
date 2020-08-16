@@ -190,6 +190,7 @@ class LocalRunner:
         if max_episode_length is None:
             raise ValueError('If `sampler_cls` is specified in runner.setup, '
                              'the algorithm must specify `max_episode_length`')
+
         if worker_class is None:
             worker_class = getattr(self._algo, 'worker_cls', DefaultWorker)
         if seed is None:
@@ -214,7 +215,7 @@ class LocalRunner:
               sampler_cls=None,
               sampler_args=None,
               n_workers=psutil.cpu_count(logical=False),
-              worker_class=DefaultWorker,
+              worker_class=None,
               worker_args=None):
         """Set up runner for algorithm and environment.
 
