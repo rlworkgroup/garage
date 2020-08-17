@@ -42,6 +42,11 @@ class PPO(NPO):
         use_neg_logli_entropy (bool): Whether to estimate the entropy as the
             negative log likelihood of the action.
         stop_entropy_gradient (bool): Whether to stop the entropy gradient.
+        loss_group_by_task_id (bool): If true, losses will be group by task_id,
+            and a list of losses will be sent to optimizer, which is used for
+            multi-task learning and PCGrad optimizer.
+        num_tasks (int): The number of tasks trained together, which is used
+            for multi-task learning and PCGrad optimizer.
         entropy_method (str): A string from: 'max', 'regularized',
             'no_entropy'. The type of entropy method to use. 'max' adds the
             dense entropy to the reward for each time step. 'regularized' adds
@@ -70,6 +75,8 @@ class PPO(NPO):
                  use_softplus_entropy=False,
                  use_neg_logli_entropy=False,
                  stop_entropy_gradient=False,
+                 loss_group_by_task_id=False,
+                 num_tasks=0,
                  entropy_method='no_entropy',
                  name='PPO'):
         if optimizer is None:
@@ -95,5 +102,7 @@ class PPO(NPO):
                          use_softplus_entropy=use_softplus_entropy,
                          use_neg_logli_entropy=use_neg_logli_entropy,
                          stop_entropy_gradient=stop_entropy_gradient,
+                         loss_group_by_task_id=loss_group_by_task_id,
+                         num_tasks=num_tasks,
                          entropy_method=entropy_method,
                          name=name)
