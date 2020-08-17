@@ -38,6 +38,8 @@ class TestGymEnv:
             # unconditionally, which globally resets other simulations. So
             # only one Kuka environment can be tested.
             pytest.skip('Skip Kuka Bullet environments')
+        elif 'Minitaur' in spec.id:
+            pytest.skip('Bulle Minitaur envs don\'t load')
         env = GymEnv(spec.id)
         round_trip = pickle.loads(pickle.dumps(env))
         assert round_trip

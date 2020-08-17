@@ -287,7 +287,7 @@ class GymEnv(Environment):
         """
         # We need to do some strange things here to fix-up flaws in gym
         # pylint: disable=import-outside-toplevel
-        if self._env.spec:
+        if hasattr(self._env, 'spec') and self._env.spec:
             if any(package in getattr(self._env.spec, 'entry_point', '')
                    for package in KNOWN_GYM_NOT_CLOSE_MJ_VIEWER):
                 # This import is not in the header to avoid a MuJoCo dependency
