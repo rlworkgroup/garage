@@ -491,10 +491,10 @@ class StepType(enum.IntEnum):
             ValueError: if step_cnt is < 1. In this case a environment's
             `reset()` is likely not called yet and the step_cnt is None.
         """
-        if done:
-            return StepType.TERMINAL
-        elif max_episode_length is not None and step_cnt >= max_episode_length:
+        if max_episode_length is not None and step_cnt >= max_episode_length:
             return StepType.TIMEOUT
+        elif done:
+            return StepType.TERMINAL
         elif step_cnt == 1:
             return StepType.FIRST
         elif step_cnt < 1:

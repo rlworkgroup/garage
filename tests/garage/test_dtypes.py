@@ -236,11 +236,11 @@ def test_get_step_type():
                                        max_episode_length=5,
                                        done=False)
     assert step_type == StepType.TIMEOUT
-    step_type = StepType.get_step_type(step_cnt=1,
+    step_type = StepType.get_step_type(step_cnt=5,
                                        max_episode_length=5,
                                        done=True)
-    assert step_type == StepType.TERMINAL
-    step_type = StepType.get_step_type(step_cnt=5,
+    assert step_type == StepType.TIMEOUT
+    step_type = StepType.get_step_type(step_cnt=1,
                                        max_episode_length=5,
                                        done=True)
     assert step_type == StepType.TERMINAL
