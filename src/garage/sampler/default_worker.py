@@ -110,7 +110,7 @@ class DefaultWorker(Worker):
                 self._agent_infos[k].append(v)
             self._eps_length += 1
 
-            if not es.last:
+            if not es.terminal:
                 self._prev_obs = es.observation
                 return False
         self._lengths.append(self._eps_length)
