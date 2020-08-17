@@ -44,7 +44,7 @@ class PCGradWorker(DefaultWorker):
 
         """
         for _ in range(self._num_tasks):
-            self.start_rollout()
-            while not self.step_rollout():
+            self.start_episode()
+            while not self.step_episode():
                 pass
-        return self.collect_rollout()
+        return self.collect_episode()
