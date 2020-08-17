@@ -18,7 +18,7 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 
 
 @wrap_experiment(snapshot_mode='last')
-def td3_pendulum(ctxt=None, seed=1):
+def td3_half_cheetah(ctxt=None, seed=1):
     """Train TD3 with InvertedDoublePendulum-v2 environment.
 
     Args:
@@ -30,7 +30,7 @@ def td3_pendulum(ctxt=None, seed=1):
     """
     set_seed(seed)
     runner = LocalRunner(ctxt)
-    env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+    env = GarageEnv(normalize(gym.make('HalfCheetah-v2')))
 
     policy = DeterministicMLPPolicy(env_spec=env.spec,
                                     hidden_sizes=[256, 256],
@@ -68,9 +68,9 @@ def td3_pendulum(ctxt=None, seed=1):
               qf_lr=1e-3,
               steps_per_epoch=40,
               start_steps=1000,
-              grad_steps_per_env_step=1,
-              max_episode_length=200,
-              min_buffer_size=int(1e4),
+              grad_steps_per_env_step=50,
+              max_episode_length=1000,
+              min_buffer_size=1000,
               buffer_batch_size=100)
 
     # if torch.cuda.is_available():
@@ -82,4 +82,4 @@ def td3_pendulum(ctxt=None, seed=1):
     runner.train(n_epochs=50, batch_size=100)
 
 
-td3_pendulum()
+td3_half_cheetah(seed=0)

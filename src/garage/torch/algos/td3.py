@@ -1,5 +1,4 @@
 """TD3 model in Pytorch."""
-from collections import deque
 import copy
 
 from dowel import logger, tabular
@@ -7,14 +6,14 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from garage import _Default, log_performance, make_optimizer, StepType
+from garage import _Default, log_performance, make_optimizer
 from garage._dtypes import TrajectoryBatch
 from garage.misc import tensor_utils
-from garage.np import obtain_evaluation_samples
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch import (dict_np_to_torch, global_device, set_gpu_mode,
                           torch_to_np)
+
 
 
 class TD3(RLAlgorithm):
@@ -42,6 +41,7 @@ class TD3(RLAlgorithm):
         min_buffer_size (int): The minimum buffer size for replay buffer.
         policy_noise (float): Policy (actor) noise.
         policy_noise_clip (float): Noise clip.
+        exploration_noise (float): Exploration noise.
         clip_return (float): Clip return to be in [-clip_return,
             clip_return].
         policy_lr (float): Learning rate for training policy network.
@@ -91,8 +91,8 @@ class TD3(RLAlgorithm):
         policy_optimizer=torch.optim.Adam,
         qf_optimizer=torch.optim.Adam,
         num_evaluation_trajectories=10,
-        steps_per_epoch=1,  #20,
-        start_timesteps=10000,
+        steps_per_epoch=20,
+        start_steps=1000,
     ):
 
         self._env_spec = env_spec
@@ -111,19 +111,18 @@ class TD3(RLAlgorithm):
         self._grad_steps_per_env_step = grad_steps_per_env_step
         self._update_actor_interval = update_actor_interval
         self._steps_per_epoch = steps_per_epoch
+        self._start_steps = start_steps
         self._num_evaluation_trajectories = num_evaluation_trajectories
-        self._start_timesteps = start_timesteps
         self.max_episode_length = max_episode_length
 
         self._episode_policy_losses = []
-        # self._episode_rewards = deque(maxlen=30)
         self._episode_qf_losses = []
         self._epoch_ys = []
         self._epoch_qs = []
         self._eval_env = None
         self.exploration_policy = exploration_policy
-        self.sampler_cls = LocalSampler
         self.worker_cls = FragmentWorker
+        self.sampler_cls = LocalSampler
 
         self._replay_buffer = replay_buffer
         self.policy = policy
@@ -173,19 +172,38 @@ class TD3(RLAlgorithm):
 
         """
         self.__dict__.update(state)
-        self._replay_buffer
-        self.policy
-        self._qf_1
-        self._qf_2
-        self._target_policy
-        self._target_qf_1
-        self._target_qf_2
+        self._replay_buffer = self._replay_buffer
+        self.policy = self.policy
+        self._qf_1 = self._qf_1
+        self._qf_2 = self._qf_2
+        self._target_policy = self._target_policy
+        self._target_qf_1 = self._target_qf_1
+        self._target_qf_2 = self._target_qf_2
+
+    def _get_action(self, action, noise_scale):
+        """"Select action based on policy.
+        
+        Action can be added with noise.
+
+        Args:
+            action (float): Action.
+            noise_scale (float): Noise scale added to action.
+
+        Return:
+            float: Action selected by the policy.
+        """
+        action += noise_scale * np.random.randn(self._action_dim)
+        return np.clip(action, -self._max_action, self._max_action)
+
+
 
     def train(self, runner):
         """Obtain samplers and start actual training for each epoch.
+
         Args:
             runner (LocalRunner): Experiment runner, which provides services
                 such as snapshotting and sampler control.
+
         Returns:
             float: The average return in last epoch cycle.
         """
@@ -196,20 +214,24 @@ class TD3(RLAlgorithm):
 
         for _ in runner.step_epochs():
             for cycle in range(self._steps_per_epoch):
-                # Store transition in replay buffer
+                # Obtain trasnsition batch and store it in replay buffer
                 runner.step_path = runner.obtain_trajectories(runner.step_itr)
                 self._replay_buffer.add_trajectory_batch(runner.step_path)
 
-                self._train_once(runner.step_itr, runner.step_path)
+                # Get action randomly from environment within warmup steps.
+                # Afterwards, get action from policy.
+                if runner.total_env_steps >= self._start_steps:
+                    self._train_once(runner.step_itr)
+
+                # Evaluate and log the results
                 if (cycle == 0 and self._replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
                     runner.enable_logging = True
-                    # current_timestep = runner.step_itr * cycle
                     eval_eps = self._evaluate_policy()
-                    train_returns = log_performance(runner.step_path,
-                                                    eval_eps,
-                                                    discount=self._discount,
-                                                    prefix='training')
+                    log_performance(runner.step_path,
+                                    eval_eps,
+                                    discount=self._discount,
+                                    prefix='training')
                     last_returns = log_performance(runner.step_itr,
                                                    eval_eps,
                                                    discount=self._discount,
@@ -218,13 +240,13 @@ class TD3(RLAlgorithm):
 
         return np.mean(last_returns)
 
-    def _train_once(self, itr, time_steps):
+    def _train_once(self, itr):
         """Perform one iteration of training.
+
         Args:
             itr (int): Iteration number.
-            time_steps (TimeStepBatch): Batch of time steps.
-        """
 
+        """
         for _ in range(self._grad_steps_per_env_step):
             if (self._replay_buffer.n_transitions_stored >=
                     self._min_buffer_size):
@@ -244,13 +266,14 @@ class TD3(RLAlgorithm):
 
         if itr % self._steps_per_epoch == 0:
             logger.log('Training finished')
-            # epoch = itr / self._steps_per_epoch
+            epoch = itr / self._steps_per_epoch
 
             if (self._replay_buffer.n_transitions_stored >=
                     self._min_buffer_size):
-                # tabular.record('Epoch', epoch)
+                tabular.record('Epoch', epoch)
                 self._log_statistics()
 
+    # pylint: disable=invalid-unary-operand-type
     def _optimize_policy(self, samples_data, itr):
         """Perform algorithm optimization.
 
@@ -279,10 +302,8 @@ class TD3(RLAlgorithm):
         inputs = observations
         with torch.no_grad():
             # Select action according to policy and add clipped noise
-            noise = (torch.randn_like(actions) * self._policy_noise).clamp(
+            noise = (torch.randn_like(actions)* self._policy_noise).clamp(
                 -self._policy_noise_clip, self._policy_noise_clip)
-            # next_actions = (self._target_policy(next_inputs) + noise).clamp(
-            #     -self._clip_return, self._clip_return)
             next_actions = (self._target_policy(next_inputs) + noise).clamp(
                 -self._max_action, self._max_action)
 
@@ -329,32 +350,30 @@ class TD3(RLAlgorithm):
     def _evaluate_policy(self):
         """Evaluate the performance of the policy via deterministic rollouts.
 
-            Statistics such as (average) discounted return and success rate are
+        Statistics such as (average) discounted return and success rate are
             recorded.
+
+        Returns:
+            TrajectoryBatch: Evaluation trajectories, representing the best
+                current performance of the algorithm.
+
         """
         paths = []
 
         for _ in range(self._num_evaluation_trajectories):
-            observations, actions, rewards, dones, agent_infos, env_infos = [], [], [], [], [], []
-            obs, path_length, episode_reward, agenet_info = self._eval_env.reset(
-            ), 0, 0, dict()
+            observations, actions, rewards, dones, agent_infos, env_infos = \
+                [], [], [], [], [], []
+            obs, path_length, episode_reward, agenet_info = \
+                self._eval_env.reset(), 0, 0, dict()
             self.policy.reset()
 
             while path_length < (self.max_episode_length or np.inf):
                 obs = self._eval_env.observation_space.flatten(obs)
 
-                # Select action randomly or according to policy
-                # if current_timestep < self._start_timesteps:
-                #     action = self._eval_env.action_space.sample()
-                # else:
+                # select action according to policy
                 with torch.no_grad():
-                    action = self.policy(
-                        torch.Tensor(obs).unsqueeze(0)) + np.random.normal(
-                            0,
-                            self._max_action * self._exploration_noise,
-                            size=self._action_dim).clip(
-                                -self._max_action, self._max_action)
-
+                    a = self.policy(torch.Tensor(obs).unsqueeze(0))
+                    action = self._get_action(a, self._exploration_noise)
                     action = action.squeeze(0).numpy()
 
                 # Perform action
@@ -363,8 +382,7 @@ class TD3(RLAlgorithm):
                 episode_reward += reward
 
                 observations.append(obs)
-                # rewards.append(episode_reward)
-                rewards.append(reward)
+                rewards.append(episode_reward)
                 actions.append(action)
                 agent_infos.append(agenet_info)
                 env_infos.append(env_info)
