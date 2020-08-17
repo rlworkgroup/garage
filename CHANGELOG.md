@@ -232,6 +232,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Worker processes are no longer started unnecessarily ([#1006](https://github.com/rlworkgroup/garage/pull/1006))
 - All examples where fixed and are now tested ([#1009](https://github.com/rlworkgroup/garage/pull/1009))
 
+## 2019.10.3
+
+### Fixed
+- Better parameters for example `her_ddpg_fetchreach` ([#1764](https://github.com/rlworkgroup/garage/pull/1764))
+- Bug in `DiscreteQfDerivedPolicy` in which parameters were not returned ([#1847](https://github.com/rlworkgroup/garage/pull/1847))
+- Bug which made it impossible to evaluate stochastic policies deterministically ([#1715](https://github.com/rlworkgroup/garage/pull/1715))
+
 ## 2019.10.2
 
 ### Fixed
