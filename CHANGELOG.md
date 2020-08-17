@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2019.10.3
+
+### Fixed
+- Better parameters for example `her_ddpg_fetchreach` ([#1764](https://github.com/rlworkgroup/garage/pull/1764))
+- Bug in `DiscreteQfDerivedPolicy` in which parameters were not returned ([#1847](https://github.com/rlworkgroup/garage/pull/1847))
+- Bug which made it impossible to evaluate stochastic policies deterministically ([#1715](https://github.com/rlworkgroup/garage/pull/1715))
+
 ## 2019.10.2
 
 ### Fixed
