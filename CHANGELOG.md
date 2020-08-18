@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2020.06.2
+- Fixed
+  * Better parameters for example `her_ddpg_fetchreach` ([#1763](https://github.com/rlworkgroup/garage/pull/1763))
+  * Ensure determinism in TensorFlow by using `tfp.SeedStream` ([#1821](https://github.com/rlworkgroup/garage/pull/1821))
+  * Broken rendering of MuJoCo environments to pixels in the NVIDIA Docker container ([#1838](https://github.com/rlworkgroup/garage/pull/1838))
+  * Enable cudnn in the NVIDIA Docker container ([#1840](https://github.com/rlworkgroup/garage/pull/1840))
+  * Bug in `DiscreteQfDerivedPolicy` in which parameters were not returned ([#1847](https://github.com/rlworkgroup/garage/pull/1847))
+  * Populate `TimeLimit.truncated` at every step when using `gym.Env` ([#1852](https://github.com/rlworkgroup/garage/pull/1852))
+  * Bug in which parameters where not copied when TensorFlow primitives are `clone()`ed ([#1855](https://github.com/rlworkgroup/garage/pull/1855))
+  * Typo in the `Makefile` target `run-nvidia` ([#1914](https://github.com/rlworkgroup/garage/pull/1914))
+
 ## 2020.06.1
 - Fixed
   * Pipenv fails to resolve a stable dependency set because of excessively-narrow dependencies in tensorflow-probability ([#1721](https://github.com/rlworkgroup/garage/pull/1721))
