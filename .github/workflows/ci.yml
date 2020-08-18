@@ -14,7 +14,7 @@ on:
   push:
     branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build_docker_container:
@@ -42,7 +42,7 @@ jobs:
 
 
   check_pre_commit:
-    name: Pre-commit Checking
+    name: Check pre-commit
     runs-on: ubuntu-latest
     needs: build_docker_container
     if: github.event_name == 'pull_request'
@@ -76,7 +76,7 @@ jobs:
 
 
   normal_test:
-    name: Normal Test
+    name: Normal Tests
     runs-on: ubuntu-latest
     needs: check_pre_commit
 
@@ -116,7 +116,7 @@ jobs:
 
 
   large_test:
-    name: Large Test
+    name: Large Tests
     runs-on: ubuntu-latest
     needs: check_pre_commit
 
@@ -156,7 +156,7 @@ jobs:
 
 
   mujoco_test:
-    name: MuJoCo Test
+    name: MuJoCo-Based Tests
     runs-on: ubuntu-latest
     needs: check_pre_commit
 
@@ -195,7 +195,7 @@ jobs:
 
 
   mujoco_test_long:
-    name: Large MuJoCo Test
+    name: Large MuJoCo-Based Tests
     runs-on: ubuntu-latest
     needs: check_pre_commit
 
@@ -234,7 +234,7 @@ jobs:
 
 
   nightly_test:
-    name: Nightly Test
+    name: Nightly Tests
     runs-on: ubuntu-latest
     needs: check_pre_commit
     if: github.event_name == 'schedule'
@@ -267,7 +267,7 @@ jobs:
 
 
   verify_envs_conda:
-    name: Verify Conda Environment
+    name: Verify Conda Environment Installation
     runs-on: ubuntu-latest
     needs: check_pre_commit
     if: github.event_name == 'schedule'
@@ -317,7 +317,7 @@ jobs:
 
 
   verify_envs_pipenv:
-    name: Verify Pipenv Environment
+    name: Verify Pipenv Environment Installation
     runs-on: ubuntu-latest
     needs: check_pre_commit
     if: github.event_name == 'schedule'
