@@ -3,7 +3,7 @@ name: Garage CI
 env:
   GARAGE_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
-  DOCKER_TAG: garage-ci-189158592
+  DOCKER_TAG: garage-ci-${{ github.run_id }}
   OWNER: "rlworkgroup"
   DOCKER_CACHE_REPO: "garage-ci"
   MJKEY: ${{ secrets.MJKEY }}
@@ -18,6 +18,7 @@ on:
 
 jobs:
   build_docker_container:
+    name: Build Docker Container
     runs-on: ubuntu-latest
 
     steps:
@@ -41,6 +42,7 @@ jobs:
 
 
   check_pre_commit:
+    name: Pre-commit Checking
     runs-on: ubuntu-latest
     needs: build_docker_container
     if: github.event_name == 'pull_request'
@@ -74,6 +76,7 @@ jobs:
 
 
   normal_test:
+    name: Normal Test
     runs-on: ubuntu-latest
     needs: check_pre_commit
 
@@ -113,6 +116,7 @@ jobs:
 
 
   large_test:
+    name: Large Test
     runs-on: ubuntu-latest
     needs: check_pre_commit
 
@@ -145,13 +149,14 @@ jobs:
           '[ ! -f ${MJKEY_PATH} ] || mv ${MJKEY_PATH} ${MJKEY_PATH}.bak
           pytest --cov=garage --cov-report=xml -m "large and not flaky" --durations=20 &&
           for i in {1..5}; do \
-          bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
-          || echo 'Retrying...' && sleep 30 && continue; \
-          exit 1; \
+            bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
+              || echo 'Retrying...' && sleep 30 && continue; \
+            exit 1; \
           done'
 
 
   mujoco_test:
+    name: MuJoCo Test
     runs-on: ubuntu-latest
     needs: check_pre_commit
 
@@ -183,13 +188,14 @@ jobs:
           /bin/bash -c \
           'pytest --cov=garage --cov-report=xml -m "mujoco and not flaky" --durations=20 &&
           for i in {1..5}; do \
-          bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
-          || echo 'Retrying...' && sleep 30 && continue; \
-          exit 1; \
+            bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
+                || echo 'Retrying...' && sleep 30 && continue; \
+            exit 1; \
           done'
 
 
   mujoco_test_long:
+    name: Large MuJoCo Test
     runs-on: ubuntu-latest
     needs: check_pre_commit
 
@@ -228,9 +234,10 @@ jobs:
 
 
   nightly_test:
+    name: Nightly Test
     runs-on: ubuntu-latest
     needs: check_pre_commit
-#    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule'
 
     steps:
       - uses: actions/checkout@v2
@@ -260,9 +267,10 @@ jobs:
 
 
   verify_envs_conda:
+    name: Verify Conda Environment
     runs-on: ubuntu-latest
     needs: check_pre_commit
-#    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule'
 
     steps:
       - uses: actions/checkout@v2
@@ -309,9 +317,10 @@ jobs:
 
 
   verify_envs_pipenv:
+    name: Verify Pipenv Environment
     runs-on: ubuntu-latest
     needs: check_pre_commit
-#    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule'
 
     steps:
       - uses: actions/checkout@v2
@@ -353,6 +362,7 @@ jobs:
 
 
   delete_docker_container:
+    name: Delete Docker Container
     runs-on: ubuntu-latest
     needs: [normal_test, large_test, mujoco_test, mujoco_test_long, nightly_test, verify_envs_conda, verify_envs_pipenv]
     if: always()
