@@ -109,7 +109,7 @@ class NormalizedEnv(Wrapper):
             reward = self._apply_normalize_reward(reward)
 
         return EnvStep(env_spec=es.env_spec,
-                       action=es.action,
+                       action=action,
                        reward=reward * self._scale_reward,
                        observation=next_obs,
                        env_info=es.env_info,
