@@ -284,7 +284,7 @@ def test_rl2_metaworld_ml1_push():
     """Test rl2_ppo_ml1.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_metaworld_ml1_push.py', '--n_epochs',
-        '1', '--episodes_per_task', '1', '--meta_batch_size', '10'
+        '1', '--episode_per_task', '1', '--meta_batch_size', '10'
     ],
                           check=False).returncode == 0
 
@@ -296,7 +296,7 @@ def test_rl2_ppo_metaworld_ml10():
     """Test rl2_ppo_ml10.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_metaworld_ml10.py', '--n_epochs', '1',
-        '--episodes_per_task', '1', '--meta_batch_size', '10'
+        '--episode_per_task', '1', '--meta_batch_size', '10'
     ],
                           check=False).returncode == 0
 
