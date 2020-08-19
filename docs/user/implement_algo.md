@@ -84,21 +84,13 @@ We'll also want an environment to test our algorithm with.
 
 ```py
 from garage import wrap_experiment
-<<<<<<< HEAD
 from garage.envs import PointEnv
-=======
-from garage.envs import PointEnv, GymEnv
->>>>>>> a1877525... Flatten observations if necessary
 from garage.experiment import LocalRunner
 
 @wrap_experiment
 def debug_my_algorithm(ctxt):
     runner = LocalRunner(ctxt)
-<<<<<<< HEAD
     env = PointEnv()
-=======
-    env = GymEnv(PointEnv())
->>>>>>> a1877525... Flatten observations if necessary
     algo = MyAlgorithm()
     runner.setup(algo, env)
     runner.train(n_epochs=3)
@@ -167,11 +159,7 @@ class SimpleVPG:
             samples = runner.obtain_samples(epoch)
 
 from garage import wrap_experiment
-<<<<<<< HEAD
 from garage.envs import PointEnv
-=======
-from garage.envs import PointEnv, GymEnv
->>>>>>> a1877525... Flatten observations if necessary
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.torch.policies import GaussianMLPPolicy
@@ -180,11 +168,7 @@ from garage.torch.policies import GaussianMLPPolicy
 def debug_my_algorithm(ctxt):
     set_seed(100)
     runner = LocalRunner(ctxt)
-<<<<<<< HEAD
     env = PointEnv()
-=======
-    env = GymEnv(PointEnv())
->>>>>>> a1877525... Flatten observations if necessary
     policy = GaussianMLPPolicy(env.spec)
     algo = SimpleVPG(policy)
     runner.setup(algo, env)
@@ -322,11 +306,7 @@ policy when training, you can solve an Gym environment, for example
 def tutorial_vpg(ctxt=None):
     set_seed(100)
     runner = LocalRunner(ctxt)
-<<<<<<< HEAD
     env = GymEnv('LunarLanderContinuous-v2')
-=======
-    env = GymEnv(env_name='LunarLanderContinuous-v2')
->>>>>>> a1877525... Flatten observations if necessary
     policy = GaussianMLPPolicy(env.spec)
     algo = SimpleVPG(env.spec, policy)
     runner.setup(algo, env)
@@ -342,11 +322,7 @@ except for the replacement of `LocalRunner` with `LocalTFRunner`.
 ```py
 ...
 from garage import wrap_experiment
-<<<<<<< HEAD
 from garage.envs import PointEnv
-=======
-from garage.envs import PointEnv, GymEnv
->>>>>>> a1877525... Flatten observations if necessary
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.tf.policies import GaussianMLPPolicy
@@ -355,11 +331,7 @@ from garage.tf.policies import GaussianMLPPolicy
 def tutorial_vpg(ctxt=None):
     set_seed(100)
     with LocalTFRunner(ctxt) as runner:
-<<<<<<< HEAD
         env = PointEnv()
-=======
-        env = GymEnv(PointEnv())
->>>>>>> a1877525... Flatten observations if necessary
         policy = GaussianMLPPolicy(env.spec)
         algo = SimpleVPG(env.spec, policy)
         runner.setup(algo, env)
@@ -524,11 +496,7 @@ from garage.tf.policies import CategoricalMLPPolicy
 def tutorial_cem(ctxt=None):
     set_seed(100)
     with LocalTFRunner(ctxt) as runner:
-<<<<<<< HEAD
         env = GymEnv('CartPole-v1')
-=======
-        env = GymEnv(env_name='CartPole-v1')
->>>>>>> a1877525... Flatten observations if necessary
         policy = CategoricalMLPPolicy(env.spec)
         algo = SimpleCEM(env.spec, policy)
         runner.setup(algo, env)

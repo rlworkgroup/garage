@@ -50,11 +50,7 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
 
     """
     set_seed(seed)
-<<<<<<< HEAD
     envs = [normalize(GymEnv(ML1.get_train_tasks('push-v1')))]
-=======
-    envs = [GymEnv(normalize(ML1.get_train_tasks('push-v1')))]
->>>>>>> a1877525... Flatten observations if necessary
     env = MultiEnvWrapper(envs, mode='del-onehot')
 
     latent_length = 2
@@ -188,11 +184,7 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task):
     """
     set_seed(seed)
     tasks = MT50.get_train_tasks().all_task_names
-<<<<<<< HEAD
     envs = [GymEnv(normalize(MT50.from_task(task))) for task in tasks]
-=======
-    envs = [normalize(GymEnv(MT50.from_task(task))) for task in tasks]
->>>>>>> a1877525... Flatten observations if necessary
     env = MultiEnvWrapper(envs,
                           sample_strategy=round_robin_strategy,
                           mode='del-onehot')
