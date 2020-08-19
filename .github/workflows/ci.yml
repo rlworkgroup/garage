@@ -51,6 +51,8 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
+    - name: Docker info
+      run: docker version
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
     - name: Pull from cache (GitHub Package Registry)
@@ -71,8 +73,6 @@ jobs:
           --memory 7500m \
           --memory-swap 7500m \
           "${DOCKER_TAG}" scripts/travisci/check_precommit.sh
-    - name: Docker info
-      run: docker version
 
 
   normal_test:
