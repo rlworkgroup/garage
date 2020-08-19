@@ -34,7 +34,7 @@ def a2c_pendulum(ctxt=None, seed=1):
 
         policy = GaussianMLPPolicy(
             env_spec=env.spec,
-            hidden_sizes=(64, 64),
+            hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.tanh,
             output_nonlinearity=None,
         )
@@ -50,14 +50,16 @@ def a2c_pendulum(ctxt=None, seed=1):
             env_spec=env.spec,
             policy=policy,
             baseline=baseline,
-            max_episode_length=100,
+            max_episode_length=env.spec.max_episode_length,
+            stop_entropy_gradient=True,
+            center_adv=False,
             discount=0.99,
-            optimizer_args=dict(learning_rate=0.01),
+            optimizer_args=dict(learning_rate=0.001),
         )
 
         runner.setup(algo, env)
 
-        runner.train(n_epochs=100, batch_size=2048)
+        runner.train(n_epochs=2000, batch_size=512)
 
 
 a2c_pendulum(seed=1)

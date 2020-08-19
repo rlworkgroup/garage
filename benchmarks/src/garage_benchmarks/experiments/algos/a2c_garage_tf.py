@@ -10,7 +10,7 @@ from garage.tf.policies import GaussianMLPPolicy as TF_GMP
 
 hyper_parameters = {
     'hidden_sizes': [32, 32],
-    'learning_rate': 1e-2,
+    'learning_rate': 1e-3,
     'discount': 0.99,
     'n_epochs': 2000,
     'batch_size': 512,
@@ -48,6 +48,8 @@ def a2c_garage_tf(ctxt, env_id, seed):
                       baseline=baseline,
                       max_episode_length=env.spec.max_episode_length,
                       discount=hyper_parameters['discount'],
+                      stop_entropy_gradient=True,
+                      center_adv=False,
                       optimizer_args=dict(
                           learning_rate=hyper_parameters['learning_rate'], ))
 

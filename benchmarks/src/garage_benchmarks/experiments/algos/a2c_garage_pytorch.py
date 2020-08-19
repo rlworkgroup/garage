@@ -11,7 +11,7 @@ from garage.torch.value_functions import GaussianMLPValueFunction
 
 hyper_parameters = {
     'hidden_sizes': [32, 32],
-    'learning_rate': 1e-2,
+    'learning_rate': 1e-3,
     'discount': 0.99,
     'n_epochs': 2000,
     'batch_size': 512,
@@ -59,6 +59,8 @@ def a2c_garage_pytorch(ctxt, env_id, seed):
         value_function=value_function,
         policy_optimizer=policy_optimizer,
         vf_optimizer=vf_optimizer,
+        stop_entropy_gradient=True,
+        center_adv=False,
         max_episode_length=env.spec.max_episode_length,
         discount=hyper_parameters['discount'],
     )
