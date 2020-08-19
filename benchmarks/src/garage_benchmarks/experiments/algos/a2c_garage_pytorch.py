@@ -13,8 +13,8 @@ hyper_parameters = {
     'hidden_sizes': [32, 32],
     'learning_rate': 1e-3,
     'discount': 0.99,
-    'n_epochs': 2000,
-    'batch_size': 512,
+    'n_epochs': 500,
+    'batch_size': 2000,
 }
 
 
