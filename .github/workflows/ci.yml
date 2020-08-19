@@ -78,7 +78,8 @@ jobs:
   normal_test:
     name: Normal Tests
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || steps.check_pre_commit.conclusion == 'success'
+    needs: check_pre_commit
+    if: github.event_name != 'pull_request'
 
     steps:
     - uses: actions/checkout@v2
@@ -118,7 +119,8 @@ jobs:
   large_test:
     name: Large Tests
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || steps.check_pre_commit.conclusion == 'success'
+    needs: check_pre_commit
+    if: github.event_name != 'pull_request'
 
     steps:
     - uses: actions/checkout@v2
@@ -158,7 +160,8 @@ jobs:
   mujoco_test:
     name: MuJoCo-Based Tests
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || steps.check_pre_commit.conclusion == 'success'
+    needs: check_pre_commit
+    if: github.event_name != 'pull_request'
 
     steps:
     - uses: actions/checkout@v2
@@ -197,7 +200,8 @@ jobs:
   mujoco_test_long:
     name: Large MuJoCo-Based Tests
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || steps.check_pre_commit.conclusion == 'success'
+    needs: check_pre_commit
+    if: github.event_name != 'pull_request'
 
     steps:
     - uses: actions/checkout@v2
