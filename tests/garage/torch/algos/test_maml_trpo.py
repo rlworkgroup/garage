@@ -41,13 +41,12 @@ def test_maml_trpo_pendulum():
                                               hidden_sizes=(32, 32))
 
     episodes_per_task = 5
-    max_episode_length = 100
+    max_episode_length = env.spec.max_episode_length
 
     runner = LocalRunner(snapshot_config)
     algo = MAMLTRPO(env=env,
                     policy=policy,
                     value_function=value_function,
-                    max_episode_length=max_episode_length,
                     meta_batch_size=5,
                     discount=0.99,
                     gae_lambda=1.,
@@ -77,13 +76,12 @@ def test_maml_trpo_dummy_named_env():
                                               hidden_sizes=(32, 32))
 
     episodes_per_task = 2
-    max_episode_length = 100
+    max_episode_length = env.spec.max_episode_length
 
     runner = LocalRunner(snapshot_config)
     algo = MAMLTRPO(env=env,
                     policy=policy,
                     value_function=value_function,
-                    max_episode_length=max_episode_length,
                     meta_batch_size=5,
                     discount=0.99,
                     gae_lambda=1.,

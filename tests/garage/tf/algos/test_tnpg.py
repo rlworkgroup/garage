@@ -27,7 +27,6 @@ class TestTNPG(TfGraphTestCase):
             algo = TNPG(env_spec=env.spec,
                         policy=policy,
                         baseline=baseline,
-                        max_episode_length=100,
                         discount=0.99,
                         optimizer_args=dict(reg_coeff=5e-1))
 

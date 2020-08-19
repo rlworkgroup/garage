@@ -58,7 +58,7 @@ class TRPO(NPO):
                  policy,
                  baseline,
                  scope=None,
-                 max_episode_length=500,
+                 max_episode_length=None,
                  discount=0.99,
                  gae_lambda=0.98,
                  center_adv=True,

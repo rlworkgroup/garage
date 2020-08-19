@@ -29,7 +29,6 @@ class VPG(RLAlgorithm):
             for policy.
         vf_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer for
             value function.
-        max_episode_length (int): Maximum length of a single episode.
         num_train_per_epoch (int): Number of train_once calls per epoch.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
@@ -61,7 +60,6 @@ class VPG(RLAlgorithm):
         value_function,
         policy_optimizer=None,
         vf_optimizer=None,
-        max_episode_length=500,
         num_train_per_epoch=1,
         discount=0.99,
         gae_lambda=1,
@@ -74,7 +72,7 @@ class VPG(RLAlgorithm):
     ):
         self.discount = discount
         self.policy = policy
-        self.max_episode_length = max_episode_length
+        self.max_episode_length = env_spec.max_episode_length
 
         self._value_function = value_function
         self._gae_lambda = gae_lambda

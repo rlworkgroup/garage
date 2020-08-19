@@ -34,7 +34,6 @@ class TestGaussianPolicies(TfGraphTestCase):
                 env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
-                max_episode_length=100,
                 discount=0.99,
                 max_kl_step=0.01,
                 optimizer=ConjugateGradientOptimizer,

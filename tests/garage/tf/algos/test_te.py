@@ -56,7 +56,6 @@ class TestTE(TfGraphTestCase):
         self.policy_ent_coeff = 2e-2
         self.encoder_ent_coeff = 2.2e-3
         self.inference_ce_coeff = 5e-2
-        self.max_episode_length = 100
         embedding_init_std = 1.0
         embedding_max_std = 2.0
         embedding_min_std = 0.38
@@ -75,6 +74,7 @@ class TestTE(TfGraphTestCase):
         self.env = env = MultiEnvWrapper(task_envs,
                                          round_robin_strategy,
                                          mode='vanilla')
+        self.max_episode_length = self.env.spec.max_episode_length
 
         latent_lb = np.zeros(latent_length, )
         latent_ub = np.ones(latent_length, )
@@ -126,9 +126,10 @@ class TestTE(TfGraphTestCase):
             env_spec=env.spec, features=['observations', 'tasks', 'latents'])
 
     def test_te_worker(self):
-        worker = TaskEmbeddingWorker(seed=1,
-                                     max_episode_length=100,
-                                     worker_number=1)
+        worker = TaskEmbeddingWorker(
+            seed=1,
+            max_episode_length=self.max_episode_length,
+            worker_number=1)
         worker.update_env(self.env)
         worker.update_agent(self.policy)
         worker.start_episode()
@@ -146,7 +147,6 @@ class TestTE(TfGraphTestCase):
                          policy=self.policy,
                          baseline=self.baseline,
                          inference=self.inference,
-                         max_episode_length=self.max_episode_length,
                          discount=0.99,
                          lr_clip_range=0.2,
                          policy_ent_coeff=self.policy_ent_coeff,

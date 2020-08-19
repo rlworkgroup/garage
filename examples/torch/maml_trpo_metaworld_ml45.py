@@ -49,7 +49,7 @@ def maml_trpo_metaworld_ml45(ctxt, seed, epochs, episodes_per_task,
 
     value_function = LinearFeatureBaseline(env_spec=env.spec)
 
-    max_episode_length = 100
+    max_episode_length = env.spec.max_episode_length
 
     test_task_names = mwb.ML45.get_test_tasks().all_task_names
     test_tasks = [
@@ -66,7 +66,6 @@ def maml_trpo_metaworld_ml45(ctxt, seed, epochs, episodes_per_task,
     algo = MAMLTRPO(env=env,
                     policy=policy,
                     value_function=value_function,
-                    max_episode_length=max_episode_length,
                     meta_batch_size=meta_batch_size,
                     discount=0.99,
                     gae_lambda=1.,

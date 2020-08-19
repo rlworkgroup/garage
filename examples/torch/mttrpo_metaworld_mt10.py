@@ -59,7 +59,6 @@ def mttrpo_metaworld_mt10(ctxt, seed, epochs, batch_size, n_worker):
     algo = TRPO(env_spec=env.spec,
                 policy=policy,
                 value_function=value_function,
-                max_episode_length=128,
                 discount=0.99,
                 gae_lambda=0.95)
 

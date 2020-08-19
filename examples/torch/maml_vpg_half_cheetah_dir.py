@@ -51,7 +51,7 @@ def maml_vpg_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
-    max_episode_length = 100
+    max_episode_length = env.spec.max_episode_length
 
     task_sampler = SetTaskSampler(lambda: normalize(
         GymEnv(HalfCheetahDirEnv()), expected_action_scale=10.))
@@ -65,7 +65,6 @@ def maml_vpg_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
     algo = MAMLVPG(env=env,
                    policy=policy,
                    value_function=value_function,
-                   max_episode_length=max_episode_length,
                    meta_batch_size=meta_batch_size,
                    discount=0.99,
                    gae_lambda=1.,

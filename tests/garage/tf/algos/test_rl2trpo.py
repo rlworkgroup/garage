@@ -40,12 +40,13 @@ class TestRL2TRPO(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.max_episode_length = 100
         self.meta_batch_size = 10
         self.episode_per_task = 4
         self.tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
             normalize(GymEnv(HalfCheetahDirEnv()))))
         self.env_spec = RL2Env(normalize(GymEnv(HalfCheetahDirEnv()))).spec
+        self.max_episode_length = self.env_spec.max_episode_length
+
         self.policy = GaussianGRUPolicy(env_spec=self.env_spec,
                                         hidden_dim=64,
                                         state_include_action=False)
@@ -54,7 +55,6 @@ class TestRL2TRPO(TfGraphTestCase):
     def test_rl2_trpo_pendulum(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             algo = RL2TRPO(
-                rl2_max_episode_length=self.max_episode_length,
                 meta_batch_size=self.meta_batch_size,
                 task_sampler=self.tasks,
                 env_spec=self.env_spec,
@@ -82,8 +82,7 @@ class TestRL2TRPO(TfGraphTestCase):
 
     def test_rl2_trpo_pendulum_default_optimizer(self):
         with LocalTFRunner(snapshot_config, sess=self.sess):
-            algo = RL2TRPO(rl2_max_episode_length=self.max_episode_length,
-                           meta_batch_size=self.meta_batch_size,
+            algo = RL2TRPO(meta_batch_size=self.meta_batch_size,
                            task_sampler=self.tasks,
                            env_spec=self.env_spec,
                            policy=self.policy,
@@ -98,8 +97,7 @@ class TestRL2TRPO(TfGraphTestCase):
 
     def test_ppo_pendulum_default_optimizer2(self):
         with LocalTFRunner(snapshot_config, sess=self.sess):
-            algo = RL2TRPO(rl2_max_episode_length=self.max_episode_length,
-                           meta_batch_size=self.meta_batch_size,
+            algo = RL2TRPO(meta_batch_size=self.meta_batch_size,
                            task_sampler=self.tasks,
                            env_spec=self.env_spec,
                            policy=self.policy,
@@ -115,8 +113,7 @@ class TestRL2TRPO(TfGraphTestCase):
     def test_rl2_trpo_pendulum_invalid_kl_constraint(self):
         with LocalTFRunner(snapshot_config, sess=self.sess):
             with pytest.raises(ValueError):
-                RL2TRPO(rl2_max_episode_length=self.max_episode_length,
-                        meta_batch_size=self.meta_batch_size,
+                RL2TRPO(meta_batch_size=self.meta_batch_size,
                         task_sampler=self.tasks,
                         env_spec=self.env_spec,
                         policy=self.policy,

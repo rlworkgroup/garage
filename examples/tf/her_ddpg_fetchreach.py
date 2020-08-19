@@ -65,7 +65,6 @@ def her_ddpg_fetchreach(ctxt=None, seed=1):
             replay_buffer=replay_buffer,
             target_update_tau=0.01,
             steps_per_epoch=50,
-            max_episode_length=250,
             n_train_steps=40,
             discount=0.95,
             exploration_policy=exploration_policy,

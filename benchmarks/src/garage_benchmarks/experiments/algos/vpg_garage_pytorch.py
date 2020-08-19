@@ -15,7 +15,6 @@ hyper_parameters = {
     'learning_rate': 1e-2,
     'discount': 0.99,
     'n_epochs': 250,
-    'max_episode_length': 100,
     'batch_size': 2048,
 }
 
@@ -57,15 +56,13 @@ def vpg_garage_pytorch(ctxt, env_id, seed):
                                     max_optimization_epochs=10,
                                     minibatch_size=64)
 
-    algo = PyTorch_VPG(
-        env_spec=env.spec,
-        policy=policy,
-        value_function=value_function,
-        policy_optimizer=policy_optimizer,
-        vf_optimizer=vf_optimizer,
-        max_episode_length=hyper_parameters['max_episode_length'],
-        discount=hyper_parameters['discount'],
-        center_adv=hyper_parameters['center_adv'])
+    algo = PyTorch_VPG(env_spec=env.spec,
+                       policy=policy,
+                       value_function=value_function,
+                       policy_optimizer=policy_optimizer,
+                       vf_optimizer=vf_optimizer,
+                       discount=hyper_parameters['discount'],
+                       center_adv=hyper_parameters['center_adv'])
 
     runner.setup(algo, env)
     runner.train(n_epochs=hyper_parameters['n_epochs'],

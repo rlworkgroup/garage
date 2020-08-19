@@ -47,7 +47,6 @@ class TestTRPO(TfGraphTestCase):
             algo = TRPO(env_spec=self.env.spec,
                         policy=self.policy,
                         baseline=self.baseline,
-                        max_episode_length=100,
                         discount=0.99,
                         gae_lambda=0.98,
                         policy_ent_coeff=0.0)
@@ -63,7 +62,6 @@ class TestTRPO(TfGraphTestCase):
                 env_spec=self.env.spec,
                 policy=self.policy,
                 baseline=self.baseline,
-                max_episode_length=100,
                 discount=0.99,
                 gae_lambda=0.98,
                 policy_ent_coeff=0.0,
@@ -77,7 +75,6 @@ class TestTRPO(TfGraphTestCase):
             algo = TRPO(env_spec=self.env.spec,
                         policy=self.policy,
                         baseline=self.baseline,
-                        max_episode_length=100,
                         discount=0.99,
                         gae_lambda=0.98,
                         policy_ent_coeff=0.0,
@@ -98,7 +95,6 @@ class TestTRPO(TfGraphTestCase):
             algo = TRPO(env_spec=env.spec,
                         policy=policy,
                         baseline=baseline,
-                        max_episode_length=100,
                         discount=0.99,
                         max_kl_step=0.01,
                         optimizer_args=dict(hvp_approach=FiniteDifferenceHvp(
@@ -124,7 +120,6 @@ class TestTRPO(TfGraphTestCase):
             algo = TRPO(env_spec=env.spec,
                         policy=policy,
                         baseline=baseline,
-                        max_episode_length=100,
                         discount=0.99,
                         max_kl_step=0.01,
                         optimizer_args=dict(hvp_approach=FiniteDifferenceHvp(
@@ -165,7 +160,6 @@ class TestTRPOCNNCubeCrash(TfGraphTestCase):
             algo = TRPO(env_spec=env.spec,
                         policy=policy,
                         baseline=baseline,
-                        max_episode_length=100,
                         discount=0.99,
                         gae_lambda=0.98,
                         max_kl_step=0.01,

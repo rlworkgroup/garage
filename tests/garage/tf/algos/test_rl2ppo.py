@@ -39,12 +39,12 @@ class TestRL2PPO(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.max_episode_length = 100
         self.meta_batch_size = 10
         self.episode_per_task = 4
         self.tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
             normalize(GymEnv(HalfCheetahDirEnv()))))
         self.env_spec = RL2Env(normalize(GymEnv(HalfCheetahDirEnv()))).spec
+        self.max_episode_length = self.env_spec.max_episode_length
         self.policy = GaussianGRUPolicy(env_spec=self.env_spec,
                                         hidden_dim=64,
                                         state_include_action=False)
@@ -52,8 +52,7 @@ class TestRL2PPO(TfGraphTestCase):
 
     def test_rl2_ppo_pendulum(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            algo = RL2PPO(rl2_max_episode_length=self.max_episode_length,
-                          meta_batch_size=self.meta_batch_size,
+            algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                           task_sampler=self.tasks,
                           env_spec=self.env_spec,
                           policy=self.policy,
@@ -91,8 +90,7 @@ class TestRL2PPO(TfGraphTestCase):
                 max_episode_length=self.max_episode_length,
                 n_test_tasks=1)
 
-            algo = RL2PPO(rl2_max_episode_length=self.max_episode_length,
-                          meta_batch_size=self.meta_batch_size,
+            algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                           task_sampler=self.tasks,
                           env_spec=self.env_spec,
                           policy=self.policy,
@@ -127,8 +125,7 @@ class TestRL2PPO(TfGraphTestCase):
 
     def test_rl2_ppo_pendulum_exploration_policy(self):
         with LocalTFRunner(snapshot_config, sess=self.sess):
-            algo = RL2PPO(rl2_max_episode_length=self.max_episode_length,
-                          meta_batch_size=self.meta_batch_size,
+            algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                           task_sampler=self.tasks,
                           env_spec=self.env_spec,
                           policy=self.policy,
@@ -155,8 +152,7 @@ class TestRL2PPO(TfGraphTestCase):
 
     def test_rl2_ppo_pendulum_adapted_policy(self):
         with LocalTFRunner(snapshot_config, sess=self.sess):
-            algo = RL2PPO(rl2_max_episode_length=self.max_episode_length,
-                          meta_batch_size=self.meta_batch_size,
+            algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                           task_sampler=self.tasks,
                           env_spec=self.env_spec,
                           policy=self.policy,
@@ -188,8 +184,7 @@ class TestRL2PPO(TfGraphTestCase):
     def test_rl2_ppo_pendulum_wrong_worker(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             with pytest.raises(ValueError):
-                algo = RL2PPO(rl2_max_episode_length=self.max_episode_length,
-                              meta_batch_size=self.meta_batch_size,
+                algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                               task_sampler=self.tasks,
                               env_spec=self.env_spec,
                               policy=self.policy,

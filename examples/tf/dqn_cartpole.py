@@ -45,7 +45,6 @@ def dqn_cartpole(ctxt=None, seed=1):
                    policy=policy,
                    qf=qf,
                    exploration_policy=exploration_policy,
-                   max_episode_length=100,
                    replay_buffer=replay_buffer,
                    steps_per_epoch=steps_per_epoch,
                    qf_lr=1e-4,

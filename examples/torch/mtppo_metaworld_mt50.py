@@ -59,7 +59,6 @@ def mtppo_metaworld_mt50(ctxt, seed, epochs, batch_size, n_worker):
     algo = PPO(env_spec=env.spec,
                policy=policy,
                value_function=value_function,
-               max_episode_length=128,
                discount=0.99,
                gae_lambda=0.95,
                center_adv=True,

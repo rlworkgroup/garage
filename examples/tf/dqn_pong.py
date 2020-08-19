@@ -29,7 +29,7 @@ from garage.tf.q_functions import DiscreteCNNQFunction
 @click.option('--buffer_size', type=int, default=int(5e4))
 @click.option('--max_episode_length', type=int, default=500)
 @wrap_experiment
-def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
+def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4)):
     """Train DQN on PongNoFrameskip-v4 environment.
 
     Args:
@@ -38,9 +38,6 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
         seed (int): Used to seed the random number generator to produce
             determinism.
         buffer_size (int): Number of timesteps to store in replay buffer.
-        max_episode_length (int): Maximum length of an episode, after which an
-            episode is considered complete. This is used during testing to
-            minimize the memory required to store a single episode.
 
     """
     set_seed(seed)
@@ -90,7 +87,6 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
                    qf_lr=1e-4,
                    discount=0.99,
                    min_buffer_size=int(1e4),
-                   max_episode_length=max_episode_length,
                    double_q=False,
                    n_train_steps=500,
                    steps_per_epoch=steps_per_epoch,

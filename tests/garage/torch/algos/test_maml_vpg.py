@@ -53,7 +53,7 @@ class TestMAMLVPG:
         deterministic.set_seed(0)
 
         episodes_per_task = 5
-        max_episode_length = 100
+        max_episode_length = self.env.spec.max_episode_length
 
         task_sampler = SetTaskSampler(lambda: normalize(
             GymEnv(HalfCheetahDirEnv()), expected_action_scale=10.))
@@ -67,7 +67,6 @@ class TestMAMLVPG:
         algo = MAMLVPG(env=self.env,
                        policy=self.policy,
                        value_function=self.value_function,
-                       max_episode_length=max_episode_length,
                        meta_batch_size=5,
                        discount=0.99,
                        gae_lambda=1.,

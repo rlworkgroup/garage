@@ -52,7 +52,7 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, episodes_per_task,
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
-    max_episode_length = 100
+    max_episode_length = env.spec.max_episode_length
 
     test_sampler = SetTaskSampler(lambda: normalize(
         GymEnv(mwb.ML1.get_test_tasks('push-v1'))))
@@ -64,7 +64,6 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, episodes_per_task,
     algo = MAMLTRPO(env=env,
                     policy=policy,
                     value_function=value_function,
-                    max_episode_length=max_episode_length,
                     meta_batch_size=meta_batch_size,
                     discount=0.99,
                     gae_lambda=1.,

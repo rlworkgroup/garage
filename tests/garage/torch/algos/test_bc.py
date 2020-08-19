@@ -94,7 +94,6 @@ def test_bc_point_deterministic(ray_local_session_fixture):  # NOQA
               policy,
               batch_size=batch_size,
               source=expert,
-              max_episode_length=200,
               policy_lr=1e-2,
               loss='mse')
     runner.setup(algo, env)
@@ -115,7 +114,6 @@ def test_bc_point(ray_local_session_fixture):  # NOQA
               policy,
               batch_size=batch_size,
               source=expert,
-              max_episode_length=200,
               policy_lr=1e-2,
               loss='log_prob')
     runner.setup(algo, env)
@@ -136,7 +134,7 @@ def test_bc_point_sample_batches():
     runner = LocalRunner(snapshot_config)
     goal = np.array([1., 1.])
     env = PointEnv(goal=goal)
-    max_episode_length = 200
+    max_episode_length = 100
     source = list(expert_source(env, goal, max_episode_length, 5))
     policy = DeterministicMLPPolicy(env.spec, hidden_sizes=[8, 8])
     batch_size = 600

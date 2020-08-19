@@ -39,7 +39,6 @@ def multi_env_ppo(ctxt=None, seed=1):
         algo = PPO(env_spec=env.spec,
                    policy=policy,
                    baseline=baseline,
-                   max_episode_length=100,
                    discount=0.99,
                    gae_lambda=0.95,
                    lr_clip_range=0.2,

@@ -298,9 +298,6 @@ class RL2(MetaRLAlgorithm, abc.ABC):
     garage/tf/algos/rl2ppo.py and garage/tf/algos/rl2trpo.py.
 
     Args:
-        rl2_max_episode_length (int): Maximum length for episodess with
-            respect to RL^2. Note that it is different from the maximum episode
-            length for the inner algorithm.
         meta_batch_size (int): Meta batch size.
         task_sampler (TaskSampler): Task sampler.
         meta_evaluator (MetaEvaluator): Evaluator for meta-RL algorithms.
@@ -310,11 +307,11 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
     """
 
-    def __init__(self, rl2_max_episode_length, meta_batch_size, task_sampler,
-                 meta_evaluator, n_epochs_per_eval, **inner_algo_args):
+    def __init__(self, meta_batch_size, task_sampler, meta_evaluator,
+                 n_epochs_per_eval, **inner_algo_args):
         self._inner_algo = RL2NPO(**inner_algo_args)
-        self._rl2_max_episode_length = rl2_max_episode_length
         self.env_spec = self._inner_algo._env_spec
+        self._rl2_max_episode_length = self.env_spec.max_episode_length
         self._n_epochs_per_eval = n_epochs_per_eval
         self._policy = self._inner_algo.policy
         self._discount = self._inner_algo._discount

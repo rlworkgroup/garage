@@ -56,7 +56,7 @@ class PPO(NPO):
                  policy,
                  baseline,
                  scope=None,
-                 max_episode_length=100,
+                 max_episode_length=None,
                  discount=0.99,
                  gae_lambda=1,
                  center_adv=True,

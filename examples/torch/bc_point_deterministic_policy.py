@@ -80,7 +80,6 @@ def bc_point(ctxt=None):
               policy,
               batch_size=batch_size,
               source=expert,
-              max_episode_length=200,
               policy_lr=1e-2,
               loss='mse')
     runner.setup(algo, env)

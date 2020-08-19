@@ -17,13 +17,12 @@ from garage.tf.policies import GaussianGRUPolicy
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--max_episode_length', default=150)
 @click.option('--meta_batch_size', default=10)
 @click.option('--n_epochs', default=10)
 @click.option('--episode_per_task', default=10)
 @wrap_experiment
-def rl2_ppo_metaworld_ml1_push(ctxt, seed, max_episode_length, meta_batch_size,
-                               n_epochs, episode_per_task):
+def rl2_ppo_metaworld_ml1_push(ctxt, seed, meta_batch_size, n_epochs,
+                               episode_per_task):
     """Train PPO with ML1 environment.
 
     Args:
@@ -31,7 +30,6 @@ def rl2_ppo_metaworld_ml1_push(ctxt, seed, max_episode_length, meta_batch_size,
             :class:`~LocalRunner` to create the :class:`~Snapshotter`.
         seed (int): Used to seed the random number generator to produce
             determinism.
-        max_episode_length (int): Maximum length of a single episode.
         meta_batch_size (int): Meta batch size.
         n_epochs (int): Total number of epochs for training.
         episode_per_task (int): Number of training episode per task.
@@ -50,8 +48,9 @@ def rl2_ppo_metaworld_ml1_push(ctxt, seed, max_episode_length, meta_batch_size,
 
         baseline = LinearFeatureBaseline(env_spec=env_spec)
 
-        algo = RL2PPO(rl2_max_episode_length=max_episode_length,
-                      meta_batch_size=meta_batch_size,
+        max_episode_length = env_spec.max_episode_length
+
+        algo = RL2PPO(meta_batch_size=meta_batch_size,
                       task_sampler=tasks,
                       env_spec=env_spec,
                       policy=policy,

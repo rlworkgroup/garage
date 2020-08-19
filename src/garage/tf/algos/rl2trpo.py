@@ -10,9 +10,6 @@ class RL2TRPO(RL2):
     See https://arxiv.org/abs/1502.05477.
 
     Args:
-        rl2_max_episode_length (int): Maximum length for episodes with respect
-            to RL^2. Notice that it is different from the maximum episode
-            length for the inner algorithm.
         meta_batch_size (int): Meta batch size.
         task_sampler (TaskSampler): Task sampler.
         env_spec (EnvSpec): Environment specification.
@@ -22,7 +19,8 @@ class RL2TRPO(RL2):
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_episode_length (int): Maximum length of a single episode.
+        max_episode_length (int): Maximum length of a single episode for
+            the inner algorithm.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -62,7 +60,6 @@ class RL2TRPO(RL2):
     """
 
     def __init__(self,
-                 rl2_max_episode_length,
                  meta_batch_size,
                  task_sampler,
                  env_spec,
@@ -99,8 +96,7 @@ class RL2TRPO(RL2):
         if optimizer_args is None:
             optimizer_args = dict()
 
-        super().__init__(rl2_max_episode_length=rl2_max_episode_length,
-                         meta_batch_size=meta_batch_size,
+        super().__init__(meta_batch_size=meta_batch_size,
                          task_sampler=task_sampler,
                          env_spec=env_spec,
                          policy=policy,

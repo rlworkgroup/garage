@@ -92,7 +92,6 @@ def testCriticLoss():
               discount=0.9,
               buffer_batch_size=2,
               target_entropy=3.0,
-              max_episode_length=10,
               optimizer=MagicMock)
 
     observations = torch.FloatTensor([[1, 2], [3, 4]])
@@ -131,7 +130,6 @@ def testActorLoss():
               target_entropy=3.0,
               initial_log_entropy=0,
               optimizer=MagicMock,
-              max_episode_length=10,
               gradient_steps_per_itr=1)
 
     observations = torch.Tensor([[1., 2.], [3., 4.]])
@@ -158,7 +156,6 @@ def testTemperatureLoss():
               target_entropy=3.0,
               initial_log_entropy=4.0,
               optimizer=MagicMock,
-              max_episode_length=10,
               gradient_steps_per_itr=1)
     observations = torch.Tensor([[1., 2.], [3., 4.]])
     action_dists = policy(observations)[0]
@@ -199,7 +196,6 @@ def test_sac_inverted_double_pendulum():
               qf1=qf1,
               qf2=qf2,
               gradient_steps_per_itr=100,
-              max_episode_length=100,
               replay_buffer=replay_buffer,
               min_buffer_size=1e3,
               target_update_tau=5e-3,
@@ -253,7 +249,6 @@ def test_fixed_alpha():
               qf1=qf1,
               qf2=qf2,
               gradient_steps_per_itr=100,
-              max_episode_length=100,
               replay_buffer=replay_buffer,
               min_buffer_size=100,
               target_update_tau=5e-3,

@@ -26,7 +26,6 @@ class CMAES(RLAlgorithm):
             Advantage Estimation).
         n_samples (int): Number of policies sampled in one epoch.
         discount (float): Environment reward discount.
-        max_episode_length (int): Maximum length of a single episode.
         sigma0 (float): Initial std for param distribution.
 
     """
@@ -37,10 +36,9 @@ class CMAES(RLAlgorithm):
                  baseline,
                  n_samples,
                  discount=0.99,
-                 max_episode_length=500,
                  sigma0=1.):
         self.policy = policy
-        self.max_episode_length = max_episode_length
+        self.max_episode_length = env_spec.max_episode_length
         self.sampler_cls = RaySampler
 
         self._env_spec = env_spec
