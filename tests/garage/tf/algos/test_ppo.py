@@ -228,7 +228,6 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
 
 class TestPPOPendulumLSTM(TfGraphTestCase):
 
-    @pytest.mark.flaky
     @pytest.mark.mujoco_long
     def test_ppo_pendulum_lstm(self):
         """Test PPO with Pendulum environment and recurrent policy."""
@@ -258,7 +257,7 @@ class TestPPOPendulumLSTM(TfGraphTestCase):
             )
             runner.setup(algo, env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 80
+            assert last_avg_ret > 60
 
 
 class TestPPOPendulumGRU(TfGraphTestCase):
