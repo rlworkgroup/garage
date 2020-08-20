@@ -183,6 +183,7 @@ class MTSAC(SAC):
                 obtain_evaluation_episodes(
                     self.policy,
                     self._eval_env,
+                    self._max_episode_length_eval,
                     num_eps=self._num_evaluation_episodes))
         eval_eps = EpisodeBatch.concatenate(*eval_eps)
         last_return = log_multitask_performance(epoch, eval_eps,
