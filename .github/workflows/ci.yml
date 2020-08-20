@@ -22,6 +22,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Docker info
+        run: docker version
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -48,18 +50,20 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      if: github.event_name == 'pull_request'
       with:
         fetch-depth: 0
-    - name: Docker info
-      run: docker version
     - name: Login to GitHub Package Registry
+      if: github.event_name == 'pull_request'
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
     - name: Pull from cache (GitHub Package Registry)
+      if: github.event_name == 'pull_request'
       run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Tag docker image
+      if: github.event_name == 'pull_request'
       run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Check pre-commit
-      if: github.event_name != 'pull_request'
+      if: github.event_name == 'pull_request'
       run: |
         docker run \
           -e COMMIT_RANGE \
