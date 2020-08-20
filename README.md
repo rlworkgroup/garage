@@ -34,6 +34,13 @@ getting started instructions and detailed APIs.
 pip install --user garage
 ```
 
+## Join the Community
+**Join the [garage-announce mailing list](https://groups.google.com/forum/#!forum/garage-announce/join)** for infrequent updates (<1/mo.) on the status of the project and new releases.
+
+Need some help? Want to ask garage is right for your project? Have a question which is not quite a bug and not quite a feature request?
+
+**Join the community Slack** by filling out [this Google Form](https://docs.google.com/forms/d/e/1FAIpQLSf4AXRIbA1cLGjku4lIRQ6btStWPeIMeG3J17i4_FhFQU8X0g/viewform).
+
 ## Algorithms
 
 The table below summarizes the algorithms available in garage.
