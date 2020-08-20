@@ -86,7 +86,8 @@ def test_multi_headed_mlp_module(input_dim, output_dim, hidden_sizes,
     for i, output in enumerate(outputs):
         expected = input_dim * torch.Tensor(hidden_sizes).prod()
         expected *= output_w_init_vals[i]
-        assert torch.equal(output, torch.full((output_dim[i], ), expected))
+        assert torch.equal(
+            output, torch.full((output_dim[i], ), expected, dtype=torch.float))
 
 
 @pytest.mark.parametrize(

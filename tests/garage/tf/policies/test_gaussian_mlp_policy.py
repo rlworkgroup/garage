@@ -99,4 +99,4 @@ class TestGaussianMLPPolicy(TfGraphTestCase):
                     policy_pickled.distribution.stddev()
                 ],
                 feed_dict={policy_pickled.model.input: [[obs.flatten()]]})
-            assert np.array_equal(output1, output2)
+            assert np.array_equal(output2, output1)

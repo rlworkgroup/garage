@@ -32,7 +32,7 @@ class TestTanhGaussianMLPPolicy:
                                        std_parameterization='exp',
                                        hidden_w_init=nn.init.ones_,
                                        output_w_init=nn.init.ones_)
-        expected_mean = torch.full((act_dim, ), 1.0)
+        expected_mean = torch.full((act_dim, ), 1.0, dtype=torch.float)
         action, prob = policy.get_action(obs)
         assert np.allclose(prob['mean'], expected_mean.numpy(), rtol=1e-3)
         assert action.squeeze(0).shape == (act_dim, )
@@ -56,7 +56,7 @@ class TestTanhGaussianMLPPolicy:
                                        std_parameterization='exp',
                                        hidden_w_init=nn.init.ones_,
                                        output_w_init=nn.init.ones_)
-        expected_mean = torch.full((act_dim, ), 1.0)
+        expected_mean = torch.full((act_dim, ), 1.0, dtype=torch.float)
         action, prob = policy.get_action(obs)
         assert np.allclose(prob['mean'], expected_mean.numpy(), rtol=1e-3)
         assert action.shape == (act_dim, )
@@ -86,7 +86,9 @@ class TestTanhGaussianMLPPolicy:
                                        hidden_w_init=nn.init.ones_,
                                        output_w_init=nn.init.ones_)
 
-        expected_mean = torch.full([batch_size, act_dim], 1.0)
+        expected_mean = torch.full([batch_size, act_dim],
+                                   1.0,
+                                   dtype=torch.float)
         action, prob = policy.get_actions(obs)
         assert np.allclose(prob['mean'], expected_mean.numpy(), rtol=1e-3)
         assert action.shape == (batch_size, act_dim)
@@ -116,7 +118,9 @@ class TestTanhGaussianMLPPolicy:
                                        hidden_w_init=nn.init.ones_,
                                        output_w_init=nn.init.ones_)
 
-        expected_mean = torch.full([batch_size, act_dim], 1.0)
+        expected_mean = torch.full([batch_size, act_dim],
+                                   1.0,
+                                   dtype=torch.float)
         action, prob = policy.get_actions(obs)
         assert np.allclose(prob['mean'], expected_mean.numpy(), rtol=1e-3)
         assert action.shape == (batch_size, act_dim)
