@@ -17,6 +17,11 @@ pull_request_rules:
       - status-success="Travis CI - Pull Request"
       - status-success="codecov/patch"
       - status-success="docs/readthedocs.org:garage"
+      - status-success="Garage CI / Check pre-commit (pull_request)"
+      - status-success="Garage CI / Normal Tests (pull_request)"
+      - status-success="Garage CI / Large Tests (pull_request)"
+      - status-success="Garage CI / MuJoCo-Based Tests (pull_request)"
+      - status-success="Garage CI / Large MuJoCo-Based Tests (pull_request)"
       - label=ready-to-merge
     actions:
       merge:
@@ -32,6 +37,11 @@ pull_request_rules:
       - "#approved-reviews-by>=1"
       - "#changes-requested-reviews-by=0"
       - status-success="Travis CI - Pull Request"
+      - status-success="Garage CI / Check pre-commit (pull_request)"
+      - status-success="Garage CI / Normal Tests (pull_request)"
+      - status-success="Garage CI / Large Tests (pull_request)"
+      - status-success="Garage CI / MuJoCo-Based Tests (pull_request)"
+      - status-success="Garage CI / Large MuJoCo-Based Tests (pull_request)"
       - status-success="codecov/patch"
       - status-success="docs/readthedocs.org:garage"
       - label=ready-to-merge
@@ -49,6 +59,7 @@ pull_request_rules:
       - "approved-reviews-by=@maintainers"
       - "#changes-requested-reviews-by=0"
       - status-success="Travis CI - Pull Request"
+      - status-success="Garage CI / Check pre-commit (pull_request)"
       - status-success="docs/readthedocs.org:garage"
       - label=ready-to-merge
       - -files~=\.(?!md|rst|png|bib)
@@ -66,6 +77,7 @@ pull_request_rules:
       - "#approved-reviews-by>=1"
       - "#changes-requested-reviews-by=0"
       - status-success="Travis CI - Pull Request"
+      - status-success="Garage CI / Check pre-commit (pull_request)"
       - status-success="docs/readthedocs.org:garage"
       - label=ready-to-merge
       - -files~=\.(?!md|rst|png|bib)
