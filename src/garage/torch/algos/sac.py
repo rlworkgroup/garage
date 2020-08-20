@@ -129,7 +129,8 @@ class SAC(RLAlgorithm):
         self._discount = discount
         self._reward_scale = reward_scale
         self.max_episode_length = max_episode_length
-        self._max_episode_length_eval = max_episode_length_eval
+        self._max_episode_length_eval = (max_episode_length_eval
+                                         or max_episode_length)
 
         self.policy = policy
         self.env_spec = env_spec
