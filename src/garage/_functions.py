@@ -136,7 +136,9 @@ def log_performance(itr, batch, discount, prefix='Evaluation'):
     undiscounted_returns = []
     termination = []
     success = []
+    rewards = []
     for eps in batch.split():
+        rewards.append(eps.rewards)
         returns.append(discount_cumsum(eps.rewards, discount))
         undiscounted_returns.append(sum(eps.rewards))
         termination.append(
@@ -151,7 +153,8 @@ def log_performance(itr, batch, discount, prefix='Evaluation'):
     with tabular.prefix(prefix + '/'):
         tabular.record('Iteration', itr)
         tabular.record('NumEpisodes', len(returns))
-
+        tabular.record('MinReward', np.min(rewards))
+        tabular.record('MaxReward', np.max(rewards))
         tabular.record('AverageDiscountedReturn', average_discounted_return)
         tabular.record('AverageReturn', np.mean(undiscounted_returns))
         tabular.record('StdReturn', np.std(undiscounted_returns))

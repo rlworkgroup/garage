@@ -6,7 +6,11 @@ import sys
 import cloudpickle
 import tensorflow as tf
 
+from gym.wrappers import TimeLimit, Monitor
+from garage.envs import GymEnv
+
 from garage.sampler.utils import rollout
+from garage.torch import set_gpu_mode
 
 
 def query_yes_no(question, default='yes'):
@@ -61,14 +65,21 @@ if __name__ == '__main__':
     # with tf.compat.v1.Session():
     #     [rest of the code]
     with tf.compat.v1.Session() as sess:
-        data = cloudpickle.load(args.file)
+        set_gpu_mode(True)
+        with open(args.file, mode='rb') as fi:
+            data = cloudpickle.load(fi)
         policy = data['algo'].policy
         env = data['env']
-        while True:
+        env = env.unwrapped
+        env = TimeLimit(env, args.max_episode_length)
+        env = Monitor(env, "recording", force=True, video_callable=lambda episode_id: True)
+        env = GymEnv(env)
+        env.spec.id = "pick-place-v2"
+        for _ in range(10):
             path = rollout(env,
                            policy,
                            max_episode_length=args.max_episode_length,
                            animated=True,
                            speedup=args.speedup)
-            if not query_yes_no('Continue simulation?'):
-                break
+            # if not query_yes_no('Continue simulation?'):
+            #     break

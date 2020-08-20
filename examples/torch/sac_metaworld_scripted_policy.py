@@ -11,7 +11,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv
+from garage.envs import GymEnv
 from garage.envs.wrappers import MWScriptedReward
 from garage.envs import normalize
 from garage.experiment import deterministic, LocalRunner
@@ -61,7 +61,7 @@ def sac_metaworld(ctxt=None, env_name=None, seed=1, gpu=None):
     env._freeze_rand_vec = True
     max_path_length = env.max_path_length
 
-    env = GarageEnv(MWScriptedReward(env, scripted_policy=_scripted_policies[env_name]()))
+    env = GymEnv(MWScriptedReward(env, scripted_policy=_scripted_policies[env_name]()))
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=[256, 256],
@@ -88,7 +88,7 @@ def sac_metaworld(ctxt=None, env_name=None, seed=1, gpu=None):
             qf2=qf2,
             gradient_steps_per_itr=batch_size,
             max_episode_length=max_path_length,
-            max_eval_episode_length=max_path_length,
+            max_episode_length_eval=max_path_length,
             replay_buffer=replay_buffer,
             min_buffer_size=1e4,
             target_update_tau=5e-3,
@@ -96,7 +96,7 @@ def sac_metaworld(ctxt=None, env_name=None, seed=1, gpu=None):
             buffer_batch_size=256,
             reward_scale=1.,
             steps_per_epoch=800,
-            num_evaluation_trajectories=10)
+            num_evaluation_episodes=10)
 
     if gpu is not None:
         set_gpu_mode(True, gpu)
