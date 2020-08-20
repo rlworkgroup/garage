@@ -45,7 +45,7 @@ jobs:
     name: Check pre-commit
     runs-on: ubuntu-latest
     needs: build_docker_container
-    if: github.event_name == 'pull_request'
+    if: needs.check_pre_commit.result != 'failure'
 
     steps:
     - uses: actions/checkout@v2
@@ -79,7 +79,7 @@ jobs:
     name: Normal Tests
     runs-on: ubuntu-latest
     needs: check_pre_commit
-    if: github.event_name != 'pull_request'
+    if: needs.check_pre_commit.result != 'failure'
 
     steps:
     - uses: actions/checkout@v2
@@ -120,7 +120,7 @@ jobs:
     name: Large Tests
     runs-on: ubuntu-latest
     needs: check_pre_commit
-    if: github.event_name != 'pull_request'
+    if: needs.check_pre_commit.result != 'failure'
 
     steps:
     - uses: actions/checkout@v2
@@ -161,7 +161,7 @@ jobs:
     name: MuJoCo-Based Tests
     runs-on: ubuntu-latest
     needs: check_pre_commit
-    if: github.event_name != 'pull_request'
+    if: needs.check_pre_commit.result != 'failure'
 
     steps:
     - uses: actions/checkout@v2
@@ -201,7 +201,7 @@ jobs:
     name: Large MuJoCo-Based Tests
     runs-on: ubuntu-latest
     needs: check_pre_commit
-    if: github.event_name != 'pull_request'
+    if: needs.check_pre_commit.result != 'failure'
 
     steps:
     - uses: actions/checkout@v2
