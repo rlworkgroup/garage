@@ -45,7 +45,7 @@ jobs:
     name: Check pre-commit
     runs-on: ubuntu-latest
     needs: build_docker_container
-    if: needs.check_pre_commit.result != 'failure'
+    if: github.event_name != 'pull_request'
 
     steps:
     - uses: actions/checkout@v2
