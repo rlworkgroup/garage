@@ -2,7 +2,7 @@ name: Garage CI
 
 env:
   GARAGE_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
+  TRAVIS_COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
   DOCKER_TAG: garage-ci-${{ github.run_id }}
   OWNER: "rlworkgroup"
   DOCKER_CACHE_REPO: "garage-ci"
@@ -22,6 +22,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Docker info
+        run: docker version
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -45,24 +47,26 @@ jobs:
     name: Check pre-commit
     runs-on: ubuntu-latest
     needs: build_docker_container
-    if: github.event_name == 'pull_request'
 
     steps:
     - uses: actions/checkout@v2
+      if: github.event_name == 'pull_request'
       with:
         fetch-depth: 0
-    - name: Docker info
-      run: docker version
     - name: Login to GitHub Package Registry
+      if: github.event_name == 'pull_request'
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
     - name: Pull from cache (GitHub Package Registry)
+      if: github.event_name == 'pull_request'
       run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Tag docker image
+      if: github.event_name == 'pull_request'
       run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Check pre-commit
+      if: github.event_name == 'pull_request'
       run: |
         docker run \
-          -e COMMIT_RANGE \
+          -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTION \
           -e GITHUB_REF \
@@ -93,7 +97,7 @@ jobs:
     - name: Normal tests
       run: |
         docker run \
-          -e COMMIT_RANGE \
+          -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTION \
           -e GITHUB_REF \
@@ -134,7 +138,7 @@ jobs:
       run: |
         ci_env="$(bash <(curl -s https://codecov.io/env))" &&
         docker run \
-          -e COMMIT_RANGE \
+          -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTION \
           -e GITHUB_REF \
@@ -174,7 +178,7 @@ jobs:
       run: |
         ci_env="$(bash <(curl -s https://codecov.io/env))" &&
         docker run \
-          -e COMMIT_RANGE \
+          -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTION \
           -e GITHUB_REF \
@@ -213,7 +217,7 @@ jobs:
       run: |
         ci_env="$(bash <(curl -s https://codecov.io/env))" &&
         docker run \
-          -e COMMIT_RANGE \
+          -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTION \
           -e GITHUB_REF \
@@ -236,7 +240,7 @@ jobs:
   nightly_test:
     name: Nightly Tests
     runs-on: ubuntu-latest
-    needs: check_pre_commit
+    needs: build_docker_container
     if: github.event_name == 'schedule'
 
     steps:
@@ -253,7 +257,7 @@ jobs:
         run: |
           ci_env="$(bash <(curl -s https://codecov.io/env))" &&
           docker run \
-            -e COMMIT_RANGE \
+            -e TRAVIS_COMMIT_RANGE \
             -e MJKEY \
             -e GITHUB_ACTION \
             -e GITHUB_REF \
@@ -269,7 +273,7 @@ jobs:
   verify_envs_conda:
     name: Verify Conda Environment Installation
     runs-on: ubuntu-latest
-    needs: check_pre_commit
+    needs: build_docker_container
     if: github.event_name == 'schedule'
 
     steps:
@@ -286,7 +290,7 @@ jobs:
         run: |
           ci_env="$(bash <(curl -s https://codecov.io/env))" &&
           docker run \
-          -e COMMIT_RANGE \
+          -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTION \
           -e GITHUB_REF \
@@ -319,7 +323,7 @@ jobs:
   verify_envs_pipenv:
     name: Verify Pipenv Environment Installation
     runs-on: ubuntu-latest
-    needs: check_pre_commit
+    needs: build_docker_container
     if: github.event_name == 'schedule'
 
     steps:
@@ -336,7 +340,7 @@ jobs:
         run: |
           ci_env="$(bash <(curl -s https://codecov.io/env))" &&
           docker run \
-          -e COMMIT_RANGE \
+          -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTION \
           -e GITHUB_REF \
