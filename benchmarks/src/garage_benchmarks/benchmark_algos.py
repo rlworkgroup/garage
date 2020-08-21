@@ -8,7 +8,8 @@ from garage_benchmarks.experiments.algos import (ddpg_garage_tf,
                                                  trpo_garage_pytorch,
                                                  trpo_garage_tf,
                                                  vpg_garage_pytorch,
-                                                 vpg_garage_tf)
+                                                 vpg_garage_tf,
+                                                 pcgrad_ppo_tf)
 from garage_benchmarks.helper import benchmark, iterate_experiments
 from garage_benchmarks.parameters import Fetch1M_ENV_SET, MuJoCo1M_ENV_SET
 
@@ -56,3 +57,10 @@ def vpg_benchmarks():
     """Run experiments for VPG benchmarking."""
     iterate_experiments(vpg_garage_pytorch, MuJoCo1M_ENV_SET)
     iterate_experiments(vpg_garage_tf, MuJoCo1M_ENV_SET)
+
+_seeds = [1, 10, 27]
+
+@benchmark
+def pcgrad_benchmarks():
+    """Run experiments for VPG benchmarking."""
+    iterate_experiments(pcgrad_ppo_tf, ['MT10'], seeds=_seeds)
