@@ -87,7 +87,7 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
 
     with LocalTFRunner(snapshot_config=ctxt) as runner:
         task_envs = [
-            PointEnv(*t_args, **t_kwargs)
+            PointEnv(*t_args, **t_kwargs, max_episode_length=100)
             for t_args, t_kwargs in zip(task_args, task_kwargs)
         ]
         env = MultiEnvWrapper(task_envs, round_robin_strategy, mode='vanilla')

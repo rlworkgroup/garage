@@ -37,7 +37,10 @@ def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task):
     """
     set_seed(seed)
     tasks = MT10.get_train_tasks().all_task_names
-    envs = [normalize(GymEnv(MT10.from_task(task))) for task in tasks]
+    envs = [
+        normalize(GymEnv(MT10.from_task(task), max_episode_length=100))
+        for task in tasks
+    ]
     env = MultiEnvWrapper(envs,
                           sample_strategy=round_robin_strategy,
                           mode='del-onehot')

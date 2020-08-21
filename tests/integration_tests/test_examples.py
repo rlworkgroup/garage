@@ -110,7 +110,8 @@ def test_ppo_memorize_digits():
     env = os.environ.copy()
     env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
     command = [
-        EXAMPLES_ROOT_DIR / 'tf/ppo_memorize_digits.py', '--batch_size', '4'
+        EXAMPLES_ROOT_DIR / 'tf/ppo_memorize_digits.py', '--batch_size', '4',
+        '--max_episode_length', '5'
     ]
     assert subprocess.run(command, check=False, env=env).returncode == 0
 
@@ -125,10 +126,12 @@ def test_trpo_cubecrash():
     """
     env = os.environ.copy()
     env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
-    assert subprocess.run(
-        [EXAMPLES_ROOT_DIR / 'tf/trpo_cubecrash.py', '--batch_size', '4'],
-        check=False,
-        env=env).returncode == 0
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'tf/trpo_cubecrash.py', '--batch_size', '4',
+        '--max_episode_length', '5'
+    ],
+                          check=False,
+                          env=env).returncode == 0
 
 
 @pytest.mark.no_cover

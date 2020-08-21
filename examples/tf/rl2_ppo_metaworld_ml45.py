@@ -37,9 +37,13 @@ def rl2_ppo_metaworld_ml45(ctxt, seed, meta_batch_size, n_epochs,
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
+        max_episode_length = 150
+        inner_max_episode_length = max_episode_length * episode_per_task
         ml45_train_tasks = mwb.ML45.get_train_tasks()
         ml45_train_envs = [
-            RL2Env(GymEnv(mwb.ML45.from_task(task_name)))
+            RL2Env(
+                GymEnv(mwb.ML45.from_task(task_name),
+                       max_episode_length=inner_max_episode_length))
             for task_name in ml45_train_tasks.all_task_names
         ]
         tasks = task_sampler.EnvPoolSampler(ml45_train_envs)
@@ -53,7 +57,6 @@ def rl2_ppo_metaworld_ml45(ctxt, seed, meta_batch_size, n_epochs,
                                    state_include_action=False)
 
         baseline = LinearFeatureBaseline(env_spec=env_spec)
-        max_episode_length = env_spec.max_episode_length
 
         algo = RL2PPO(meta_batch_size=meta_batch_size,
                       task_sampler=tasks,
@@ -71,7 +74,7 @@ def rl2_ppo_metaworld_ml45(ctxt, seed, meta_batch_size, n_epochs,
                       entropy_method='max',
                       policy_ent_coeff=0.02,
                       center_adv=False,
-                      max_episode_length=max_episode_length * episode_per_task)
+                      episodes_per_trial=episode_per_task)
 
         runner.setup(algo,
                      tasks.sample(meta_batch_size),

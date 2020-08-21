@@ -1,6 +1,7 @@
 """Wrapper class that converts gym.Env into GymEnv."""
 
 import copy
+import warnings
 
 import akro
 import gym
@@ -49,13 +50,11 @@ def _get_time_limit(env, max_episode_length):
 
     if spec_steps:
         if max_episode_length is not None and max_episode_length != spec_steps:
-            raise RuntimeError('Expect max_episode_length to '
-                               'be equal to '
-                               'env.spec.max_episode_stpes'
-                               '({}), but got {} instead'.format(
-                                   spec_steps, max_episode_length))
-        max_episode_length = spec_steps
-
+            warnings.warn('Overriding max_episode_length. Replacing gym time'
+                          'limit ({}), with {}'.format(spec_steps,
+                                                       max_episode_length))
+            return max_episode_length
+        return spec_steps
     return max_episode_length
 
 

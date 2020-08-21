@@ -25,6 +25,7 @@ class SimpleVPG:
     def __init__(self, env_spec, policy):
         self.env_spec = env_spec
         self.policy = policy
+        self.max_episode_length = env_spec.max_episode_length
         self._discount = 0.99
         self.init_opt()
 
@@ -125,7 +126,7 @@ def tutorial_vpg(ctxt=None):
     """
     set_seed(100)
     with LocalTFRunner(ctxt) as runner:
-        env = PointEnv()
+        env = PointEnv(max_episode_length=200)
         policy = GaussianMLPPolicy(env.spec)
         algo = SimpleVPG(env.spec, policy)
         runner.setup(algo, env)

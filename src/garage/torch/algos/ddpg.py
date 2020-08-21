@@ -34,6 +34,9 @@ class DDPG(RLAlgorithm):
                 Exploration strategy.
         target_update_tau (float): Interpolation parameter for doing the
             soft target update.
+        max_episode_length_eval (int or None): Maximum length of episodes used
+            for off-policy evaluation. If `None`, defaults to
+            `env_spec.max_episode_length`.
         discount(float): Discount factor for the cumulative return.
         policy_weight_decay (float): L2 weight decay factor for parameters
             of the policy network.
@@ -68,6 +71,7 @@ class DDPG(RLAlgorithm):
             *,  # Everything after this is numbers.
             steps_per_epoch=20,
             n_train_steps=50,
+            max_episode_length_eval=None,
             buffer_batch_size=64,
             min_buffer_size=int(1e4),
             exploration_policy=None,
@@ -110,6 +114,9 @@ class DDPG(RLAlgorithm):
         self._reward_scale = reward_scale
         self.max_episode_length = env_spec.max_episode_length
         self._max_episode_length_eval = env_spec.max_episode_length
+
+        if max_episode_length_eval is not None:
+            self._max_episode_length_eval = max_episode_length_eval
 
         self.env_spec = env_spec
         self.replay_buffer = replay_buffer

@@ -298,6 +298,8 @@ class RL2(MetaRLAlgorithm, abc.ABC):
     garage/tf/algos/rl2ppo.py and garage/tf/algos/rl2trpo.py.
 
     Args:
+        episodes_per_trial (int): Used to calculate the max episode length for
+            the inner algorithm.
         meta_batch_size (int): Meta batch size.
         task_sampler (TaskSampler): Task sampler.
         meta_evaluator (MetaEvaluator): Evaluator for meta-RL algorithms.
@@ -307,11 +309,13 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
     """
 
-    def __init__(self, meta_batch_size, task_sampler, meta_evaluator,
-                 n_epochs_per_eval, **inner_algo_args):
+    def __init__(self, episodes_per_trial, meta_batch_size, task_sampler,
+                 meta_evaluator, n_epochs_per_eval, **inner_algo_args):
+
         self._inner_algo = RL2NPO(**inner_algo_args)
-        self.env_spec = self._inner_algo._env_spec
-        self._rl2_max_episode_length = self.env_spec.max_episode_length
+        self._env_spec = self._inner_algo._env_spec
+        self._rl2_max_episode_length = (self._env_spec.max_episode_length /
+                                        episodes_per_trial)
         self._n_epochs_per_eval = n_epochs_per_eval
         self._policy = self._inner_algo.policy
         self._discount = self._inner_algo._discount
@@ -462,7 +466,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
         undiscounted_returns = log_multitask_performance(
             itr,
-            EpisodeBatch.from_list(self.env_spec, paths),
+            EpisodeBatch.from_list(self._env_spec, paths),
             self._inner_algo._discount,
             name_map=name_map)
 
@@ -493,7 +497,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         """
         observations = np.concatenate([path['observations'] for path in paths])
         actions = np.concatenate([
-            self.env_spec.action_space.flatten_n(path['actions'])
+            self._env_spec.action_space.flatten_n(path['actions'])
             for path in paths
         ])
         valids = np.concatenate(

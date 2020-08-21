@@ -86,7 +86,7 @@ def test_bc_point_deterministic(ray_local_session_fixture):  # NOQA
     deterministic.set_seed(100)
     runner = LocalRunner(snapshot_config)
     goal = np.array([1., 1.])
-    env = PointEnv(goal=goal)
+    env = PointEnv(goal=goal, max_episode_length=200)
     expert = OptimalPolicy(env.spec, goal=goal)
     policy = DeterministicMLPPolicy(env.spec, hidden_sizes=[8, 8])
     batch_size = 600
@@ -106,7 +106,7 @@ def test_bc_point(ray_local_session_fixture):  # NOQA
     deterministic.set_seed(100)
     runner = LocalRunner(snapshot_config)
     goal = np.array([1., 1.])
-    env = PointEnv(goal=goal)
+    env = PointEnv(goal=goal, max_episode_length=200)
     expert = OptimalPolicy(env.spec, goal=goal)
     policy = GaussianMLPPolicy(env.spec, [4])
     batch_size = 400

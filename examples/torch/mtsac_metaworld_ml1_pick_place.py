@@ -44,12 +44,13 @@ def mtsac_metaworld_ml1_pick_place(ctxt=None, seed=1, _gpu=None):
     deterministic.set_seed(seed)
     runner = LocalRunner(ctxt)
     train_envs = []
+
     test_envs = []
     env_names = []
     for i in range(50):
-        train_env = normalize(
-            GymEnv(mwb.ML1.get_train_tasks('pick-place-v1'),
-                   normalize_reward=True))
+        train_env = normalize(GymEnv(mwb.ML1.get_train_tasks('pick-place-v1'),
+                                     max_episode_length=150),
+                              normalize_reward=True)
         test_env = pickle.loads(pickle.dumps(train_env))
         env_names.append('pick_place_{}'.format(i))
         train_envs.append(train_env)

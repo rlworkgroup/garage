@@ -31,6 +31,7 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 @click.option('--batch_size', default=256)
 @click.option('--embedding_batch_size', default=64)
 @click.option('--embedding_mini_batch_size', default=64)
+@click.option('--max_episode_length', default=150)
 @wrap_experiment
 def pearl_metaworld_ml1_push(ctxt=None,
                              seed=1,
@@ -49,6 +50,7 @@ def pearl_metaworld_ml1_push(ctxt=None,
                              batch_size=256,
                              embedding_batch_size=64,
                              embedding_mini_batch_size=64,
+                             max_episode_length=150,
                              reward_scale=10.,
                              use_gpu=False):
     """Train PEARL with ML1 environments.
@@ -82,6 +84,7 @@ def pearl_metaworld_ml1_push(ctxt=None,
         embedding_mini_batch_size (int): Number of transitions in mini context
             batch; should be same as embedding_batch_size for non-recurrent
             encoder.
+        max_episode_length (int): Maximum episode length.
         reward_scale (int): Reward scale.
         use_gpu (bool): Whether or not to use GPU for training.
 
@@ -132,14 +135,13 @@ def pearl_metaworld_ml1_push(ctxt=None,
         batch_size=batch_size,
         embedding_batch_size=embedding_batch_size,
         embedding_mini_batch_size=embedding_mini_batch_size,
+        max_episode_length=max_episode_length,
         reward_scale=reward_scale,
     )
 
     set_gpu_mode(use_gpu, gpu_id=0)
     if use_gpu:
         pearl.to()
-
-    max_episode_length = env.spec.max_episode_length
 
     runner.setup(algo=pearl,
                  env=env[0](),

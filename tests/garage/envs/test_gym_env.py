@@ -91,10 +91,10 @@ def test_get_time_limit_from_gym_make():
     assert env._max_episode_length is None
 
 
-def test_get_time_limit_detects_inconsistency():
-    with pytest.raises(RuntimeError):
-        env = GymEnv('CartPoleBulletEnv-v1', max_episode_length=math.inf)
-        env.close()
+def test_get_time_limit_max_ep_len_not_equal_timeout():
+    env = GymEnv('CartPoleBulletEnv-v1', max_episode_length=1)
+    assert env.spec.max_episode_length == 1
+    env.close()
 
 
 def test_get_time_limit_finds_time_limit():

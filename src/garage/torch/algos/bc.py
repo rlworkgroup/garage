@@ -77,7 +77,7 @@ class BC(RLAlgorithm):
         self._name = name
 
         # Public fields for sampling.
-        self.env_spec = env_spec
+        self._env_spec = env_spec
         self.policy = None
         self.max_episode_length = env_spec.max_episode_length
         self.sampler_cls = None
@@ -148,7 +148,7 @@ class BC(RLAlgorithm):
 
         """
         if isinstance(self._source, Policy):
-            batch = EpisodeBatch.from_list(self.env_spec,
+            batch = EpisodeBatch.from_list(self._env_spec,
                                            runner.obtain_samples(epoch))
             log_performance(epoch, batch, 1.0, prefix='Expert')
             return batch

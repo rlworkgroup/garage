@@ -30,6 +30,9 @@ class DDPG(RLAlgorithm):
         steps_per_epoch (int): Number of train_once calls per epoch.
         n_train_steps (int): Training steps.
         buffer_batch_size (int): Batch size of replay buffer.
+        max_episode_length_eval (int or None): Maximum length of episodes used
+            for off-policy evaluation. If None, defaults to
+            `env_spec.max_episode_length`.
         min_buffer_size (int): The minimum buffer size for replay buffer.
         exploration_policy (garage.np.exploration_policies.ExplorationPolicy):
             Exploration strategy.
@@ -65,6 +68,7 @@ class DDPG(RLAlgorithm):
             n_train_steps=50,
             buffer_batch_size=64,
             min_buffer_size=int(1e4),
+            max_episode_length_eval=None,
             exploration_policy=None,
             target_update_tau=0.01,
             discount=0.99,
@@ -108,7 +112,11 @@ class DDPG(RLAlgorithm):
         self._discount = discount
         self._reward_scale = reward_scale
         self.max_episode_length = env_spec.max_episode_length
-        self._max_episode_length_eval = env_spec.max_episode_length
+        self._max_episode_length_eval = max_episode_length_eval
+
+        if max_episode_length_eval is None:
+            self._max_episode_length_eval = env_spec.max_episode_length
+
         self._eval_env = None
 
         self.env_spec = env_spec

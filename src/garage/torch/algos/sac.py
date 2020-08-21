@@ -43,6 +43,9 @@ class SAC(RLAlgorithm):
             collected by the sampler.
         env_spec (EnvSpec): The env_spec attribute of the environment that the
             agent is being trained in.
+        max_episode_length_eval (int or None): Maximum length of episodes used
+            for off-policy evaluation. If None, defaults to
+            `env_spec.max_episode_length`.
         gradient_steps_per_itr (int): Number of optimization steps that should
         gradient_steps_per_itr(int): Number of optimization steps that should
             occur before the training step is over and a new batch of
@@ -87,6 +90,7 @@ class SAC(RLAlgorithm):
         qf2,
         replay_buffer,
         *,  # Everything after this is numbers.
+        max_episode_length_eval=None,
         gradient_steps_per_itr,
         fixed_alpha=None,
         target_entropy=None,
@@ -123,6 +127,9 @@ class SAC(RLAlgorithm):
         self._reward_scale = reward_scale
         self.max_episode_length = env_spec.max_episode_length
         self._max_episode_length_eval = env_spec.max_episode_length
+
+        if max_episode_length_eval is not None:
+            self._max_episode_length_eval = max_episode_length_eval
 
         self.policy = policy
         self.env_spec = env_spec

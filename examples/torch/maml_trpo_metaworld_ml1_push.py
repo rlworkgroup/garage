@@ -37,7 +37,8 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, episodes_per_task,
 
     """
     set_seed(seed)
-    env = normalize(GymEnv(mwb.ML1.get_train_tasks('push-v1')),
+    env = normalize(GymEnv(mwb.ML1.get_train_tasks('push-v1'),
+                           max_episode_length=150),
                     expected_action_scale=10.)
 
     policy = GaussianMLPPolicy(

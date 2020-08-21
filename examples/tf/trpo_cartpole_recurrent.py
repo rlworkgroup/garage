@@ -44,7 +44,7 @@ def trpo_cartpole_recurrent(ctxt, seed, n_epochs, batch_size, plot):
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        env = GymEnv('CartPole-v1')
+        env = GymEnv('CartPole-v1', max_episode_length=100)
 
         policy = CategoricalLSTMPolicy(name='policy', env_spec=env.spec)
 

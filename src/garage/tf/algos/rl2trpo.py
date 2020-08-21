@@ -19,7 +19,7 @@ class RL2TRPO(RL2):
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_episode_length (int): Maximum length of a single episode for
+        episodes_per_trial (int): Used to calculate the max episode length for
             the inner algorithm.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
@@ -65,8 +65,8 @@ class RL2TRPO(RL2):
                  env_spec,
                  policy,
                  baseline,
+                 episodes_per_trial,
                  scope=None,
-                 max_episode_length=500,
                  discount=0.99,
                  gae_lambda=0.98,
                  center_adv=True,
@@ -101,8 +101,8 @@ class RL2TRPO(RL2):
                          env_spec=env_spec,
                          policy=policy,
                          baseline=baseline,
+                         episodes_per_trial=episodes_per_trial,
                          scope=scope,
-                         max_episode_length=max_episode_length,
                          discount=discount,
                          gae_lambda=gae_lambda,
                          center_adv=center_adv,

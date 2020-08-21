@@ -17,12 +17,13 @@ from garage.tf.policies import GaussianGRUPolicy
 
 @click.command()
 @click.option('--seed', default=1)
+@click.option('--max_episode_length', default=100)
 @click.option('--meta_batch_size', default=10)
 @click.option('--n_epochs', default=10)
 @click.option('--episode_per_task', default=4)
 @wrap_experiment
-def rl2_ppo_halfcheetah(ctxt, seed, meta_batch_size, n_epochs,
-                        episode_per_task):
+def rl2_ppo_halfcheetah(ctxt, seed, max_episode_length, meta_batch_size,
+                        n_epochs, episode_per_task):
     """Train PPO with HalfCheetah environment.
 
     Args:
@@ -30,6 +31,7 @@ def rl2_ppo_halfcheetah(ctxt, seed, meta_batch_size, n_epochs,
             :class:`~LocalRunner` to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
+        max_episode_length (int): Maximum length of a single episode.
         meta_batch_size (int): Meta batch size.
         n_epochs (int): Total number of epochs for training.
         episode_per_task (int): Number of training episode per task.
@@ -37,10 +39,13 @@ def rl2_ppo_halfcheetah(ctxt, seed, meta_batch_size, n_epochs,
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
+        inner_max_episode_length = max_episode_length * episode_per_task
         tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
             GymEnv(HalfCheetahVelEnv())))
 
-        env_spec = RL2Env(GymEnv(HalfCheetahVelEnv())).spec
+        env_spec = RL2Env(
+            GymEnv(HalfCheetahVelEnv(),
+                   max_episode_length=inner_max_episode_length)).spec
         policy = GaussianGRUPolicy(name='policy',
                                    hidden_dim=64,
                                    env_spec=env_spec,
@@ -48,13 +53,12 @@ def rl2_ppo_halfcheetah(ctxt, seed, meta_batch_size, n_epochs,
 
         baseline = LinearFeatureBaseline(env_spec=env_spec)
 
-        max_episode_length = env_spec.max_episode_length
-
         algo = RL2PPO(meta_batch_size=meta_batch_size,
                       task_sampler=tasks,
                       env_spec=env_spec,
                       policy=policy,
                       baseline=baseline,
+                      episodes_per_trial=episode_per_task,
                       discount=0.99,
                       gae_lambda=0.95,
                       lr_clip_range=0.2,
@@ -65,8 +69,7 @@ def rl2_ppo_halfcheetah(ctxt, seed, meta_batch_size, n_epochs,
                       stop_entropy_gradient=True,
                       entropy_method='max',
                       policy_ent_coeff=0.02,
-                      center_adv=False,
-                      max_episode_length=max_episode_length * episode_per_task)
+                      center_adv=False)
 
         runner.setup(algo,
                      tasks.sample(meta_batch_size),

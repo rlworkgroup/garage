@@ -37,7 +37,7 @@ def maml_trpo_metaworld_ml10(ctxt, seed, epochs, episodes_per_task,
 
     """
     set_seed(seed)
-    env = normalize(GymEnv(mwb.ML10.get_train_tasks()),
+    env = normalize(GymEnv(mwb.ML10.get_train_tasks(), max_episode_length=150),
                     expected_action_scale=10.)
 
     policy = GaussianMLPPolicy(

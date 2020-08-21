@@ -31,7 +31,6 @@ class TestDmControlTfPolicy(TfGraphTestCase):
                 env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
-                max_episode_length=5,
                 discount=0.99,
                 max_kl_step=0.01,
             )

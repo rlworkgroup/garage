@@ -30,7 +30,12 @@ from garage.envs.mujoco import HalfCheetahDirEnv  # isort:skip # pylint: disable
 @pytest.mark.mujoco
 def test_maml_trpo_pendulum():
     """Test PPO with Pendulum environment."""
-    env = normalize(GymEnv(HalfCheetahDirEnv()), expected_action_scale=10.)
+    episodes_per_task = 5
+    max_episode_length = 100
+
+    env = normalize(GymEnv(HalfCheetahDirEnv(),
+                           max_episode_length=max_episode_length),
+                    expected_action_scale=10.)
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=(64, 64),
@@ -39,9 +44,6 @@ def test_maml_trpo_pendulum():
     )
     value_function = GaussianMLPValueFunction(env_spec=env.spec,
                                               hidden_sizes=(32, 32))
-
-    episodes_per_task = 5
-    max_episode_length = env.spec.max_episode_length
 
     runner = LocalRunner(snapshot_config)
     algo = MAMLTRPO(env=env,
@@ -65,7 +67,8 @@ def test_maml_trpo_pendulum():
 
 def test_maml_trpo_dummy_named_env():
     """Test with dummy environment that has env_name."""
-    env = normalize(GymEnv(DummyMultiTaskBoxEnv()), expected_action_scale=10.)
+    env = normalize(GymEnv(DummyMultiTaskBoxEnv(), max_episode_length=100),
+                    expected_action_scale=10.)
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=(64, 64),

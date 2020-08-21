@@ -38,6 +38,8 @@ def rl2_ppo_metaworld_ml10_meta_test(ctxt, seed, meta_batch_size, n_epochs,
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
+        max_episode_length = 150
+        inner_max_episode_length = max_episode_length * episode_per_task
         ml10_train_envs = [
             RL2Env(GymEnv(mwb.ML10.from_task(task_name)))
             for task_name in mwb.ML10.get_train_tasks().all_task_names
@@ -46,7 +48,9 @@ def rl2_ppo_metaworld_ml10_meta_test(ctxt, seed, meta_batch_size, n_epochs,
         tasks.grow_pool(meta_batch_size)
 
         ml10_test_envs = [
-            RL2Env(GymEnv(mwb.ML10.from_task(task_name)))
+            RL2Env(
+                GymEnv(mwb.ML10.from_task(task_name),
+                       max_episode_length=inner_max_episode_length))
             for task_name in mwb.ML10.get_test_tasks().all_task_names
         ]
         test_tasks = task_sampler.EnvPoolSampler(ml10_test_envs)
@@ -83,7 +87,7 @@ def rl2_ppo_metaworld_ml10_meta_test(ctxt, seed, meta_batch_size, n_epochs,
                       entropy_method='max',
                       policy_ent_coeff=0.02,
                       center_adv=False,
-                      max_episode_length=max_episode_length * episode_per_task,
+                      episodes_per_trial=episode_per_task,
                       meta_evaluator=meta_evaluator,
                       n_epochs_per_eval=10)
 

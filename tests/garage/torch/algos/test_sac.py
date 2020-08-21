@@ -83,7 +83,9 @@ def testCriticLoss():
     """Test Sac Critic/QF loss."""
     # pylint: disable=no-member
     policy = DummyActorPolicy()
-    sac = SAC(env_spec=None,
+    spec = MagicMock
+    spec.max_episode_length = 100
+    sac = SAC(env_spec=spec,
               policy=policy,
               qf1=DummyCriticNet(),
               qf2=DummyCriticNet(),
@@ -120,7 +122,9 @@ def testActorLoss():
     """Test Sac Actor/Policy loss."""
     # pylint: disable=no-member
     policy = DummyActorPolicy()
-    sac = SAC(env_spec=None,
+    policy = DummyActorPolicy()
+    spec = MagicMock
+    sac = SAC(env_spec=spec,
               policy=policy,
               qf1=DummyCriticNet(),
               qf2=DummyCriticNet(),
@@ -146,7 +150,9 @@ def testTemperatureLoss():
     """Test Sac temperature loss."""
     # pylint: disable=no-member
     policy = DummyActorPolicy()
-    sac = SAC(env_spec=None,
+    policy = DummyActorPolicy()
+    spec = MagicMock
+    sac = SAC(env_spec=spec,
               policy=policy,
               qf1=DummyCriticNet(),
               qf2=DummyCriticNet(),

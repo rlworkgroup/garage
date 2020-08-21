@@ -41,10 +41,15 @@ class TestRL2PPO(TfGraphTestCase):
         super().setup_method()
         self.meta_batch_size = 10
         self.episode_per_task = 4
+        self.max_episode_length = 100
+        self.inner_max_episode_length = (self.max_episode_length *
+                                         self.episode_per_task)
         self.tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
             normalize(GymEnv(HalfCheetahDirEnv()))))
-        self.env_spec = RL2Env(normalize(GymEnv(HalfCheetahDirEnv()))).spec
-        self.max_episode_length = self.env_spec.max_episode_length
+        self.env_spec = RL2Env(
+            normalize(
+                GymEnv(HalfCheetahDirEnv(),
+                       max_episode_length=self.inner_max_episode_length))).spec
         self.policy = GaussianGRUPolicy(env_spec=self.env_spec,
                                         hidden_dim=64,
                                         state_include_action=False)
@@ -64,8 +69,7 @@ class TestRL2PPO(TfGraphTestCase):
                           entropy_method='max',
                           policy_ent_coeff=0.02,
                           center_adv=False,
-                          max_episode_length=self.max_episode_length *
-                          self.episode_per_task)
+                          episodes_per_trial=self.episode_per_task)
 
             runner.setup(
                 algo,
@@ -106,8 +110,7 @@ class TestRL2PPO(TfGraphTestCase):
                           entropy_method='max',
                           policy_ent_coeff=0.02,
                           center_adv=False,
-                          max_episode_length=self.max_episode_length *
-                          self.episode_per_task,
+                          episodes_per_trial=self.episode_per_task,
                           meta_evaluator=meta_evaluator,
                           n_epochs_per_eval=10)
 
@@ -141,8 +144,8 @@ class TestRL2PPO(TfGraphTestCase):
                           entropy_method='max',
                           policy_ent_coeff=0.02,
                           center_adv=False,
-                          max_episode_length=self.max_episode_length *
-                          self.episode_per_task)
+                          episodes_per_trial=self.episode_per_task)
+
             exploration_policy = algo.get_exploration_policy()
             params = exploration_policy.get_param_values()
             new_params = np.zeros_like(params)
@@ -168,8 +171,8 @@ class TestRL2PPO(TfGraphTestCase):
                           entropy_method='max',
                           policy_ent_coeff=0.02,
                           center_adv=False,
-                          max_episode_length=self.max_episode_length *
-                          self.episode_per_task)
+                          episodes_per_trial=self.episode_per_task)
+
             exploration_policy = algo.get_exploration_policy()
             adapted_policy = algo.adapt_policy(exploration_policy, [])
             (params, hidden) = adapted_policy.get_param_values()
@@ -200,8 +203,7 @@ class TestRL2PPO(TfGraphTestCase):
                               entropy_method='max',
                               policy_ent_coeff=0.02,
                               center_adv=False,
-                              max_episode_length=self.max_episode_length *
-                              self.episode_per_task)
+                              episodes_per_trial=self.episode_per_task)
 
                 runner.setup(algo,
                              self.tasks.sample(self.meta_batch_size),

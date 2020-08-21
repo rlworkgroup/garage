@@ -35,8 +35,6 @@ class NPO(RLAlgorithm):
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_episode_length (int): Maximum length of a single episode. Should
-            be left as None unless using RL^2.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -89,7 +87,6 @@ class NPO(RLAlgorithm):
                  policy,
                  baseline,
                  scope=None,
-                 max_episode_length=None,
                  discount=0.99,
                  gae_lambda=1,
                  center_adv=True,
@@ -108,10 +105,7 @@ class NPO(RLAlgorithm):
                  name='NPO'):
         self.policy = policy
         self.scope = scope
-        if max_episode_length is None:
-            self.max_episode_length = env_spec.max_episode_length
-        self.max_episode_length = max_episode_length
-
+        self.max_episode_length = env_spec.max_episode_length
         self._env_spec = env_spec
         self._baseline = baseline
         self._discount = discount

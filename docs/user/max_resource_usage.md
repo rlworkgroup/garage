@@ -123,7 +123,6 @@ def trpo_pendulum(ctxt=None, seed=1):
     algo = TRPO(env_spec=env.spec,
                 policy=policy,
                 value_function=value_function,
-                max_episode_length=100,
                 discount=0.99,
                 center_adv=False)
 

@@ -29,7 +29,7 @@ from garage.tf.q_functions import DiscreteCNNQFunction
 @click.option('--buffer_size', type=int, default=int(5e4))
 @click.option('--max_episode_length', type=int, default=500)
 @wrap_experiment
-def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4)):
+def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
     """Train DQN on PongNoFrameskip-v4 environment.
 
     Args:
@@ -38,6 +38,9 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4)):
         seed (int): Used to seed the random number generator to produce
             determinism.
         buffer_size (int): Number of timesteps to store in replay buffer.
+        max_episode_length (int): Maximum length of an episode, after which an
+            episode is considered complete. This is used during testing to
+            minimize the memory required to store a single episode.
 
     """
     set_seed(seed)
@@ -48,6 +51,7 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4)):
         num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
 
         env = gym.make('PongNoFrameskip-v4')
+        env = env.unwrapped
         env = Noop(env, noop_max=30)
         env = MaxAndSkip(env, skip=4)
         env = EpisodicLife(env)
@@ -58,7 +62,7 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4)):
         env = ClipReward(env)
         env = StackFrames(env, 4)
 
-        env = GymEnv(env, is_image=True)
+        env = GymEnv(env, is_image=True, max_episode_length=max_episode_length)
 
         replay_buffer = PathBuffer(capacity_in_transitions=buffer_size)
 

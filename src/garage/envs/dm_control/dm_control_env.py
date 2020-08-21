@@ -36,8 +36,9 @@ class DMControlEnv(Environment):
         self._name = name or type(env.task).__name__
         self._viewer = None
         self._step_cnt = None
-
-        self._max_episode_length = self._env._step_limit
+        self._max_episode_length = 1e12
+        if self._env._step_limit != np.Inf:
+            self._max_episode_length = int(self._env._step_limit)
 
         # action space
         action_spec = self._env.action_spec()

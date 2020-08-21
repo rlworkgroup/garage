@@ -39,7 +39,9 @@ def mtppo_metaworld_mt50(ctxt, seed, epochs, batch_size, n_worker):
     tasks = mwb.MT50.get_train_tasks().all_task_names
     envs = []
     for task in tasks:
-        envs.append(normalize(GymEnv(mwb.MT50.from_task(task))))
+        envs.append(
+            normalize(GymEnv(mwb.MT50.from_task(task),
+                             max_episode_length=150)))
     env = MultiEnvWrapper(envs,
                           sample_strategy=round_robin_strategy,
                           mode='vanilla')

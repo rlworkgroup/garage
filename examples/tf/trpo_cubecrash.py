@@ -16,8 +16,9 @@ from garage.tf.policies import CategoricalCNNPolicy
 
 @click.command()
 @click.option('--batch_size', type=int, default=4000)
+@click.option('--max_episode_length', type=int, default=5)
 @wrap_experiment
-def trpo_cubecrash(ctxt=None, seed=1, batch_size=4000):
+def trpo_cubecrash(ctxt=None, seed=1, max_episode_length=5, batch_size=4000):
     """Train TRPO with CubeCrash-v0 environment.
 
     Args:
@@ -25,12 +26,14 @@ def trpo_cubecrash(ctxt=None, seed=1, batch_size=4000):
             configuration used by LocalRunner to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
+        max_episode_length (int): Maximum length of a single episode.
         batch_size (int): Number of timesteps to use in each training step.
 
     """
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
-        env = normalize(GymEnv('CubeCrash-v0'))
+        env = normalize(
+            GymEnv('CubeCrash-v0', max_episode_length=max_episode_length))
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       filters=((32, (8, 8)), (64, (4, 4))),
                                       strides=(4, 2),

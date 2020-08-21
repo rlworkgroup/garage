@@ -19,13 +19,13 @@ from garage.tf.policies import GaussianGRUPolicy
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--max_episode_length', default=100)
+@click.option('--max_episode_length', default=150)
 @click.option('--meta_batch_size', default=10)
 @click.option('--n_epochs', default=10)
 @click.option('--episode_per_task', default=4)
 @wrap_experiment
-def rl2_trpo_halfcheetah(ctxt, seed, meta_batch_size, n_epochs,
-                         episode_per_task):
+def rl2_trpo_halfcheetah(ctxt, seed, max_episode_length, meta_batch_size,
+                         n_epochs, episode_per_task):
     """Train TRPO with HalfCheetah environment.
 
     Args:
@@ -33,32 +33,36 @@ def rl2_trpo_halfcheetah(ctxt, seed, meta_batch_size, n_epochs,
             :class:`~LocalRunner` to create the :class:`~Snapshotter`.
         seed (int): Used to seed the random number generator to produce
             determinism.
+        max_episode_length (int): Maximum length of a single episode.
         meta_batch_size (int): Meta batch size.
         n_epochs (int): Total number of epochs for training.
         episode_per_task (int): Number of training episode per task.
 
+
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
+        inner_max_episode_length = max_episode_length * episode_per_task
+
         tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
             GymEnv(HalfCheetahVelEnv())))
 
-        env_spec = RL2Env(GymEnv(HalfCheetahVelEnv())).spec
+        env_spec = RL2Env(
+            GymEnv(HalfCheetahVelEnv(),
+                   max_episode_length=inner_max_episode_length)).spec
         policy = GaussianGRUPolicy(name='policy',
                                    hidden_dim=64,
                                    env_spec=env_spec,
                                    state_include_action=False)
 
         baseline = LinearFeatureBaseline(env_spec=env_spec)
-        max_episode_length = env_spec.max_episode_length
 
         algo = RL2TRPO(meta_batch_size=meta_batch_size,
                        task_sampler=tasks,
                        env_spec=env_spec,
                        policy=policy,
                        baseline=baseline,
-                       max_episode_length=max_episode_length *
-                       episode_per_task,
+                       episodes_per_trial=episode_per_task,
                        discount=0.99,
                        max_kl_step=0.01,
                        optimizer=ConjugateGradientOptimizer,

@@ -29,6 +29,9 @@ class DQN(RLAlgorithm):
         steps_per_epoch (int): Number of train_once calls per epoch.
         min_buffer_size (int): The minimum buffer size for replay buffer.
         buffer_batch_size (int): Batch size for replay buffer.
+        max_episode_length_eval (int or None): Maximum length of episodes used
+            for off-policy evaluation. If None, defaults to
+            `env_spec.max_episode_length`.
         n_train_steps (int): Training steps.
         qf_lr (float): Learning rate for Q-Function.
         qf_optimizer (tf.Optimizer): Optimizer for Q-Function.
@@ -54,6 +57,7 @@ class DQN(RLAlgorithm):
                  steps_per_epoch=20,
                  min_buffer_size=int(1e4),
                  buffer_batch_size=64,
+                 max_episode_length_eval=None,
                  n_train_steps=50,
                  qf_lr=_Default(0.001),
                  qf_optimizer=tf.compat.v1.train.AdamOptimizer,
@@ -82,6 +86,10 @@ class DQN(RLAlgorithm):
         self._reward_scale = reward_scale
         self.max_episode_length = env_spec.max_episode_length
         self._max_episode_length_eval = env_spec.max_episode_length
+
+        if max_episode_length_eval is not None:
+            self._max_episode_length_eval = max_episode_length_eval
+
         self._eval_env = None
 
         self.env_spec = env_spec

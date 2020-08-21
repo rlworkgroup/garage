@@ -112,7 +112,7 @@ class TENPO(RLAlgorithm):
         assert isinstance(inference, StochasticEncoder)
 
         self.policy = policy
-        self.scope = scope
+        self._scope = scope
         self.max_episode_length = env_spec.max_episode_length
 
         self._env_spec = env_spec

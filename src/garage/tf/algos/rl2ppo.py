@@ -14,12 +14,12 @@ class RL2PPO(RL2):
         env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.StochasticPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
+        episodes_per_trial (int): Used to calculate the max episode length for
+            the inner algorithm.
         scope (str): Scope for identifying the algorithm.
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_episode_length (int): Maximum length of a single episode for
-            the inner algorithm.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -62,8 +62,8 @@ class RL2PPO(RL2):
                  env_spec,
                  policy,
                  baseline,
+                 episodes_per_trial,
                  scope=None,
-                 max_episode_length=500,
                  discount=0.99,
                  gae_lambda=1,
                  center_adv=True,
@@ -87,8 +87,8 @@ class RL2PPO(RL2):
                          env_spec=env_spec,
                          policy=policy,
                          baseline=baseline,
+                         episodes_per_trial=episodes_per_trial,
                          scope=scope,
-                         max_episode_length=max_episode_length,
                          discount=discount,
                          gae_lambda=gae_lambda,
                          center_adv=center_adv,

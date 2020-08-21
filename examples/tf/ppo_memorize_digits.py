@@ -16,8 +16,12 @@ from garage.tf.policies import CategoricalCNNPolicy
 
 @click.command()
 @click.option('--batch_size', type=int, default=4000)
+@click.option('--max_episode_length', type=int, default=100)
 @wrap_experiment
-def ppo_memorize_digits(ctxt=None, seed=1, batch_size=4000):
+def ppo_memorize_digits(ctxt=None,
+                        seed=1,
+                        batch_size=4000,
+                        max_episode_length=100):
     """Train PPO on MemorizeDigits-v0 environment.
 
     Args:
@@ -26,11 +30,15 @@ def ppo_memorize_digits(ctxt=None, seed=1, batch_size=4000):
         seed (int): Used to seed the random number generator to produce
             determinism.
         batch_size (int): Number of timesteps to use in each training step.
+        max_episode_length (int): Max number of timesteps in an episode.
 
     """
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
-        env = normalize(GymEnv('MemorizeDigits-v0', is_image=True))
+        env = normalize(
+            GymEnv('MemorizeDigits-v0',
+                   is_image=True,
+                   max_episode_length=max_episode_length))
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       filters=(
                                                   (32, (5, 5)),

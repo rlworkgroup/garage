@@ -37,7 +37,8 @@ def maml_ppo_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
 
     """
     set_seed(seed)
-    env = normalize(GymEnv(HalfCheetahDirEnv()), expected_action_scale=10.)
+    env = normalize(GymEnv(HalfCheetahDirEnv(), max_episode_length=100),
+                    expected_action_scale=10.)
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
