@@ -62,7 +62,7 @@ pull_request_rules:
       - status-success="Check pre-commit"
       - status-success="docs/readthedocs.org:garage"
       - label=ready-to-merge
-      - -files~=\.(?!md|rst|png|bib)
+      - -files~=\.(?!md|rst|png|bib|html|css)
     actions:
       merge:
         strict: smart
@@ -80,7 +80,7 @@ pull_request_rules:
       - status-success="Check pre-commit"
       - status-success="docs/readthedocs.org:garage"
       - label=ready-to-merge
-      - -files~=\.(?!md|rst|png|bib)
+      - -files~=\.(?!md|rst|png|bib|html|css)
     actions:
       merge:
         strict: smart
