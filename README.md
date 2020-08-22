@@ -160,3 +160,6 @@ state of reproducibility in RL research in the same spirit.
 rllab was developed by Rocky Duan (UC Berkeley/Covariant), Peter Chen
 (UC Berkeley/Covariant), Rein Houthooft (UC Berkeley/Happy Elements), John
 Schulman (UC Berkeley/OpenAI), and Pieter Abbeel (UC Berkeley/Covariant).
+
+---
+<p align="center" style="align-items:center; display:inline-block">Made with &#10084; &nbsp;at <a href="https://robotics.usc.edu/resl/" target="_blank"><img align="absmiddle" src="https://github.com/rlworkgroup/garage/blob/resl-ack/docs/_static/resl_logo.png?raw=true" height="60px"></a> and &nbsp;<a href="https://viterbischool.usc.edu/" target="_blank"><img align="absmiddle" src="https://github.com/rlworkgroup/garage/blob/resl-ack/docs/_static/viterbi_logo.png?raw=true" height="30px"></a></p>

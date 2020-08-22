@@ -12,7 +12,7 @@ while read commit; do
     | tail -n +2 \
     | awk -F . '{print $NF}' \
     | uniq \
-    | grep -v 'md\|rst\|png\|bib')"
+    | grep -v 'md\|rst\|png\|bib\|html\|css')"
   test -z "${not_docs}"
   pass=$?
   status="$((${status} | ${pass}))"
