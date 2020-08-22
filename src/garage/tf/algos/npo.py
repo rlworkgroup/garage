@@ -274,7 +274,7 @@ class NPO(RLAlgorithm):
                 ])) for path in paths
         ]
 
-        paths = self._sampled_for_each_task(paths)
+        # paths = self._sampled_for_each_task(paths)
 
         if hasattr(self._baseline, 'predict_n'):
             baseline_predictions = self._baseline.predict_n(paths)
@@ -531,9 +531,15 @@ class NPO(RLAlgorithm):
                         valid_mask = tf.math.logical_and(task_mask, valid_bool)
                         tmp_obj = tf.boolean_mask(obj, valid_mask)
 
-                        tmp_loss = tf.cond(tf.equal(tf.size(tmp_obj), 0),
-                                           lambda: tf.constant(0.0),
-                                           lambda: -tf.reduce_mean(tmp_obj))
+                        idxs = tf.range(tf.shape(tmp_obj)[0])
+                        ridxs = tf.random.shuffle(idxs)[:self.max_episode_length]
+                        rinput = tf.gather(tmp_obj, indices=ridxs, axis=0)
+                        
+                        tmp_loss = -tf.reduce_mean(rinput)
+
+                        # tmp_loss = tf.cond(tf.equal(tf.size(tmp_obj), 0),
+                        #                    lambda: tf.constant(0.0),
+                        #                    lambda: -tf.reduce_mean(tmp_obj))
 
                         loss.append(tmp_loss)
 
