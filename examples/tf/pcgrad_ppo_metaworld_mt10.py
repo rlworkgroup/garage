@@ -14,6 +14,7 @@ from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.optimizers import PCGradOptimizer
 from garage.tf.policies import GaussianMLPPolicy
 
+from garage.sampler import LocalSampler
 
 @wrap_experiment
 def pcgrad_ppo_metaworld_mt10(ctxt=None, seed=1):
@@ -51,7 +52,7 @@ def pcgrad_ppo_metaworld_mt10(ctxt=None, seed=1):
         algo = PPO(env_spec=env.spec,
                    policy=policy,
                    baseline=baseline,
-                   max_episode_length=100,
+                   max_episode_length=150,
                    discount=0.99,
                    gae_lambda=0.95,
                    lr_clip_range=0.2,
@@ -68,8 +69,9 @@ def pcgrad_ppo_metaworld_mt10(ctxt=None, seed=1):
         runner.setup(algo,
                      env,
                      worker_class=PCGradWorker,
+                     n_workers=4,
                      worker_args=dict(num_tasks=len(envs)))
-        runner.train(n_epochs=120, batch_size=2048, plot=False)
+        runner.train(n_epochs=120, batch_size=6000, plot=False)
 
 
 pcgrad_ppo_metaworld_mt10()
