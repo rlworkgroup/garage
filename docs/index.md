@@ -34,7 +34,6 @@ and how to implement new MDPs and new algorithms.
    user/ensure_your_experiments_are_reproducible
    user/meta_multi_task_rl_exp.md
    user/max_resource_usage
-   user/environment_libraries
 
 .. toctree::
    :maxdepth: 2
@@ -54,6 +53,7 @@ and how to implement new MDPs and new algorithms.
    :maxdepth: 2
    :caption: Reference Guide
 
+   user/environment_libraries
    user/sampling
 
 .. toctree::
