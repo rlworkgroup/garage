@@ -65,7 +65,9 @@ def vpg_benchmarks():
 @benchmark
 def a2c_benchmarks():
     """Run experiments for A2C benchmarking."""
-    # iterate_experiments(a2c_garage_pytorch, MuJoCo1M_ENV_SET, seeds=random.sample(range(100), 3))
-    iterate_experiments(a2c_garage_tf,
+    iterate_experiments(a2c_garage_pytorch,
                         MuJoCo1M_ENV_SET,
                         seeds=random.sample(range(100), 3))
+    # iterate_experiments(a2c_garage_tf,
+    #                     MuJoCo1M_ENV_SET,
+    #                     seeds=random.sample(range(100), 3))
