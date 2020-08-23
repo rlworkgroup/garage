@@ -4,7 +4,7 @@ import torch
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic, LocalRunner
-from garage.torch.algos import A2C
+from garage.torch.algos.a2c_2 import A2C
 from garage.torch.optimizers import OptimizerWrapper
 from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -13,7 +13,7 @@ hyper_parameters = {
     'hidden_sizes': [32, 32],
     'learning_rate': 1e-3,
     'discount': 0.99,
-    'n_epochs': 500,
+    'n_epochs': 1000,
     'batch_size': 2000,
 }
 
@@ -42,9 +42,9 @@ def a2c_garage_pytorch(ctxt, env_id, seed):
                          output_nonlinearity=None)
 
     value_function = GaussianMLPValueFunction(env_spec=env.spec,
-                                              hidden_sizes=(32, 32),
-                                              hidden_nonlinearity=torch.tanh,
-                                              output_nonlinearity=None)
+                                                hidden_sizes=(32, 32),
+                                                hidden_nonlinearity=torch.tanh,
+                                                output_nonlinearity=None)
 
     policy_optimizer = OptimizerWrapper(
         (torch.optim.Adam, dict(lr=hyper_parameters['learning_rate'])), policy)

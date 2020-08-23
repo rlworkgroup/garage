@@ -8,9 +8,11 @@ import torch
 import torch.nn.functional as F
 
 from garage import EpisodeBatch, log_performance
+from garage._dtypes import StepType
 from garage.misc import tensor_utils as tu
+from garage.np._functions import obtain_evaluation_episodes
 from garage.np.algos.rl_algorithm import RLAlgorithm
-from garage.sampler import RaySampler
+from garage.sampler import FragmentWorker, RaySampler
 from garage.torch import compute_advantages, filter_valids, pad_to_last
 from garage.torch.optimizers import OptimizerWrapper
 
@@ -94,6 +96,7 @@ class VPG(RLAlgorithm):
                                           policy_ent_coeff)
         self._episode_reward_mean = collections.deque(maxlen=100)
         self.sampler_cls = RaySampler
+        self.worker_cls = FragmentWorker
 
         if policy_optimizer:
             self._policy_optimizer = policy_optimizer
@@ -147,6 +150,7 @@ class VPG(RLAlgorithm):
         actions_flat = torch.cat(filter_valids(actions, valids))
         rewards_flat = torch.cat(filter_valids(rewards, valids))
         returns_flat = torch.cat(filter_valids(returns, valids))
+
         advs_flat = self._compute_advantage(rewards, valids, baselines)
 
         with torch.no_grad():
@@ -188,6 +192,9 @@ class VPG(RLAlgorithm):
                                                EpisodeBatch.from_list(
                                                    self._env_spec, paths),
                                                discount=self.discount)
+        self._episode_reward_mean.extend(undiscounted_returns)
+        moving_avg = np.mean(self._episode_reward_mean)
+        tabular.record('Extras/100EpisodeRewardMean', moving_avg)
         return np.mean(undiscounted_returns)
 
     def train(self, runner):

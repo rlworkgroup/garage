@@ -4,13 +4,13 @@ import torch
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic, LocalRunner
-from garage.torch.algos import A2C
+from garage.torch.algos.a2c_2 import A2C
 from garage.torch.optimizers import OptimizerWrapper
 from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
 from garage.torch.value_functions import ContinuousMLPValueFunction
 
 
-@wrap_experiment
+@wrap_experiment(snapshot_mode='none')
 def a2c_pendulum(ctxt, seed):
     """Create garage PyTorch A2C model and training.
 
@@ -25,7 +25,7 @@ def a2c_pendulum(ctxt, seed):
 
     runner = LocalRunner(ctxt)
 
-    env = normalize(GymEnv('InvertedPendulum-v2'))
+    env = GymEnv('InvertedPendulum-v2')
 
     policy = PyTorch_GMP(env.spec,
                          hidden_sizes=(32, 32),
@@ -37,12 +37,11 @@ def a2c_pendulum(ctxt, seed):
                                                 hidden_nonlinearity=torch.tanh,
                                                 output_nonlinearity=None)
 
-    policy_optimizer = OptimizerWrapper(
-        (torch.optim.Adam, dict(lr=1e-3)), policy)
+    policy_optimizer = OptimizerWrapper((torch.optim.Adam, dict(lr=1e-3)),
+                                        policy)
 
-    vf_optimizer = OptimizerWrapper(
-        (torch.optim.Adam, dict(lr=1e-3)),
-        value_function)
+    vf_optimizer = OptimizerWrapper((torch.optim.Adam, dict(lr=1e-3)),
+                                    value_function)
 
     algo = A2C(
         env_spec=env.spec,
@@ -57,8 +56,7 @@ def a2c_pendulum(ctxt, seed):
     )
 
     runner.setup(algo, env)
-    runner.train(n_epochs=1000,
-                 batch_size=500)
+    runner.train(n_epochs=2000, batch_size=2000)
 
 
-a2c_pendulum(seed=1)
+a2c_pendulum(seed=0)
