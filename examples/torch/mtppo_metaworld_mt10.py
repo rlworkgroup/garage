@@ -18,8 +18,8 @@ from garage.torch.value_functions import GaussianMLPValueFunction
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--epochs', default=500)
-@click.option('--batch_size', default=1024)
+@click.option('--epochs', default=1000)
+@click.option('--batch_size', default=4500)
 @click.option('--n_worker', default=psutil.cpu_count(logical=False))
 @wrap_experiment(snapshot_mode='all')
 def mtppo_metaworld_mt10(ctxt, seed, epochs, batch_size, n_worker):
@@ -59,7 +59,7 @@ def mtppo_metaworld_mt10(ctxt, seed, epochs, batch_size, n_worker):
     algo = PPO(env_spec=env.spec,
                policy=policy,
                value_function=value_function,
-               max_episode_length=128,
+               max_episode_length=150,
                discount=0.99,
                gae_lambda=0.95,
                center_adv=True,

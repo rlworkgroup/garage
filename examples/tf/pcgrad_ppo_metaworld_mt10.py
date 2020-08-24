@@ -71,7 +71,7 @@ def pcgrad_ppo_metaworld_mt10(ctxt=None, seed=1):
                      worker_class=PCGradWorker,
                      n_workers=4,
                      worker_args=dict(num_tasks=len(envs)))
-        runner.train(n_epochs=120, batch_size=6000, plot=False)
+        runner.train(n_epochs=1000, batch_size=4500, plot=False)
 
 
 pcgrad_ppo_metaworld_mt10()

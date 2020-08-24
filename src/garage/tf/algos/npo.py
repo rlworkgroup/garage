@@ -7,7 +7,7 @@ from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
 
-from garage import EpisodeBatch, log_performance, make_optimizer, StepType
+from garage import EpisodeBatch, log_performance, make_optimizer, StepType, log_multitask_performance
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
@@ -194,58 +194,6 @@ class NPO(RLAlgorithm):
             runner.step_itr += 1
 
         return last_return
-    
-    def _sampled_for_each_task(self, paths):
-        which_batch = []
-        for idx, path in enumerate(paths):
-            tmp_num = path['actions'].shape[0]
-            for i in range(tmp_num):
-                which_batch.append((idx, i))
-        np.random.shuffle(which_batch)
-        count = np.zeros(self._num_tasks)
-        observations = []
-        actions = []
-        rewards = []
-        dones = []
-        env_infos = dict()
-        agent_infos = dict()
-        for key in paths[0]['env_infos'].keys():
-            env_infos[key] = []
-        for key in paths[0]['agent_infos'].keys():
-            agent_infos[key] = []
-        for index in which_batch:
-            batch_idx = index[0]
-            epi_idx = index[1]
-            if count[paths[batch_idx]['env_infos']['task_id'][epi_idx]] < self.max_episode_length:
-                count[paths[batch_idx]['env_infos']['task_id'][epi_idx]] += 1
-                observations.append(paths[batch_idx]['observations'][epi_idx])
-                actions.append(paths[batch_idx]['actions'][epi_idx])
-                rewards.append(paths[batch_idx]['rewards'][epi_idx])
-                dones.append(paths[batch_idx]['dones'][epi_idx])
-                for key in paths[0]['env_infos'].keys():
-                    env_infos[key].append(paths[batch_idx]['env_infos'][key][epi_idx])
-                for key in paths[0]['agent_infos'].keys():
-                    agent_infos[key].append(paths[batch_idx]['agent_infos'][key][epi_idx])
-        i = 0
-        res = []
-        while i < len(observations):
-            end_i = min(len(observations), i + self.max_episode_length)
-            env_infos_tmp = dict()
-            agent_infos_tmp = dict()
-            for key in paths[0]['env_infos'].keys():
-                env_infos_tmp[key] = np.array(env_infos[key][i:end_i])
-            for key in paths[0]['agent_infos'].keys():
-                agent_infos_tmp[key] = np.array(agent_infos[key][i:end_i])
-            res.append(dict(
-                observations=np.array(observations[i:end_i]),
-                actions=np.array(actions[i:end_i]),
-                rewards=np.array(rewards[i:end_i]),
-                dones=np.array(dones[i:end_i]),
-                env_infos=env_infos_tmp,
-                agent_infos=agent_infos_tmp
-            ))
-            i = end_i
-        return res
 
     def train_once(self, itr, paths):
         """Perform one step of policy optimization given one batch of samples.
@@ -273,8 +221,6 @@ class NPO(RLAlgorithm):
                     for step_type in path['step_types']
                 ])) for path in paths
         ]
-
-        # paths = self._sampled_for_each_task(paths)
 
         if hasattr(self._baseline, 'predict_n'):
             baseline_predictions = self._baseline.predict_n(paths)
