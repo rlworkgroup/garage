@@ -29,7 +29,7 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
 @click.option('--gpu', type=int, default=0)
 @wrap_experiment(snapshot_mode='gap', snapshot_gap=50, name_parameters='all')
-def sac_metaworld_new_reward_function(ctxt=None, env_name=None, gpu=None, reward_scale=10, tag="hammacher_product_only", seed=1):
+def sac_metaworld_winning_pick_place_arrangement(ctxt=None, env_name=None, gpu=None, reward_scale=10, tag=None, seed=1):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -47,17 +47,19 @@ def sac_metaworld_new_reward_function(ctxt=None, env_name=None, gpu=None, reward
     else:
         env_cls = ALL_V1_ENVIRONMENTS[env_name]
 
-    env = env_cls()
-    env._partially_observable = False
-    env._freeze_rand_vec = False
-    env._set_task_called = True
-    env.reset()
-    env._freeze_rand_vec = True
+    # env = env_cls()
+    # env._partially_observable = False
+    # env._freeze_rand_vec = False
+    # env._set_task_called = True
+    # env.reset()
+    # env._freeze_rand_vec = True
     # env.max_path_length = 500 # This was used apart of the winning sac run
-    max_path_length = env.max_path_length
+    # max_path_length = env.max_path_length
 
-    env = GymEnv(env)
-    # max_path_length = 500
+    # env = GymEnv(env)
+    with open('pick_place_v2_141.pkl', 'rb') as fi:
+        env = pickle.load(fi)
+    max_path_length = 500
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=[256, 256],
@@ -101,4 +103,4 @@ def sac_metaworld_new_reward_function(ctxt=None, env_name=None, gpu=None, reward
     runner.train(n_epochs=250, batch_size=batch_size)
 
 
-sac_metaworld_new_reward_function()
+sac_metaworld_winning_pick_place_arrangement()

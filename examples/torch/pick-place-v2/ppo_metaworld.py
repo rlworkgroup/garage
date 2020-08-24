@@ -9,23 +9,26 @@ steps.
 import click
 import gym
 import numpy as np
+import pickle
 import tensorflow as tf
 
-from metaworld.envs.mujoco.env_dict import ALL_V1_ENVIRONMENTS
+from metaworld.envs.mujoco.env_dict import ALL_V1_ENVIRONMENTS, ALL_V2_ENVIRONMENTS
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.policies import GaussianMLPPolicy
 
+from garage.sampler import LocalSampler
+
 @click.command()
-@click.option('--env_name', type=str)
+@click.option('--env-name', type=str)
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
 @wrap_experiment(name_parameters='all', snapshot_mode='gap', snapshot_gap=50)
-def ppo_metaworld(ctxt=None, env_name=None, tag="", seed=1,):
+def ppo_metaworld(ctxt=None, env_name=None, tag="max_path_length=500_ip_weight_10_solimp_0.99_reward_scale=10_friction=1.5", seed=1,):
     """Train PPO with Metaworl environments.
 
     Args:
@@ -36,23 +39,27 @@ def ppo_metaworld(ctxt=None, env_name=None, tag="", seed=1,):
 
     """
     special = {'push-v1' : "push", 'reach-v1' : "reach", "pick-place-v1": "pick_place"}
-    assert env_name in ALL_V1_ENVIRONMENTS.keys()
+    not_in_mw = 'the env_name specified is not a metaworld environment'
+    assert env_name in ALL_V2_ENVIRONMENTS or env_name in ALL_V1_ENVIRONMENTS, not_in_mw
 
-    env = ALL_V1_ENVIRONMENTS[env_name]()
-    if env_name in special:
-        env._set_task_inner(task_type=special[env_name])
+    if env_name in ALL_V2_ENVIRONMENTS:
+        env_cls = ALL_V2_ENVIRONMENTS[env_name]
+    else:
+        env_cls = ALL_V1_ENVIRONMENTS[env_name]
 
+    env = env_cls()
     env._partially_observable = False
     env._freeze_rand_vec = False
     env._set_task_called = True
     env.reset()
     env._freeze_rand_vec = True
+    # env.max_path_length = 500 # This was used apart of the winning sac run
     max_path_length = env.max_path_length
-
+    env = GymEnv(env)
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        env = GarageEnv(normalize(env))
-
+        # with open('pick_place_v2_141.pkl', 'rb') as fi:
+        #     env = pickle.load(fi)
         policy = GaussianMLPPolicy(
             env_spec=env.spec,
             hidden_sizes=(64, 64),
@@ -73,13 +80,13 @@ def ppo_metaworld(ctxt=None, env_name=None, tag="", seed=1,):
             env_spec=env.spec,
             policy=policy,
             baseline=baseline,
-            max_path_length=max_path_length,
+            max_episode_length=max_path_length,
             discount=0.99,
             gae_lambda=0.95,
             lr_clip_range=0.2,
             optimizer_args=dict(
                 batch_size=32,
-                max_epochs=10,
+                max_episode_length=10,
             ),
             stop_entropy_gradient=True,
             entropy_method='max',
@@ -87,7 +94,7 @@ def ppo_metaworld(ctxt=None, env_name=None, tag="", seed=1,):
             center_adv=False,
         )
 
-        runner.setup(algo, env)
+        runner.setup(algo, env,)
         runner.train(n_epochs=int(10000000/(max_path_length*100)), batch_size=(max_path_length*100), plot=False)
 
 
