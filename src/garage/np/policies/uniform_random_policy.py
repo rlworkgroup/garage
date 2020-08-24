@@ -43,7 +43,6 @@ class UniformRandomPolicy(Policy):
             List[dict]: Arbitrary policy state information (agent_info).
 
         """
-
         return self._env_spec.action_space.sample(), dict()
 
     def get_actions(self, observations):
@@ -57,4 +56,4 @@ class UniformRandomPolicy(Policy):
             List[dict]: Arbitrary policy state information (agent_info).
 
         """
-        return self._env_spec.action_space.sample_n(len(observations)), dict()
+        return [self._env_spec.action_space.sample() for obs in observations], dict()

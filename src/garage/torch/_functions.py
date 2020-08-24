@@ -176,7 +176,7 @@ def torch_to_np(tensors):
         `garage.torch._functions.to_numpy`.
 
     """
-    value_out = tuple(v.numpy() for v in tensors)
+    value_out = tuple(v.cpu().numpy() for v in tensors)
     return value_out
 
 

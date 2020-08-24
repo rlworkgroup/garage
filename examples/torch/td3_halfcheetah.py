@@ -6,7 +6,7 @@ from torch.nn import functional as F
 
 # from garage.np.exploration_policies import AddGaussianNoise
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GymEnv, normalize
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddGaussianNoise
@@ -17,7 +17,7 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 
 
 
-@wrap_experiment(snapshot_mode='last')
+@wrap_experiment(snapshot_mode='none')
 def td3_half_cheetah(ctxt=None, seed=1):
     """Train TD3 with InvertedDoublePendulum-v2 environment.
 
@@ -30,7 +30,7 @@ def td3_half_cheetah(ctxt=None, seed=1):
     """
     set_seed(seed)
     runner = LocalRunner(ctxt)
-    env = GarageEnv(normalize(gym.make('HalfCheetah-v2')))
+    env = normalize(GymEnv('HalfCheetah-v2'))
 
     policy = DeterministicMLPPolicy(env_spec=env.spec,
                                     hidden_sizes=[256, 256],
@@ -66,20 +66,16 @@ def td3_half_cheetah(ctxt=None, seed=1):
               policy_noise=0.2,
               policy_lr=1e-3,
               qf_lr=1e-3,
-              steps_per_epoch=40,
+              steps_per_epoch=120,
               start_steps=1000,
               grad_steps_per_env_step=50,
-              max_episode_length=1000,
+            #   max_episode_length=1000,
               min_buffer_size=1000,
               buffer_batch_size=100)
 
-    # if torch.cuda.is_available():
-    #     set_gpu_mode(True)
-    # else:
-    #     set_gpu_mode(False)
-    # td3.to()
+    td3.to()
     runner.setup(algo=td3, env=env)
-    runner.train(n_epochs=50, batch_size=100)
+    runner.train(n_epochs=250, batch_size=100)
 
 
 td3_half_cheetah(seed=0)

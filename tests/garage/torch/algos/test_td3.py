@@ -53,7 +53,6 @@ class TestTD3:
 
         runner.setup(td3, env, sampler_cls=LocalSampler)
         last_avg_ret = runner.train(n_epochs=10, batch_size=100)
-        print(last_avg_ret, type(last_avg_ret))
         assert last_avg_ret > 0
 
         env.close()

@@ -17,7 +17,7 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 
 
 
-@wrap_experiment(snapshot_mode='last')
+@wrap_experiment(snapshot_mode='none')
 def td3_pendulum(ctxt=None, seed=1):
     """Train TD3 with InvertedDoublePendulum-v2 environment.
 
@@ -69,17 +69,13 @@ def td3_pendulum(ctxt=None, seed=1):
               steps_per_epoch=40,
               start_steps=1000,
               grad_steps_per_env_step=1,
-              max_episode_length=200,
+            #   max_episode_length=200,
               min_buffer_size=int(1e4),
               buffer_batch_size=100)
 
-    # if torch.cuda.is_available():
-    #     set_gpu_mode(True)
-    # else:
-    #     set_gpu_mode(False)
-    # td3.to()
+    td3.to()
     runner.setup(algo=td3, env=env)
-    runner.train(n_epochs=50, batch_size=100)
+    runner.train(n_epochs=750, batch_size=100)
 
 
 td3_pendulum()
