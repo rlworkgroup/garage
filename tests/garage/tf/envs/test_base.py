@@ -12,7 +12,7 @@ class TestGarageEnv:
     def test_is_pickleable(self):
         env = GarageEnv(env_name='CartPole-v1')
         round_trip = pickle.loads(pickle.dumps(env))
-        assert round_trip.env.spec == env.env.spec
+        assert round_trip.env.spec.id == env.env.spec.id
 
     @pytest.mark.nightly
     @pytest.mark.parametrize('spec', list(gym.envs.registry.all()))
