@@ -199,7 +199,7 @@ class SAC(RLAlgorithm):
                              next_observation=path['next_observations'],
                              terminal=path['dones'].reshape(-1, 1)))
                     path_returns.append(sum(path['rewards']))
-                assert len(path_returns) is len(runner.step_path)
+                assert len(path_returns) == len(runner.step_path)
                 self.episode_rewards.append(np.mean(path_returns))
                 for _ in range(self._gradient_steps):
                     policy_loss, qf1_loss, qf2_loss = self.train_once()
