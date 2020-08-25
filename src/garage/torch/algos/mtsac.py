@@ -65,60 +65,67 @@ class MTSAC(SAC):
         steps_per_epoch (int): Number of train_once calls per epoch.
         num_evaluation_episodes (int): The number of evaluation episodes used
             for computing eval stats at the end of every epoch.
+        deterministic_eval_sampling (bool) : When using stochastic policies,
+            whether true if deterministic sampling (taking the mean of the
+            distribution output by the stochastic policy) is done and
+            false if random sampling is done (sampling from the output
+            distribution).
 
     """
 
-    def __init__(
-        self,
-        policy,
-        qf1,
-        qf2,
-        replay_buffer,
-        env_spec,
-        num_tasks,
-        max_episode_length,
-        eval_env,
-        gradient_steps_per_itr,
-        fixed_alpha=None,
-        target_entropy=None,
-        initial_log_entropy=0.,
-        discount=0.99,
-        buffer_batch_size=64,
-        min_buffer_size=int(1e4),
-        target_update_tau=5e-3,
-        policy_lr=3e-4,
-        qf_lr=3e-4,
-        reward_scale=1.0,
-        optimizer=torch.optim.Adam,
-        steps_per_epoch=1,
-        num_evaluation_episodes=5,
-    ):
+    def __init__(self,
+                 policy,
+                 qf1,
+                 qf2,
+                 replay_buffer,
+                 env_spec,
+                 num_tasks,
+                 max_episode_length,
+                 eval_env,
+                 gradient_steps_per_itr,
+                 fixed_alpha=None,
+                 target_entropy=None,
+                 initial_log_entropy=0.,
+                 discount=0.99,
+                 buffer_batch_size=64,
+                 min_buffer_size=int(1e4),
+                 target_update_tau=5e-3,
+                 policy_lr=3e-4,
+                 qf_lr=3e-4,
+                 reward_scale=1.0,
+                 optimizer=torch.optim.Adam,
+                 steps_per_epoch=1,
+                 num_evaluation_episodes=5,
+                 deterministic_eval_sampling=False):
 
-        super().__init__(policy=policy,
-                         qf1=qf1,
-                         qf2=qf2,
-                         replay_buffer=replay_buffer,
-                         env_spec=env_spec,
-                         max_episode_length=max_episode_length,
-                         gradient_steps_per_itr=gradient_steps_per_itr,
-                         fixed_alpha=fixed_alpha,
-                         target_entropy=target_entropy,
-                         initial_log_entropy=initial_log_entropy,
-                         discount=discount,
-                         buffer_batch_size=buffer_batch_size,
-                         min_buffer_size=min_buffer_size,
-                         target_update_tau=target_update_tau,
-                         policy_lr=policy_lr,
-                         qf_lr=qf_lr,
-                         reward_scale=reward_scale,
-                         optimizer=optimizer,
-                         steps_per_epoch=steps_per_epoch,
-                         num_evaluation_episodes=num_evaluation_episodes,
-                         eval_env=eval_env)
+        super().__init__(
+            policy=policy,
+            qf1=qf1,
+            qf2=qf2,
+            replay_buffer=replay_buffer,
+            env_spec=env_spec,
+            max_episode_length=max_episode_length,
+            gradient_steps_per_itr=gradient_steps_per_itr,
+            fixed_alpha=fixed_alpha,
+            target_entropy=target_entropy,
+            initial_log_entropy=initial_log_entropy,
+            discount=discount,
+            buffer_batch_size=buffer_batch_size,
+            min_buffer_size=min_buffer_size,
+            target_update_tau=target_update_tau,
+            policy_lr=policy_lr,
+            qf_lr=qf_lr,
+            reward_scale=reward_scale,
+            optimizer=optimizer,
+            steps_per_epoch=steps_per_epoch,
+            num_evaluation_episodes=num_evaluation_episodes,
+            deterministic_eval_sampling=deterministic_eval_sampling,
+            eval_env=eval_env)
         self._num_tasks = num_tasks
         self._eval_env = eval_env
         self._use_automatic_entropy_tuning = fixed_alpha is None
         self._fixed_alpha = fixed_alpha
+        self._deterministic_eval_sampling = deterministic_eval_sampling
         if self._use_automatic_entropy_tuning:
             if target_entropy:
                 self._target_entropy = target_entropy
@@ -183,7 +190,8 @@ class MTSAC(SAC):
                 obtain_evaluation_episodes(
                     self.policy,
                     self._eval_env,
-                    num_eps=self._num_evaluation_episodes))
+                    num_eps=self._num_evaluation_episodes,
+                    deterministic=self._deterministic_eval_sampling))
         eval_eps = EpisodeBatch.concatenate(*eval_eps)
         last_return = log_multitask_performance(epoch, eval_eps,
                                                 self._discount)

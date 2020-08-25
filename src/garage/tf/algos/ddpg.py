@@ -56,6 +56,11 @@ class DDPG(RLAlgorithm):
         max_action (float): Maximum action magnitude.
         reward_scale (float): Reward scale.
         name (str): Name of the algorithm shown in computation graph.
+        deterministic_eval_sampling (bool) : When using stochastic policies,
+            whether true if deterministic sampling (taking the mean of the
+            distribution output by the stochastic policy) is done and
+            false if random sampling is done (sampling from the output
+            distribution).
 
     """
 
@@ -83,6 +88,7 @@ class DDPG(RLAlgorithm):
             qf_lr=_Default(1e-3),
             clip_pos_returns=False,
             clip_return=np.inf,
+            deterministic_eval_sampling=True,
             max_action=None,
             reward_scale=1.,
             name='DDPG'):
@@ -94,6 +100,7 @@ class DDPG(RLAlgorithm):
         self._name = name
         self._clip_pos_returns = clip_pos_returns
         self._clip_return = clip_return
+        self._deterministic_eval_sampling = deterministic_eval_sampling
 
         self._episode_policy_losses = []
         self._episode_qf_losses = []
@@ -287,7 +294,9 @@ class DDPG(RLAlgorithm):
                         self._min_buffer_size):
                     runner.enable_logging = True
                     eval_episodes = obtain_evaluation_episodes(
-                        self.policy, self._eval_env)
+                        self.policy,
+                        self._eval_env,
+                        deterministic=self._deterministic_eval_sampling)
                     last_returns = log_performance(runner.step_itr,
                                                    eval_episodes,
                                                    discount=self._discount)

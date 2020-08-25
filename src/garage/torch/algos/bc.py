@@ -43,6 +43,12 @@ class BC(RLAlgorithm):
             `garage.torch.StochasticPolicy`.
         minibatches_per_epoch (int): Number of minibatches per epoch.
         name (str): Name to use for logging.
+        deterministic_eval_sampling (bool) : When using stochastic policies,
+            whether true if deterministic sampling (taking the mean of the
+            distribution output by the stochastic policy) is done and
+            false if random sampling is done (sampling from the output
+            distribution).
+
 
     Raises:
         ValueError: If `source` is a `garage.Policy` and `max_episode_length`
@@ -65,6 +71,7 @@ class BC(RLAlgorithm):
         policy_lr=_Default(1e-3),
         loss='log_prob',
         minibatches_per_epoch=16,
+        deterministic_eval_sampling=True,
         name='BC',
     ):
         self._source = source
@@ -79,6 +86,7 @@ class BC(RLAlgorithm):
         self._eval_env = None
         self._batch_size = batch_size
         self._name = name
+        self._deterministic_eval_sampling = deterministic_eval_sampling
 
         # Public fields for sampling.
         self.env_spec = env_spec
@@ -107,10 +115,13 @@ class BC(RLAlgorithm):
             self._eval_env = runner.get_env_copy()
         for epoch in runner.step_epochs():
             if self._eval_env is not None:
-                log_performance(epoch,
-                                obtain_evaluation_episodes(
-                                    self.learner, self._eval_env),
-                                discount=1.0)
+                log_performance(
+                    epoch,
+                    obtain_evaluation_episodes(
+                        self.learner,
+                        self._eval_env,
+                        deterministic=self._deterministic_eval_sampling),
+                    discount=1.0)
             losses = self._train_once(runner, epoch)
             with tabular.prefix(self._name + '/'):
                 tabular.record('MeanLoss', np.mean(losses))

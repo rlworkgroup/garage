@@ -81,6 +81,11 @@ class SAC(RLAlgorithm):
             for computing eval stats at the end of every epoch.
         eval_env (Environment): environment used for collecting evaluation
             episodes. If None, a copy of the train env is used.
+        deterministic_eval_sampling (bool) : When using stochastic policies,
+            whether true if deterministic sampling (taking the mean of the
+            distribution output by the stochastic policy) is done and
+            false if random sampling is done (sampling from the output
+            distribution).
 
     """
 
@@ -109,6 +114,7 @@ class SAC(RLAlgorithm):
         steps_per_epoch=1,
         num_evaluation_episodes=10,
         eval_env=None,
+        deterministic_eval_sampling=False,
     ):
 
         self._qf1 = qf1
@@ -122,6 +128,7 @@ class SAC(RLAlgorithm):
         self._optimizer = optimizer
         self._num_evaluation_episodes = num_evaluation_episodes
         self._eval_env = eval_env
+        self._deterministic_eval_sampling = deterministic_eval_sampling
 
         self._min_buffer_size = min_buffer_size
         self._steps_per_epoch = steps_per_epoch
@@ -465,7 +472,7 @@ class SAC(RLAlgorithm):
             self.policy,
             self._eval_env,
             num_eps=self._num_evaluation_episodes,
-            deterministic=False)
+            deterministic=self._deterministic_eval_sampling)
         last_return = log_performance(epoch,
                                       eval_episodes,
                                       discount=self._discount)

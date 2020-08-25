@@ -47,6 +47,11 @@ class DQN(RLAlgorithm):
         double_q (bool): Bool for using double q-network.
         reward_scale (float): Reward scale.
         name (str): Name of the algorithm.
+        deterministic_eval_sampling (bool) : When using stochastic policies,
+            whether true if deterministic sampling (taking the mean of the
+            distribution output by the stochastic policy) is done and
+            false if random sampling is done (sampling from the output
+            distribution).
 
     """
 
@@ -68,6 +73,7 @@ class DQN(RLAlgorithm):
                  target_network_update_freq=5,
                  grad_norm_clipping=None,
                  double_q=False,
+                 deterministic_eval_sampling=True,
                  reward_scale=1.,
                  name='DQN'):
         self._qf_optimizer = qf_optimizer
@@ -76,6 +82,7 @@ class DQN(RLAlgorithm):
         self._target_network_update_freq = target_network_update_freq
         self._grad_norm_clipping = grad_norm_clipping
         self._double_q = double_q
+        self._deterministic_eval_sampling = deterministic_eval_sampling
 
         # clone a target q-function
         self._target_qf = qf.clone('target_qf')
@@ -214,7 +221,9 @@ class DQN(RLAlgorithm):
                         self._min_buffer_size):
                     runner.enable_logging = True
                     eval_episodes = obtain_evaluation_episodes(
-                        self.policy, self._eval_env)
+                        self.policy,
+                        self._eval_env,
+                        deterministic=self._deterministic_eval_sampling)
                     last_returns = log_performance(runner.step_itr,
                                                    eval_episodes,
                                                    discount=self._discount)

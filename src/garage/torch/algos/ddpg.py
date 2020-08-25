@@ -62,7 +62,7 @@ class DDPG(RLAlgorithm):
             clip_return].
         max_action (float): Maximum action magnitude.
         reward_scale (float): Reward scale.
-
+        deterministic_eval_sampling (bool) : When using stochastic policies, whether random true if deterministic sampling (taking the mean of the distribution outputted by the stochastic policy) is done and false if random sampling is done (sampling from the outputted distribution).
     """
 
     def __init__(
@@ -89,6 +89,7 @@ class DDPG(RLAlgorithm):
             qf_lr=_Default(1e-3),
             clip_pos_returns=False,
             clip_return=np.inf,
+            deterministic_eval_sampling=True,
             max_action=None,
             reward_scale=1.):
         action_bound = env_spec.action_space.high
@@ -97,6 +98,7 @@ class DDPG(RLAlgorithm):
         self._qf_weight_decay = qf_weight_decay
         self._clip_pos_returns = clip_pos_returns
         self._clip_return = clip_return
+        self._deterministic_eval_sampling = deterministic_eval_sampling
         self._max_action = action_bound if max_action is None else max_action
 
         self._steps_per_epoch = steps_per_epoch
@@ -159,7 +161,9 @@ class DDPG(RLAlgorithm):
                         self._min_buffer_size):
                     runner.enable_logging = True
                     eval_eps = obtain_evaluation_episodes(
-                        self.policy, self._eval_env)
+                        self.policy,
+                        self._eval_env,
+                        deterministic=self._deterministic_eval_sampling)
                     last_returns = log_performance(runner.step_itr,
                                                    eval_eps,
                                                    discount=self._discount)

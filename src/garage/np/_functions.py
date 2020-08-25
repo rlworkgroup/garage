@@ -42,8 +42,8 @@ def obtain_evaluation_episodes(policy,
         max_episode_length (int): Maximum episode length. The episode will
             truncated when length of episode reaches max_episode_length.
         num_eps (int): Number of episodes.
-        deterministic (bool): Whether the a deterministic approach is used
-            in rollout.
+        deterministic (bool): Whether deterministic sampliing is used in
+            evaluation.
 
     Returns:
         EpisodeBatch: Evaluation episodes, representing the best current

@@ -62,6 +62,12 @@ class TD3(RLAlgorithm):
         exploration_policy_clip (float): Action noise clip.
         actor_update_period (int): Action update period.
         exploration_policy (ExplorationPolicy): Exploration strategy.
+        deterministic_eval_sampling (bool) : When using stochastic policies,
+            whether random true if deterministic sampling (taking the mean of
+            the distribution output by the stochastic policy) is done and
+            false if random sampling is done (sampling from the output
+            distribution).
+
 
     """
 
@@ -95,7 +101,8 @@ class TD3(RLAlgorithm):
             exploration_policy_sigma=0.2,
             actor_update_period=2,
             exploration_policy_clip=0.5,
-            exploration_policy=None):
+            exploration_policy=None,
+            deterministic_eval_sampling=False):
         action_bound = env_spec.action_space.high
         self._max_action = action_bound if max_action is None else max_action
         self._tau = target_update_tau
@@ -104,6 +111,7 @@ class TD3(RLAlgorithm):
         self._name = name
         self._clip_pos_returns = clip_pos_returns
         self._clip_return = clip_return
+        self._deterministic_eval_sampling = deterministic_eval_sampling
 
         self._episode_policy_losses = []
         self._episode_qf_losses = []
@@ -307,7 +315,9 @@ class TD3(RLAlgorithm):
                         self._min_buffer_size):
                     runner.enable_logging = True
                     eval_episodes = obtain_evaluation_episodes(
-                        self.policy, self._eval_env)
+                        self.policy,
+                        self._eval_env,
+                        deterministic=self._deterministic_eval_sampling)
                     last_returns = log_performance(runner.step_itr,
                                                    eval_episodes,
                                                    discount=self._discount)
