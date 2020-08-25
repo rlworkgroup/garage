@@ -202,7 +202,6 @@ class LocalRunner:
             sampler_args = {}
         if worker_args is None:
             worker_args = {}
-        if issubclass(sampler_cls, BaseSampler):
             return sampler_cls(self._algo, self._env, **sampler_args)
         else:
             return sampler_cls.from_worker_factory(WorkerFactory(
