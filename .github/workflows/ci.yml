@@ -74,7 +74,7 @@ jobs:
           -e GITHUB_HEAD_REF \
           -e GITHUB_SHA \
           -e GITHUB_RUN_ID \
-          --memory 7500m \
+          --memory 6500m \
           --memory-swap 7500m \
           "${DOCKER_TAG}" scripts/travisci/check_precommit.sh
 
@@ -105,7 +105,7 @@ jobs:
           -e GITHUB_HEAD_REF \
           -e GITHUB_SHA \
           -e GITHUB_RUN_ID \
-          --memory 7500m \
+          --memory 6500m \
           --memory-swap 7500m \
           "${DOCKER_TAG}" \
           /bin/bash -c \
@@ -146,7 +146,7 @@ jobs:
           -e GITHUB_HEAD_REF \
           -e GITHUB_SHA \
           -e GITHUB_RUN_ID \
-          --memory 7500m \
+          --memory 6500m \
           --memory-swap 7500m \
           "${DOCKER_TAG}" \
           /bin/bash -c \
@@ -186,7 +186,7 @@ jobs:
           -e GITHUB_HEAD_REF \
           -e GITHUB_SHA \
           -e GITHUB_RUN_ID \
-          --memory 7500m \
+          --memory 6500m \
           --memory-swap 7500m \
           "${DOCKER_TAG}" \
           /bin/bash -c \
@@ -225,7 +225,7 @@ jobs:
           -e GITHUB_HEAD_REF \
           -e GITHUB_SHA \
           -e GITHUB_RUN_ID \
-          --memory 7500m \
+          --memory 6500m \
           --memory-swap 7500m \
           "${DOCKER_TAG}" \
           /bin/bash -c \
@@ -265,7 +265,7 @@ jobs:
             -e GITHUB_HEAD_REF \
             -e GITHUB_SHA \
             -e GITHUB_RUN_ID \
-            --memory 7500m \
+            --memory 6500m \
             --memory-swap 7500m \
             "${DOCKER_TAG}" pytest -v -m nightly
 
@@ -298,7 +298,7 @@ jobs:
           -e GITHUB_HEAD_REF \
           -e GITHUB_SHA \
           -e GITHUB_RUN_ID \
-          --memory 7500m \
+          --memory 6500m \
           --memory-swap 7500m \
           "${DOCKER_TAG}" \
           /bin/bash -c \
@@ -348,7 +348,7 @@ jobs:
           -e GITHUB_HEAD_REF \
           -e GITHUB_SHA \
           -e GITHUB_RUN_ID \
-          --memory 7500m \
+          --memory 6500m \
           --memory-swap 7500m \
           "${DOCKER_TAG}" \
           /bin/bash -c \
