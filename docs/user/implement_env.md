@@ -1,48 +1,75 @@
 # Adding a New Environment
 
-Garage uses the [`Environment`](https://github.com/rlworkgroup/garage/blob/master/src/garage/_environment.py)
-API for all RL environments.
+Garage uses the `Environment` API for all RL environments.
 
-The public API methods of :`Environment` are:
+The public API methods of `Environment` are:
 
-* `reset()`: Resets the environment. Return the first observation, and the episode-level information.
-* `step()`: Steps the environment with an action and returns an EnvStep.
-
-    An `EnvStep` is a named tuple of `env_spec`, `observation`, `action`, `reward`,
-    `step_type` representing a single step in the environment.
-* `render()`: Returns value for rendering, could be a terminal text, an image, etc.
-* `visualize()`: Creates a visualization of the environment.
-* `close()`: Closes the environment.
+```eval_rst
++----------------------------------+--------------------------------------+
+| Functions                        | Description                          |
++==================================+======================================+
+| :meth:`~Environment.reset()`     | Resets the environment. Return the   |
+|                                  | first observation, and the           |
+|                                  | episode-level information.           |
++----------------------------------+--------------------------------------+
+| :meth:`~Environment.step()`      | Steps the environment with an action |
+|                                  | and returns an :class:`EnvSpec`.     |
+|                                  | An `EnvStep` is a named tuple of     |
+|                                  | `env_spec`, `observation`, `action`, |
+|                                  | `reward`, `step_type` representing a |
+|                                  | single step in the environment.      |
++----------------------------------+--------------------------------------+
+| :meth:`~Environment.render()`    | Returns value for rendering, could   |
+|                                  | be a terminal text, an image, etc.   |
++----------------------------------+--------------------------------------+
+| :meth:`~Environment.visualize()` | Creates a visualization of the       |
+|                                  | environment.                         |
++----------------------------------+--------------------------------------+
+| :meth:`~Environment.close()`     | Closes the environment.              |
++----------------------------------+--------------------------------------+
+```
 
 The attributes of `Environment` are:
-
-* `action_space`: The action space specification.
-* `observation_space`: The observation space specification.
-* `spec`: The environment specifications.
-* `render_modes`: The list of supported render modes.
-
+```eval_rst
++-----------------------+-------------------------------------------------+
+| Properties            | Description                                     |
++=======================+=================================================+
+| action_space          | The action space specification                  |
++-----------------------+-------------------------------------------------+
+| observation_space     | The observation space specification             |
++-----------------------+-------------------------------------------------+
+| spec                  | The environment specifications                  |
++-----------------------+-------------------------------------------------+
+| render_modes          | The list of supported render modes              |
++-----------------------+-------------------------------------------------+
+```
 You should expect to use all environments in garage with this API.
 
 ## Add Support for an Existing Environment Library
 
 Luckily, Garage already came with a variety of external environment wrappers:
 
-* `garage.envs.GymEnv`, which supports the `gym` API.
-* `garage.envs.dm_control.DmControlEnv`, which supports Deepmind's
-`dm_control` API.
-* `garage.envs.bullet.BulletEnv`, which supports the `pybullet` API.
+* `GymEnv`, which supports the `gym` API.
+* `DmControlEnv`, which supports Deepmind's `dm_control` API.
+* `BulletEnv`, which supports the `pybullet` API.
 
     Note that `pybullet` environments are `gym`-based environments, and they
-    can be wrapped with `garage.envs.GymEnv` as well. In such case,
-    `garage.envs.GymEnv` will detect the bullet-based environment and returns
-    a `garage.envs.bullet.BulletEnv`.
+    can be wrapped with `GymEnv` as well. In such case,
+    `GymEnv` will detect the bullet-based environment and returns
+    a `BulletEnv`.
+
+Find more about these environment wrappers [here](environment_libraries).
 
 If you would like to add an existing environment to garage, you will probably
 need an environment wrapper to handle environment-specific logic.
 
 Here is an handy To-do list for adding a new environment wrapper:
 
-* **Inherit** the environment wrapper from `Environment`.
+* (Recommended) **Inherit** the environment wrapper from `Environment`.
+
+    Note that this is not required in Python because of duck typing. Your
+    custom environment class will work as long as it implements
+    interface methods of `Environment`.
 
 * **Implement** attributes: `observation_space`, `action_space`, `spec`,
 and `render_modes`
@@ -70,8 +97,9 @@ and `render_modes`
 
 In the rest of this section, we will walk through an example of implementing a
 point robot environment using our framework. A more complete version of this
-environment is available as `garage.envs.PointEnv`.
+environment is available as `PointEnv`.
 
+```eval_rst
 We will implement a simple environment with 2D observations and 2D actions. The
 goal is to control a point robot in 2D to move it to the origin. We receive
 position of a point robot in the 2D plane :math:`(x, y) \in \mathbb{R}^2`.
@@ -79,6 +107,7 @@ The action is its velocity :math:`(\dot x, \dot y) \in \mathbb{R}^2`
 constrained so that :math:`|\dot x| \leq 0.1` and :math:`|\dot y| \leq 0.1`.
 We encourage the robot to move to the origin by defining its reward as the
 negative distance to the origin: :math:`r(x, y) = - \sqrt{x^2 + y^2}`.
+```
 
 We start by creating a new file for the environment, then we declare a class
 inheriting from the base environment and add some imports:
