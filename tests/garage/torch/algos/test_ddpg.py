@@ -22,7 +22,7 @@ class TestDDPG:
         """Test DDPG with Pendulum environment."""
         deterministic.set_seed(0)
         runner = LocalRunner(snapshot_config)
-        env = GymEnv('InvertedDoublePendulum-v2')
+        env = GymEnv('InvertedDoublePendulum-v2', max_episode_length=100)
         policy = DeterministicMLPPolicy(env_spec=env.spec,
                                         hidden_sizes=[64, 64],
                                         hidden_nonlinearity=F.relu,

@@ -22,7 +22,7 @@ class TestTD3(TfGraphTestCase):
     def test_td3_pendulum(self):
         """Test TD3 with Pendulum environment."""
         with LocalTFRunner(snapshot_config) as runner:
-            env = GymEnv('InvertedDoublePendulum-v2')
+            env = GymEnv('InvertedDoublePendulum-v2', max_episode_length=100)
 
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[400, 300],

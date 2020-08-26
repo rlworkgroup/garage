@@ -25,7 +25,7 @@ def test_mtsac_get_log_alpha(monkeypatch):
 
     """
     env_names = ['CartPole-v0', 'CartPole-v1']
-    task_envs = [GymEnv(name) for name in env_names]
+    task_envs = [GymEnv(name, max_episode_length=100) for name in env_names]
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
     deterministic.set_seed(0)
     policy = TanhGaussianMLPPolicy(
@@ -79,7 +79,7 @@ def test_mtsac_get_log_alpha_incorrect_num_tasks(monkeypatch):
 
     """
     env_names = ['CartPole-v0', 'CartPole-v1']
-    task_envs = [GymEnv(name) for name in env_names]
+    task_envs = [GymEnv(name, max_episode_length=150) for name in env_names]
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
     deterministic.set_seed(0)
     policy = TanhGaussianMLPPolicy(
@@ -105,7 +105,6 @@ def test_mtsac_get_log_alpha_incorrect_num_tasks(monkeypatch):
                   qf1=qf1,
                   qf2=qf2,
                   gradient_steps_per_itr=150,
-                  max_episode_length=150,
                   eval_env=env,
                   env_spec=env.spec,
                   num_tasks=4,
@@ -128,7 +127,7 @@ def test_mtsac_get_log_alpha_incorrect_num_tasks(monkeypatch):
 def test_mtsac_inverted_double_pendulum():
     """Performance regression test of MTSAC on 2 InvDoublePendulum envs."""
     env_names = ['InvertedDoublePendulum-v2', 'InvertedDoublePendulum-v2']
-    task_envs = [GymEnv(name) for name in env_names]
+    task_envs = [GymEnv(name, max_episode_length=100) for name in env_names]
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
     test_envs = MultiEnvWrapper(task_envs,
                                 sample_strategy=round_robin_strategy)
@@ -179,7 +178,7 @@ def test_to():
 
     """
     env_names = ['CartPole-v0', 'CartPole-v1']
-    task_envs = [GymEnv(name) for name in env_names]
+    task_envs = [GymEnv(name, max_episode_length=100) for name in env_names]
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
     deterministic.set_seed(0)
     policy = TanhGaussianMLPPolicy(
@@ -234,7 +233,7 @@ def test_to():
 def test_fixed_alpha():
     """Test if using fixed_alpha ensures that alpha is non differentiable."""
     env_names = ['InvertedDoublePendulum-v2', 'InvertedDoublePendulum-v2']
-    task_envs = [GymEnv(name) for name in env_names]
+    task_envs = [GymEnv(name, max_episode_length=100) for name in env_names]
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
     test_envs = MultiEnvWrapper(task_envs,
                                 sample_strategy=round_robin_strategy)

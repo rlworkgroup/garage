@@ -177,7 +177,8 @@ def testTemperatureLoss():
 def test_sac_inverted_double_pendulum():
     """Test Sac performance on inverted pendulum."""
     # pylint: disable=unexpected-keyword-arg
-    env = normalize(GymEnv('InvertedDoublePendulum-v2'))
+    env = normalize(GymEnv('InvertedDoublePendulum-v2',
+                           max_episode_length=100))
     deterministic.set_seed(0)
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
@@ -230,7 +231,8 @@ def test_sac_inverted_double_pendulum():
 def test_fixed_alpha():
     """Test if using fixed_alpha ensures that alpha is non differentiable."""
     # pylint: disable=unexpected-keyword-arg
-    env = normalize(GymEnv('InvertedDoublePendulum-v2'))
+    env = normalize(GymEnv('InvertedDoublePendulum-v2',
+                           max_episode_length=100))
     deterministic.set_seed(0)
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,

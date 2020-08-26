@@ -39,7 +39,7 @@ class TestVPG:
 
     def setup_method(self):
         """Setup method which is called before every test."""
-        self._env = GymEnv('InvertedDoublePendulum-v2')
+        self._env = GymEnv('InvertedDoublePendulum-v2', max_episode_length=100)
         self._runner = LocalRunner(snapshot_config)
 
         self._policy = GaussianMLPPolicy(env_spec=self._env.spec,
