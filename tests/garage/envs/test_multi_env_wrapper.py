@@ -136,15 +136,26 @@ class TestMultiEnvWrapper:
         mt_env = self._init_multi_env_wrapper(
             envs, sample_strategy=round_robin_strategy)
 
-        obs, _ = mt_env.reset()
-        assert (obs[-2:] == np.array([1., 0.])).all()
+        obs, episode_info = mt_env.reset()
+        assert (episode_info['active_task_one_hot'] == np.array([1., 0.])).all()
         obs = mt_env.step(1).observation
         assert (obs[-2:] == np.array([1., 0.])).all()
 
-        obs, _ = mt_env.reset()
-        assert (obs[-2:] == np.array([0., 1.])).all()
+        obs, episode_info = mt_env.reset()
+        assert (episode_info['active_task_one_hot'] == np.array([0., 1.])).all()
         obs = mt_env.step(1).observation
         assert (obs[-2:] == np.array([0., 1.])).all()
+
+
+    def test_one_hot_episode_info(self):
+        """test if episode info is correct"""
+        envs = ['CartPole-v0', 'CartPole-v0']
+        mt_env = self._init_multi_env_wrapper(
+            envs, sample_strategy=round_robin_strategy)
+        
+        _, episode_info = mt_env.reset()
+        assert (episode_info['active_task_one_hot'] == np.array([1., 0.])).all()
+
 
     def test_visualization(self):
         envs = ['CartPole-v0', 'CartPole-v1']
