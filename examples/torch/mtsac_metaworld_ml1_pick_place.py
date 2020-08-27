@@ -84,24 +84,30 @@ def mtsac_metaworld_ml1_pick_place(ctxt=None, seed=1, _gpu=None):
     epochs = timesteps // batch_size
     epoch_cycles = epochs // num_evaluation_points
     epochs = epochs // epoch_cycles
-    mtsac = MTSAC(policy=policy,
-                  qf1=qf1,
-                  qf2=qf2,
-                  gradient_steps_per_itr=150,
-                  max_episode_length=150,
-                  eval_env=ml1_test_envs,
-                  env_spec=ml1_train_envs.spec,
-                  num_tasks=50,
-                  steps_per_epoch=epoch_cycles,
-                  replay_buffer=replay_buffer,
-                  min_buffer_size=1500,
-                  target_update_tau=5e-3,
-                  discount=0.99,
-                  buffer_batch_size=1280)
+    mtsac = MTSAC(
+        policy=policy,
+        qf1=qf1,
+        qf2=qf2,
+        gradient_steps_per_itr=150,
+        max_episode_length=150,
+        max_episode_length_eval=150,
+        eval_env=ml1_test_envs,
+        env_spec=ml1_train_envs.spec,
+        num_tasks=50,
+        steps_per_epoch=epoch_cycles,
+        replay_buffer=replay_buffer,
+        min_buffer_size=1500,
+        target_update_tau=5e-3,
+        discount=0.99,
+        buffer_batch_size=1280,
+    )
     if _gpu is not None:
         set_gpu_mode(True, _gpu)
     mtsac.to()
-    runner.setup(algo=mtsac, env=ml1_train_envs, sampler_cls=LocalSampler)
+    runner.setup(algo=mtsac,
+                 env=ml1_train_envs,
+                 sampler_cls=LocalSampler,
+                 n_workers=1)
     runner.train(n_epochs=epochs, batch_size=batch_size)
 
 
