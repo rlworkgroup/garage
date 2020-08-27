@@ -13,8 +13,6 @@ on:
     - cron: '0 9 * * *'
   push:
     branches: [master]
-  pull_request:
-    branches: [master, gh-actions-fork]
   pull_request_target:
     branches: [master,gh-actions-fork]
 
