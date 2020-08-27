@@ -109,10 +109,7 @@ def test_ppo_memorize_digits():
     """
     env = os.environ.copy()
     env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
-    command = [
-        EXAMPLES_ROOT_DIR / 'tf/ppo_memorize_digits.py', '--batch_size', '4'
-    ]
-    assert subprocess.run(command, check=False, env=env).returncode == 0
+    assert 1 == 0
 
 
 @pytest.mark.no_cover
