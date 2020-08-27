@@ -5,6 +5,7 @@ import warnings
 
 import numpy as np
 
+minor_change = None
 seed_ = None
 seed_stream_ = None
 
