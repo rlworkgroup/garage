@@ -14,7 +14,6 @@ pull_request_rules:
       - "#approved-reviews-by>=2"
       - "approved-reviews-by=@maintainers"
       - "#changes-requested-reviews-by=0"
-      - status-success="Travis CI - Pull Request"
       - status-success="codecov/patch"
       - status-success="docs/readthedocs.org:garage"
       - status-success="Check pre-commit"
@@ -36,7 +35,6 @@ pull_request_rules:
       - "author=@rlworkgroup/maintainers"
       - "#approved-reviews-by>=1"
       - "#changes-requested-reviews-by=0"
-      - status-success="Travis CI - Pull Request"
       - status-success="Check pre-commit"
       - status-success="Normal Tests"
       - status-success="Large Tests"
@@ -58,7 +56,6 @@ pull_request_rules:
       - "#approved-reviews-by>=2"
       - "approved-reviews-by=@maintainers"
       - "#changes-requested-reviews-by=0"
-      - status-success="Travis CI - Pull Request"
       - status-success="Check pre-commit"
       - status-success="docs/readthedocs.org:garage"
       - label=ready-to-merge
@@ -76,7 +73,6 @@ pull_request_rules:
       - "author=@rlworkgroup/maintainers"
       - "#approved-reviews-by>=1"
       - "#changes-requested-reviews-by=0"
-      - status-success="Travis CI - Pull Request"
       - status-success="Check pre-commit"
       - status-success="docs/readthedocs.org:garage"
       - label=ready-to-merge
