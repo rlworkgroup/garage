@@ -87,7 +87,7 @@ class TEPPO(TENPO):
 
         inference_optimizer = inference_optimizer or FirstOrderOptimizer
         inference_optimizer_args = inference_optimizer_args or dict(
-            batch_size=32, max_episode_length=10)
+            batch_size=32, max_optimization_epochs=10)
 
         super().__init__(env_spec=env_spec,
                          policy=policy,

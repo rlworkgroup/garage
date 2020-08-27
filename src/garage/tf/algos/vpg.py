@@ -73,7 +73,7 @@ class VPG(NPO):
         if optimizer is None:
             default_args = dict(
                 batch_size=None,
-                max_episode_length=1,
+                max_optimization_epochs=1,
             )
             optimizer = FirstOrderOptimizer
             if optimizer_args is None:

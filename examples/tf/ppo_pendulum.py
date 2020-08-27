@@ -61,7 +61,7 @@ def ppo_pendulum(ctxt=None, seed=1):
             lr_clip_range=0.2,
             optimizer_args=dict(
                 batch_size=32,
-                max_episode_length=10,
+                max_optimization_epochs=10,
             ),
             stop_entropy_gradient=True,
             entropy_method='max',

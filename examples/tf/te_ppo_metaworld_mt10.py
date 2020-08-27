@@ -114,12 +114,12 @@ def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task):
                      use_softplus_entropy=True,
                      optimizer_args=dict(
                          batch_size=32,
-                         max_episode_length=10,
+                         max_optimization_epochs=10,
                          learning_rate=1e-3,
                      ),
                      inference_optimizer_args=dict(
                          batch_size=32,
-                         max_episode_length=10,
+                         max_optimization_epochs=10,
                      ),
                      center_adv=True,
                      stop_ce_gradient=True)

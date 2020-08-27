@@ -63,7 +63,7 @@ def ppo_memorize_digits(ctxt=None, seed=1, batch_size=4000):
                    policy_ent_coeff=0.0,
                    optimizer_args=dict(
                        batch_size=32,
-                       max_episode_length=10,
+                       max_optimization_epochs=10,
                        learning_rate=1e-3,
                    ))
 
