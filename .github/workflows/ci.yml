@@ -74,8 +74,8 @@ jobs:
           -e GITHUB_HEAD_REF \
           -e GITHUB_SHA \
           -e GITHUB_RUN_ID \
-          --memory 7500m \
-          --memory-swap 7500m \
+          --memory 6500m \
+          --memory-swap 6500m \
           "${DOCKER_TAG}" scripts/travisci/check_precommit.sh
 
 
@@ -105,8 +105,8 @@ jobs:
           -e GITHUB_HEAD_REF \
           -e GITHUB_SHA \
           -e GITHUB_RUN_ID \
-          --memory 7500m \
-          --memory-swap 7500m \
+          --memory 6500m \
+          --memory-swap 6500m \
           "${DOCKER_TAG}" \
           /bin/bash -c \
           '[ ! -f ${MJKEY_PATH} ] || mv ${MJKEY_PATH} ${MJKEY_PATH}.bak &&
@@ -146,8 +146,8 @@ jobs:
           -e GITHUB_HEAD_REF \
           -e GITHUB_SHA \
           -e GITHUB_RUN_ID \
-          --memory 7500m \
-          --memory-swap 7500m \
+          --memory 6500m \
+          --memory-swap 6500m \
           "${DOCKER_TAG}" \
           /bin/bash -c \
           '[ ! -f ${MJKEY_PATH} ] || mv ${MJKEY_PATH} ${MJKEY_PATH}.bak
@@ -186,8 +186,8 @@ jobs:
           -e GITHUB_HEAD_REF \
           -e GITHUB_SHA \
           -e GITHUB_RUN_ID \
-          --memory 7500m \
-          --memory-swap 7500m \
+          --memory 6500m \
+          --memory-swap 6500m \
           "${DOCKER_TAG}" \
           /bin/bash -c \
           'pytest --cov=garage --cov-report=xml -m "mujoco and not flaky" --durations=20 &&
@@ -225,8 +225,8 @@ jobs:
           -e GITHUB_HEAD_REF \
           -e GITHUB_SHA \
           -e GITHUB_RUN_ID \
-          --memory 7500m \
-          --memory-swap 7500m \
+          --memory 6500m \
+          --memory-swap 6500m \
           "${DOCKER_TAG}" \
           /bin/bash -c \
           'pytest --cov=garage --cov-report=xml -m "mujoco_long and not flaky" --durations=20 &&
@@ -265,8 +265,8 @@ jobs:
             -e GITHUB_HEAD_REF \
             -e GITHUB_SHA \
             -e GITHUB_RUN_ID \
-            --memory 7500m \
-            --memory-swap 7500m \
+            --memory 6500m \
+            --memory-swap 6500m \
             "${DOCKER_TAG}" pytest -v -m nightly
 
 
@@ -298,8 +298,8 @@ jobs:
           -e GITHUB_HEAD_REF \
           -e GITHUB_SHA \
           -e GITHUB_RUN_ID \
-          --memory 7500m \
-          --memory-swap 7500m \
+          --memory 6500m \
+          --memory-swap 6500m \
           "${DOCKER_TAG}" \
           /bin/bash -c \
           'CONDA_ROOT=$HOME/miniconda \
@@ -348,8 +348,8 @@ jobs:
           -e GITHUB_HEAD_REF \
           -e GITHUB_SHA \
           -e GITHUB_RUN_ID \
-          --memory 7500m \
-          --memory-swap 7500m \
+          --memory 6500m \
+          --memory-swap 6500m \
           "${DOCKER_TAG}" \
           /bin/bash -c \
           "export PATH=\$PATH_NO_VENV && \
