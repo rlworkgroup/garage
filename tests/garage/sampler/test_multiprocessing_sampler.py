@@ -50,7 +50,6 @@ def test_obtain_samples():
     env.close()
 
 
-@pytest.mark.flaky
 @pytest.mark.timeout(10)
 def test_update_envs_env_update():
     max_episode_length = 16
@@ -67,7 +66,7 @@ def test_update_envs_env_update():
                             n_workers=n_workers)
     sampler = MultiprocessingSampler.from_worker_factory(workers, policy, env)
     episodes = sampler.obtain_samples(0,
-                                      161,
+                                      500,
                                       np.asarray(policy.get_param_values()),
                                       env_update=tasks.sample(n_workers))
     mean_rewards = []
@@ -75,8 +74,8 @@ def test_update_envs_env_update():
     for eps in episodes.split():
         mean_rewards.append(eps.rewards.mean())
         goals.append(eps.env_infos['task'][0]['goal'])
-    assert np.var(mean_rewards) > 0
-    assert np.var(goals) > 0
+    assert np.var(mean_rewards) > 1e-3
+    assert np.var(goals) > 1e-3
     with pytest.raises(ValueError):
         sampler.obtain_samples(0,
                                10,
@@ -171,7 +170,6 @@ def test_init_with_crashed_worker():
     env.close()
 
 
-@pytest.mark.flaky
 @pytest.mark.timeout(10)
 def test_pickle():
     max_episode_length = 16
@@ -191,7 +189,7 @@ def test_pickle():
     sampler.shutdown_worker()
     sampler2 = pickle.loads(sampler_pickled)
     episodes = sampler2.obtain_samples(0,
-                                       161,
+                                       500,
                                        np.asarray(policy.get_param_values()),
                                        env_update=tasks.sample(n_workers))
     mean_rewards = []
@@ -199,7 +197,7 @@ def test_pickle():
     for eps in episodes.split():
         mean_rewards.append(eps.rewards.mean())
         goals.append(eps.env_infos['task'][0]['goal'])
-    assert np.var(mean_rewards) > 0
-    assert np.var(goals) > 0
+    assert np.var(mean_rewards) > 1e-3
+    assert np.var(goals) > 1e-3
     sampler2.shutdown_worker()
     env.close()
