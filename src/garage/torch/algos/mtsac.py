@@ -33,6 +33,9 @@ class MTSAC(SAC):
             agent is being trained in.
         num_tasks (int): The number of tasks being learned.
         max_episode_length (int): The max episode length of the algorithm.
+        max_episode_length_eval (int or None): Maximum length of episodes used
+            for off-policy evaluation. If None, defaults to
+            `max_episode_length`.
         eval_env (Environment): The environment used for collecting evaluation
             episodes.
         gradient_steps_per_itr (int): Number of optimization steps that should
@@ -75,10 +78,12 @@ class MTSAC(SAC):
         qf2,
         replay_buffer,
         env_spec,
+        *,
         num_tasks,
         max_episode_length,
         eval_env,
         gradient_steps_per_itr,
+        max_episode_length_eval=None,
         fixed_alpha=None,
         target_entropy=None,
         initial_log_entropy=0.,
@@ -100,6 +105,7 @@ class MTSAC(SAC):
                          replay_buffer=replay_buffer,
                          env_spec=env_spec,
                          max_episode_length=max_episode_length,
+                         max_episode_length_eval=max_episode_length_eval,
                          gradient_steps_per_itr=gradient_steps_per_itr,
                          fixed_alpha=fixed_alpha,
                          target_entropy=target_entropy,
@@ -153,6 +159,11 @@ class MTSAC(SAC):
                 terminal: :math:`(N, 1)`
                 next_observation: :math:`(N, O^*)`
 
+        Raises:
+            ValueError: If the number of tasks, num_tasks passed to
+                this algorithm doesn't match the length of the task
+                one-hot id in the observation vector.
+
         Returns:
             torch.Tensor: log_alpha. shape is (1, self.buffer_batch_size)
 
@@ -160,6 +171,13 @@ class MTSAC(SAC):
         obs = samples_data['observation']
         log_alpha = self._log_alpha
         one_hots = obs[:, -self._num_tasks:]
+        if (log_alpha.shape[0] != one_hots.shape[1]
+                or one_hots.shape[1] != self._num_tasks
+                or log_alpha.shape[0] != self._num_tasks):
+            raise ValueError(
+                'The number of tasks in the environment does '
+                'not match self._num_tasks. Are you sure that you passed '
+                'The correct number of tasks?')
         ret = torch.mm(one_hots, log_alpha.unsqueeze(0).t()).squeeze()
         return ret
 
@@ -183,6 +201,7 @@ class MTSAC(SAC):
                 obtain_evaluation_episodes(
                     self.policy,
                     self._eval_env,
+                    self._max_episode_length_eval,
                     num_eps=self._num_evaluation_episodes))
         eval_eps = EpisodeBatch.concatenate(*eval_eps)
         last_return = log_multitask_performance(epoch, eval_eps,

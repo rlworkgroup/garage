@@ -48,7 +48,6 @@ class SAC(RLAlgorithm):
             for off-policy evaluation. If None, defaults to
             `max_episode_length`.
         gradient_steps_per_itr (int): Number of optimization steps that should
-        max_episode_length(int): Max episode length of the environment.
         gradient_steps_per_itr(int): Number of optimization steps that should
             occur before the training step is over and a new batch of
             transitions is collected by the sampler.
