@@ -187,7 +187,7 @@ class MultiEnvWrapper(Wrapper):
         if self._mode == 'vanilla':
             pass
         elif self._mode == 'add-onehot':
-            episode_info["active_task_one_hot"] = self._active_task_one_hot()
+            episode_info['task_one_hot'] = self._active_task_one_hot()
         else:  # self._mode == 'del-onehot'
             obs = obs[:-self._num_tasks]
 
