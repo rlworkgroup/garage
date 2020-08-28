@@ -19,8 +19,8 @@ def my_first_experiment(ctxt=None):
 my_first_experiment()
 ```
 
-Run the example launcher will generate outputs like the following (`CUR_DIR` is
-the current directory).
+Running the example launcher will generate outputs like the following
+(`CUR_DIR` is the current directory).
 
 ```sh
 2020-08-20 15:18:53 | [my_first_experiment] Logging to CUR_DIR/data/local/experiment/my_first_experiment
@@ -30,10 +30,14 @@ Hello World!
 The followings are some useful parameters of `wrap_experiment`. You can see
 details of its parameters [here](../_autoapi/garage/index.html#garage.wrap_experiment).
 
-- log_dir: The custom log directory to log to.
-- snapshot_mode: Policy for which snapshots to keep. The last iteration will be
-saved by default.
-- snapshot_gap: Gap between snapshot iterations. Waits this number of
+* log_dir: The custom log directory to log to.
+* snapshot_mode: Policy for which snapshots to keep. The last iteration will be
+saved by default. Here are acceptable inputs.
+  * `'last'`, only the last iteration will be saved.
+  * `'all'`, all iterations will be saved.
+  * `'gap'`, every snapshot_gap iterations are saved.
+  * `'none'`, do not save snapshots.
+* snapshot_gap: Gap between snapshot iterations. Waits this number of
 iterations before taking another snapshot.
 
 Here is an example to set a custom log directory:
