@@ -220,7 +220,7 @@ class LocalRunner:
               sampler_cls=None,
               sampler_args=None,
               n_workers=psutil.cpu_count(logical=False),
-              worker_class=DefaultWorker,
+              worker_class=None,
               worker_args=None):
         """Set up runner for algorithm and environment.
 
@@ -254,6 +254,8 @@ class LocalRunner:
             sampler_args = {}
         if sampler_cls is None:
             sampler_cls = getattr(algo, 'sampler_cls', None)
+        if worker_class is None:
+            worker_class = getattr(algo, 'worker_cls', DefaultWorker)
         if worker_args is None:
             worker_args = {}
 
