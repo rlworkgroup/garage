@@ -106,17 +106,7 @@ class MultiEnvWrapper(Wrapper):
             akro.Box: Observation space.
 
         """
-        if self._mode == 'vanilla':
-            return self._env.observation_space
-        elif self._mode == 'add-onehot':
-            task_lb, task_ub = self.task_space.bounds
-            env_lb, env_ub = self._env.observation_space.bounds
-            return akro.Box(np.concatenate([env_lb, task_lb]),
-                            np.concatenate([env_ub, task_ub]))
-        else:  # self._mode == 'del-onehot'
-            env_lb, env_ub = self._env.observation_space.bounds
-            num_tasks = self._num_tasks
-            return akro.Box(env_lb[:-num_tasks], env_ub[:-num_tasks])
+        return self._env.observation_space
 
     @property
     def spec(self):
@@ -187,7 +177,7 @@ class MultiEnvWrapper(Wrapper):
         if self._mode == 'vanilla':
             pass
         elif self._mode == 'add-onehot':
-            episode_info["active_task_one_hot"] = self._active_task_one_hot()
+            episode_info['task_one_hot'] = self._active_task_one_hot()
         else:  # self._mode == 'del-onehot'
             obs = obs[:-self._num_tasks]
 
@@ -204,13 +194,7 @@ class MultiEnvWrapper(Wrapper):
 
         """
         es = self._env.step(action)
-
-        if self._mode == 'add-onehot':
-            obs = np.concatenate([es.observation, self._active_task_one_hot()])
-        elif self._mode == 'del-onehot':
-            obs = es.observation[:-self._num_tasks]
-        else:  # self._mode == 'vanilla'
-            obs = es.observation
+        obs = es.observation
 
         env_info = es.env_info
         if 'task_id' not in es.env_info:

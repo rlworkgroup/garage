@@ -64,7 +64,10 @@ def test_mtsac_get_log_alpha(monkeypatch):
                   buffer_batch_size=buffer_batch_size)
     monkeypatch.setattr(mtsac, '_log_alpha', torch.Tensor([1., 2.]))
     for i, _ in enumerate(env_names):
-        obs = torch.Tensor([env.reset()[0]] * buffer_batch_size)
+        obs, episode_info = env.reset()
+        obs = torch.Tensor(
+            [np.concatenate([obs, episode_info['task_one_hot']])] *
+            buffer_batch_size)
         log_alpha = mtsac._get_log_alpha(dict(observation=obs))
         assert (log_alpha == torch.Tensor([i + 1, i + 1])).all().item()
         assert log_alpha.size() == torch.Size([mtsac._buffer_batch_size])

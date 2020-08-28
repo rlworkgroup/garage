@@ -25,7 +25,9 @@ class TestMultiEnvWrapper:
             garage.envs.multi_env_wrapper: Multi env wrapper.
         """
         task_envs = [GymEnv(name) for name in env_names]
-        return MultiEnvWrapper(task_envs, sample_strategy=sample_strategy)
+        return MultiEnvWrapper(task_envs,
+                               mode='add-onehot',
+                               sample_strategy=sample_strategy)
 
     def test_tasks_from_same_env(self):
         """test init with multiple tasks from same env"""
@@ -57,22 +59,6 @@ class TestMultiEnvWrapper:
         mt_env = self._init_multi_env_wrapper(
             envs, sample_strategy=round_robin_strategy)
         assert mt_env._active_task_index is None
-
-    def test_one_hot_observation_space(self):
-        """test one hot representation of observation space"""
-        envs = ['CartPole-v0', 'CartPole-v1']
-        mt_env = self._init_multi_env_wrapper(envs)
-        cartpole = GymEnv('CartPole-v0')
-        cartpole_lb, cartpole_ub = cartpole.observation_space.bounds
-        obs_space = akro.Box(np.concatenate([cartpole_lb,
-                                             np.zeros(2)]),
-                             np.concatenate([cartpole_ub,
-                                             np.ones(2)]))
-        assert mt_env.observation_space.shape == obs_space.shape
-        assert (
-            mt_env.observation_space.bounds[0] == obs_space.bounds[0]).all()
-        assert (
-            mt_env.observation_space.bounds[1] == obs_space.bounds[1]).all()
 
     def test_action_space(self):
         """test action space"""
@@ -130,32 +116,14 @@ class TestMultiEnvWrapper:
         ub = np.ones(2)
         assert (bounds[0] == lb).all() and (bounds[1] == ub).all()
 
-    def test_one_hot_observation(self):
-        """test if output of step function is correct"""
-        envs = ['CartPole-v0', 'CartPole-v0']
-        mt_env = self._init_multi_env_wrapper(
-            envs, sample_strategy=round_robin_strategy)
-
-        obs, episode_info = mt_env.reset()
-        assert (episode_info['active_task_one_hot'] == np.array([1., 0.])).all()
-        obs = mt_env.step(1).observation
-        assert (obs[-2:] == np.array([1., 0.])).all()
-
-        obs, episode_info = mt_env.reset()
-        assert (episode_info['active_task_one_hot'] == np.array([0., 1.])).all()
-        obs = mt_env.step(1).observation
-        assert (obs[-2:] == np.array([0., 1.])).all()
-
-
     def test_one_hot_episode_info(self):
         """test if episode info is correct"""
         envs = ['CartPole-v0', 'CartPole-v0']
         mt_env = self._init_multi_env_wrapper(
             envs, sample_strategy=round_robin_strategy)
-        
-        _, episode_info = mt_env.reset()
-        assert (episode_info['active_task_one_hot'] == np.array([1., 0.])).all()
 
+        _, episode_info = mt_env.reset()
+        assert (episode_info['task_one_hot'] == np.array([1., 0.])).all()
 
     def test_visualization(self):
         envs = ['CartPole-v0', 'CartPole-v1']
@@ -200,22 +168,21 @@ class TestMetaWorldMultiEnvWrapper:
 
     def test_observation_space(self):
         assert self.env.observation_space.shape == (9 + self.env.num_tasks, )
-        assert self.env_no_onehot.observation_space.shape == (9, )
+        assert self.env_no_onehot.observation_space.shape == (
+            9 + self.env.num_tasks, )
 
     def test_step(self):
-        """Test that env_infos includes extra infos and obs has onehot."""
+        """Test that env_infos includes extra infos."""
         self.env.reset()
         self.env_no_onehot.reset()
         action0 = self.env.spec.action_space.sample()
         action1 = self.env_no_onehot.spec.action_space.sample()
         es = self.env.step(action0)
-        obs0, info0 = es.observation, es.env_info
+        info0 = es.env_info
         es = self.env_no_onehot.step(action1)
-        obs1, info1 = es.observation, es.env_info
+        info1 = es.env_info
         assert info0['task_id'] == self.env.active_task_index
         assert info1['task_id'] == self.env.active_task_index
-        assert (self.env._active_task_one_hot() == obs0[9:]).all()
-        assert obs0.shape[0] == obs1.shape[0] + self.env.num_tasks
 
     def test_reset(self):
         """Test round robin switching of environments during call to reset."""
