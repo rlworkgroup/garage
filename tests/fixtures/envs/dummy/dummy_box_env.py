@@ -1,5 +1,5 @@
-"""Dummy gym.spaces.Box environment for testing purpose."""
-import gym
+"""Dummy akro.Box environment for testing purpose."""
+import akro
 import numpy as np
 
 from tests.fixtures.envs.dummy import DummyEnv
@@ -26,10 +26,7 @@ class DummyBoxEnv(DummyEnv):
             gym.spaces: The observation space of the environment.
 
         """
-        return gym.spaces.Box(low=-1,
-                              high=1,
-                              shape=self._obs_dim,
-                              dtype=np.float32)
+        return akro.Box(low=-1, high=1, shape=self._obs_dim, dtype=np.float32)
 
     @property
     def action_space(self):
@@ -39,10 +36,10 @@ class DummyBoxEnv(DummyEnv):
             gym.spaces: The action space of the environment.
 
         """
-        return gym.spaces.Box(low=-5.0,
-                              high=5.0,
-                              shape=self._action_dim,
-                              dtype=np.float32)
+        return akro.Box(low=-5.0,
+                        high=5.0,
+                        shape=self._action_dim,
+                        dtype=np.float32)
 
     def reset(self):
         """Reset the environment.

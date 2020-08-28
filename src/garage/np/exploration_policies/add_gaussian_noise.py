@@ -26,7 +26,7 @@ class AddGaussianNoise(ExplorationPolicy):
                  max_sigma=1.0,
                  min_sigma=0.1,
                  decay_period=1000000):
-        assert isinstance(env_spec.action_space, akro.Space)
+        assert isinstance(env_spec.action_space, akro.Box)
         assert len(env_spec.action_space.shape) == 1
         super().__init__(policy)
         self._max_sigma = max_sigma

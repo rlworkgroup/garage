@@ -299,6 +299,7 @@ def product_of_gaussians(mus, sigmas_squared):
     return mu, sigma_squared
 
 
+# pylint: disable=W0223
 class NonLinearity(nn.Module):
     """Wrapper class for non linear function or module.
 
@@ -348,11 +349,8 @@ class TransposeImage(Wrapper):
     @property
     def observation_space(self):
         """akro.Space: The observation space specification."""
-        obs_shape = self._env.observation_space
-        return akro.Box(self._env.observation_space.low[0, 0, 0],
-                        self._env.observation_space.high[0, 0, 0],
-                        [obs_shape[2], obs_shape[1], obs_shape[0]],
-                        dtype=self._env.observation_space.dtype)
+        obs_shape = self._env.observation_space.shape
+        return akro.Image((obs_shape[2], obs_shape[1], obs_shape[0]))
 
     @property
     def spec(self):
@@ -371,23 +369,6 @@ class TransposeImage(Wrapper):
             EnvStep: The environment step resulting from the action.
 
         """
-        env_step = self._env.step(action)
-        env_step.observation = env_step.observation.transpose(2, 0, 1)
-        return env_step
-
-    def reset(self):
-        """Reset the wrapped env.
-
-        Returns:
-            numpy.ndarray: The first observation conforming to
-                `observation_space`.
-            dict: The episode-level information.
-                Note that this is not part of `env_info` provided in `step()`.
-                It contains information of he entire episode， which could be
-                needed to determine the first action (e.g. in the case of
-                goal-conditioned or MTRL.)
-
-        """
-        env_init = self._env.reset()
-        env_init[0] = env_init[0].transpose(2, 0, 1)
-        return env_init
+        env_step = super().step(action)
+        obs = env_step.observation.transpose(2, 0, 1)
+        return env_step._replace(observation=obs)
