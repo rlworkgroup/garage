@@ -63,7 +63,7 @@ def categorical_cnn_policy(ctxt, env_id, seed):
                    policy_ent_coeff=0.0,
                    optimizer_args=dict(
                        batch_size=32,
-                       max_episode_length=10,
+                       max_optimization_epochs=10,
                        learning_rate=1e-3,
                    ))
 

@@ -68,7 +68,7 @@ def rl2_ppo_halfcheetah_meta_test(ctxt, seed, max_episode_length,
                       lr_clip_range=0.2,
                       optimizer_args=dict(
                           batch_size=32,
-                          max_episode_length=10,
+                          max_optimization_epochs=10,
                       ),
                       stop_entropy_gradient=True,
                       entropy_method='max',

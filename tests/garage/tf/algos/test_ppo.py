@@ -54,7 +54,7 @@ class TestPPO(TfGraphTestCase):
                        discount=0.99,
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32,
-                                           max_episode_length=10))
+                                           max_optimization_epochs=10))
             runner.setup(algo, self.env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
@@ -70,7 +70,7 @@ class TestPPO(TfGraphTestCase):
                        discount=0.99,
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32,
-                                           max_episode_length=10),
+                                           max_optimization_epochs=10),
                        stop_entropy_gradient=True,
                        entropy_method='max',
                        policy_ent_coeff=0.02,
@@ -93,7 +93,7 @@ class TestPPO(TfGraphTestCase):
                        discount=0.99,
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32,
-                                           max_episode_length=10),
+                                           max_optimization_epochs=10),
                        stop_entropy_gradient=True,
                        use_neg_logli_entropy=True,
                        entropy_method='max',
@@ -117,7 +117,7 @@ class TestPPO(TfGraphTestCase):
                        discount=0.99,
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32,
-                                           max_episode_length=10),
+                                           max_optimization_epochs=10),
                        stop_entropy_gradient=True,
                        use_neg_logli_entropy=True,
                        entropy_method='regularized',
@@ -138,7 +138,7 @@ class TestPPO(TfGraphTestCase):
                        discount=0.99,
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32,
-                                           max_episode_length=10),
+                                           max_optimization_epochs=10),
                        stop_entropy_gradient=False,
                        entropy_method='regularized',
                        policy_ent_coeff=0.02,
@@ -179,7 +179,7 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
                 lr_clip_range=0.2,
                 optimizer_args=dict(
                     batch_size=32,
-                    max_episode_length=10,
+                    max_optimization_epochs=10,
                 ),
                 stop_entropy_gradient=True,
                 entropy_method='max',
@@ -212,7 +212,7 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
                 lr_clip_range=0.2,
                 optimizer_args=dict(
                     batch_size=32,
-                    max_episode_length=10,
+                    max_optimization_epochs=10,
                 ),
                 stop_entropy_gradient=True,
                 entropy_method='max',
@@ -248,7 +248,7 @@ class TestPPOPendulumLSTM(TfGraphTestCase):
                 lr_clip_range=0.2,
                 optimizer_args=dict(
                     batch_size=32,
-                    max_episode_length=10,
+                    max_optimization_epochs=10,
                 ),
                 stop_entropy_gradient=True,
                 entropy_method='max',
@@ -282,7 +282,7 @@ class TestPPOPendulumGRU(TfGraphTestCase):
                 lr_clip_range=0.2,
                 optimizer_args=dict(
                     batch_size=32,
-                    max_episode_length=10,
+                    max_optimization_epochs=10,
                 ),
                 stop_entropy_gradient=True,
                 entropy_method='max',

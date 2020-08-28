@@ -62,7 +62,7 @@ def continuous_mlp_baseline(ctxt, env_id, seed):
                    policy_ent_coeff=hyper_params['policy_ent_coeff'],
                    optimizer_args=dict(
                        batch_size=32,
-                       max_episode_length=10,
+                       max_optimization_epochs=10,
                        learning_rate=1e-3,
                    ),
                    center_adv=hyper_params['center_adv'],
