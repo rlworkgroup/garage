@@ -37,7 +37,11 @@ class DDPG(RLAlgorithm):
             for off-policy evaluation. If None, defaults to
             `env_spec.max_episode_length`.
         min_buffer_size (int): The minimum buffer size for replay buffer.
-        exploration_policy (ExplorationPolicy): Exploration strategy.
+        exploration_policy (garage.np.exploration_policies.ExplorationPolicy):
+            Exploration strategy.
+        uniform_random_policy
+                (garage.np.policies.Policies):
+                Uniform random exploration strategy.
         target_update_tau (float): Interpolation parameter for doing the
             soft target update.
         policy_lr (float): Learning rate for training policy network.
@@ -56,7 +60,11 @@ class DDPG(RLAlgorithm):
             clip_return].
         max_action (float): Maximum action magnitude.
         reward_scale (float): Reward scale.
+        exploration_policy_sigma (float): Action noise sigma.
+        exploration_policy_clip (float): Action noise clip.
         name (str): Name of the algorithm shown in computation graph.
+        num_evaluation_episodes (int): Number of evaluation episodes.
+        start_steps (int): number of steps for exploration.
 
     """
 
@@ -66,17 +74,20 @@ class DDPG(RLAlgorithm):
             policy,
             qf,
             replay_buffer,
+            exploration_policy,
             *,  # Everything after this is numbers.
             steps_per_epoch=20,
             n_train_steps=50,
             buffer_batch_size=64,
             min_buffer_size=int(1e4),
+            start_steps=1000,
             max_episode_length_eval=None,
-            exploration_policy=None,
+            uniform_random_policy=None,
             target_update_tau=0.01,
             discount=0.99,
             policy_weight_decay=0,
             qf_weight_decay=0,
+            num_evaluation_episodes=10,
             policy_optimizer=tf.compat.v1.train.AdamOptimizer,
             qf_optimizer=tf.compat.v1.train.AdamOptimizer,
             policy_lr=_Default(1e-4),
@@ -85,8 +96,11 @@ class DDPG(RLAlgorithm):
             clip_return=np.inf,
             max_action=None,
             reward_scale=1.,
+            exploration_policy_sigma=0.2,
+            exploration_policy_clip=0.5,
             name='DDPG'):
-        action_bound = env_spec.action_space.high
+        self.env_spec = env_spec
+        action_bound = env_spec.action_space.high[0]
         self._max_action = action_bound if max_action is None else max_action
         self._tau = target_update_tau
         self._policy_weight_decay = policy_weight_decay
@@ -109,6 +123,7 @@ class DDPG(RLAlgorithm):
 
         self._min_buffer_size = min_buffer_size
         self._qf = qf
+        self._start_steps = start_steps
         self._steps_per_epoch = steps_per_epoch
         self._n_train_steps = n_train_steps
         self._buffer_batch_size = buffer_batch_size
@@ -120,7 +135,13 @@ class DDPG(RLAlgorithm):
         if max_episode_length_eval is None:
             self._max_episode_length_eval = env_spec.max_episode_length
 
+        self._num_evaluation_episodes = num_evaluation_episodes
+        self._uniform_random_policy = uniform_random_policy
+        self._exploration_policy_sigma = exploration_policy_sigma
+        self._exploration_policy_clip = exploration_policy_clip
         self._eval_env = None
+        self._act_dim = self.env_spec.action_space.flat_dim
+        self._obs_dim = self.env_spec.observation_space.flat_dim
 
         self._env_spec = env_spec
         self._replay_buffer = replay_buffer
@@ -138,17 +159,15 @@ class DDPG(RLAlgorithm):
         with tf.name_scope(self._name):
             # Create target policy and qf network
             with tf.name_scope('inputs'):
-                obs_dim = self._env_spec.observation_space.flat_dim
                 input_y = tf.compat.v1.placeholder(tf.float32,
                                                    shape=(None, 1),
                                                    name='input_y')
                 obs = tf.compat.v1.placeholder(tf.float32,
-                                               shape=(None, obs_dim),
+                                               shape=(None, self._obs_dim),
                                                name='input_observation')
-                actions = tf.compat.v1.placeholder(
-                    tf.float32,
-                    shape=(None, self._env_spec.action_space.flat_dim),
-                    name='input_action')
+                actions = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, self._act_dim),
+                                                   name='input_action')
 
             policy_network_outputs = self._target_policy.build(obs,
                                                                name='policy')
@@ -176,17 +195,15 @@ class DDPG(RLAlgorithm):
                                                outputs=target_update_op)
 
             with tf.name_scope('inputs'):
-                obs_dim = self._env_spec.observation_space.flat_dim
                 input_y = tf.compat.v1.placeholder(tf.float32,
                                                    shape=(None, 1),
                                                    name='input_y')
                 obs = tf.compat.v1.placeholder(tf.float32,
-                                               shape=(None, obs_dim),
+                                               shape=(None, self._obs_dim),
                                                name='input_observation')
-                actions = tf.compat.v1.placeholder(
-                    tf.float32,
-                    shape=(None, self._env_spec.action_space.flat_dim),
-                    name='input_action')
+                actions = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, self._act_dim),
+                                                   name='input_action')
             # Set up policy training function
             next_action = self.policy.build(obs, name='policy_action')
             next_qval = self._qf.build(obs,
@@ -279,20 +296,36 @@ class DDPG(RLAlgorithm):
         """
         if not self._eval_env:
             self._eval_env = trainer.get_env_copy()
-        last_returns = [float('nan')]
+        last_returns = None
         trainer.enable_logging = False
 
         for _ in trainer.step_epochs():
             for cycle in range(self._steps_per_epoch):
-                trainer.step_path = trainer.obtain_episodes(trainer.step_itr)
+                # Get action randomly from environment within warm-up steps.
+                # Afterwards, get action from policy.
+                if self._uniform_random_policy and \
+                        trainer.step_itr < self._start_steps:
+                    trainer.step_path = trainer.obtain_episodes(
+                        trainer.step_itr,
+                        agent_update=self._uniform_random_policy)
+                else:
+                    trainer.step_path = trainer.obtain_episodes(
+                        trainer.step_itr, agent_update=self.exploration_policy)
+
                 if hasattr(self.exploration_policy, 'update'):
                     self.exploration_policy.update(trainer.step_path)
-                self._train_once(trainer.step_itr, trainer.step_path)
+
+                # Update after warm-up steps.
+                if trainer.total_env_steps >= self._start_steps:
+                    self._train_once(trainer.step_itr, trainer.step_path)
+
                 if (cycle == 0 and self._replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
                     trainer.enable_logging = True
                     eval_episodes = obtain_evaluation_episodes(
-                        self.policy, self._eval_env)
+                        self.policy,
+                        self._eval_env,
+                        num_eps=self._num_evaluation_episodes)
                     last_returns = log_performance(trainer.step_itr,
                                                    eval_episodes,
                                                    discount=self._discount)
@@ -305,7 +338,7 @@ class DDPG(RLAlgorithm):
 
         Args:
             itr (int): Iteration number.
-            episodes (EpisodeBatch): Batch of episodes.
+            episodes (int): Episode number.
 
         """
         self._replay_buffer.add_episode_batch(episodes)
@@ -365,14 +398,16 @@ class DDPG(RLAlgorithm):
         inputs = observations
 
         target_actions = self._target_policy_f_prob_online(next_inputs)
+        noise = np.random.normal(0.0, self._exploration_policy_sigma,
+                                 target_actions.shape)
+        noise = np.clip(noise, -self._exploration_policy_clip,
+                        self._exploration_policy_clip)
+        target_actions += noise
+
         target_qvals = self._target_qf_f_prob_online(next_inputs,
                                                      target_actions)
 
-        clip_range = (-self._clip_return,
-                      0. if self._clip_pos_returns else self._clip_return)
-        ys = np.clip(
-            rewards + (1.0 - terminals) * self._discount * target_qvals,
-            clip_range[0], clip_range[1])
+        ys = (rewards + (1.0 - terminals) * self._discount * target_qvals)
 
         _, qval_loss, qval = self._f_train_qf(ys, inputs, actions)
         _, action_loss = self._f_train_policy(inputs)

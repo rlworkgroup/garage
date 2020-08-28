@@ -9,6 +9,7 @@ from garage import wrap_experiment
 from garage.envs import GymEnv
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
+from garage.np.policies import UniformRandomPolicy
 from garage.replay_buffer import HERReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.policies import ContinuousMLPPolicy
@@ -43,6 +44,8 @@ def her_ddpg_fetchreach(ctxt=None, seed=1):
                                                        policy,
                                                        sigma=0.2)
 
+        uniform_random_policy = UniformRandomPolicy(env.spec)
+
         qf = ContinuousMLPQFunction(
             env_spec=env.spec,
             name='QFunction',
@@ -68,6 +71,7 @@ def her_ddpg_fetchreach(ctxt=None, seed=1):
             n_train_steps=40,
             discount=0.95,
             exploration_policy=exploration_policy,
+            uniform_random_policy=uniform_random_policy,
             policy_optimizer=tf.compat.v1.train.AdamOptimizer,
             qf_optimizer=tf.compat.v1.train.AdamOptimizer,
             buffer_batch_size=256,
