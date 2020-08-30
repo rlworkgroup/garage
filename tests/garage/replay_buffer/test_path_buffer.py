@@ -41,8 +41,13 @@ def eps_data():
                           [StepType.TERMINAL])
     step_types = np.array(step_types, dtype=StepType)
 
+    # episode_infos
+    episode_infos = dict()
+    episode_infos['task_one_hot'] = np.stack([[1, 1]] * len(lens))
+
     return {
         'env_spec': env_spec,
+        'episode_infos': episode_infos,
         'observations': obs,
         'last_observations': last_obs,
         'actions': act,

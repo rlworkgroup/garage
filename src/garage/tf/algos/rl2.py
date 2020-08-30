@@ -482,6 +482,10 @@ class RL2(MetaRLAlgorithm, abc.ABC):
             k: np.concatenate([b.agent_infos[k] for b in episode_list])
             for k in episode_list[0].agent_infos.keys()
         }
+        episode_infos = {
+            k: np.concatenate([b.episode_infos[k] for b in episode_list])
+            for k in episode_list[0].episode_infos.keys()
+        }
         actions = np.concatenate([
             self._env_spec.action_space.flatten_n(ep.actions)
             for ep in episode_list
@@ -489,6 +493,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
         return EpisodeBatch(
             env_spec=episode_list[0].env_spec,
+            episode_infos=episode_infos,
             observations=np.concatenate(
                 [ep.observations for ep in episode_list]),
             last_observations=episode_list[-1].last_observations,

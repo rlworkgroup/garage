@@ -130,7 +130,8 @@ class FragmentWorker(DefaultWorker):
             if len(frag.rewards) > 0:
                 complete_frag = frag.to_batch()
                 self._complete_fragments.append(complete_frag)
-                self._fragments[i] = InProgressEpisode(frag.env, frag.last_obs)
+                self._fragments[i] = InProgressEpisode(frag.env, frag.last_obs,
+                                                       frag.episode_info)
         assert len(self._complete_fragments) > 0
         result = EpisodeBatch.concatenate(*self._complete_fragments)
         self._complete_fragments = []

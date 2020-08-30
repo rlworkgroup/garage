@@ -95,7 +95,7 @@ class PointEnv(Environment):
         first_obs = np.concatenate([self._point, (dist, )])
         self._step_cnt = 0
 
-        return first_obs, dict()
+        return first_obs, dict(goal=self._goal)
 
     def step(self, action):
         """Step the environment.

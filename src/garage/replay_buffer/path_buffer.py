@@ -141,6 +141,7 @@ class PathBuffer:
         ],
                               dtype=StepType)
         return TimeStepBatch(env_spec=self._env_spec,
+                             episode_infos={},
                              observations=samples['observations'],
                              actions=samples['actions'],
                              rewards=samples['rewards'],

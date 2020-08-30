@@ -82,6 +82,7 @@ class TestContextConditionedPolicy:
                      reward=1.0,
                      env_info={},
                      agent_info={},
+                     episode_info={},
                      step_type=StepType.FIRST)
         updates = 10
         for _ in range(updates):

@@ -109,7 +109,7 @@ def rollout(env,
     env_steps = []
     agent_infos = []
     observations = []
-    last_obs = env.reset()[0]
+    last_obs, episode_infos = env.reset()
     agent.reset()
     episode_length = 0
     if animated:
@@ -130,6 +130,7 @@ def rollout(env,
         last_obs = es.observation
 
     return dict(
+        episode_infos=episode_infos,
         observations=np.array(observations),
         actions=np.array([es.action for es in env_steps]),
         rewards=np.array([es.reward for es in env_steps]),

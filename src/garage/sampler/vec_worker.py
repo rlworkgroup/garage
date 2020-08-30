@@ -55,6 +55,7 @@ class VecWorker(DefaultWorker):
         self._step_types = [[], ] * n
         self._env_infos = [collections.defaultdict(list), ] * n
         self._agent_infos = [collections.defaultdict(list), ] * n
+        self._episode_infos = [collections.defaultdict(list), ] * n
         # yapf: enable
 
     def update_agent(self, agent_update):
@@ -109,14 +110,20 @@ class VecWorker(DefaultWorker):
             n = len(self._envs)
             self.agent.reset([True] * n)
             if self._needs_env_reset:
-                self._prev_obs = np.asarray(
-                    [env.reset()[0] for env in self._envs])
+                obs_list, episode_infos_list = [], []
+                for env in self._envs:
+                    obs, episode_info = env.reset()
+                    obs_list.append(obs)
+                    episode_infos_list.append(episode_info)
+
+                self._prev_obs = np.asarray(obs_list)
+                self._episode_infos = np.array(episode_infos_list)
             else:
                 # Avoid calling reset on environments that are already at the
                 # start of an episode.
                 for i, env in enumerate(self._envs):
                     if self._episode_lengths[i] > 0:
-                        self._prev_obs[i] = env.reset()[0]
+                        self._prev_obs[i], self._episode_infos[i] = env.reset()
             self._episode_lengths = [0 for _ in range(n)]
             self._observations = [[] for _ in range(n)]
             self._actions = [[] for _ in range(n)]
@@ -134,12 +141,16 @@ class VecWorker(DefaultWorker):
             episode_number] <= self._max_episode_length
         env_infos = self._env_infos[episode_number]
         agent_infos = self._agent_infos[episode_number]
+        episode_infos = self._episode_infos[episode_number]
         for k, v in env_infos.items():
             env_infos[k] = np.asarray(v)
         for k, v in agent_infos.items():
             agent_infos[k] = np.asarray(v)
+        for k, v in episode_infos.items():
+            episode_infos[k] = np.asarray(v)
         eps = EpisodeBatch(
             env_spec=self._envs[episode_number].spec,
+            episode_infos=dict(episode_infos),
             observations=np.asarray(self._observations[episode_number]),
             last_observations=np.asarray([last_observation]),
             actions=np.asarray(self._actions[episode_number]),
@@ -160,6 +171,7 @@ class VecWorker(DefaultWorker):
         self._prev_obs[episode_number] = self._envs[episode_number].reset()[0]
         self._env_infos[episode_number] = collections.defaultdict(list)
         self._agent_infos[episode_number] = collections.defaultdict(list)
+        self._episode_infos[episode_number] = collections.defaultdict(list)
 
     def step_episode(self):
         """Take a single time-step in the current episode.
