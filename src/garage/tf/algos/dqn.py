@@ -8,7 +8,7 @@ from garage import _Default, make_optimizer
 from garage import log_performance
 from garage.np import obtain_evaluation_samples
 from garage.np import samples_to_tensors
-from garage.sampler import LocalSampler
+from garage.sampler import LocalSampler, OffPolicyVectorizedSampler
 from garage.np.algos import RLAlgorithm
 from garage.tf.misc import tensor_utils
 
@@ -245,10 +245,11 @@ class DQN(RLAlgorithm):
         """
         epoch = itr / self._steps_per_epoch
 
-        self.replay_buffer.add_trajectory_batch(paths)
-        self.episode_rewards.extend(
-            [traj.rewards.sum() for traj in paths.split()])
-        last_average_return = np.mean(self.episode_rewards)
+        if self.sampler_cls != OffPolicyVectorizedSampler:
+            self.replay_buffer.add_trajectory_batch(paths)
+        # self.episode_rewards.extend(
+        #     [traj.rewards.sum() for traj in paths.split()])
+        # last_average_return = np.mean(self.episode_rewards)
         for _ in range(self._n_train_steps):
             if (self.replay_buffer.n_transitions_stored >=
                     self._min_buffer_size):
@@ -269,7 +270,7 @@ class DQN(RLAlgorithm):
                 tabular.record('Episode100RewardMean', mean100ep_rewards)
                 tabular.record('{}/Episode100LossMean'.format(self._qf.name),
                                mean100ep_qf_loss)
-        return last_average_return
+        return 0
 
     def optimize_policy(self, samples_data):
         """Optimize network using experiences from replay buffer.

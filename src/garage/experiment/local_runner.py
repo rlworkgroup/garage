@@ -6,7 +6,7 @@ import time
 import cloudpickle
 from dowel import logger, tabular
 import psutil
-
+from garage._dtypes import TrajectoryBatch
 from garage.experiment.deterministic import get_seed, set_seed
 from garage.experiment.snapshotter import Snapshotter
 from garage.sampler import parallel_sampler
@@ -196,6 +196,10 @@ class LocalRunner:
                 raise ValueError('If `sampler_cls` is specified in '
                                  'runner.setup, the algorithm must have '
                                  'a `max_path_length` field.')
+
+        policy = self._algo.policy
+        if hasattr(self._algo, 'exploration_policy'):
+            policy = self._algo.exploration_policy
         if seed is None:
             seed = get_seed()
         if sampler_args is None:
@@ -211,7 +215,7 @@ class LocalRunner:
                 n_workers=n_workers,
                 worker_class=worker_class,
                 worker_args=worker_args),
-                                                   agents=self._algo.policy,
+                                                   agents=policy,
                                                    envs=self._env)
 
     def setup(self,
@@ -291,10 +295,10 @@ class LocalRunner:
             self._plotter.close()
 
     def obtain_trajectories(self,
-                       itr,
-                       batch_size=None,
-                       agent_update=None,
-                       env_update=None):
+                            itr,
+                            batch_size=None,
+                            agent_update=None,
+                            env_update=None):
         """Obtain one batch of samples.
 
         Args:
@@ -318,6 +322,7 @@ class LocalRunner:
             list[dict]: One batch of samples.
 
         """
+
         if self._sampler is None:
             raise ValueError('Runner was not initialized with `sampler_cls`. '
                              'Either provide `sampler_cls` to runner.setup, '
@@ -326,15 +331,24 @@ class LocalRunner:
             raise ValueError('Runner was not initialized with `batch_size`. '
                              'Either provide `batch_size` to runner.train, '
                              ' or pass `batch_size` to runner.obtain_samples.')
+
         paths = None
-        paths = None
-        if agent_update is None:
-            agent_update = self._algo.policy.get_param_values()
-        paths = self._sampler.obtain_samples(
-            itr, (batch_size or self._train_args.batch_size),
-            agent_update=agent_update,
-            env_update=env_update)
-        self._stats.total_env_steps += sum(paths.lengths)
+        if isinstance(self._sampler, BaseSampler):
+            paths = self._sampler.obtain_samples(
+                itr, (batch_size or self._train_args.batch_size))
+            self._stats.total_env_steps += sum(
+                [len(p['rewards']) for p in paths])
+
+            #paths = TrajectoryBatch.from_trajectory_list(self._env.spec, paths)
+        else:
+            if agent_update is None:
+                agent_update = self._algo.policy.get_param_values()
+            paths = self._sampler.obtain_samples(
+                itr, (batch_size or self._train_args.batch_size),
+                agent_update=agent_update,
+                env_update=env_update)
+            self._stats.total_env_steps += sum(paths.lengths)
+
         return paths
 
     def obtain_samples(self,
