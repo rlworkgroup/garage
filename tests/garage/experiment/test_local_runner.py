@@ -38,7 +38,6 @@ class TestLocalRunner:
         algo = PPO(env_spec=self.env.spec,
                    policy=self.policy,
                    value_function=self.value_function,
-                   max_episode_length=100,
                    discount=0.99,
                    gae_lambda=0.97,
                    lr_clip_range=2e-1)

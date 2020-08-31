@@ -39,7 +39,9 @@ def mttrpo_metaworld_mt10(ctxt, seed, epochs, batch_size, n_worker):
     tasks = mwb.MT10.get_train_tasks().all_task_names
     envs = []
     for task in tasks:
-        envs.append(normalize(GymEnv(mwb.MT10.from_task(task))))
+        envs.append(
+            normalize(GymEnv(mwb.MT10.from_task(task),
+                             max_episode_length=150)))
     env = MultiEnvWrapper(envs,
                           sample_strategy=round_robin_strategy,
                           mode='vanilla')
@@ -59,7 +61,6 @@ def mttrpo_metaworld_mt10(ctxt, seed, epochs, batch_size, n_worker):
     algo = TRPO(env_spec=env.spec,
                 policy=policy,
                 value_function=value_function,
-                max_episode_length=128,
                 discount=0.99,
                 gae_lambda=0.95)
 

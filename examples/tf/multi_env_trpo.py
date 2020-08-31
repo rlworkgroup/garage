@@ -23,8 +23,8 @@ def multi_env_trpo(ctxt=None, seed=1):
     """
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
-        env1 = normalize(PointEnv(goal=(-1., 0.)))
-        env2 = normalize(PointEnv(goal=(1., 0.)))
+        env1 = normalize(PointEnv(goal=(-1., 0.), max_episode_length=100))
+        env2 = normalize(PointEnv(goal=(1., 0.), max_episode_length=100))
         env = MultiEnvWrapper([env1, env2])
 
         policy = GaussianMLPPolicy(env_spec=env.spec)
@@ -34,7 +34,6 @@ def multi_env_trpo(ctxt=None, seed=1):
         algo = TRPO(env_spec=env.spec,
                     policy=policy,
                     baseline=baseline,
-                    max_episode_length=100,
                     discount=0.99,
                     gae_lambda=0.95,
                     lr_clip_range=0.2,

@@ -39,10 +39,13 @@ def rl2_ppo_halfcheetah(ctxt, seed, max_episode_length, meta_batch_size,
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
+        inner_max_episode_length = max_episode_length * episode_per_task
         tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
             GymEnv(HalfCheetahVelEnv())))
 
-        env_spec = RL2Env(GymEnv(HalfCheetahVelEnv())).spec
+        env_spec = RL2Env(
+            GymEnv(HalfCheetahVelEnv(),
+                   max_episode_length=inner_max_episode_length)).spec
         policy = GaussianGRUPolicy(name='policy',
                                    hidden_dim=64,
                                    env_spec=env_spec,
@@ -50,12 +53,12 @@ def rl2_ppo_halfcheetah(ctxt, seed, max_episode_length, meta_batch_size,
 
         baseline = LinearFeatureBaseline(env_spec=env_spec)
 
-        algo = RL2PPO(rl2_max_episode_length=max_episode_length,
-                      meta_batch_size=meta_batch_size,
+        algo = RL2PPO(meta_batch_size=meta_batch_size,
                       task_sampler=tasks,
                       env_spec=env_spec,
                       policy=policy,
                       baseline=baseline,
+                      episodes_per_trial=episode_per_task,
                       discount=0.99,
                       gae_lambda=0.95,
                       lr_clip_range=0.2,
@@ -66,8 +69,7 @@ def rl2_ppo_halfcheetah(ctxt, seed, max_episode_length, meta_batch_size,
                       stop_entropy_gradient=True,
                       entropy_method='max',
                       policy_ent_coeff=0.02,
-                      center_adv=False,
-                      max_episode_length=max_episode_length * episode_per_task)
+                      center_adv=False)
 
         runner.setup(algo,
                      tasks.sample(meta_batch_size),

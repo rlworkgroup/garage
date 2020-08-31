@@ -39,12 +39,17 @@ class TestRL2PPO(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.max_episode_length = 100
         self.meta_batch_size = 10
         self.episode_per_task = 4
+        self.max_episode_length = 100
+        self.inner_max_episode_length = (self.max_episode_length *
+                                         self.episode_per_task)
         self.tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
             normalize(GymEnv(HalfCheetahDirEnv()))))
-        self.env_spec = RL2Env(normalize(GymEnv(HalfCheetahDirEnv()))).spec
+        self.env_spec = RL2Env(
+            normalize(
+                GymEnv(HalfCheetahDirEnv(),
+                       max_episode_length=self.inner_max_episode_length))).spec
         self.policy = GaussianGRUPolicy(env_spec=self.env_spec,
                                         hidden_dim=64,
                                         state_include_action=False)
@@ -52,8 +57,7 @@ class TestRL2PPO(TfGraphTestCase):
 
     def test_rl2_ppo_pendulum(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            algo = RL2PPO(rl2_max_episode_length=self.max_episode_length,
-                          meta_batch_size=self.meta_batch_size,
+            algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                           task_sampler=self.tasks,
                           env_spec=self.env_spec,
                           policy=self.policy,
@@ -65,8 +69,7 @@ class TestRL2PPO(TfGraphTestCase):
                           entropy_method='max',
                           policy_ent_coeff=0.02,
                           center_adv=False,
-                          max_episode_length=self.max_episode_length *
-                          self.episode_per_task)
+                          episodes_per_trial=self.episode_per_task)
 
             runner.setup(
                 algo,
@@ -91,8 +94,7 @@ class TestRL2PPO(TfGraphTestCase):
                 max_episode_length=self.max_episode_length,
                 n_test_tasks=1)
 
-            algo = RL2PPO(rl2_max_episode_length=self.max_episode_length,
-                          meta_batch_size=self.meta_batch_size,
+            algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                           task_sampler=self.tasks,
                           env_spec=self.env_spec,
                           policy=self.policy,
@@ -108,8 +110,7 @@ class TestRL2PPO(TfGraphTestCase):
                           entropy_method='max',
                           policy_ent_coeff=0.02,
                           center_adv=False,
-                          max_episode_length=self.max_episode_length *
-                          self.episode_per_task,
+                          episodes_per_trial=self.episode_per_task,
                           meta_evaluator=meta_evaluator,
                           n_epochs_per_eval=10)
 
@@ -127,8 +128,7 @@ class TestRL2PPO(TfGraphTestCase):
 
     def test_rl2_ppo_pendulum_exploration_policy(self):
         with LocalTFRunner(snapshot_config, sess=self.sess):
-            algo = RL2PPO(rl2_max_episode_length=self.max_episode_length,
-                          meta_batch_size=self.meta_batch_size,
+            algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                           task_sampler=self.tasks,
                           env_spec=self.env_spec,
                           policy=self.policy,
@@ -144,8 +144,8 @@ class TestRL2PPO(TfGraphTestCase):
                           entropy_method='max',
                           policy_ent_coeff=0.02,
                           center_adv=False,
-                          max_episode_length=self.max_episode_length *
-                          self.episode_per_task)
+                          episodes_per_trial=self.episode_per_task)
+
             exploration_policy = algo.get_exploration_policy()
             params = exploration_policy.get_param_values()
             new_params = np.zeros_like(params)
@@ -155,8 +155,7 @@ class TestRL2PPO(TfGraphTestCase):
 
     def test_rl2_ppo_pendulum_adapted_policy(self):
         with LocalTFRunner(snapshot_config, sess=self.sess):
-            algo = RL2PPO(rl2_max_episode_length=self.max_episode_length,
-                          meta_batch_size=self.meta_batch_size,
+            algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                           task_sampler=self.tasks,
                           env_spec=self.env_spec,
                           policy=self.policy,
@@ -172,8 +171,8 @@ class TestRL2PPO(TfGraphTestCase):
                           entropy_method='max',
                           policy_ent_coeff=0.02,
                           center_adv=False,
-                          max_episode_length=self.max_episode_length *
-                          self.episode_per_task)
+                          episodes_per_trial=self.episode_per_task)
+
             exploration_policy = algo.get_exploration_policy()
             adapted_policy = algo.adapt_policy(exploration_policy, [])
             (params, hidden) = adapted_policy.get_param_values()
@@ -188,8 +187,7 @@ class TestRL2PPO(TfGraphTestCase):
     def test_rl2_ppo_pendulum_wrong_worker(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             with pytest.raises(ValueError):
-                algo = RL2PPO(rl2_max_episode_length=self.max_episode_length,
-                              meta_batch_size=self.meta_batch_size,
+                algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                               task_sampler=self.tasks,
                               env_spec=self.env_spec,
                               policy=self.policy,
@@ -205,8 +203,7 @@ class TestRL2PPO(TfGraphTestCase):
                               entropy_method='max',
                               policy_ent_coeff=0.02,
                               center_adv=False,
-                              max_episode_length=self.max_episode_length *
-                              self.episode_per_task)
+                              episodes_per_trial=self.episode_per_task)
 
                 runner.setup(algo,
                              self.tasks.sample(self.meta_batch_size),

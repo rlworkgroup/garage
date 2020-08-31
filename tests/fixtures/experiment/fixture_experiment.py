@@ -24,7 +24,7 @@ def fixture_exp(snapshot_config, sess):
 
     """
     with LocalTFRunner(snapshot_config=snapshot_config, sess=sess) as runner:
-        env = GymEnv('CartPole-v1')
+        env = GymEnv('CartPole-v1', max_episode_length=100)
 
         policy = CategoricalMLPPolicy(name='policy',
                                       env_spec=env.spec,
@@ -35,7 +35,6 @@ def fixture_exp(snapshot_config, sess):
         algo = VPG(env_spec=env.spec,
                    policy=policy,
                    baseline=baseline,
-                   max_episode_length=100,
                    discount=0.99,
                    optimizer_args=dict(learning_rate=0.01, ))
 

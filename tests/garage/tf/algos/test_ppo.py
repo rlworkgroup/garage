@@ -29,7 +29,8 @@ class TestPPO(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = normalize(GymEnv('InvertedDoublePendulum-v2'))
+        self.env = normalize(
+            GymEnv('InvertedDoublePendulum-v2', max_episode_length=100))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
             hidden_sizes=(64, 64),
@@ -50,7 +51,6 @@ class TestPPO(TfGraphTestCase):
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
-                       max_episode_length=100,
                        discount=0.99,
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32,
@@ -66,7 +66,6 @@ class TestPPO(TfGraphTestCase):
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
-                       max_episode_length=100,
                        discount=0.99,
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32,
@@ -89,7 +88,6 @@ class TestPPO(TfGraphTestCase):
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
-                       max_episode_length=100,
                        discount=0.99,
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32,
@@ -113,7 +111,6 @@ class TestPPO(TfGraphTestCase):
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
-                       max_episode_length=100,
                        discount=0.99,
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32,
@@ -134,7 +131,6 @@ class TestPPO(TfGraphTestCase):
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
-                       max_episode_length=100,
                        discount=0.99,
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32,
@@ -158,7 +154,8 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
     def test_ppo_pendulum_continuous_baseline(self):
         """Test PPO with Pendulum environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = normalize(GymEnv('InvertedDoublePendulum-v2'))
+            env = normalize(
+                GymEnv('InvertedDoublePendulum-v2', max_episode_length=100))
             policy = GaussianMLPPolicy(
                 env_spec=env.spec,
                 hidden_sizes=(64, 64),
@@ -173,7 +170,6 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
                 env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
-                max_episode_length=100,
                 discount=0.99,
                 gae_lambda=0.95,
                 lr_clip_range=0.2,
@@ -196,7 +192,8 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
     def test_ppo_pendulum_recurrent_continuous_baseline(self):
         """Test PPO with Pendulum environment and recurrent policy."""
         with LocalTFRunner(snapshot_config) as runner:
-            env = normalize(GymEnv('InvertedDoublePendulum-v2'))
+            env = normalize(
+                GymEnv('InvertedDoublePendulum-v2', max_episode_length=100))
             policy = GaussianLSTMPolicy(env_spec=env.spec, )
             baseline = ContinuousMLPBaseline(
                 env_spec=env.spec,
@@ -206,7 +203,6 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
                 env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
-                max_episode_length=100,
                 discount=0.99,
                 gae_lambda=0.95,
                 lr_clip_range=0.2,
@@ -232,7 +228,8 @@ class TestPPOPendulumLSTM(TfGraphTestCase):
     def test_ppo_pendulum_lstm(self):
         """Test PPO with Pendulum environment and recurrent policy."""
         with LocalTFRunner(snapshot_config) as runner:
-            env = normalize(GymEnv('InvertedDoublePendulum-v2'))
+            env = normalize(
+                GymEnv('InvertedDoublePendulum-v2', max_episode_length=100))
             lstm_policy = GaussianLSTMPolicy(env_spec=env.spec)
             baseline = GaussianMLPBaseline(
                 env_spec=env.spec,
@@ -242,7 +239,6 @@ class TestPPOPendulumLSTM(TfGraphTestCase):
                 env_spec=env.spec,
                 policy=lstm_policy,
                 baseline=baseline,
-                max_episode_length=100,
                 discount=0.99,
                 gae_lambda=0.95,
                 lr_clip_range=0.2,
@@ -266,7 +262,8 @@ class TestPPOPendulumGRU(TfGraphTestCase):
     def test_ppo_pendulum_gru(self):
         """Test PPO with Pendulum environment and recurrent policy."""
         with LocalTFRunner(snapshot_config) as runner:
-            env = normalize(GymEnv('InvertedDoublePendulum-v2'))
+            env = normalize(
+                GymEnv('InvertedDoublePendulum-v2', max_episode_length=100))
             gru_policy = GaussianGRUPolicy(env_spec=env.spec)
             baseline = GaussianMLPBaseline(
                 env_spec=env.spec,
@@ -276,7 +273,6 @@ class TestPPOPendulumGRU(TfGraphTestCase):
                 env_spec=env.spec,
                 policy=gru_policy,
                 baseline=baseline,
-                max_episode_length=100,
                 discount=0.99,
                 gae_lambda=0.95,
                 lr_clip_range=0.2,

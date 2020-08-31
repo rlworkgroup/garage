@@ -41,7 +41,6 @@ class TestDDPG(TfGraphTestCase):
                 qf_lr=1e-3,
                 qf=qf,
                 replay_buffer=replay_buffer,
-                max_episode_length=100,
                 steps_per_epoch=20,
                 target_update_tau=1e-2,
                 n_train_steps=50,
@@ -62,7 +61,8 @@ class TestDDPG(TfGraphTestCase):
         This environment has a [-3, 3] action_space bound.
         """
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = normalize(GymEnv('InvertedPendulum-v2'))
+            env = normalize(
+                GymEnv('InvertedPendulum-v2', max_episode_length=100))
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=tf.nn.relu,
@@ -82,7 +82,6 @@ class TestDDPG(TfGraphTestCase):
                 qf_lr=1e-3,
                 qf=qf,
                 replay_buffer=replay_buffer,
-                max_episode_length=100,
                 steps_per_epoch=20,
                 target_update_tau=1e-2,
                 n_train_steps=50,
@@ -103,7 +102,8 @@ class TestDDPG(TfGraphTestCase):
         This environment has a [-3, 3] action_space bound.
         """
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = normalize(GymEnv('InvertedPendulum-v2'))
+            env = normalize(
+                GymEnv('InvertedPendulum-v2', max_episode_length=100))
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=tf.nn.relu,
@@ -122,7 +122,6 @@ class TestDDPG(TfGraphTestCase):
                 qf_lr=1e-3,
                 qf=qf,
                 replay_buffer=replay_buffer,
-                max_episode_length=100,
                 steps_per_epoch=20,
                 target_update_tau=1e-2,
                 n_train_steps=50,

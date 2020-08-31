@@ -51,6 +51,7 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
         num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
 
         env = gym.make('PongNoFrameskip-v4')
+        env = env.unwrapped
         env = Noop(env, noop_max=30)
         env = MaxAndSkip(env, skip=4)
         env = EpisodicLife(env)
@@ -61,7 +62,7 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
         env = ClipReward(env)
         env = StackFrames(env, 4)
 
-        env = GymEnv(env, is_image=True)
+        env = GymEnv(env, is_image=True, max_episode_length=max_episode_length)
 
         replay_buffer = PathBuffer(capacity_in_transitions=buffer_size)
 
@@ -90,7 +91,6 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
                    qf_lr=1e-4,
                    discount=0.99,
                    min_buffer_size=int(1e4),
-                   max_episode_length=max_episode_length,
                    double_q=False,
                    n_train_steps=500,
                    steps_per_epoch=steps_per_epoch,

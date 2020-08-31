@@ -46,7 +46,6 @@ class TENPO(RLAlgorithm):
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_episode_length (int): Maximum length of a single episode.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -90,7 +89,6 @@ class TENPO(RLAlgorithm):
                  policy,
                  baseline,
                  scope=None,
-                 max_episode_length=500,
                  discount=0.99,
                  gae_lambda=1,
                  center_adv=True,
@@ -114,8 +112,8 @@ class TENPO(RLAlgorithm):
         assert isinstance(inference, StochasticEncoder)
 
         self.policy = policy
-        self.scope = scope
-        self.max_episode_length = max_episode_length
+        self._scope = scope
+        self.max_episode_length = env_spec.max_episode_length
 
         self._env_spec = env_spec
         self._baseline = baseline

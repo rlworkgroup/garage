@@ -54,7 +54,6 @@ def ddpg_pendulum(ctxt=None, seed=1, lr=1e-4):
                 policy=policy,
                 qf=qf,
                 replay_buffer=replay_buffer,
-                max_episode_length=100,
                 steps_per_epoch=20,
                 n_train_steps=50,
                 min_buffer_size=int(1e4),

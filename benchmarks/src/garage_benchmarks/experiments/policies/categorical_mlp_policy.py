@@ -36,7 +36,6 @@ def categorical_mlp_policy(ctxt, env_id, seed):
         algo = PPO(env_spec=env.spec,
                    policy=policy,
                    baseline=baseline,
-                   max_episode_length=100,
                    discount=0.99,
                    gae_lambda=0.95,
                    lr_clip_range=0.2,

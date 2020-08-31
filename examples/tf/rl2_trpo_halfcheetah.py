@@ -19,7 +19,7 @@ from garage.tf.policies import GaussianGRUPolicy
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--max_episode_length', default=100)
+@click.option('--max_episode_length', default=150)
 @click.option('--meta_batch_size', default=10)
 @click.option('--n_epochs', default=10)
 @click.option('--episode_per_task', default=4)
@@ -38,13 +38,18 @@ def rl2_trpo_halfcheetah(ctxt, seed, max_episode_length, meta_batch_size,
         n_epochs (int): Total number of epochs for training.
         episode_per_task (int): Number of training episode per task.
 
+
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
+        inner_max_episode_length = max_episode_length * episode_per_task
+
         tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
             GymEnv(HalfCheetahVelEnv())))
 
-        env_spec = RL2Env(GymEnv(HalfCheetahVelEnv())).spec
+        env_spec = RL2Env(
+            GymEnv(HalfCheetahVelEnv(),
+                   max_episode_length=inner_max_episode_length)).spec
         policy = GaussianGRUPolicy(name='policy',
                                    hidden_dim=64,
                                    env_spec=env_spec,
@@ -52,14 +57,12 @@ def rl2_trpo_halfcheetah(ctxt, seed, max_episode_length, meta_batch_size,
 
         baseline = LinearFeatureBaseline(env_spec=env_spec)
 
-        algo = RL2TRPO(rl2_max_episode_length=max_episode_length,
-                       meta_batch_size=meta_batch_size,
+        algo = RL2TRPO(meta_batch_size=meta_batch_size,
                        task_sampler=tasks,
                        env_spec=env_spec,
                        policy=policy,
                        baseline=baseline,
-                       max_episode_length=max_episode_length *
-                       episode_per_task,
+                       episodes_per_trial=episode_per_task,
                        discount=0.99,
                        max_kl_step=0.01,
                        optimizer=ConjugateGradientOptimizer,

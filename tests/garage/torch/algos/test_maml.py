@@ -31,7 +31,8 @@ class TestMAML:
 
     def setup_method(self):
         """Setup method which is called before every test."""
-        self.env = normalize(GymEnv(HalfCheetahDirEnv()),
+        self.env = normalize(GymEnv(HalfCheetahDirEnv(),
+                                    max_episode_length=100),
                              expected_action_scale=10.)
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
@@ -44,7 +45,6 @@ class TestMAML:
         self.algo = MAMLPPO(env=self.env,
                             policy=self.policy,
                             value_function=self.value_function,
-                            max_episode_length=100,
                             meta_batch_size=5,
                             discount=0.99,
                             gae_lambda=1.,

@@ -32,7 +32,8 @@ def mtppo_metaworld_ml1_push(ctxt, seed, epochs, batch_size):
 
     """
     set_seed(seed)
-    env = normalize(GymEnv(mwb.ML1.get_train_tasks('push-v1')))
+    env = normalize(
+        GymEnv(mwb.ML1.get_train_tasks('push-v1'), max_episode_length=150))
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
@@ -47,7 +48,6 @@ def mtppo_metaworld_ml1_push(ctxt, seed, epochs, batch_size):
     algo = PPO(env_spec=env.spec,
                policy=policy,
                value_function=value_function,
-               max_episode_length=128,
                discount=0.99,
                gae_lambda=0.95,
                center_adv=True,

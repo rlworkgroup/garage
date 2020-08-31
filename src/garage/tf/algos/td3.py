@@ -46,13 +46,12 @@ class TD3(RLAlgorithm):
         clip_return (float): Clip return to be in [-clip_return,
             clip_return].
         discount (float): Discount factor for the cumulative return.
+        max_episode_length_eval (int or None): Maximum length of episodes used
+            for off-policy evaluation. If `None`, defaults to
+            `env_spec.max_episode_length`.
         max_action (float): Maximum action magnitude.
         name (str): Name of the algorithm shown in computation graph.
         steps_per_epoch (int): Number of batches of samples in each epoch.
-        max_episode_length (int): Maximum length of an episode.
-        max_episode_length_eval (int or None): Maximum length of episodes used
-            for off-policy evaluation. If `None`, defaults to
-            `max_episode_length`.
         n_train_steps (int): Number of optimizations in each epoch cycle.
         buffer_batch_size (int): Size of replay buffer.
         min_buffer_size (int):
@@ -83,11 +82,10 @@ class TD3(RLAlgorithm):
             clip_pos_returns=False,
             clip_return=np.inf,
             discount=0.99,
+            max_episode_length_eval=None,
             max_action=None,
             name='TD3',
             steps_per_epoch=20,
-            max_episode_length=None,
-            max_episode_length_eval=None,
             n_train_steps=50,
             buffer_batch_size=64,
             min_buffer_size=1e4,
@@ -137,8 +135,12 @@ class TD3(RLAlgorithm):
         self._buffer_batch_size = buffer_batch_size
         self._discount = discount
         self._reward_scale = reward_scale
-        self.max_episode_length = max_episode_length
-        self._max_episode_length_eval = max_episode_length_eval
+        self.max_episode_length = env_spec.max_episode_length
+        self._max_episode_length_eval = env_spec.max_episode_length
+
+        if max_episode_length_eval is not None:
+            self._max_episode_length_eval = max_episode_length_eval
+
         self._eval_env = None
 
         self.env_spec = env_spec

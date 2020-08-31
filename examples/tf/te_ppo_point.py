@@ -74,7 +74,6 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
     policy_ent_coeff = 1e-3
     encoder_ent_coeff = 1e-3
     inference_ce_coeff = 5e-2
-    max_episode_length = 100
     embedding_init_std = 0.1
     embedding_max_std = 0.2
     embedding_min_std = 1e-6
@@ -88,7 +87,7 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
 
     with LocalTFRunner(snapshot_config=ctxt) as runner:
         task_envs = [
-            PointEnv(*t_args, **t_kwargs)
+            PointEnv(*t_args, **t_kwargs, max_episode_length=100)
             for t_args, t_kwargs in zip(task_args, task_kwargs)
         ]
         env = MultiEnvWrapper(task_envs, round_robin_strategy, mode='vanilla')
@@ -142,7 +141,6 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
                      policy=policy,
                      baseline=baseline,
                      inference=inference,
-                     max_episode_length=max_episode_length,
                      discount=0.99,
                      lr_clip_range=0.2,
                      policy_ent_coeff=policy_ent_coeff,

@@ -40,7 +40,6 @@ def erwr_cartpole(ctxt=None, seed=1):
         algo = ERWR(env_spec=env.spec,
                     policy=policy,
                     baseline=baseline,
-                    max_episode_length=100,
                     discount=0.99)
 
         runner.setup(algo=algo, env=env)

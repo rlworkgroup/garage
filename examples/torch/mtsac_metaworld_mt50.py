@@ -44,9 +44,11 @@ def mtsac_metaworld_mt50(ctxt=None, seed=1, use_gpu=False, _gpu=0):
     train_envs = []
     test_envs = []
     for task_name in task_names:
-        train_env = normalize(GymEnv(mwb.MT50.from_task(task_name)),
+        train_env = normalize(GymEnv(mwb.MT50.from_task(task_name),
+                                     max_episode_length=150),
                               normalize_reward=True)
-        test_env = normalize(GymEnv(mwb.MT50.from_task(task_name)))
+        test_env = normalize(
+            GymEnv(mwb.MT50.from_task(task_name), max_episode_length=150))
         train_envs.append(train_env)
         test_envs.append(test_env)
     mt50_train_envs = MultiEnvWrapper(train_envs,
@@ -84,7 +86,6 @@ def mtsac_metaworld_mt50(ctxt=None, seed=1, use_gpu=False, _gpu=0):
                   qf1=qf1,
                   qf2=qf2,
                   gradient_steps_per_itr=150,
-                  max_episode_length=150,
                   max_episode_length_eval=150,
                   eval_env=mt50_test_envs,
                   env_spec=mt50_train_envs.spec,

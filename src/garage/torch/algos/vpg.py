@@ -29,7 +29,6 @@ class VPG(RLAlgorithm):
             for policy.
         vf_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer for
             value function.
-        max_episode_length (int): Maximum length of a single episode.
         num_train_per_epoch (int): Number of train_once calls per epoch.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
@@ -61,7 +60,6 @@ class VPG(RLAlgorithm):
         value_function,
         policy_optimizer=None,
         vf_optimizer=None,
-        max_episode_length=500,
         num_train_per_epoch=1,
         discount=0.99,
         gae_lambda=1,
@@ -72,9 +70,9 @@ class VPG(RLAlgorithm):
         stop_entropy_gradient=False,
         entropy_method='no_entropy',
     ):
-        self.discount = discount
+        self._discount = discount
         self.policy = policy
-        self.max_episode_length = max_episode_length
+        self.max_episode_length = env_spec.max_episode_length
 
         self._value_function = value_function
         self._gae_lambda = gae_lambda
@@ -124,6 +122,15 @@ class VPG(RLAlgorithm):
             if policy_ent_coeff != 0.0:
                 raise ValueError('policy_ent_coeff should be zero '
                                  'when there is no entropy method')
+
+    @property
+    def discount(self):
+        """Discount factor used by the algorithm.
+
+        Returns:
+            float: discount factor.
+        """
+        return self._discount
 
     def train_once(self, itr, paths):
         """Train the algorithm once.
@@ -187,7 +194,7 @@ class VPG(RLAlgorithm):
         undiscounted_returns = log_performance(itr,
                                                EpisodeBatch.from_list(
                                                    self._env_spec, paths),
-                                               discount=self.discount)
+                                               discount=self._discount)
         return np.mean(undiscounted_returns)
 
     def train(self, runner):
@@ -349,7 +356,7 @@ class VPG(RLAlgorithm):
                 baselines with shape :math:`(N \dot [T], )`.
 
         """
-        advantages = compute_advantages(self.discount, self._gae_lambda,
+        advantages = compute_advantages(self._discount, self._gae_lambda,
                                         self.max_episode_length, baselines,
                                         rewards)
         advantage_flat = torch.cat(filter_valids(advantages, valids))
@@ -476,7 +483,7 @@ class VPG(RLAlgorithm):
         ])
         returns = torch.stack([
             pad_to_last(tu.discount_cumsum(path['rewards'],
-                                           self.discount).copy(),
+                                           self._discount).copy(),
                         total_length=self.max_episode_length) for path in paths
         ])
         with torch.no_grad():

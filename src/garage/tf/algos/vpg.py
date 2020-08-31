@@ -14,7 +14,6 @@ class VPG(NPO):
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_episode_length (int): Maximum length of a single episode.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -54,7 +53,6 @@ class VPG(NPO):
                  policy,
                  baseline,
                  scope=None,
-                 max_episode_length=500,
                  discount=0.99,
                  gae_lambda=1,
                  center_adv=True,
@@ -84,7 +82,6 @@ class VPG(NPO):
                          policy=policy,
                          baseline=baseline,
                          scope=scope,
-                         max_episode_length=max_episode_length,
                          discount=discount,
                          gae_lambda=gae_lambda,
                          center_adv=center_adv,

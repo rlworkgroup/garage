@@ -72,7 +72,7 @@ def bc_point(ctxt=None):
     """
     runner = LocalRunner(ctxt)
     goal = np.array([1., 1.])
-    env = PointEnv(goal=goal)
+    env = PointEnv(goal=goal, max_episode_length=200)
     expert = OptimalPolicy(env.spec, goal=goal)
     policy = DeterministicMLPPolicy(env.spec, hidden_sizes=[8, 8])
     batch_size = 1000
@@ -80,7 +80,6 @@ def bc_point(ctxt=None):
               policy,
               batch_size=batch_size,
               source=expert,
-              max_episode_length=200,
               policy_lr=1e-2,
               loss='mse')
     runner.setup(algo, env)

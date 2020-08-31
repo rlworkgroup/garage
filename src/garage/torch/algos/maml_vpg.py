@@ -16,7 +16,6 @@ class MAMLVPG(MAML):
         value_function (garage.np.baselines.Baseline): The value function.
         inner_lr (float): Adaptation learning rate.
         outer_lr (float): Meta policy learning rate.
-        max_episode_length (int): Maximum length of a single episode.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -51,7 +50,6 @@ class MAMLVPG(MAML):
                  value_function,
                  inner_lr=_Default(1e-1),
                  outer_lr=1e-3,
-                 max_episode_length=100,
                  discount=0.99,
                  gae_lambda=1,
                  center_adv=True,
@@ -74,7 +72,6 @@ class MAMLVPG(MAML):
                          value_function,
                          policy_optimizer=policy_optimizer,
                          vf_optimizer=vf_optimizer,
-                         max_episode_length=max_episode_length,
                          num_train_per_epoch=1,
                          discount=discount,
                          gae_lambda=gae_lambda,

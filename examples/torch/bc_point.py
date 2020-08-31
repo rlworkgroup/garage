@@ -76,7 +76,7 @@ def bc_point(ctxt=None, loss='log_prob'):
     """
     runner = LocalRunner(ctxt)
     goal = np.array([1., 1.])
-    env = PointEnv(goal=goal)
+    env = PointEnv(goal=goal, max_episode_length=200)
     expert = OptimalPolicy(env.spec, goal=goal)
     policy = GaussianMLPPolicy(env.spec, [8, 8])
     batch_size = 1000
@@ -84,7 +84,6 @@ def bc_point(ctxt=None, loss='log_prob'):
               policy,
               batch_size=batch_size,
               source=expert,
-              max_episode_length=200,
               policy_lr=1e-2,
               loss=loss)
     runner.setup(algo, env)

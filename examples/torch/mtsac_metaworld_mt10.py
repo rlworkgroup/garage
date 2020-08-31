@@ -42,9 +42,11 @@ def mtsac_metaworld_mt10(ctxt=None, seed=1, _gpu=None):
     train_envs = []
     test_envs = []
     for task_name in task_names:
-        train_env = normalize(GymEnv(mwb.MT10.from_task(task_name)),
+        train_env = normalize(GymEnv(mwb.MT10.from_task(task_name),
+                                     max_episode_length=150),
                               normalize_reward=True)
-        test_env = normalize(GymEnv(mwb.MT10.from_task(task_name)))
+        test_env = normalize(
+            GymEnv(mwb.MT10.from_task(task_name), max_episode_length=150))
         train_envs.append(train_env)
         test_envs.append(test_env)
     mt10_train_envs = MultiEnvWrapper(train_envs,
@@ -82,7 +84,6 @@ def mtsac_metaworld_mt10(ctxt=None, seed=1, _gpu=None):
                   qf1=qf1,
                   qf2=qf2,
                   gradient_steps_per_itr=150,
-                  max_episode_length=150,
                   max_episode_length_eval=150,
                   eval_env=mt10_test_envs,
                   env_spec=mt10_train_envs.spec,

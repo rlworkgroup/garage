@@ -42,7 +42,6 @@ def cem_cartpole(ctxt=None, seed=1):
                    policy=policy,
                    baseline=baseline,
                    best_frac=0.05,
-                   max_episode_length=100,
                    n_samples=n_samples)
 
         runner.setup(algo, env)
