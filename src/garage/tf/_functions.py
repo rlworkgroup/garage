@@ -1,7 +1,7 @@
 """Utility functions for tf-based Reinforcement learning algorithms."""
 import numpy as np
 
-from garage.misc import tensor_utils as np_tensor_utils
+from garage.np import discount_cumsum
 from garage.tf.misc import tensor_utils
 
 
@@ -40,8 +40,7 @@ def paths_to_tensors(paths, max_episode_length, baseline_predictions, discount,
         path_baselines = np.append(baseline_predictions[idx], 0)
         deltas = (path['rewards'] + discount * path_baselines[1:] -
                   path_baselines[:-1])
-        path['advantages'] = np_tensor_utils.discount_cumsum(
-            deltas, discount * gae_lambda)
+        path['advantages'] = discount_cumsum(deltas, discount * gae_lambda)
         path['deltas'] = deltas
 
     for idx, path in enumerate(paths):
@@ -50,8 +49,7 @@ def paths_to_tensors(paths, max_episode_length, baseline_predictions, discount,
         baselines.append(path['baselines'])
 
         # returns
-        path['returns'] = np_tensor_utils.discount_cumsum(
-            path['rewards'], discount)
+        path['returns'] = discount_cumsum(path['rewards'], discount)
         returns.append(path['returns'])
 
     # make all paths the same length

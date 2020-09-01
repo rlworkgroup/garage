@@ -5,7 +5,7 @@ import enum
 import akro
 import numpy as np
 
-from garage.misc import tensor_utils
+from garage.np import concat_tensor_dict_list, slice_nested_dict
 
 # pylint: disable=too-many-lines
 
@@ -286,18 +286,16 @@ class EpisodeBatch(
         start = 0
         for i, length in enumerate(self.lengths):
             stop = start + length
-            eps = EpisodeBatch(env_spec=self.env_spec,
-                               observations=self.observations[start:stop],
-                               last_observations=np.asarray(
-                                   [self.last_observations[i]]),
-                               actions=self.actions[start:stop],
-                               rewards=self.rewards[start:stop],
-                               env_infos=tensor_utils.slice_nested_dict(
-                                   self.env_infos, start, stop),
-                               agent_infos=tensor_utils.slice_nested_dict(
-                                   self.agent_infos, start, stop),
-                               step_types=self.step_types[start:stop],
-                               lengths=np.asarray([length]))
+            eps = EpisodeBatch(
+                env_spec=self.env_spec,
+                observations=self.observations[start:stop],
+                last_observations=np.asarray([self.last_observations[i]]),
+                actions=self.actions[start:stop],
+                rewards=self.rewards[start:stop],
+                env_infos=slice_nested_dict(self.env_infos, start, stop),
+                agent_infos=slice_nested_dict(self.agent_infos, start, stop),
+                step_types=self.step_types[start:stop],
+                lengths=np.asarray([length]))
             episodes.append(eps)
             start = stop
         return episodes
@@ -407,7 +405,7 @@ class EpisodeBatch(
                 last_observations = np.asarray(
                     [p['observations'][-1] for p in paths])
 
-        stacked_paths = tensor_utils.concat_tensor_dict_list(paths)
+        stacked_paths = concat_tensor_dict_list(paths)
 
         # Temporary solution. This logic is not needed if algorithms process
         # step_types instead of dones directly.

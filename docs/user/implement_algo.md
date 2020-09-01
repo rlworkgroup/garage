@@ -194,7 +194,7 @@ import torch
 import numpy as np
 
 from garage.samplers import LocalSampler
-from garage.misc import tensor_utils
+from garage.np import discount_cumsum
 
 class SimpleVPG:
 
@@ -216,8 +216,7 @@ class SimpleVPG:
         losses = []
         self._policy_opt.zero_grad()
         for path in samples:
-            returns_numpy = tensor_utils.discount_cumsum(
-                path['rewards'], self._discount)
+            returns_numpy = discount_cumsum(path['rewards'], self._discount)
             returns = torch.Tensor(returns_numpy.copy())
             obs = torch.Tensor(path['observations'])
             actions = torch.Tensor(path['actions'])
@@ -396,8 +395,7 @@ the inputs with sample data.
         actions = np.concatenate([path['actions'] for path in samples])
         returns = []
         for path in samples:
-            returns.append(
-                tensor_utils.discount_cumsum(path['rewards'], self._discount))
+            returns.append(discount_cumsum(path['rewards'], self._discount))
         returns = np.concatenate(returns)
         sess = tf.compat.v1.get_default_session()
         sess.run(self._train_op,
@@ -509,7 +507,7 @@ parameters of the policy.
 
 ```py
 import numpy as np
-from garage.misc import tensor_utils
+from garage.np import discount_cumsum
 from garage.sampler import LocalSampler
 
 class SimpleCEM:
@@ -542,8 +540,7 @@ class SimpleCEM:
     def _train_once(self, epoch, paths):
         returns = []
         for path in paths:
-            returns.append(
-                tensor_utils.discount_cumsum(path['rewards'], self._discount))
+            returns.append(discount_cumsum(path['rewards'], self._discount))
         avg_return = np.mean(np.concatenate(returns))
         self._all_avg_returns.append(avg_return)
         if (epoch + 1) % self._n_samples == 0:

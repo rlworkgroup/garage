@@ -78,7 +78,7 @@ policy = data['algo'].policy
 env = data['env']
 
 # See what the trained policy can accomplish
-from garage.sampler.utils import rollout
+from garage import rollout
 path = rollout(env, policy, animated=True)
 print(path)
 ```

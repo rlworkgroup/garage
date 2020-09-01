@@ -10,8 +10,8 @@ from garage import (_Default,
                     EpisodeBatch,
                     log_performance,
                     make_optimizer,
+                    obtain_evaluation_episodes,
                     TimeStepBatch)
-from garage.np import obtain_evaluation_episodes
 from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.np.policies import Policy
 from garage.sampler import RaySampler

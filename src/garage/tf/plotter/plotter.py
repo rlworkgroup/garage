@@ -9,7 +9,7 @@ from threading import Thread
 import numpy as np
 import tensorflow as tf
 
-from garage.sampler.utils import rollout as default_rollout
+from garage import rollout as default_rollout
 
 __all__ = ['Plotter']
 

@@ -2,7 +2,7 @@
 from dowel import logger, tabular
 import numpy as np
 
-from garage.misc import tensor_utils as np_tensor_utils
+from garage.np import explained_variance_1d, pad_tensor_n
 from garage.tf.algos import NPO
 
 
@@ -92,9 +92,9 @@ class RL2NPO(NPO):
         pol_ent = self._f_policy_entropy(*policy_opt_input_values)
         tabular.record('{}/Entropy'.format(self.policy.name), np.mean(pol_ent))
 
-        ev = np_tensor_utils.explained_variance_1d(samples_data['baselines'],
-                                                   samples_data['returns'],
-                                                   samples_data['valids'])
+        ev = explained_variance_1d(samples_data['baselines'],
+                                   samples_data['returns'],
+                                   samples_data['valids'])
         tabular.record('{}/ExplainedVariance'.format(self._baseline.name), ev)
         self._old_policy.parameters = self.policy.parameters
 
@@ -112,4 +112,4 @@ class RL2NPO(NPO):
         """
         paths = samples_data['paths']
         baselines = [self._baseline.predict(path) for path in paths]
-        return np_tensor_utils.pad_tensor_n(baselines, self.max_episode_length)
+        return pad_tensor_n(baselines, self.max_episode_length)

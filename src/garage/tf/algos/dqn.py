@@ -1,14 +1,19 @@
 """Deep Q-Learning Network algorithm."""
+# yapf: disable
 import akro
 from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
-from garage import _Default, log_performance, make_optimizer
-from garage.np import obtain_evaluation_episodes
+from garage import (_Default,
+                    log_performance,
+                    make_optimizer,
+                    obtain_evaluation_episodes)
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf.misc import tensor_utils
+
+# yapf: enable
 
 
 class DQN(RLAlgorithm):

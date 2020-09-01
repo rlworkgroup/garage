@@ -7,7 +7,7 @@ from garage import EpisodeBatch, log_performance, wrap_experiment
 from garage.envs import PointEnv
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
-from garage.misc import tensor_utils
+from garage.np import discount_cumsum
 from garage.sampler import LocalSampler
 from garage.tf.policies import GaussianMLPPolicy
 
@@ -78,8 +78,7 @@ class SimpleVPG:
         actions = np.concatenate([path['actions'] for path in samples])
         returns = []
         for path in samples:
-            returns.append(
-                tensor_utils.discount_cumsum(path['rewards'], self._discount))
+            returns.append(discount_cumsum(path['rewards'], self._discount))
         returns = np.concatenate(returns)
         sess = tf.compat.v1.get_default_session()
         sess.run(self._train_op,

@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage import EpisodeBatch, log_performance, make_optimizer, StepType
-from garage.misc import tensor_utils as np_tensor_utils
+from garage.np import explained_variance_1d, pad_tensor_n
 from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
 from garage.tf import paths_to_tensors
@@ -104,7 +104,7 @@ class NPO(RLAlgorithm):
                  entropy_method='no_entropy',
                  name='NPO'):
         self.policy = policy
-        self.scope = scope
+        self._scope = scope
         self.max_episode_length = env_spec.max_episode_length
         self._env_spec = env_spec
         self._baseline = baseline
@@ -148,9 +148,9 @@ class NPO(RLAlgorithm):
         self._episode_reward_mean = collections.deque(maxlen=100)
         self.sampler_cls = RaySampler
 
-        self.init_opt()
+        self._init_opt()
 
-    def init_opt(self):
+    def _init_opt(self):
         """Initialize optimizater."""
         pol_loss_inputs, pol_opt_inputs = self._build_inputs()
         self._policy_opt_inputs = pol_opt_inputs
@@ -178,12 +178,12 @@ class NPO(RLAlgorithm):
 
         for _ in runner.step_epochs():
             runner.step_path = runner.obtain_samples(runner.step_itr)
-            last_return = self.train_once(runner.step_itr, runner.step_path)
+            last_return = self._train_once(runner.step_itr, runner.step_path)
             runner.step_itr += 1
 
         return last_return
 
-    def train_once(self, itr, paths):
+    def _train_once(self, itr, paths):
         """Perform one step of policy optimization given one batch of samples.
 
         Args:
@@ -234,10 +234,11 @@ class NPO(RLAlgorithm):
         samples_data['average_return'] = np.mean(undiscounted_returns)
 
         logger.log('Optimizing policy...')
-        self.optimize_policy(samples_data)
+        self._optimize_policy(samples_data)
+
         return samples_data['average_return']
 
-    def optimize_policy(self, samples_data):
+    def _optimize_policy(self, samples_data):
         """Optimize policy.
 
         Args:
@@ -269,9 +270,9 @@ class NPO(RLAlgorithm):
         tabular.record('{}/Perplexity'.format(self.policy.name), np.exp(ent))
         self._fit_baseline_with_data(samples_data)
 
-        ev = np_tensor_utils.explained_variance_1d(samples_data['baselines'],
-                                                   samples_data['returns'],
-                                                   samples_data['valids'])
+        ev = explained_variance_1d(samples_data['baselines'],
+                                   samples_data['returns'],
+                                   samples_data['valids'])
 
         tabular.record('{}/ExplainedVariance'.format(self._baseline.name), ev)
         self._old_policy.parameters = self.policy.parameters
@@ -500,10 +501,10 @@ class NPO(RLAlgorithm):
             path['returns'] = ret[val.astype(np.bool)]
             aug_rewards.append(path['rewards'])
             aug_returns.append(path['returns'])
-        samples_data['rewards'] = np_tensor_utils.pad_tensor_n(
-            aug_rewards, self.max_episode_length)
-        samples_data['returns'] = np_tensor_utils.pad_tensor_n(
-            aug_returns, self.max_episode_length)
+        samples_data['rewards'] = pad_tensor_n(aug_rewards,
+                                               self.max_episode_length)
+        samples_data['returns'] = pad_tensor_n(aug_returns,
+                                               self.max_episode_length)
 
         # Fit baseline
         logger.log('Fitting baseline...')
@@ -614,4 +615,4 @@ class NPO(RLAlgorithm):
         """
         self.__dict__ = state
         self._name_scope = tf.name_scope(self._name)
-        self.init_opt()
+        self._init_opt()

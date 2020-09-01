@@ -12,7 +12,7 @@ import numpy as np
 import torch
 from torch.optim import Optimizer
 
-from garage.misc.tensor_utils import unflatten_tensors
+from garage.np import unflatten_tensors
 
 
 def _build_hessian_vector_product(func, params, reg_coeff=1e-5):

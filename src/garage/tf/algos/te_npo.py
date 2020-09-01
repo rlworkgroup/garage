@@ -9,7 +9,7 @@ import tensorflow as tf
 
 from garage import EpisodeBatch, InOutSpec, log_performance
 from garage.experiment import deterministic
-from garage.misc import tensor_utils as np_tensor_utils
+from garage.np import explained_variance_1d, rrse, sliding_window
 from garage.np.algos import RLAlgorithm
 from garage.sampler import LocalSampler
 from garage.tf import paths_to_tensors
@@ -334,7 +334,7 @@ class TENPO(RLAlgorithm):
             obs_flat = self._env_spec.observation_space.flatten_n(obs)
             steps = obs_flat
             window = self._inference.spec.input_space.shape[0]
-            traj = np_tensor_utils.sliding_window(steps, window, smear=True)
+            traj = sliding_window(steps, window, smear=True)
             traj_flat = self._inference.spec.input_space.flatten_n(traj)
             path['trajectories'] = traj_flat
 
@@ -861,8 +861,7 @@ class TENPO(RLAlgorithm):
         tabular.record('{}/EntReturns'.format(self.policy.name), d_returns)
 
         # Calculate explained variance
-        ev = np_tensor_utils.explained_variance_1d(np.concatenate(baselines),
-                                                   aug_returns)
+        ev = explained_variance_1d(np.concatenate(baselines), aug_returns)
         tabular.record('{}/ExplainedVariance'.format(self._baseline.name), ev)
 
         inference_rmse = (samples_data['trajectory_infos']['mean'] -
@@ -870,8 +869,8 @@ class TENPO(RLAlgorithm):
         inference_rmse = np.sqrt(inference_rmse.mean())
         tabular.record('Inference/RMSE', inference_rmse)
 
-        inference_rrse = np_tensor_utils.rrse(
-            samples_data['latents'], samples_data['trajectory_infos']['mean'])
+        inference_rrse = rrse(samples_data['latents'],
+                              samples_data['trajectory_infos']['mean'])
         tabular.record('Inference/RRSE', inference_rrse)
 
         embed_ent = self._f_encoder_entropy(*policy_opt_input_values)

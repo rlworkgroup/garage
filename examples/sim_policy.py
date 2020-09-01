@@ -6,7 +6,7 @@ import sys
 import cloudpickle
 import tensorflow as tf
 
-from garage.sampler.utils import rollout
+from garage import rollout
 
 
 def query_yes_no(question, default='yes'):
