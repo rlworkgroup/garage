@@ -41,12 +41,11 @@ class TestRaySamplerTF():
     """
 
     def setup_method(self):
-        self.env = GridWorldEnv(desc='4x4')
+        self.env = GridWorldEnv(desc='4x4', max_episode_length=16)
         self.policy = ScriptedPolicy(
             scripted_actions=[2, 2, 1, 0, 3, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 1])
         self.algo = Mock(env_spec=self.env.spec,
-                         policy=self.policy,
-                         max_episode_length=16)
+                         policy=self.policy)
 
     def teardown_method(self):
         self.env.close()
@@ -54,8 +53,7 @@ class TestRaySamplerTF():
     def test_ray_batch_sampler(self, ray_local_session_fixture):
         del ray_local_session_fixture
         assert ray.is_initialized()
-        workers = WorkerFactory(
-            seed=100, max_episode_length=self.algo.max_episode_length)
+        workers = WorkerFactory(seed=100)
         sampler1 = RaySampler(workers, self.policy, self.env)
         sampler1.start_worker()
         sampler1.shutdown_worker()

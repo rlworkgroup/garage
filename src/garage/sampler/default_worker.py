@@ -14,8 +14,6 @@ class DefaultWorker(Worker):
 
     Args:
         seed (int): The seed to use to intialize random number generators.
-        max_episode_length (int or float): The maximum length of episodes which
-            will be sampled. Can be (floating point) infinity.
         worker_number (int): The number of the worker where this update is
             occurring. This argument is used to set a different seed for each
             worker.
@@ -30,13 +28,10 @@ class DefaultWorker(Worker):
             self,
             *,  # Require passing by keyword, since everything's an int.
             seed,
-            max_episode_length,
             worker_number):
-        super().__init__(seed=seed,
-                         max_episode_length=max_episode_length,
-                         worker_number=worker_number)
-        self.agent = None
-        self.env = None
+        super().__init__(seed=seed, worker_number=worker_number)
+        self._agent = None
+        self._env = None
         self._env_steps = []
         self._observations = []
         self._last_observations = []
@@ -63,9 +58,9 @@ class DefaultWorker(Worker):
 
         """
         if isinstance(agent_update, (dict, tuple, np.ndarray)):
-            self.agent.set_param_values(agent_update)
+            self._agent.set_param_values(agent_update)
         elif agent_update is not None:
-            self.agent = agent_update
+            self._agent = agent_update
 
     def update_env(self, env_update):
         """Use any non-None env_update as a new environment.
@@ -85,25 +80,26 @@ class DefaultWorker(Worker):
             TypeError: If env_update is not one of the documented types.
 
         """
-        self.env, _ = _apply_env_update(self.env, env_update)
+        self._env, _ = _apply_env_update(self._env, env_update)
 
     def start_episode(self):
         """Begin a new episode."""
         self._eps_length = 0
-        self._prev_obs, _ = self.env.reset()
-        self.agent.reset()
+        self._prev_obs, _ = self._env.reset()
+        self._agent.reset()
 
     def step_episode(self):
         """Take a single time-step in the current episode.
 
         Returns:
             bool: True iff the episode is done, either due to the environment
-            indicating termination of due to reaching `max_episode_length`.
+            indicating termination of due to reaching
+            :attr:`EnvSpec.max_episode_length`.
 
         """
-        if self._eps_length < self._max_episode_length:
-            a, agent_info = self.agent.get_action(self._prev_obs)
-            es = self.env.step(a)
+        if self._eps_length < self._env.spec.max_episode_length:
+            a, agent_info = self._agent.get_action(self._prev_obs)
+            es = self._env.step(a)
             self._observations.append(self._prev_obs)
             self._env_steps.append(es)
             for k, v in agent_info.items():
@@ -153,7 +149,7 @@ class DefaultWorker(Worker):
 
         lengths = self._lengths
         self._lengths = []
-        return EpisodeBatch(env_spec=self.env.spec,
+        return EpisodeBatch(env_spec=self._env.spec,
                             observations=np.asarray(observations),
                             last_observations=np.asarray(last_observations),
                             actions=np.asarray(actions),
@@ -177,4 +173,4 @@ class DefaultWorker(Worker):
 
     def shutdown(self):
         """Close the worker's environment."""
-        self.env.close()
+        self._env.close()

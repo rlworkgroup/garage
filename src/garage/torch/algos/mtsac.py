@@ -32,14 +32,11 @@ class MTSAC(SAC):
         env_spec (EnvSpec): The env_spec attribute of the environment that the
             agent is being trained in.
         num_tasks (int): The number of tasks being learned.
-        max_episode_length_eval (int or None): Maximum length of episodes used
-            for off-policy evaluation. If None, defaults to
-            `max_episode_length`.
-        eval_env (Environment): The environment used for collecting evaluation
-            episodes.
         gradient_steps_per_itr (int): Number of optimization steps that should
             occur before the training step is over and a new batch of
             transitions is collected by the sampler.
+        eval_env (Environment): Environment used for off-policy evaluation. If
+            `None`, defaults to the environment used for sampling.
         fixed_alpha (float): The entropy/temperature to be used if temperature
             is not supposed to be learned.
         target_entropy (float): target entropy to be used during
@@ -79,9 +76,8 @@ class MTSAC(SAC):
         env_spec,
         *,
         num_tasks,
-        eval_env,
         gradient_steps_per_itr,
-        max_episode_length_eval=None,
+        eval_env=None,
         fixed_alpha=None,
         target_entropy=None,
         initial_log_entropy=0.,
@@ -102,7 +98,6 @@ class MTSAC(SAC):
                          qf2=qf2,
                          replay_buffer=replay_buffer,
                          env_spec=env_spec,
-                         max_episode_length_eval=max_episode_length_eval,
                          gradient_steps_per_itr=gradient_steps_per_itr,
                          fixed_alpha=fixed_alpha,
                          target_entropy=target_entropy,
@@ -119,15 +114,16 @@ class MTSAC(SAC):
                          num_evaluation_episodes=num_evaluation_episodes,
                          eval_env=eval_env)
         self._num_tasks = num_tasks
-        self._eval_env = eval_env
         self._use_automatic_entropy_tuning = fixed_alpha is None
         self._fixed_alpha = fixed_alpha
+
         if self._use_automatic_entropy_tuning:
             if target_entropy:
                 self._target_entropy = target_entropy
             else:
                 self._target_entropy = -np.prod(
                     self.env_spec.action_space.shape).item()
+
             self._log_alpha = torch.Tensor([self._initial_log_entropy] *
                                            self._num_tasks).requires_grad_()
             self._alpha_optimizer = optimizer([self._log_alpha] *
@@ -136,6 +132,7 @@ class MTSAC(SAC):
         else:
             self._log_alpha = torch.Tensor([self._fixed_alpha] *
                                            self._num_tasks).log()
+
         self._epoch_mean_success_rate = []
         self._epoch_median_success_rate = []
 
@@ -198,7 +195,6 @@ class MTSAC(SAC):
                 obtain_evaluation_episodes(
                     self.policy,
                     self._eval_env,
-                    self._max_episode_length_eval,
                     num_eps=self._num_evaluation_episodes))
         eval_eps = EpisodeBatch.concatenate(*eval_eps)
         last_return = log_multitask_performance(epoch, eval_eps,

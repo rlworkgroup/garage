@@ -109,7 +109,7 @@ class TFWorkerWrapper(Worker):
 
         Returns:
             EpisodeBatch: Batch of sampled episodes. May be truncated if
-                `max_episode_length` is set.
+                :attr:`EnvSpec.max_episode_length` is set.
 
         """
         return self._inner_worker.rollout()
@@ -123,7 +123,8 @@ class TFWorkerWrapper(Worker):
 
         Returns:
             bool: True iff the episode is done, either due to the environment
-                indicating termination of due to reaching `max_episode_length`.
+                indicating termination of due to reaching
+                :attr:`EnvSpec.max_episode_length`.
 
         """
         return self._inner_worker.step_episode()

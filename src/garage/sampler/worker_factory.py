@@ -31,11 +31,9 @@ class WorkerFactory:
     All arguments to this type must be passed by keyword.
 
     Args:
-        seed(int): The seed to use to intialize random number generators.
-        n_workers(int): The number of workers to use.
-        max_episode_length(int): The maximum length episodes which will be
-            sampled.
-        worker_class(type): Class of the workers. Instances should implement
+        seed (int): The seed to use to intialize random number generators.
+        n_workers (int): The number of workers to use.
+        worker_class (type): Class of the workers. Instances should implement
             the Worker interface.
         worker_args (dict or None): Additional arguments that should be passed
             to the worker.
@@ -46,13 +44,11 @@ class WorkerFactory:
             self,
             *,  # Require passing by keyword.
             seed,
-            max_episode_length,
             n_workers=psutil.cpu_count(logical=False),
             worker_class=DefaultWorker,
             worker_args=None):
         self.n_workers = n_workers
         self._seed = seed
-        self._max_episode_length = max_episode_length
         self._worker_class = worker_class
         if worker_args is None:
             self._worker_args = {}
@@ -68,10 +64,10 @@ class WorkerFactory:
         correct.
 
         Args:
-            objs(object or list): Must be either a single object or a list
+            objs (object or list): Must be either a single object or a list
                 of length n_workers.
-            preprocess(function): Function to call on each single object before
-                creating the list.
+            preprocess (Callable): Function to call on each single object
+                before creating the list.
 
         Raises:
             ValueError: If a list is passed of a length other than `n_workers`.
@@ -99,12 +95,11 @@ class WorkerFactory:
             ValueError: If the worker number is greater than `n_workers`.
 
         Returns:
-            garage.sampler.Worker: The constructed worker.
+            Worker: The constructed worker.
 
         """
         if worker_number >= self.n_workers:
             raise ValueError('Worker number is too big')
         return self._worker_class(worker_number=worker_number,
                                   seed=self._seed,
-                                  max_episode_length=self._max_episode_length,
                                   **self._worker_args)

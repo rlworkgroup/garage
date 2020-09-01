@@ -95,12 +95,12 @@ def pearl_metaworld_ml10(ctxt=None,
                             encoder_hidden_size)
     # create multi-task environment and sample tasks
     ML_train_envs = [
-        normalize(GymEnv(mwb.ML10.from_task(task_name)))
+        normalize(GymEnv(mwb.ML10.from_task(task_name), max_episode_length=max_episode_length))
         for task_name in mwb.ML10.get_train_tasks().all_task_names
     ]
 
     ML_test_envs = [
-        normalize(GymEnv(mwb.ML10.from_task(task_name)))
+        normalize(GymEnv(mwb.ML10.from_task(task_name), max_episode_length=max_episode_length))
         for task_name in mwb.ML10.get_test_tasks().all_task_names
     ]
 
@@ -145,7 +145,6 @@ def pearl_metaworld_ml10(ctxt=None,
         batch_size=batch_size,
         embedding_batch_size=embedding_batch_size,
         embedding_mini_batch_size=embedding_mini_batch_size,
-        max_episode_length=max_episode_length,
         reward_scale=reward_scale,
     )
 
@@ -156,7 +155,6 @@ def pearl_metaworld_ml10(ctxt=None,
     runner.setup(algo=pearl,
                  env=env[0](),
                  sampler_cls=LocalSampler,
-                 sampler_args=dict(max_episode_length=max_episode_length),
                  n_workers=1,
                  worker_class=PEARLWorker)
 

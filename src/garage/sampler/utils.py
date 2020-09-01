@@ -5,20 +5,12 @@ import numpy as np
 from garage.misc import tensor_utils
 
 
-def rollout(env,
-            agent,
-            *,
-            max_episode_length=np.inf,
-            animated=False,
-            speedup=1,
-            deterministic=False):
+def rollout(env, agent, *, animated=False, speedup=1, deterministic=False):
     """Sample a single episode of the agent in the environment.
 
     Args:
         agent (Policy): Agent used to select actions.
         env (Environment): Environment to perform actions in.
-        max_episode_length (int): If the episode reaches this many timesteps,
-            it is truncated.
         animated (bool): If true, render the environment after each step.
         speedup (float): Factor by which to decrease the wait time between
             rendered steps. Only relevant, if animated == true.
@@ -54,7 +46,7 @@ def rollout(env,
     episode_length = 0
     if animated:
         env.visualize()
-    while episode_length < (max_episode_length or np.inf):
+    while episode_length < (env.spec.max_episode_length or np.inf):
         a, agent_info = agent.get_action(last_obs)
         if deterministic and 'mean' in agent_info:
             a = agent_info['mean']

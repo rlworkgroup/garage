@@ -43,9 +43,8 @@ class SAC(RLAlgorithm):
             collected by the sampler.
         env_spec (EnvSpec): The env_spec attribute of the environment that the
             agent is being trained in.
-        max_episode_length_eval (int or None): Maximum length of episodes used
-            for off-policy evaluation. If None, defaults to
-            `env_spec.max_episode_length`.
+        eval_env (Environment): Environment used for off-policy evaluation. If
+            `None`, defaults to the environment used for sampling.
         gradient_steps_per_itr (int): Number of optimization steps that should
         gradient_steps_per_itr(int): Number of optimization steps that should
             occur before the training step is over and a new batch of
@@ -90,7 +89,6 @@ class SAC(RLAlgorithm):
         qf2,
         replay_buffer,
         *,  # Everything after this is numbers.
-        max_episode_length_eval=None,
         gradient_steps_per_itr,
         fixed_alpha=None,
         target_entropy=None,
@@ -126,10 +124,6 @@ class SAC(RLAlgorithm):
         self._discount = discount
         self._reward_scale = reward_scale
         self.max_episode_length = env_spec.max_episode_length
-        self._max_episode_length_eval = env_spec.max_episode_length
-
-        if max_episode_length_eval is not None:
-            self._max_episode_length_eval = max_episode_length_eval
 
         self.policy = policy
         self.env_spec = env_spec
@@ -179,16 +173,20 @@ class SAC(RLAlgorithm):
         """
         if not self._eval_env:
             self._eval_env = runner.get_env_copy()
+
         last_return = None
         for _ in runner.step_epochs():
             for _ in range(self._steps_per_epoch):
+
                 if not (self.replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
                     batch_size = int(self._min_buffer_size)
                 else:
                     batch_size = None
+
                 runner.step_path = runner.obtain_samples(
                     runner.step_itr, batch_size)
+
                 path_returns = []
                 for path in runner.step_path:
                     self.replay_buffer.add_path(
@@ -201,10 +199,13 @@ class SAC(RLAlgorithm):
                                  for step_type in path['step_types']
                              ]).reshape(-1, 1)))
                     path_returns.append(sum(path['rewards']))
+
                 assert len(path_returns) == len(runner.step_path)
                 self.episode_rewards.append(np.mean(path_returns))
+
                 for _ in range(self._gradient_steps):
                     policy_loss, qf1_loss, qf2_loss = self.train_once()
+
             last_return = self._evaluate_policy(runner.step_itr)
             self._log_statistics(policy_loss, qf1_loss, qf2_loss)
             tabular.record('TotalEnvSteps', runner.total_env_steps)

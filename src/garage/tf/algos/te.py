@@ -15,8 +15,6 @@ class TaskEmbeddingWorker(DefaultWorker):
 
     Args:
         seed (int): The seed to use to intialize random number generators.
-        max_episode_length (int or float): The maximum length of episodes to
-            sample. Can be (floating point) infinity.
         worker_number(int): The number of the worker where this update is
             occurring. This argument is used to set a different seed for each
             worker.
@@ -31,20 +29,18 @@ class TaskEmbeddingWorker(DefaultWorker):
             self,
             *,  # Require passing by keyword, since everything's an int.
             seed,
-            max_episode_length,
             worker_number):
         self._latents = []
         self._tasks = []
         self._latent_infos = defaultdict(list)
         self._z, self._t, self._latent_info = None, None, None
         super().__init__(seed=seed,
-                         max_episode_length=max_episode_length,
                          worker_number=worker_number)
 
     def start_episode(self):
         """Begin a new episode."""
         # pylint: disable=protected-access
-        self._t = self.env._active_task_one_hot()
+        self._t = self._env._active_task_one_hot()
         self._z, self._latent_info = self.agent.get_latent(self._t)
         self._z = self.agent.latent_space.flatten(self._z)
         super().start_episode()
@@ -54,13 +50,14 @@ class TaskEmbeddingWorker(DefaultWorker):
 
         Returns:
             bool: True iff the episode is done, either due to the environment
-                indicating termination of due to reaching `max_episode_length`.
+                indicating termination of due to reaching
+                :attr:`EnvSpec.max_episode_length`.
 
         """
-        if self._eps_length < self._max_episode_length:
-            a, agent_info = self.agent.get_action_given_latent(
+        if self._eps_length < self._env.spec.max_episode_length:
+            a, agent_info = self._agent.get_action_given_latent(
                 self._prev_obs, self._z)
-            es = self.env.step(a)
+            es = self._env.step(a)
             self._observations.append(self._prev_obs)
             self._env_steps.append(es)
             self._tasks.append(self._t)
@@ -133,7 +130,7 @@ class TaskEmbeddingWorker(DefaultWorker):
         lengths = self._lengths
         self._lengths = []
 
-        return EpisodeBatch(env_spec=self.env.spec,
+        return EpisodeBatch(env_spec=self._env.spec,
                             observations=np.asarray(observations),
                             last_observations=np.asarray(last_observations),
                             actions=np.asarray(actions),

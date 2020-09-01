@@ -94,11 +94,11 @@ def pearl_metaworld_ml1_push(ctxt=None,
                             encoder_hidden_size)
     # create multi-task environment and sample tasks
     env_sampler = SetTaskSampler(lambda: normalize(
-        GymEnv(mwb.ML1.get_train_tasks('push-v1'))))
+        GymEnv(mwb.ML1.get_train_tasks('push-v1'), max_episode_length=max_episode_length)))
     env = env_sampler.sample(num_train_tasks)
 
     test_env_sampler = SetTaskSampler(lambda: normalize(
-        GymEnv(mwb.ML1.get_test_tasks('push-v1'))))
+        GymEnv(mwb.ML1.get_test_tasks('push-v1'), max_episode_length=max_episode_length)))
 
     runner = LocalRunner(ctxt)
 
@@ -135,7 +135,6 @@ def pearl_metaworld_ml1_push(ctxt=None,
         batch_size=batch_size,
         embedding_batch_size=embedding_batch_size,
         embedding_mini_batch_size=embedding_mini_batch_size,
-        max_episode_length=max_episode_length,
         reward_scale=reward_scale,
     )
 
@@ -146,7 +145,6 @@ def pearl_metaworld_ml1_push(ctxt=None,
     runner.setup(algo=pearl,
                  env=env[0](),
                  sampler_cls=LocalSampler,
-                 sampler_args=dict(max_episode_length=max_episode_length),
                  n_workers=1,
                  worker_class=PEARLWorker)
 

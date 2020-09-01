@@ -55,7 +55,6 @@ class TestPEARL:
                       batch_size=256,
                       embedding_batch_size=8,
                       embedding_mini_batch_size=8,
-                      max_episode_length=50,
                       reward_scale=10.,
                       use_information_bottleneck=True,
                       use_next_obs_in_context=False,
@@ -64,11 +63,11 @@ class TestPEARL:
         net_size = params['net_size']
         set_seed(params['seed'])
         env_sampler = SetTaskSampler(lambda: normalize(
-            GymEnv(ML1.get_train_tasks('push-v1'))))
+            GymEnv(ML1.get_train_tasks('push-v1'),max_episode_length=params['max_episode_length'])))
         env = env_sampler.sample(params['num_train_tasks'])
 
         test_env_sampler = SetTaskSampler(lambda: normalize(
-            GymEnv(ML1.get_test_tasks('push-v1'))))
+            GymEnv(ML1.get_test_tasks('push-v1'), max_episode_length=params['max_episode_length'])))
 
         augmented_env = PEARL.augment_env_spec(env[0](), params['latent_size'])
         qf = ContinuousMLPQFunction(
@@ -105,7 +104,6 @@ class TestPEARL:
             batch_size=params['batch_size'],
             embedding_batch_size=params['embedding_batch_size'],
             embedding_mini_batch_size=params['embedding_mini_batch_size'],
-            max_episode_length=params['max_episode_length'],
             reward_scale=params['reward_scale'],
         )
 
@@ -118,7 +116,6 @@ class TestPEARL:
             algo=pearl,
             env=env[0](),
             sampler_cls=LocalSampler,
-            sampler_args=dict(max_episode_length=params['max_episode_length']),
             n_workers=1,
             worker_class=PEARLWorker)
 

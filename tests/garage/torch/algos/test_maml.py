@@ -81,7 +81,7 @@ class TestMAML:
 
     def test_adapt_policy(self):
         """Test if policy can adapt to samples."""
-        worker = WorkerFactory(seed=100, max_episode_length=100)
+        worker = WorkerFactory(seed=100)
         sampler = LocalSampler.from_worker_factory(worker, self.policy,
                                                    self.env)
 

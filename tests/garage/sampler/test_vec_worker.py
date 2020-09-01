@@ -32,7 +32,7 @@ def envs():
         ['SFFF', 'FFFF', 'FFFF', 'FFFF'],
         ['SHFF', 'HHFF', 'FFFF', 'FFFF'],
     ]
-    return [GridWorldEnv(desc=desc) for desc in descs]
+    return [GridWorldEnv(desc=desc, max_episode_length=MAX_EPISODE_LENGTH) for desc in descs]
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def other_envs():
         ['FFFF', 'FFFF', 'FSFF', 'FFFF'],
         ['HHFF', 'HHHF', 'HSHF', 'HHHF'],
     ]
-    return [GridWorldEnv(desc=desc) for desc in descs]
+    return [GridWorldEnv(desc=desc, max_episode_length=MAX_EPISODE_LENGTH) for desc in descs]
 
 
 def assert_eps_eq(ground_truth_eps, test_eps):
@@ -61,7 +61,6 @@ def assert_eps_eq(ground_truth_eps, test_eps):
 
 def test_rollout(env, policy):
     worker = VecWorker(seed=SEED,
-                       max_episode_length=MAX_EPISODE_LENGTH,
                        worker_number=0,
                        n_envs=N_EPS)
     worker.update_agent(policy)
@@ -77,7 +76,6 @@ def test_rollout(env, policy):
 
 def test_non_vec_rollout(env, policy):
     worker = VecWorker(seed=SEED,
-                       max_episode_length=MAX_EPISODE_LENGTH,
                        worker_number=0,
                        n_envs=1)
     worker.update_agent(policy)
@@ -92,14 +90,12 @@ def test_non_vec_rollout(env, policy):
 
 def test_in_local_sampler(policy, envs):
     true_workers = WorkerFactory(seed=100,
-                                 n_workers=N_EPS,
-                                 max_episode_length=MAX_EPISODE_LENGTH)
+                                 n_workers=N_EPS)
     true_sampler = LocalSampler.from_worker_factory(true_workers, policy, envs)
     vec_workers = WorkerFactory(seed=100,
                                 n_workers=1,
                                 worker_class=VecWorker,
-                                worker_args=dict(n_envs=N_EPS),
-                                max_episode_length=MAX_EPISODE_LENGTH)
+                                worker_args=dict(n_envs=N_EPS))
     vec_sampler = LocalSampler.from_worker_factory(vec_workers, policy, [envs])
     n_samples = 100
 
@@ -121,14 +117,12 @@ def test_in_local_sampler(policy, envs):
 
 def test_reset_optimization(policy, envs, other_envs):
     true_workers = WorkerFactory(seed=100,
-                                 n_workers=N_EPS,
-                                 max_episode_length=MAX_EPISODE_LENGTH)
+                                 n_workers=N_EPS)
     true_sampler = LocalSampler.from_worker_factory(true_workers, policy, envs)
     vec_workers = WorkerFactory(seed=100,
                                 n_workers=1,
                                 worker_class=VecWorker,
-                                worker_args=dict(n_envs=N_EPS),
-                                max_episode_length=MAX_EPISODE_LENGTH)
+                                worker_args=dict(n_envs=N_EPS))
     vec_sampler = LocalSampler.from_worker_factory(vec_workers, [policy],
                                                    [envs])
     n_samples = 4 * MAX_EPISODE_LENGTH
@@ -149,14 +143,12 @@ def test_init_with_env_updates(policy, envs):
     task_sampler = EnvPoolSampler(envs)
     envs = task_sampler.sample(N_EPS)
     true_workers = WorkerFactory(seed=100,
-                                 n_workers=N_EPS,
-                                 max_episode_length=MAX_EPISODE_LENGTH)
+                                 n_workers=N_EPS)
     true_sampler = LocalSampler.from_worker_factory(true_workers, policy, envs)
     vec_workers = WorkerFactory(seed=100,
                                 n_workers=1,
                                 worker_class=VecWorker,
-                                worker_args=dict(n_envs=N_EPS),
-                                max_episode_length=MAX_EPISODE_LENGTH)
+                                worker_args=dict(n_envs=N_EPS))
     vec_sampler = LocalSampler.from_worker_factory(vec_workers, [policy],
                                                    [envs])
     n_samples = 100

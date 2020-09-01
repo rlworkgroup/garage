@@ -122,8 +122,6 @@ class RL2Worker(DefaultWorker):
 
     Args:
         seed (int): The seed to use to intialize random number generators.
-        max_episode_length (int or float): The maximum length of episodes to
-            sample. Can be (floating point) infinity.
         worker_number (int): The number of the worker where this update is
             occurring. This argument is used to set a different seed for each
             worker.
@@ -141,12 +139,10 @@ class RL2Worker(DefaultWorker):
             self,
             *,  # Require passing by keyword, since everything's an int.
             seed,
-            max_episode_length,
             worker_number,
             n_episodes_per_trial=2):
         self._n_episodes_per_trial = n_episodes_per_trial
         super().__init__(seed=seed,
-                         max_episode_length=max_episode_length,
                          worker_number=worker_number)
 
     def start_episode(self):
@@ -454,7 +450,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         # i.e. max_episode_length * episode_per_task
         concatenated_paths_stacked = (
             np_tensor_utils.stack_and_pad_tensor_dict_list(
-                concatenated_paths, self._inner_algo.max_episode_length))
+                concatenated_paths, self._env_spec.max_episode_length))
 
         name_map = None
         if hasattr(self._task_sampler, '_envs') and hasattr(

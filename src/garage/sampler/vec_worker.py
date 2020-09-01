@@ -19,8 +19,6 @@ class VecWorker(DefaultWorker):
 
     Args:
         seed (int): The seed to use to intialize random number generators.
-        max_episode_length (int or float): The maximum length of episodes which
-            will be sampled. Can be (floating point) infinity.
         worker_number (int): The number of the worker this update is
             occurring in. This argument is used  set a different seed for
             each worker.
@@ -29,15 +27,8 @@ class VecWorker(DefaultWorker):
 
     DEFAULT_N_ENVS = 8
 
-    def __init__(self,
-                 *,
-                 seed,
-                 max_episode_length,
-                 worker_number,
-                 n_envs=DEFAULT_N_ENVS):
-        super().__init__(seed=seed,
-                         max_episode_length=max_episode_length,
-                         worker_number=worker_number)
+    def __init__(self, *, seed, worker_number, n_envs=DEFAULT_N_ENVS):
+        super().__init__(seed=seed, worker_number=worker_number)
         self._n_envs = n_envs
         self._completed_episodes = []
         self._needs_agent_reset = True
@@ -107,7 +98,7 @@ class VecWorker(DefaultWorker):
         """Begin a new episode."""
         if self._needs_agent_reset or self._needs_env_reset:
             n = len(self._envs)
-            self.agent.reset([True] * n)
+            self._agent.reset([True] * n)
             if self._needs_env_reset:
                 self._prev_obs = np.asarray(
                     [env.reset()[0] for env in self._envs])
@@ -130,8 +121,8 @@ class VecWorker(DefaultWorker):
             self._needs_env_reset = False
 
     def _gather_episode(self, episode_number, last_observation):
-        assert 0 < self._episode_lengths[
-            episode_number] <= self._max_episode_length
+        max_episode_length = self._envs[episode_number].spec.max_episode_length
+        assert 0 < self._episode_lengths[episode_number] <= max_episode_length
         env_infos = self._env_infos[episode_number]
         agent_infos = self._agent_infos[episode_number]
         for k, v in env_infos.items():
@@ -168,10 +159,11 @@ class VecWorker(DefaultWorker):
             bool: True iff at least one of the episodes was completed.
         """
         finished = False
-        actions, agent_info = self.agent.get_actions(self._prev_obs)
+        actions, agent_info = self._agent.get_actions(self._prev_obs)
         completes = [False] * len(self._envs)
         for i, action in enumerate(actions):
-            if self._episode_lengths[i] < self._max_episode_length:
+            max_episode_length = self._envs[i].spec.max_episode_length
+            if self._episode_lengths[i] < max_episode_length:
                 es = self._envs[i].step(action)
                 self._observations[i].append(self._prev_obs[i])
                 self._rewards[i].append(es.reward)
@@ -183,12 +175,12 @@ class VecWorker(DefaultWorker):
                 self._episode_lengths[i] += 1
                 self._step_types[i].append(es.step_type)
                 self._prev_obs[i] = es.observation
-            if self._episode_lengths[i] >= self._max_episode_length or es.last:
+            if self._episode_lengths[i] >= max_episode_length or es.last:
                 self._gather_episode(i, es.observation)
                 completes[i] = True
                 finished = True
         if finished:
-            self.agent.reset(completes)
+            self._agent.reset(completes)
         return finished
 
     def collect_episode(self):

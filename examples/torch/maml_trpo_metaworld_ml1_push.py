@@ -58,8 +58,7 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, episodes_per_task,
     test_sampler = SetTaskSampler(lambda: normalize(
         GymEnv(mwb.ML1.get_test_tasks('push-v1'))))
 
-    meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
-                                   max_episode_length=max_episode_length)
+    meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler)
 
     runner = LocalRunner(ctxt)
     algo = MAMLTRPO(env=env,

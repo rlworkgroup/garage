@@ -15,8 +15,6 @@ class FragmentWorker(DefaultWorker):
 
     Args:
         seed (int): The seed to use to intialize random number generators.
-        max_episode_length (int or float): The maximum length of episodes which
-            will be sampled. Can be (floating point) infinity.
         length of fragments before they're transmitted out of
         worker_number (int): The number of the worker this update is
             occurring in. This argument is used to set a different seed for
@@ -33,13 +31,10 @@ class FragmentWorker(DefaultWorker):
     def __init__(self,
                  *,
                  seed,
-                 max_episode_length,
                  worker_number,
                  n_envs=DEFAULT_N_ENVS,
                  timesteps_per_call=1):
-        super().__init__(seed=seed,
-                         max_episode_length=max_episode_length,
-                         worker_number=worker_number)
+        super().__init__(seed=seed, worker_number=worker_number)
         self._n_envs = n_envs
         self._timesteps_per_call = timesteps_per_call
         self._needs_env_reset = True
@@ -87,7 +82,7 @@ class FragmentWorker(DefaultWorker):
         """Resets all agents if the environment was updated."""
         if self._needs_env_reset:
             self._needs_env_reset = False
-            self.agent.reset([True] * len(self._envs))
+            self._agent.reset([True] * len(self._envs))
             self._episode_lengths = [0] * len(self._envs)
             self._fragments = [InProgressEpisode(env) for env in self._envs]
 
@@ -99,15 +94,16 @@ class FragmentWorker(DefaultWorker):
 
         """
         prev_obs = np.asarray([frag.last_obs for frag in self._fragments])
-        actions, agent_infos = self.agent.get_actions(prev_obs)
+        actions, agent_infos = self._agent.get_actions(prev_obs)
         completes = [False] * len(self._envs)
         for i, action in enumerate(actions):
             frag = self._fragments[i]
-            if self._episode_lengths[i] < self._max_episode_length:
+            max_episode_length = self._envs[i].spec.max_episode_length
+            if self._episode_lengths[i] < max_episode_length:
                 agent_info = {k: v[i] for (k, v) in agent_infos.items()}
                 frag.step(action, agent_info)
                 self._episode_lengths[i] += 1
-            if (self._episode_lengths[i] >= self._max_episode_length
+            if (self._episode_lengths[i] >= max_episode_length
                     or frag.step_types[-1] == StepType.TERMINAL):
                 self._episode_lengths[i] = 0
                 complete_frag = frag.to_batch()
@@ -115,7 +111,7 @@ class FragmentWorker(DefaultWorker):
                 self._fragments[i] = InProgressEpisode(self._envs[i])
                 completes[i] = True
         if any(completes):
-            self.agent.reset(completes)
+            self._agent.reset(completes)
         return any(completes)
 
     def collect_episode(self):

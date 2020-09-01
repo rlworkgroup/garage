@@ -17,7 +17,8 @@ from tests.fixtures.envs.dummy import DummyBoxEnv
 
 def test_methods():
     """Test PEARLWorker methods."""
-    env_spec = GymEnv(DummyBoxEnv())
+    max_episode_length = 20
+    env_spec = GymEnv(DummyBoxEnv(), max_episode_length=max_episode_length)
     latent_dim = 5
     latent_space = akro.Box(low=-1,
                             high=1,
@@ -54,9 +55,7 @@ def test_methods():
                                               use_information_bottleneck=True,
                                               use_next_obs=False)
 
-    max_episode_length = 20
     worker1 = PEARLWorker(seed=1,
-                          max_episode_length=max_episode_length,
                           worker_number=1)
     worker1.update_agent(context_policy)
     worker1.update_env(env_spec)
@@ -67,7 +66,6 @@ def test_methods():
     assert episodes.rewards.shape == (max_episode_length, )
 
     worker2 = PEARLWorker(seed=1,
-                          max_episode_length=max_episode_length,
                           worker_number=1,
                           deterministic=True,
                           accum_context=True)

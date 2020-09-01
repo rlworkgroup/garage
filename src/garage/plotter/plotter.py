@@ -39,7 +39,6 @@ class Plotter:
     def _worker_start(self):
         env = None
         policy = None
-        max_length = None
         initial_rollout = True
         try:
             # Each iteration will process ALL messages currently in the
@@ -66,19 +65,17 @@ class Plotter:
                 if Op.UPDATE in msgs:
                     env, policy = msgs[Op.UPDATE].args
                 elif Op.DEMO in msgs:
-                    param_values, max_length = msgs[Op.DEMO].args
+                    param_values = msgs[Op.DEMO].args
                     policy.set_param_values(param_values)
                     initial_rollout = False
                     rollout(env,
                             policy,
-                            max_episode_length=max_length,
                             animated=True,
                             speedup=5)
                 else:
                     if max_length:
                         rollout(env,
                                 policy,
-                                max_episode_length=max_length,
                                 animated=True,
                                 speedup=5)
         except KeyboardInterrupt:
@@ -128,8 +125,7 @@ class Plotter:
 
         Args:
             env (GymEnv): Environment to visualize.
-            policy (Policy): Policy to roll out in the
-                visualization.
+            policy (Policy): Policy to roll out in the visualization.
 
         """
         if not Plotter.enable:
@@ -141,24 +137,21 @@ class Plotter:
         if 'Darwin' in platform.platform():
             rollout(env,
                     policy,
-                    max_episode_length=np.inf,
                     animated=True,
                     speedup=5)
 
         self._queue.put(Message(op=Op.UPDATE, args=(env, policy), kwargs=None))
 
-    def update_plot(self, policy, max_length=np.inf):
+    def update_plot(self, policy):
         """Update the plotter.
 
         Args:
-            policy (garage.np.policies.Policy): New policy to roll out in the
-                visualization.
-            max_length (int): Maximum number of steps to roll out.
+            policy (Policy): New policy to roll out in the visualization.
 
         """
         if not Plotter.enable:
             return
         self._queue.put(
             Message(op=Op.DEMO,
-                    args=(policy.get_param_values(), max_length),
+                    args=policy.get_param_values(),
                     kwargs=None))

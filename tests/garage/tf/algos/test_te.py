@@ -128,7 +128,6 @@ class TestTE(TfGraphTestCase):
     def test_te_worker(self):
         worker = TaskEmbeddingWorker(
             seed=1,
-            max_episode_length=self.max_episode_length,
             worker_number=1)
         worker.update_env(self.env)
         worker.update_agent(self.policy)

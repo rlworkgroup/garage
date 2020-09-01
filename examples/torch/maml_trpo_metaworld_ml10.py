@@ -62,7 +62,6 @@ def maml_trpo_metaworld_ml10(ctxt, seed, epochs, episodes_per_task,
     test_sampler = EnvPoolSampler(test_tasks)
 
     meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
-                                   max_episode_length=max_episode_length,
                                    n_test_tasks=len(test_task_names))
 
     runner = LocalRunner(ctxt)

@@ -49,10 +49,6 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('file', type=str, help='path to the snapshot file')
-    parser.add_argument('--max_episode_length',
-                        type=int,
-                        default=1000,
-                        help='Max length of episode')
     parser.add_argument('--speedup', type=float, default=1, help='Speedup')
     args = parser.parse_args()
 
@@ -67,7 +63,6 @@ if __name__ == '__main__':
         while True:
             path = rollout(env,
                            policy,
-                           max_episode_length=args.max_episode_length,
                            animated=True,
                            speedup=args.speedup)
             if not query_yes_no('Continue simulation?'):

@@ -18,7 +18,7 @@ MAX_EPISODE_LENGTH = 9
 
 @pytest.fixture
 def env():
-    return GridWorldEnv(desc='4x4')
+    return GridWorldEnv(desc='4x4', max_episode_length=MAX_EPISODE_LENGTH)
 
 
 @pytest.fixture
@@ -36,7 +36,7 @@ def envs():
         ['SFFF', 'FFFF', 'FFFF', 'FFFF'],
         ['SHFF', 'HHFF', 'FFFF', 'FFFF'],
     ]
-    return [GridWorldEnv(desc=desc) for desc in descs]
+    return [GridWorldEnv(desc=desc, max_episode_length=MAX_EPISODE_LENGTH) for desc in descs]
 
 
 @pytest.fixture
@@ -48,7 +48,7 @@ def other_envs():
         ['FHSF', 'FGFH', 'FHFH', 'HFFH'],
         ['SHFF', 'HHFF', 'FFFF', 'FFFF'],
     ]
-    return [GridWorldEnv(desc=desc) for desc in descs]
+    return [GridWorldEnv(desc=desc, max_episode_length=MAX_EPISODE_LENGTH) for desc in descs]
 
 
 def eps_eq(true_eps, test_eps):
@@ -86,7 +86,6 @@ def slice_episodes(episodes, slice_size):
 @pytest.mark.parametrize('timesteps_per_call', [1, 2])
 def test_rollout(env, policy, timesteps_per_call):
     worker = FragmentWorker(seed=SEED,
-                            max_episode_length=MAX_EPISODE_LENGTH,
                             worker_number=0,
                             n_envs=N_EPS,
                             timesteps_per_call=timesteps_per_call)
@@ -106,15 +105,13 @@ def test_rollout(env, policy, timesteps_per_call):
 @pytest.mark.parametrize('timesteps_per_call', [1, 2])
 def test_in_local_sampler(policy, envs, other_envs, timesteps_per_call):
     true_workers = WorkerFactory(seed=100,
-                                 n_workers=N_EPS,
-                                 max_episode_length=MAX_EPISODE_LENGTH)
+                                 n_workers=N_EPS)
     true_sampler = LocalSampler.from_worker_factory(true_workers, policy, envs)
     worker_args = dict(n_envs=N_EPS, timesteps_per_call=timesteps_per_call)
     vec_workers = WorkerFactory(seed=100,
                                 n_workers=1,
                                 worker_class=FragmentWorker,
-                                worker_args=worker_args,
-                                max_episode_length=MAX_EPISODE_LENGTH)
+                                worker_args=worker_args)
     vec_sampler = LocalSampler.from_worker_factory(vec_workers, policy, [envs])
     n_samples = 400
 

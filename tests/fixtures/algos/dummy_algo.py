@@ -17,7 +17,7 @@ class DummyAlgo(RLAlgorithm):  # pylint: disable=too-few-public-methods
         self.policy = policy
         self.baseline = baseline
         self.discount = 0.9
-        self.max_episode_length = 1
+        self.max_episode_length = env_spec.max_episode_length
         self.n_samples = 10
 
     def train(self, runner):

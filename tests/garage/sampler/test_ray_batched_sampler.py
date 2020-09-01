@@ -16,14 +16,13 @@ from tests.fixtures.sampler import ray_local_session_fixture
 
 def test_obtain_samples(ray_local_session_fixture):
     del ray_local_session_fixture
-    env = GridWorldEnv(desc='4x4')
+    env = GridWorldEnv(desc='4x4', max_episode_length=16)
     policy = ScriptedPolicy(
         scripted_actions=[2, 2, 1, 0, 3, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 1])
-    algo = Mock(env_spec=env.spec, policy=policy, max_episode_length=16)
+    algo = Mock(env_spec=env.spec, policy=policy)
 
     assert ray.is_initialized()
     workers = WorkerFactory(seed=100,
-                            max_episode_length=algo.max_episode_length,
                             n_workers=8)
     sampler1 = RaySampler.from_worker_factory(workers, policy, env)
     sampler2 = LocalSampler.from_worker_factory(workers, policy, env)
@@ -58,7 +57,7 @@ def test_update_envs_env_update(ray_local_session_fixture):
     del ray_local_session_fixture
     assert ray.is_initialized()
     max_episode_length = 16
-    env = PointEnv()
+    env = PointEnv(max_episode_length=max_episode_length)
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
@@ -67,7 +66,6 @@ def test_update_envs_env_update(ray_local_session_fixture):
     tasks = SetTaskSampler(PointEnv)
     n_workers = 8
     workers = WorkerFactory(seed=100,
-                            max_episode_length=max_episode_length,
                             n_workers=n_workers)
     sampler = RaySampler.from_worker_factory(workers, policy, env)
     episodes = sampler.obtain_samples(0,
@@ -93,14 +91,13 @@ def test_obtain_exact_episodes(ray_local_session_fixture):
     assert ray.is_initialized()
     max_episode_length = 15
     n_workers = 8
-    env = PointEnv()
+    env = PointEnv(max_episode_length=max_episode_length)
     per_worker_actions = [env.action_space.sample() for _ in range(n_workers)]
     policies = [
         FixedPolicy(env.spec, [action] * max_episode_length)
         for action in per_worker_actions
     ]
     workers = WorkerFactory(seed=100,
-                            max_episode_length=max_episode_length,
                             n_workers=n_workers)
     sampler = RaySampler.from_worker_factory(workers, policies, envs=env)
     n_eps_per_worker = 3
@@ -120,7 +117,7 @@ def test_init_with_env_updates(ray_local_session_fixture):
     del ray_local_session_fixture
     assert ray.is_initialized()
     max_episode_length = 16
-    env = PointEnv()
+    env = PointEnv(max_episode_length=max_episode_length)
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
@@ -129,7 +126,6 @@ def test_init_with_env_updates(ray_local_session_fixture):
     tasks = SetTaskSampler(PointEnv)
     n_workers = 8
     workers = WorkerFactory(seed=100,
-                            max_episode_length=max_episode_length,
                             n_workers=n_workers)
     sampler = RaySampler.from_worker_factory(workers,
                                              policy,

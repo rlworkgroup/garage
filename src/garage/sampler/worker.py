@@ -5,13 +5,11 @@ import abc
 class Worker(abc.ABC):
     """Worker class used in all Samplers."""
 
-    def __init__(self, *, seed, max_episode_length, worker_number):
+    def __init__(self, *, seed, worker_number):
         """Initialize a worker.
 
         Args:
             seed (int): The seed to use to intialize random number generators.
-            max_episode_length (int or float): The maximum length of episodes
-                which will be sampled. Can be (floating point) infinity.
             worker_number (int): The number of the worker this update is
                 occurring in. This argument is used to set a different seed for
                 each worker.
@@ -22,7 +20,6 @@ class Worker(abc.ABC):
 
         """
         self._seed = seed
-        self._max_episode_length = max_episode_length
         self._worker_number = worker_number
 
     def update_agent(self, agent_update):

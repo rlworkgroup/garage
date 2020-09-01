@@ -91,7 +91,6 @@ class TestRL2PPO(TfGraphTestCase):
                 test_task_sampler=self.tasks,
                 n_exploration_eps=10,
                 n_test_episodes=10,
-                max_episode_length=self.max_episode_length,
                 n_test_tasks=1)
 
             algo = RL2PPO(meta_batch_size=self.meta_batch_size,

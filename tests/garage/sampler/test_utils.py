@@ -11,22 +11,21 @@ from tests.fixtures.policies import DummyPolicy
 class TestRollout:
 
     def setup_method(self):
-        self.env = GymEnv(DummyBoxEnv(obs_dim=(4, 4), action_dim=(2, 2)))
+        self.env = GymEnv(DummyBoxEnv(obs_dim=(4, 4), action_dim=(2, 2)), max_episode_length=5)
         self.policy = DummyPolicy(self.env.spec)
 
     def test_max_episode_length(self):
         # pylint: disable=unsubscriptable-object
-        path = utils.rollout(self.env, self.policy, max_episode_length=3)
-        assert path['observations'].shape[0] == 3
-        assert path['actions'].shape[0] == 3
-        assert path['rewards'].shape[0] == 3
-        assert path['agent_infos']['dummy'].shape[0] == 3
-        assert path['env_infos']['dummy'].shape[0] == 3
+        path = utils.rollout(self.env, self.policy)
+        assert path['observations'].shape[0] == 5
+        assert path['actions'].shape[0] == 5
+        assert path['rewards'].shape[0] == 5
+        assert path['agent_infos']['dummy'].shape[0] == 5
+        assert path['env_infos']['dummy'].shape[0] == 5
 
     def test_deterministic_action(self):
         path = utils.rollout(self.env,
                              self.policy,
-                             max_episode_length=5,
                              deterministic=True)
         assert (path['actions'] == 0.).all()
 

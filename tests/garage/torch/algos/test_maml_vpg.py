@@ -54,13 +54,11 @@ class TestMAMLVPG:
         deterministic.set_seed(0)
 
         episodes_per_task = 5
-        max_episode_length = self.env.spec.max_episode_length
 
         task_sampler = SetTaskSampler(lambda: normalize(
             GymEnv(HalfCheetahDirEnv()), expected_action_scale=10.))
 
         meta_evaluator = MetaEvaluator(test_task_sampler=task_sampler,
-                                       max_episode_length=max_episode_length,
                                        n_test_tasks=1,
                                        n_test_episodes=10)
 

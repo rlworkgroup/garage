@@ -68,7 +68,6 @@ def rl2_ppo_metaworld_ml10_meta_test(ctxt, seed, meta_batch_size, n_epochs,
         meta_evaluator = MetaEvaluator(test_task_sampler=test_tasks,
                                        n_exploration_eps=10,
                                        n_test_episodes=10,
-                                       max_episode_length=max_episode_length,
                                        n_test_tasks=5)
 
         algo = RL2PPO(meta_batch_size=meta_batch_size,

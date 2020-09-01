@@ -57,7 +57,6 @@ def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
 
     meta_evaluator = MetaEvaluator(
         test_task_sampler=task_sampler,
-        max_episode_length=env.spec.max_episode_length,
         n_test_tasks=1,
         n_test_episodes=10)
 

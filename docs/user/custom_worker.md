@@ -40,8 +40,6 @@ class MyWorker(DefaultWorker):
 
     Args:
         seed (int): The seed to use to initialize random number generators.
-        max_episode_length (int or float): The maximum length of episodes which
-            will be sampled. Can be (floating point) infinity.
         worker_number (int): The number of the worker where this update is
             occurring. This argument is used to set a different seed for each
             worker.
@@ -55,11 +53,9 @@ class MyWorker(DefaultWorker):
             self,
             *,  # Require passing by keyword, since everything's an int.
             seed,
-            max_episode_length,
             worker_number):
         ...
         super().__init__(seed=seed,
-                         max_episode_length=max_episode_length,
                          worker_number=worker_number)
         ...
 
@@ -80,8 +76,6 @@ class RL2Worker(DefaultWorker):
 
     Args:
         seed (int): The seed to use to initialize random number generators.
-        max_episode_length (int or float): The maximum length episode which
-            will be sampled. Can be (floating point) infinity.
         worker_number (int): The number of the worker where this update is
             occurring. This argument is used to set a different seed for each
             worker.
@@ -98,12 +92,10 @@ class RL2Worker(DefaultWorker):
             self,
             *,  # Require passing by keyword, since everything's an int.
             seed,
-            max_episode_length,
             worker_number,
             n_episodes_per_trial=2):
         self._n_episodes_per_trial = n_episodes_per_trial
         super().__init__(seed=seed,
-                         max_episode_length=max_episode_length,
                          worker_number=worker_number)
 
     def rollout(self):

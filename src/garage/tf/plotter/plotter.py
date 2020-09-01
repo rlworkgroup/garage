@@ -66,12 +66,10 @@ class Plotter:
         if 'Darwin' in platform.platform():
             self.rollout(self._env,
                          self._policy,
-                         max_episode_length=np.inf,
                          animated=True,
                          speedup=5)
 
     def _start_worker(self):
-        max_length = None
         initial_rollout = True
         try:
             with self.sess.as_default(), self.sess.graph.as_default():
@@ -100,22 +98,15 @@ class Plotter:
                         self._env, self._policy = msgs[Op.UPDATE].args
                         self.queue.task_done()
                     if Op.DEMO in msgs:
-                        param_values, max_length = msgs[Op.DEMO].args
+                        param_values = msgs[Op.DEMO].args
                         self._policy.set_param_values(param_values)
                         initial_rollout = False
                         self.rollout(self._env,
                                      self._policy,
-                                     max_episode_length=max_length,
                                      animated=True,
                                      speedup=5)
                         self.queue.task_done()
-                    else:
-                        if max_length:
-                            self.rollout(self._env,
-                                         self._policy,
-                                         max_episode_length=max_length,
-                                         animated=True,
-                                         speedup=5)
+
         except KeyboardInterrupt:
             pass
 
@@ -150,17 +141,15 @@ class Plotter:
                         kwargs=None))
             atexit.register(self.close)
 
-    def update_plot(self, policy, max_length=np.inf):
+    def update_plot(self, policy):
         """Update the policy being plotted.
 
         Args:
             policy (garage.tf.Policy): Policy to visualize.
-            max_length (int or float): The maximum length to allow an episode
-                to be. Defaults to infinity.
 
         """
         if self.worker_thread.is_alive():
             self.queue.put(
                 Message(op=Op.DEMO,
-                        args=(policy.get_param_values(), max_length),
+                        args=policy.get_param_values(),
                         kwargs=None))

@@ -31,7 +31,6 @@ def samples_to_tensors(paths):
 
 def obtain_evaluation_episodes(policy,
                                env,
-                               max_episode_length=1000,
                                num_eps=100,
                                deterministic=True):
     """Sample the policy for num_eps episodes and return average values.
@@ -39,8 +38,6 @@ def obtain_evaluation_episodes(policy,
     Args:
         policy (Policy): Policy to use as the actor when gathering samples.
         env (Environment): The environement used to obtain episodes.
-        max_episode_length (int): Maximum episode length. The episode will
-            truncated when length of episode reaches max_episode_length.
         num_eps (int): Number of episodes.
         deterministic (bool): Whether the a deterministic approach is used
             in rollout.
@@ -56,7 +53,6 @@ def obtain_evaluation_episodes(policy,
     for _ in range(num_eps):
         eps = rollout(env,
                       policy,
-                      max_episode_length=max_episode_length,
                       deterministic=deterministic)
         episodes.append(eps)
     return EpisodeBatch.from_list(env.spec, episodes)

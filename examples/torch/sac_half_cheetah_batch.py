@@ -6,7 +6,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from garage import wrap_experiment
-from garage.envs import GymEnv, normalize
+from garage.envs import GymEnv, MaxEpisodeLength, normalize
 from garage.experiment import deterministic, LocalRunner
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
@@ -30,6 +30,7 @@ def sac_half_cheetah_batch(ctxt=None, seed=1):
     deterministic.set_seed(seed)
     runner = LocalRunner(snapshot_config=ctxt)
     env = normalize(GymEnv('HalfCheetah-v2'))
+    eval_env = MaxEpisodeLength(env, 1000)
 
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
@@ -54,8 +55,8 @@ def sac_half_cheetah_batch(ctxt=None, seed=1):
               policy=policy,
               qf1=qf1,
               qf2=qf2,
+              eval_env=eval_env,
               gradient_steps_per_itr=1000,
-              max_episode_length_eval=1000,
               replay_buffer=replay_buffer,
               min_buffer_size=1e4,
               target_update_tau=5e-3,

@@ -150,7 +150,6 @@ class LocalRunner:
                      *,
                      seed=None,
                      n_workers=psutil.cpu_count(logical=False),
-                     max_episode_length=None,
                      worker_class=None,
                      sampler_args=None,
                      worker_args=None):
@@ -159,8 +158,6 @@ class LocalRunner:
         Args:
             sampler_cls (type): The type of sampler to construct.
             seed (int): Seed to use in sampler workers.
-            max_episode_length (int): Maximum episode length to be sampled by
-                the sampler. Epsiodes longer than this will be truncated.
             n_workers (int): The number of workers the sampler should use.
             worker_class (type): Type of worker the Sampler should use.
             sampler_args (dict or None): Additional arguments that should be
@@ -169,9 +166,8 @@ class LocalRunner:
                 passed to the sampler.
 
         Raises:
-            ValueError: If `max_episode_length` isn't passed and the algorithm
-                doesn't contain a `max_episode_length` field, or if the
-                algorithm doesn't have a policy field.
+            ValueError: If the algorithm doesn't contain a `max_episode_length`
+                field, or if the algorithm doesn't have a policy field.
 
         Returns:
             sampler_cls: An instance of the sampler class.
@@ -184,8 +180,7 @@ class LocalRunner:
             raise ValueError('If the runner is used to construct a sampler, '
                              'the algorithm must have a `policy` or '
                              '`exploration_policy` field.')
-        if max_episode_length is None:
-            if hasattr(self._algo, 'max_episode_length'):
+        if hasattr(self._algo, 'max_episode_length'):
                 max_episode_length = self._algo.max_episode_length
         if max_episode_length is None:
             raise ValueError('If `sampler_cls` is specified in runner.setup, '
@@ -200,7 +195,6 @@ class LocalRunner:
             worker_args = {}
         return sampler_cls.from_worker_factory(WorkerFactory(
             seed=seed,
-            max_episode_length=max_episode_length,
             n_workers=n_workers,
             worker_class=worker_class,
             worker_args=worker_args),
@@ -459,8 +453,7 @@ class LocalRunner:
         logger.log(tabular)
 
         if self._plot:
-            self._plotter.update_plot(self._algo.policy,
-                                      self._algo.max_episode_length)
+            self._plotter.update_plot(self._algo.policy)
             if pause_for_plot:
                 input('Plotting evaluation run: Press Enter to " "continue...')
 

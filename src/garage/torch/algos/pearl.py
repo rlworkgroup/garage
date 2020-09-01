@@ -31,11 +31,10 @@ class PEARL(MetaRLAlgorithm):
     behavior to specific tasks.
 
     Args:
-        env (list[Environment]): Batch of sampled environment updates(
-            EnvUpdate), which, when invoked on environments, will configure
-            them with new tasks.
+        env (list[Environment]): Batch of sampled :class:`EnvUpdate`s, which
+            will configure environments with new tasks when invoked.
         policy_class (type): Class implementing
-            :pyclass:`~ContextConditionedPolicy`
+            :class:`~ContextConditionedPolicy`
         encoder_class (garage.torch.embeddings.ContextEncoder): Encoder class
             for the encoder in context-conditioned policy.
         inner_policy (garage.torch.policies.Policy): Policy.
@@ -81,7 +80,6 @@ class PEARL(MetaRLAlgorithm):
         embedding_mini_batch_size (int): Number of transitions in mini context
             batch; should be same as embedding_batch_size for non-recurrent
             encoder.
-        max_episode_length (int): Maximum episode length.
         discount (float): RL discount factor.
         replay_buffer_size (int): Maximum samples in replay buffer.
         reward_scale (int): Reward scale.
@@ -125,7 +123,6 @@ class PEARL(MetaRLAlgorithm):
                  batch_size=1024,
                  embedding_batch_size=1024,
                  embedding_mini_batch_size=1024,
-                 max_episode_length=1000,
                  discount=0.99,
                  replay_buffer_size=1000000,
                  reward_scale=1,
@@ -157,7 +154,7 @@ class PEARL(MetaRLAlgorithm):
         self._batch_size = batch_size
         self._embedding_batch_size = embedding_batch_size
         self._embedding_mini_batch_size = embedding_mini_batch_size
-        self.max_episode_length = max_episode_length
+        self.max_episode_length = env.spec.max_episode_length
         self._discount = discount
         self._replay_buffer_size = replay_buffer_size
         self._reward_scale = reward_scale
@@ -168,7 +165,6 @@ class PEARL(MetaRLAlgorithm):
 
         worker_args = dict(deterministic=True, accum_context=True)
         self._evaluator = MetaEvaluator(test_task_sampler=test_env_sampler,
-                                        max_episode_length=max_episode_length,
                                         worker_class=PEARLWorker,
                                         worker_args=worker_args,
                                         n_test_tasks=num_test_tasks)
@@ -685,8 +681,6 @@ class PEARLWorker(DefaultWorker):
 
     Args:
         seed (int): The seed to use to intialize random number generators.
-        max_episode_length(int or float): The maximum length of episodes which
-            will be sampled. Can be (floating point) infinity.
         worker_number (int): The number of the worker where this update is
             occurring. This argument is used to set a different seed for each
             worker.
@@ -704,35 +698,33 @@ class PEARLWorker(DefaultWorker):
     def __init__(self,
                  *,
                  seed,
-                 max_episode_length,
                  worker_number,
                  deterministic=False,
                  accum_context=False):
         self._deterministic = deterministic
         self._accum_context = accum_context
-        super().__init__(seed=seed,
-                         max_episode_length=max_episode_length,
-                         worker_number=worker_number)
+        super().__init__(seed=seed, worker_number=worker_number)
 
     def start_episode(self):
         """Begin a new episode."""
         self._eps_length = 0
-        self._prev_obs = self.env.reset()[0]
+        self._prev_obs = self._env.reset()[0]
 
     def step_episode(self):
         """Take a single time-step in the current episode.
 
         Returns:
             bool: True iff the episode is done, either due to the environment
-            indicating termination of due to reaching `max_episode_length`.
+            indicating termination of due to reaching
+            :attr:`EnvSpec.max_episode_length`.
 
         """
-        if self._eps_length < self._max_episode_length:
-            a, agent_info = self.agent.get_action(self._prev_obs)
+        if self._eps_length < self._env.spec.max_episode_length:
+            a, agent_info = self._agent.get_action(self._prev_obs)
             if self._deterministic:
                 a = agent_info['mean']
-            a, agent_info = self.agent.get_action(self._prev_obs)
-            es = self.env.step(a)
+            a, agent_info = self._agent.get_action(self._prev_obs)
+            es = self._env.step(a)
             self._observations.append(self._prev_obs)
             self._env_steps.append(es)
             for k, v in agent_info.items():
@@ -743,7 +735,7 @@ class PEARLWorker(DefaultWorker):
                 s = TimeStep.from_env_step(env_step=es,
                                            last_observation=self._prev_obs,
                                            agent_info=agent_info)
-                self.agent.update_context(s)
+                self._agent.update_context(s)
             if not es.last:
                 self._prev_obs = es.observation
                 return False
@@ -758,10 +750,10 @@ class PEARLWorker(DefaultWorker):
             EpisodeBatch: The collected episode.
 
         """
-        self.agent.sample_from_belief()
+        self._agent.sample_from_belief()
         self.start_episode()
         while not self.step_episode():
             pass
-        self._agent_infos['context'] = [self.agent.z.detach().cpu().numpy()
-                                        ] * self._max_episode_length
+        self._agent_infos['context'] = [self._agent.z.detach().cpu().numpy()
+                                        ] * self._env.spec.max_episode_length
         return self.collect_episode()

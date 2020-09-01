@@ -12,7 +12,7 @@ from tests.fixtures.envs.dummy import DummyBoxEnv
 class TestTaskEmbeddingWorker(TfGraphTestCase):
 
     def test_task_embedding_worker(self):
-        env = GymEnv(DummyBoxEnv(obs_dim=(1, )))
+        env = GymEnv(DummyBoxEnv(obs_dim=(1, )), max_episode_length=100)
         env.active_task_one_hot = np.array([1., 0., 0., 0.])
         env._active_task_one_hot = lambda: np.array([1., 0., 0., 0.])
 
@@ -27,7 +27,6 @@ class TestTaskEmbeddingWorker(TfGraphTestCase):
         policy.get_action_given_latent.return_value = (a, agent_info)
 
         worker = TaskEmbeddingWorker(seed=1,
-                                     max_episode_length=100,
                                      worker_number=1)
         worker.update_agent(policy)
         worker.update_env(env)

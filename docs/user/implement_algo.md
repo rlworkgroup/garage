@@ -152,7 +152,7 @@ class SimpleVPG:
     def __init__(self, env_spec, policy):
         self.env_spec = env_spec
         self.policy = policy
-        self.max_episode_length = 200
+        self.max_episode_length = env_spec.max_episode_length
 
     def train(self, runner):
         for epoch in runner.step_epochs():
@@ -203,7 +203,7 @@ class SimpleVPG:
     def __init__(self, env_spec, policy):
         self.env_spec = env_spec
         self.policy = policy
-        self.max_episode_length = 200
+        self.max_episode_length = env_spec.max_episode_length
         self._discount = 0.99
         self._policy_opt = torch.optim.Adam(self.policy.parameters(), lr=1e-3)
 
@@ -353,7 +353,7 @@ class SimpleVPG:
     def __init__(self, env_spec, policy):
         self.env_spec = env_spec
         self.policy = policy
-        self.max_episode_length = 200
+        self.max_episode_length = env_spec.max_episode_length
         self._discount = 0.99
         self.init_opt()
 
@@ -518,7 +518,7 @@ class SimpleCEM:
     def __init__(self, env_spec, policy):
         self.env_spec = env_spec
         self.policy = policy
-        self.max_episode_length = 200
+        self.max_episode_length = env_spec.max_episode_length
         self._discount = 0.99
         self._extra_std = 1
         self._extra_decay_time = 100

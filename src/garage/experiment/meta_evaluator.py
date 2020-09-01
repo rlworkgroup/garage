@@ -14,7 +14,6 @@ class MetaEvaluator:
         test_task_sampler (TaskSampler): Sampler for test
             tasks. To demonstrate the effectiveness of a meta-learning method,
             these should be different from the training tasks.
-        max_episode_length (int): Maximum length of evaluation episodes.
         n_test_tasks (int or None): Number of test tasks to sample each time
             evaluation is performed. Note that tasks are sampled "without
             replacement". If None, is set to `test_task_sampler.n_tasks`.
@@ -41,7 +40,6 @@ class MetaEvaluator:
     def __init__(self,
                  *,
                  test_task_sampler,
-                 max_episode_length,
                  n_exploration_eps=10,
                  n_test_tasks=None,
                  n_test_episodes=1,
@@ -60,7 +58,6 @@ class MetaEvaluator:
         self._n_test_tasks = n_test_tasks
         self._n_test_episodes = n_test_episodes
         self._n_exploration_eps = n_exploration_eps
-        self._max_episode_length = max_episode_length
         self._eval_itr = 0
         self._prefix = prefix
         self._test_task_names = test_task_names
@@ -81,7 +78,6 @@ class MetaEvaluator:
         if self._test_sampler is None:
             self._test_sampler = LocalSampler.from_worker_factory(
                 WorkerFactory(seed=get_seed(),
-                              max_episode_length=self._max_episode_length,
                               n_workers=1,
                               worker_class=self._worker_class,
                               worker_args=self._worker_args),
@@ -97,7 +93,7 @@ class MetaEvaluator:
             adapted_policy = algo.adapt_policy(policy, eps)
             adapted_eps = self._test_sampler.obtain_samples(
                 self._eval_itr,
-                test_episodes_per_task * self._max_episode_length,
+                test_episodes_per_task * env_up.spec.max_episode_length,
                 adapted_policy)
             adapted_episodes.append(adapted_eps)
         logger.log('Finished meta-testing...')

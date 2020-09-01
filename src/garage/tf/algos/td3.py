@@ -46,9 +46,8 @@ class TD3(RLAlgorithm):
         clip_return (float): Clip return to be in [-clip_return,
             clip_return].
         discount (float): Discount factor for the cumulative return.
-        max_episode_length_eval (int or None): Maximum length of episodes used
-            for off-policy evaluation. If `None`, defaults to
-            `env_spec.max_episode_length`.
+        eval_env (Environment): Environment used for off-policy evaluation. If
+            `None`, defaults to the environment used for sampling.
         max_action (float): Maximum action magnitude.
         name (str): Name of the algorithm shown in computation graph.
         steps_per_epoch (int): Number of batches of samples in each epoch.
@@ -82,7 +81,7 @@ class TD3(RLAlgorithm):
             clip_pos_returns=False,
             clip_return=np.inf,
             discount=0.99,
-            max_episode_length_eval=None,
+            eval_env=None,
             max_action=None,
             name='TD3',
             steps_per_epoch=20,
@@ -136,12 +135,7 @@ class TD3(RLAlgorithm):
         self._discount = discount
         self._reward_scale = reward_scale
         self.max_episode_length = env_spec.max_episode_length
-        self._max_episode_length_eval = env_spec.max_episode_length
-
-        if max_episode_length_eval is not None:
-            self._max_episode_length_eval = max_episode_length_eval
-
-        self._eval_env = None
+        self._eval_env = eval_env
 
         self.env_spec = env_spec
         self.replay_buffer = replay_buffer
@@ -298,6 +292,7 @@ class TD3(RLAlgorithm):
         """
         if not self._eval_env:
             self._eval_env = runner.get_env_copy()
+
         last_returns = [float('nan')]
         runner.enable_logging = False
 

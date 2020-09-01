@@ -90,7 +90,6 @@ def mtsac_metaworld_ml1_pick_place(ctxt=None, seed=1, _gpu=None):
         qf1=qf1,
         qf2=qf2,
         gradient_steps_per_itr=150,
-        max_episode_length_eval=150,
         eval_env=ml1_test_envs,
         env_spec=ml1_train_envs.spec,
         num_tasks=50,
