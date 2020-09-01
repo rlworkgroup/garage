@@ -11,10 +11,12 @@ This collection of functions can be used to manage the following:
 """
 import copy
 
-import gym
+import akro
 import torch
 from torch import nn
 import torch.nn.functional as F
+
+from garage import Wrapper
 
 _USE_GPU = False
 _DEVICE = None
@@ -297,6 +299,7 @@ def product_of_gaussians(mus, sigmas_squared):
     return mu, sigma_squared
 
 
+# pylint: disable=W0223
 class NonLinearity(nn.Module):
     """Wrapper class for non linear function or module.
 
@@ -336,34 +339,36 @@ class NonLinearity(nn.Module):
         return repr(self.module)
 
 
-class TransposeImage(gym.ObservationWrapper):
-    """Transpose observation space for image observation in PyTorch."""
+class TransposeImage(Wrapper):
+    """Transpose observation space for image observation in PyTorch.
 
-    def __init__(self, env=None):
-        """Transpose image observation space.
-
-        Reshape the input observation shape from (H, W, C) into (C, H, W)
+    Reshape the input observation shape from (H, W, C) into (C, H, W)
         in pytorch format.
+    """
+
+    @property
+    def observation_space(self):
+        """akro.Space: The observation space specification."""
+        obs_shape = self._env.observation_space.shape
+        return akro.Image((obs_shape[2], obs_shape[1], obs_shape[0]))
+
+    @property
+    def spec(self):
+        """EnvSpec: The environment specification."""
+        env_spec = copy.deepcopy(self._env.spec)
+        env_spec.observation_space = self.observation_space
+        return env_spec
+
+    def step(self, action):
+        """Step the wrapped env.
 
         Args:
-            env (Environment): environment.
-        """
-        super().__init__(env)
-        obs_shape = self.observation_space.shape
-        self.observation_space = gym.spaces.Box(
-            self.observation_space.low[0, 0, 0],
-            self.observation_space.high[0, 0, 0],
-            [obs_shape[2], obs_shape[1], obs_shape[0]],
-            dtype=self.observation_space.dtype)
-
-    def observation(self, observation):
-        """Transpose image observation.
-
-        Args:
-            observation (tensor): observation.
+            action (np.ndarray): An action provided by the agent.
 
         Returns:
-            torch.Tensor: transposed observation.
+            EnvStep: The environment step resulting from the action.
+
         """
-        # Observation is of type Tensor
-        return observation.transpose(2, 0, 1)
+        env_step = super().step(action)
+        obs = env_step.observation.transpose(2, 0, 1)
+        return env_step._replace(observation=obs)

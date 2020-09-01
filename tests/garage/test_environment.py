@@ -1,6 +1,5 @@
 import akro
 import cloudpickle
-import gym
 import numpy as np
 import pytest
 
@@ -19,11 +18,8 @@ def test_env_spec_pickleable():
 @pytest.fixture
 def sample_data():
     # spaces
-    obs_space = gym.spaces.Box(low=1,
-                               high=10,
-                               shape=(4, 3, 2),
-                               dtype=np.float32)
-    act_space = gym.spaces.MultiDiscrete([2, 5])
+    obs_space = akro.Box(low=1, high=10, shape=(4, 3, 2), dtype=np.float32)
+    act_space = akro.Discrete(5)
     env_spec = EnvSpec(obs_space, act_space)
 
     # generate data

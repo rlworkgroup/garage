@@ -403,7 +403,7 @@ class Wrapper(Environment):
 
     @property
     def spec(self):
-        """EnvSpec: The envionrment specification."""
+        """EnvSpec: The environment specification."""
         return self._env.spec
 
     @property

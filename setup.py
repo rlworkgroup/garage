@@ -14,7 +14,6 @@ REQUIRED = [
     'cloudpickle==1.3',
     'cma==2.7.0',
     'dowel==0.0.3',
-    f'gym[atari,box2d,classic_control]=={GYM_VERSION}',
     'numpy>=1.14.5',
     'psutil',
     'python-dateutil',
@@ -30,6 +29,10 @@ REQUIRED = [
 
 # Dependencies for optional features
 EXTRAS = {}
+
+EXTRAS['gym'] = [
+    f'gym[atari,box2d,classic_control]=={GYM_VERSION}',
+]
 
 EXTRAS['mujoco'] = [
     'mujoco-py<2.1,>=2.0',

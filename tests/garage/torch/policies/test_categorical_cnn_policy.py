@@ -35,7 +35,7 @@ class TestCategoricalCNNPolicy:
     def test_get_action(self, hidden_channels, kernel_sizes, strides,
                         hidden_sizes):
         """Test get_action function."""
-        env = DummyDiscretePixelEnv()
+        env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
         env = self._initialize_obs_env(env)
         policy = CategoricalCNNPolicy(env=env,
                                       kernel_sizes=kernel_sizes,
@@ -43,7 +43,7 @@ class TestCategoricalCNNPolicy:
                                       strides=strides,
                                       hidden_sizes=hidden_sizes)
         env.reset()
-        obs, _, _, _ = env.step(1)
+        obs = env.step(1).observation
         action, _ = policy.get_action(obs)
         assert env.action_space.contains(action)
 
@@ -56,8 +56,8 @@ class TestCategoricalCNNPolicy:
     def test_get_action_img_obs(self, hidden_channels, kernel_sizes, strides,
                                 hidden_sizes):
         """Test get_action function with akro.Image observation space."""
-        env = GymEnv(self._initialize_obs_env(DummyDiscretePixelEnv()),
-                     is_image=True)
+        env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
+        env = self._initialize_obs_env(env)
         policy = CategoricalCNNPolicy(env=env,
                                       kernel_sizes=kernel_sizes,
                                       hidden_channels=hidden_channels,
@@ -78,7 +78,7 @@ class TestCategoricalCNNPolicy:
     def test_get_actions(self, hidden_channels, kernel_sizes, strides,
                          hidden_sizes):
         """Test get_actions function with akro.Image observation space."""
-        env = DummyDiscretePixelEnv()
+        env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
         env = self._initialize_obs_env(env)
         policy = CategoricalCNNPolicy(env=env,
                                       kernel_sizes=kernel_sizes,
@@ -86,7 +86,7 @@ class TestCategoricalCNNPolicy:
                                       strides=strides,
                                       hidden_sizes=hidden_sizes)
         env.reset()
-        obs, _, _, _ = env.step(1)
+        obs = env.step(1).observation
 
         actions, _ = policy.get_actions([obs, obs, obs])
         for action in actions:
@@ -105,7 +105,7 @@ class TestCategoricalCNNPolicy:
     def test_is_pickleable(self, hidden_channels, kernel_sizes, strides,
                            hidden_sizes):
         """Test if policy is pickable."""
-        env = DummyDiscretePixelEnv()
+        env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
         env = self._initialize_obs_env(env)
         policy = CategoricalCNNPolicy(env=env,
                                       kernel_sizes=kernel_sizes,
@@ -113,7 +113,7 @@ class TestCategoricalCNNPolicy:
                                       strides=strides,
                                       hidden_sizes=hidden_sizes)
         env.reset()
-        obs, _, _, _ = env.step(1)
+        obs = env.step(1).observation
 
         output_action_1, _ = policy.get_action(obs)
 
@@ -154,8 +154,8 @@ class TestCategoricalCNNPolicy:
         """Test if a flattened image obs is passed to get_action
            then it is unflattened.
         """
-        env = GymEnv(self._initialize_obs_env(DummyDiscretePixelEnv()),
-                     is_image=True)
+        env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
+        env = self._initialize_obs_env(env)
         env.reset()
         policy = CategoricalCNNPolicy(env=env,
                                       kernel_sizes=kernel_sizes,
