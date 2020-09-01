@@ -10,11 +10,11 @@ Results:
 """
 from garage import wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.algos import CMAES
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.policies import CategoricalMLPPolicy
+from garage.trainer import TFTrainer
 
 
 @wrap_experiment
@@ -23,13 +23,13 @@ def cma_es_cartpole(ctxt=None, seed=1):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
 
     """
     set_seed(seed)
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         env = GymEnv('CartPole-v1')
 
         policy = CategoricalMLPPolicy(name='policy',
@@ -44,8 +44,8 @@ def cma_es_cartpole(ctxt=None, seed=1):
                      baseline=baseline,
                      n_samples=n_samples)
 
-        runner.setup(algo, env)
-        runner.train(n_epochs=100, batch_size=1000)
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=100, batch_size=1000)
 
 
 cma_es_cartpole()

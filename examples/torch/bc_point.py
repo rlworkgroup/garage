@@ -5,9 +5,9 @@ import numpy as np
 
 from garage import wrap_experiment
 from garage.envs import PointEnv
-from garage.experiment import LocalRunner
 from garage.torch.algos import BC
 from garage.torch.policies import GaussianMLPPolicy, Policy
+from garage.trainer import Trainer
 
 
 class OptimalPolicy(Policy):
@@ -74,7 +74,7 @@ def bc_point(ctxt=None, loss='log_prob'):
         loss (str): Either 'log_prob' or 'mse'
 
     """
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
     goal = np.array([1., 1.])
     env = PointEnv(goal=goal, max_episode_length=200)
     expert = OptimalPolicy(env.spec, goal=goal)
@@ -86,8 +86,8 @@ def bc_point(ctxt=None, loss='log_prob'):
               source=expert,
               policy_lr=1e-2,
               loss=loss)
-    runner.setup(algo, env)
-    runner.train(100, batch_size=batch_size)
+    trainer.setup(algo, env)
+    trainer.train(100, batch_size=batch_size)
 
 
 bc_point()

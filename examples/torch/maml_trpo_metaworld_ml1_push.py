@@ -7,12 +7,13 @@ import torch
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import LocalRunner, MetaEvaluator
+from garage.experiment import MetaEvaluator
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.trainer import Trainer
 
 
 @click.command()
@@ -27,7 +28,7 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, episodes_per_task,
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
         epochs (int): Number of training epochs.
@@ -61,7 +62,7 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, episodes_per_task,
     meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
                                    max_episode_length=max_episode_length)
 
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
     algo = MAMLTRPO(env=env,
                     policy=policy,
                     value_function=value_function,
@@ -72,9 +73,9 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, episodes_per_task,
                     num_grad_updates=1,
                     meta_evaluator=meta_evaluator)
 
-    runner.setup(algo, env)
-    runner.train(n_epochs=epochs,
-                 batch_size=episodes_per_task * max_episode_length)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=epochs,
+                  batch_size=episodes_per_task * max_episode_length)
 
 
 maml_trpo_metaworld_ml1_push()

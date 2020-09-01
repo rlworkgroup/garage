@@ -7,12 +7,13 @@ import torch
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.envs.mujoco import HalfCheetahDirEnv
-from garage.experiment import LocalRunner, MetaEvaluator
+from garage.experiment import MetaEvaluator
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.torch.algos import MAMLVPG
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.trainer import Trainer
 
 
 @click.command()
@@ -27,7 +28,7 @@ def maml_vpg_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
 
     Args:
         ctxt (ExperimentContext): The experiment configuration used by
-            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
+            :class:`~Trainer` to create the :class:`~Snapshotter`.
         seed (int): Used to seed the random number generator to produce
             determinism.
         epochs (int): Number of training epochs.
@@ -62,7 +63,7 @@ def maml_vpg_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
                                    n_test_tasks=1,
                                    n_test_episodes=10)
 
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
     algo = MAMLVPG(env=env,
                    policy=policy,
                    value_function=value_function,
@@ -73,9 +74,9 @@ def maml_vpg_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
                    num_grad_updates=1,
                    meta_evaluator=meta_evaluator)
 
-    runner.setup(algo, env)
-    runner.train(n_epochs=epochs,
-                 batch_size=episodes_per_task * max_episode_length)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=epochs,
+                  batch_size=episodes_per_task * max_episode_length)
 
 
 maml_vpg_half_cheetah_dir()

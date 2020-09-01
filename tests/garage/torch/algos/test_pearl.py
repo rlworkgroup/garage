@@ -4,7 +4,6 @@ import pickle
 import pytest
 
 from garage.envs import GymEnv, normalize, PointEnv
-from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.sampler import LocalSampler
@@ -15,6 +14,7 @@ from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import (ContextConditionedPolicy,
                                    TanhGaussianMLPPolicy)
 from garage.torch.q_functions import ContinuousMLPQFunction
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config
 
@@ -113,8 +113,8 @@ class TestPEARL:
         if params['use_gpu']:
             pearl.to()
 
-        runner = LocalRunner(snapshot_config)
-        runner.setup(
+        trainer = Trainer(snapshot_config)
+        trainer.setup(
             algo=pearl,
             env=env[0](),
             sampler_cls=LocalSampler,
@@ -122,8 +122,8 @@ class TestPEARL:
             n_workers=1,
             worker_class=PEARLWorker)
 
-        runner.train(n_epochs=params['num_epochs'],
-                     batch_size=params['batch_size'])
+        trainer.train(n_epochs=params['num_epochs'],
+                      batch_size=params['batch_size'])
 
     def test_pickling(self):
         """Test pickle and unpickle."""

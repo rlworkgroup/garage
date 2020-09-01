@@ -1,11 +1,11 @@
 import pytest
 
 from garage.envs import GymEnv, normalize
-from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TNPG
 from garage.tf.policies import GaussianMLPPolicy
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -15,7 +15,7 @@ class TestTNPG(TfGraphTestCase):
     @pytest.mark.mujoco_long
     def test_tnpg_inverted_pendulum(self):
         """Test TNPG with InvertedPendulum-v2 environment."""
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             env = normalize(GymEnv('InvertedPendulum-v2'))
 
             policy = GaussianMLPPolicy(name='policy',
@@ -30,9 +30,9 @@ class TestTNPG(TfGraphTestCase):
                         discount=0.99,
                         optimizer_args=dict(reg_coeff=5e-1))
 
-            runner.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.setup(algo, env, sampler_cls=LocalSampler)
 
-            last_avg_ret = runner.train(n_epochs=10, batch_size=10000)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=10000)
             assert last_avg_ret > 15
 
             env.close()

@@ -11,11 +11,11 @@ Results:
 
 from garage import wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import REPS
 from garage.tf.policies import CategoricalMLPPolicy
+from garage.trainer import TFTrainer
 
 
 @wrap_experiment
@@ -24,13 +24,13 @@ def reps_gym_cartpole(ctxt=None, seed=1):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
 
     """
     set_seed(seed)
-    with LocalTFRunner(snapshot_config=ctxt) as runner:
+    with TFTrainer(snapshot_config=ctxt) as trainer:
         env = GymEnv('CartPole-v0')
 
         policy = CategoricalMLPPolicy(env_spec=env.spec, hidden_sizes=[32, 32])
@@ -42,8 +42,8 @@ def reps_gym_cartpole(ctxt=None, seed=1):
                     baseline=baseline,
                     discount=0.99)
 
-        runner.setup(algo, env)
-        runner.train(n_epochs=100, batch_size=4000, plot=False)
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=100, batch_size=4000, plot=False)
 
 
 reps_gym_cartpole()

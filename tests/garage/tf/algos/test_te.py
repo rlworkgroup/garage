@@ -6,13 +6,13 @@ import tensorflow as tf
 from garage import InOutSpec
 from garage.envs import MultiEnvWrapper, PointEnv
 from garage.envs.multi_env_wrapper import round_robin_strategy
-from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearMultiFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TEPPO
 from garage.tf.algos.te import TaskEmbeddingWorker
 from garage.tf.embeddings import GaussianMLPEncoder
 from garage.tf.policies import GaussianMLPTaskEmbeddingPolicy
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -142,7 +142,7 @@ class TestTE(TfGraphTestCase):
         assert episodes.agent_infos['latent'][0].shape == (1, )
 
     def test_te_ppo(self):
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             algo = TEPPO(env_spec=self.env.spec,
                          policy=self.policy,
                          baseline=self.baseline,
@@ -164,9 +164,9 @@ class TestTE(TfGraphTestCase):
                          center_adv=True,
                          stop_ce_gradient=True)
 
-            runner.setup(algo,
-                         self.env,
-                         sampler_cls=LocalSampler,
-                         sampler_args=None,
-                         worker_class=TaskEmbeddingWorker)
-            runner.train(n_epochs=1, batch_size=self.batch_size, plot=False)
+            trainer.setup(algo,
+                          self.env,
+                          sampler_cls=LocalSampler,
+                          sampler_args=None,
+                          worker_class=TaskEmbeddingWorker)
+            trainer.train(n_epochs=1, batch_size=self.batch_size, plot=False)

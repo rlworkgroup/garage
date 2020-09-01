@@ -7,13 +7,14 @@ import numpy as np
 import pytest
 
 from garage.envs import GymEnv, normalize
-from garage.experiment import LocalTFRunner, task_sampler
+from garage.experiment import task_sampler
 from garage.experiment.meta_evaluator import MetaEvaluator
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import RL2PPO
 from garage.tf.algos.rl2 import RL2Env, RL2Worker
 from garage.tf.policies import GaussianGRUPolicy
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -56,7 +57,7 @@ class TestRL2PPO(TfGraphTestCase):
         self.baseline = LinearFeatureBaseline(env_spec=self.env_spec)
 
     def test_rl2_ppo_pendulum(self):
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                           task_sampler=self.tasks,
                           env_spec=self.env_spec,
@@ -71,7 +72,7 @@ class TestRL2PPO(TfGraphTestCase):
                           center_adv=False,
                           episodes_per_trial=self.episode_per_task)
 
-            runner.setup(
+            trainer.setup(
                 algo,
                 self.tasks.sample(self.meta_batch_size),
                 sampler_cls=LocalSampler,
@@ -79,14 +80,14 @@ class TestRL2PPO(TfGraphTestCase):
                 worker_class=RL2Worker,
                 worker_args=dict(n_episodes_per_trial=self.episode_per_task))
 
-            last_avg_ret = runner.train(n_epochs=1,
-                                        batch_size=self.episode_per_task *
-                                        self.max_episode_length *
-                                        self.meta_batch_size)
+            last_avg_ret = trainer.train(n_epochs=1,
+                                         batch_size=self.episode_per_task *
+                                         self.max_episode_length *
+                                         self.meta_batch_size)
             assert last_avg_ret > -40
 
     def test_rl2_ppo_pendulum_meta_test(self):
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             meta_evaluator = MetaEvaluator(
                 test_task_sampler=self.tasks,
                 n_exploration_eps=10,
@@ -114,20 +115,20 @@ class TestRL2PPO(TfGraphTestCase):
                           meta_evaluator=meta_evaluator,
                           n_epochs_per_eval=10)
 
-            runner.setup(algo,
-                         self.tasks.sample(self.meta_batch_size),
-                         sampler_cls=LocalSampler,
-                         n_workers=self.meta_batch_size,
-                         worker_class=RL2Worker)
+            trainer.setup(algo,
+                          self.tasks.sample(self.meta_batch_size),
+                          sampler_cls=LocalSampler,
+                          n_workers=self.meta_batch_size,
+                          worker_class=RL2Worker)
 
-            last_avg_ret = runner.train(n_epochs=1,
-                                        batch_size=self.episode_per_task *
-                                        self.max_episode_length *
-                                        self.meta_batch_size)
+            last_avg_ret = trainer.train(n_epochs=1,
+                                         batch_size=self.episode_per_task *
+                                         self.max_episode_length *
+                                         self.meta_batch_size)
             assert last_avg_ret > -40
 
     def test_rl2_ppo_pendulum_exploration_policy(self):
-        with LocalTFRunner(snapshot_config, sess=self.sess):
+        with TFTrainer(snapshot_config, sess=self.sess):
             algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                           task_sampler=self.tasks,
                           env_spec=self.env_spec,
@@ -154,7 +155,7 @@ class TestRL2PPO(TfGraphTestCase):
                                   exploration_policy.get_param_values())
 
     def test_rl2_ppo_pendulum_adapted_policy(self):
-        with LocalTFRunner(snapshot_config, sess=self.sess):
+        with TFTrainer(snapshot_config, sess=self.sess):
             algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                           task_sampler=self.tasks,
                           env_spec=self.env_spec,
@@ -185,7 +186,7 @@ class TestRL2PPO(TfGraphTestCase):
             assert np.array_equal(expected_hidden, new_hidden)
 
     def test_rl2_ppo_pendulum_wrong_worker(self):
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             with pytest.raises(ValueError):
                 algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                               task_sampler=self.tasks,
@@ -205,11 +206,11 @@ class TestRL2PPO(TfGraphTestCase):
                               center_adv=False,
                               episodes_per_trial=self.episode_per_task)
 
-                runner.setup(algo,
-                             self.tasks.sample(self.meta_batch_size),
-                             sampler_cls=LocalSampler,
-                             n_workers=self.meta_batch_size)
+                trainer.setup(algo,
+                              self.tasks.sample(self.meta_batch_size),
+                              sampler_cls=LocalSampler,
+                              n_workers=self.meta_batch_size)
 
-                runner.train(n_epochs=10,
-                             batch_size=self.episode_per_task *
-                             self.max_episode_length * self.meta_batch_size)
+                trainer.train(n_epochs=10,
+                              batch_size=self.episode_per_task *
+                              self.max_episode_length * self.meta_batch_size)

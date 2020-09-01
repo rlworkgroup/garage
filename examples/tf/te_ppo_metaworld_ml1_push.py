@@ -8,7 +8,6 @@ import tensorflow as tf
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearMultiFeatureBaseline
 from garage.sampler import LocalSampler
@@ -16,6 +15,7 @@ from garage.tf.algos import TEPPO
 from garage.tf.algos.te import TaskEmbeddingWorker
 from garage.tf.embeddings import GaussianMLPEncoder
 from garage.tf.policies import GaussianMLPTaskEmbeddingPolicy
+from garage.trainer import TFTrainer
 
 
 @click.command()
@@ -28,7 +28,7 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
 
     Args:
         ctxt (ExperimentContext): The experiment configuration used by
-            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
+            :class:`~Trainer` to create the :class:`~Snapshotter`.
         seed (int): Used to seed the random number generator to produce
             determinism.
         n_epochs (int): Total number of epochs for training.
@@ -55,7 +55,7 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
     policy_max_std = None
     policy_min_std = None
 
-    with LocalTFRunner(snapshot_config=ctxt) as runner:
+    with TFTrainer(snapshot_config=ctxt) as trainer:
 
         task_embed_spec = TEPPO.get_encoder_spec(env.task_space,
                                                  latent_dim=latent_length)
@@ -122,12 +122,12 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
                      center_adv=True,
                      stop_ce_gradient=True)
 
-        runner.setup(algo,
-                     env,
-                     sampler_cls=LocalSampler,
-                     sampler_args=None,
-                     worker_class=TaskEmbeddingWorker)
-        runner.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
+        trainer.setup(algo,
+                      env,
+                      sampler_cls=LocalSampler,
+                      sampler_args=None,
+                      worker_class=TaskEmbeddingWorker)
+        trainer.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
 
 
 te_ppo_ml1_push()

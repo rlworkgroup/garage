@@ -3,12 +3,13 @@ import pytest
 import torch
 
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalRunner, MetaEvaluator
+from garage.experiment import deterministic, MetaEvaluator
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.sampler import LocalSampler
 from garage.torch.algos import MAMLVPG
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config
 
@@ -64,7 +65,7 @@ class TestMAMLVPG:
                                        n_test_tasks=1,
                                        n_test_episodes=10)
 
-        runner = LocalRunner(snapshot_config)
+        trainer = Trainer(snapshot_config)
         algo = MAMLVPG(env=self.env,
                        policy=self.policy,
                        value_function=self.value_function,
@@ -75,9 +76,9 @@ class TestMAMLVPG:
                        num_grad_updates=1,
                        meta_evaluator=meta_evaluator)
 
-        runner.setup(algo, self.env, sampler_cls=LocalSampler)
-        last_avg_ret = runner.train(n_epochs=10,
-                                    batch_size=episodes_per_task *
-                                    max_episode_length)
+        trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+        last_avg_ret = trainer.train(n_epochs=10,
+                                     batch_size=episodes_per_task *
+                                     max_episode_length)
 
         assert last_avg_ret > -5

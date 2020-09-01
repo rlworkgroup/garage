@@ -2,7 +2,6 @@
 import pytest
 
 from garage.envs import GymEnv, normalize
-from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
@@ -11,6 +10,7 @@ from garage.tf.optimizers import (ConjugateGradientOptimizer,
 from garage.tf.policies import (GaussianGRUPolicy,
                                 GaussianLSTMPolicy,
                                 GaussianMLPPolicy)
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -23,7 +23,7 @@ class TestGaussianPolicies(TfGraphTestCase):
 
     @pytest.mark.parametrize('policy_cls', policies)
     def test_gaussian_policies(self, policy_cls):
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             env = normalize(GymEnv('Pendulum-v0'))
 
             policy = policy_cls(name='policy', env_spec=env.spec)
@@ -41,6 +41,6 @@ class TestGaussianPolicies(TfGraphTestCase):
                     base_eps=1e-5)),
             )
 
-            runner.setup(algo, env, sampler_cls=LocalSampler)
-            runner.train(n_epochs=1, batch_size=4000)
+            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.train(n_epochs=1, batch_size=4000)
             env.close()

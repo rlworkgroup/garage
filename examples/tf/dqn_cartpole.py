@@ -5,13 +5,13 @@ Here it creates a gym environment CartPole, and trains a DQN with 50k steps.
 """
 from garage import wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DQN
 from garage.tf.policies import DiscreteQfDerivedPolicy
 from garage.tf.q_functions import DiscreteMLPQFunction
+from garage.trainer import TFTrainer
 
 
 @wrap_experiment
@@ -20,13 +20,13 @@ def dqn_cartpole(ctxt=None, seed=1):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
 
     """
     set_seed(seed)
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         n_epochs = 10
         steps_per_epoch = 10
         sampler_batch_size = 500
@@ -55,8 +55,8 @@ def dqn_cartpole(ctxt=None, seed=1):
                    target_network_update_freq=1,
                    buffer_batch_size=32)
 
-        runner.setup(algo, env)
-        runner.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
 
 
 dqn_cartpole()

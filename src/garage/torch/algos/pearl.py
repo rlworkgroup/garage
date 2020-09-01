@@ -253,23 +253,23 @@ class PEARL(MetaRLAlgorithm):
         }
         self._is_resuming = True
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samples, train, and evaluate for each epoch.
 
         Args:
-            runner (LocalRunner): Gives the algorithm the access to
-                :method:`LocalRunner..step_epochs()`, which provides services
+            trainer (Trainer): Gives the algorithm the access to
+                :method:`Trainer..step_epochs()`, which provides services
                 such as snapshotting and sampler control.
 
         """
-        for _ in runner.step_epochs():
-            epoch = runner.step_itr / self._num_steps_per_epoch
+        for _ in trainer.step_epochs():
+            epoch = trainer.step_itr / self._num_steps_per_epoch
 
             # obtain initial set of samples from all train tasks
             if epoch == 0 or self._is_resuming:
                 for idx in range(self._num_train_tasks):
                     self._task_idx = idx
-                    self._obtain_samples(runner, epoch,
+                    self._obtain_samples(trainer, epoch,
                                          self._num_initial_steps, np.inf)
                     self._is_resuming = False
 
@@ -280,16 +280,16 @@ class PEARL(MetaRLAlgorithm):
                 self._context_replay_buffers[idx].clear()
                 # obtain samples with z ~ prior
                 if self._num_steps_prior > 0:
-                    self._obtain_samples(runner, epoch, self._num_steps_prior,
+                    self._obtain_samples(trainer, epoch, self._num_steps_prior,
                                          np.inf)
                 # obtain samples with z ~ posterior
                 if self._num_steps_posterior > 0:
-                    self._obtain_samples(runner, epoch,
+                    self._obtain_samples(trainer, epoch,
                                          self._num_steps_posterior,
                                          self._update_post_train)
                 # obtain extras samples for RL training but not encoder
                 if self._num_extra_rl_steps_posterior > 0:
-                    self._obtain_samples(runner,
+                    self._obtain_samples(trainer,
                                          epoch,
                                          self._num_extra_rl_steps_posterior,
                                          self._update_post_train,
@@ -298,7 +298,7 @@ class PEARL(MetaRLAlgorithm):
             logger.log('Training...')
             # sample train tasks and optimize networks
             self._train_once()
-            runner.step_itr += 1
+            trainer.step_itr += 1
 
             logger.log('Evaluating...')
             # evaluate
@@ -397,7 +397,7 @@ class PEARL(MetaRLAlgorithm):
         self._policy_optimizer.step()
 
     def _obtain_samples(self,
-                        runner,
+                        trainer,
                         itr,
                         num_samples,
                         update_posterior_rate,
@@ -405,7 +405,7 @@ class PEARL(MetaRLAlgorithm):
         """Obtain samples.
 
         Args:
-            runner (LocalRunner): LocalRunner.
+            trainer (Trainer): Trainer.
             itr (int): Index of iteration (epoch).
             num_samples (int): Number of samples to obtain.
             update_posterior_rate (int): How often (in episodes) to infer
@@ -424,9 +424,9 @@ class PEARL(MetaRLAlgorithm):
             num_samples_per_batch = num_samples
 
         while total_samples < num_samples:
-            paths = runner.obtain_samples(itr, num_samples_per_batch,
-                                          self._policy,
-                                          self._env[self._task_idx])
+            paths = trainer.obtain_samples(itr, num_samples_per_batch,
+                                           self._policy,
+                                           self._env[self._task_idx])
             total_samples += sum([len(path['rewards']) for path in paths])
 
             for path in paths:

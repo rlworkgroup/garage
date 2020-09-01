@@ -4,7 +4,7 @@
 import click
 
 from garage import wrap_experiment
-from garage.experiment import LocalRunner
+from garage.trainer import Trainer
 
 
 @click.command()
@@ -17,13 +17,13 @@ def resume_experiment(ctxt, saved_dir):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         saved_dir (str): Path where snapshots are saved.
 
     """
-    runner = LocalRunner(snapshot_config=ctxt)
-    runner.restore(from_dir=saved_dir)
-    runner.resume()
+    trainer = Trainer(snapshot_config=ctxt)
+    trainer.restore(from_dir=saved_dir)
+    trainer.resume()
 
 
 resume_experiment()

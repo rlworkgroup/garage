@@ -6,7 +6,7 @@ performance is too low.
 import pytest
 
 from garage.envs import GymEnv, normalize
-from garage.experiment import LocalTFRunner, task_sampler
+from garage.experiment import task_sampler
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import RL2TRPO
@@ -15,6 +15,7 @@ from garage.tf.optimizers import (ConjugateGradientOptimizer,
                                   FiniteDifferenceHVP,
                                   PenaltyLBFGSOptimizer)
 from garage.tf.policies import GaussianGRUPolicy
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -58,7 +59,7 @@ class TestRL2TRPO(TfGraphTestCase):
         self.baseline = LinearFeatureBaseline(env_spec=self.env_spec)
 
     def test_rl2_trpo_pendulum(self):
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             algo = RL2TRPO(
                 meta_batch_size=self.meta_batch_size,
                 task_sampler=self.tasks,
@@ -72,20 +73,20 @@ class TestRL2TRPO(TfGraphTestCase):
                 optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
                     base_eps=1e-5)))
 
-            runner.setup(algo,
-                         self.tasks.sample(self.meta_batch_size),
-                         sampler_cls=LocalSampler,
-                         n_workers=self.meta_batch_size,
-                         worker_class=RL2Worker)
+            trainer.setup(algo,
+                          self.tasks.sample(self.meta_batch_size),
+                          sampler_cls=LocalSampler,
+                          n_workers=self.meta_batch_size,
+                          worker_class=RL2Worker)
 
-            last_avg_ret = runner.train(n_epochs=1,
-                                        batch_size=self.episode_per_task *
-                                        self.max_episode_length *
-                                        self.meta_batch_size)
+            last_avg_ret = trainer.train(n_epochs=1,
+                                         batch_size=self.episode_per_task *
+                                         self.max_episode_length *
+                                         self.meta_batch_size)
             assert last_avg_ret > -40
 
     def test_rl2_trpo_pendulum_default_optimizer(self):
-        with LocalTFRunner(snapshot_config, sess=self.sess):
+        with TFTrainer(snapshot_config, sess=self.sess):
             algo = RL2TRPO(meta_batch_size=self.meta_batch_size,
                            task_sampler=self.tasks,
                            env_spec=self.env_spec,
@@ -99,7 +100,7 @@ class TestRL2TRPO(TfGraphTestCase):
                               ConjugateGradientOptimizer)
 
     def test_ppo_pendulum_default_optimizer2(self):
-        with LocalTFRunner(snapshot_config, sess=self.sess):
+        with TFTrainer(snapshot_config, sess=self.sess):
             algo = RL2TRPO(meta_batch_size=self.meta_batch_size,
                            task_sampler=self.tasks,
                            env_spec=self.env_spec,
@@ -113,7 +114,7 @@ class TestRL2TRPO(TfGraphTestCase):
                               PenaltyLBFGSOptimizer)
 
     def test_rl2_trpo_pendulum_invalid_kl_constraint(self):
-        with LocalTFRunner(snapshot_config, sess=self.sess):
+        with TFTrainer(snapshot_config, sess=self.sess):
             with pytest.raises(ValueError):
                 RL2TRPO(meta_batch_size=self.meta_batch_size,
                         task_sampler=self.tasks,

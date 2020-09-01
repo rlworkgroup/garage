@@ -7,13 +7,14 @@ import torch
 from torch.nn import functional as F
 
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalRunner
+from garage.experiment import deterministic
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.torch import set_gpu_mode
 from garage.torch.algos import SAC
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config
 
@@ -197,7 +198,7 @@ def test_sac_inverted_double_pendulum():
                                  hidden_sizes=[32, 32],
                                  hidden_nonlinearity=F.relu)
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
-    runner = LocalRunner(snapshot_config=snapshot_config)
+    trainer = Trainer(snapshot_config=snapshot_config)
     sac = SAC(env_spec=env.spec,
               policy=policy,
               qf1=qf1,
@@ -210,13 +211,13 @@ def test_sac_inverted_double_pendulum():
               buffer_batch_size=64,
               reward_scale=1.,
               steps_per_epoch=2)
-    runner.setup(sac, env, sampler_cls=LocalSampler)
+    trainer.setup(sac, env, sampler_cls=LocalSampler)
     if torch.cuda.is_available():
         set_gpu_mode(True)
     else:
         set_gpu_mode(False)
     sac.to()
-    ret = runner.train(n_epochs=12, batch_size=200, plot=False)
+    ret = trainer.train(n_epochs=12, batch_size=200, plot=False)
     # check that automatic entropy tuning is used
     assert sac._use_automatic_entropy_tuning
     # assert that there was a gradient properly connected to alpha
@@ -251,7 +252,7 @@ def test_fixed_alpha():
                                  hidden_sizes=[32, 32],
                                  hidden_nonlinearity=F.relu)
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
-    runner = LocalRunner(snapshot_config=snapshot_config)
+    trainer = Trainer(snapshot_config=snapshot_config)
     sac = SAC(env_spec=env.spec,
               policy=policy,
               qf1=qf1,
@@ -265,8 +266,8 @@ def test_fixed_alpha():
               reward_scale=1.,
               steps_per_epoch=1,
               fixed_alpha=np.exp(0.5))
-    runner.setup(sac, env, sampler_cls=LocalSampler)
+    trainer.setup(sac, env, sampler_cls=LocalSampler)
     sac.to()
-    runner.train(n_epochs=1, batch_size=100, plot=False)
+    trainer.train(n_epochs=1, batch_size=100, plot=False)
     assert torch.allclose(torch.Tensor([0.5]), sac._log_alpha.cpu())
     assert not sac._use_automatic_entropy_tuning

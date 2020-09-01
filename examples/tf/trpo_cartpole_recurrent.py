@@ -14,13 +14,13 @@ import click
 
 from garage import wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.optimizers import (ConjugateGradientOptimizer,
                                   FiniteDifferenceHVP)
 from garage.tf.policies import CategoricalLSTMPolicy
+from garage.trainer import TFTrainer
 
 
 @click.command()
@@ -34,7 +34,7 @@ def trpo_cartpole_recurrent(ctxt, seed, n_epochs, batch_size, plot):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         n_epochs (int): Number of epochs for training.
         seed (int): Used to seed the random number generator to produce
             determinism.
@@ -43,7 +43,7 @@ def trpo_cartpole_recurrent(ctxt, seed, n_epochs, batch_size, plot):
 
     """
     set_seed(seed)
-    with LocalTFRunner(snapshot_config=ctxt) as runner:
+    with TFTrainer(snapshot_config=ctxt) as trainer:
         env = GymEnv('CartPole-v1', max_episode_length=100)
 
         policy = CategoricalLSTMPolicy(name='policy', env_spec=env.spec)
@@ -59,8 +59,8 @@ def trpo_cartpole_recurrent(ctxt, seed, n_epochs, batch_size, plot):
                     optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
                         base_eps=1e-5)))
 
-        runner.setup(algo, env)
-        runner.train(n_epochs=n_epochs, batch_size=batch_size, plot=plot)
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=n_epochs, batch_size=batch_size, plot=plot)
 
 
 trpo_cartpole_recurrent()

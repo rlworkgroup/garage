@@ -4,13 +4,13 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.np.exploration_policies import AddGaussianNoise
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.tf.algos import TD3
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -21,7 +21,7 @@ class TestTD3(TfGraphTestCase):
     @pytest.mark.mujoco_long
     def test_td3_pendulum(self):
         """Test TD3 with Pendulum environment."""
-        with LocalTFRunner(snapshot_config) as runner:
+        with TFTrainer(snapshot_config) as trainer:
             env = GymEnv('InvertedDoublePendulum-v2', max_episode_length=100)
 
             policy = ContinuousMLPPolicy(env_spec=env.spec,
@@ -67,6 +67,6 @@ class TestTD3(TfGraphTestCase):
                        policy_optimizer=tf.compat.v1.train.AdamOptimizer,
                        qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
-            runner.setup(algo, env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=250)
+            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=250)
             assert last_avg_ret > 200

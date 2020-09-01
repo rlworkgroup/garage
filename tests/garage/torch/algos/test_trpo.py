@@ -3,11 +3,12 @@ import pytest
 import torch
 
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalRunner
+from garage.experiment import deterministic
 from garage.sampler import LocalSampler
 from garage.torch.algos import TRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config
 
@@ -36,13 +37,13 @@ class TestTRPO:
         """Test TRPO with Pendulum environment."""
         deterministic.set_seed(0)
 
-        runner = LocalRunner(snapshot_config)
+        trainer = Trainer(snapshot_config)
         algo = TRPO(env_spec=self.env.spec,
                     policy=self.policy,
                     value_function=self.value_function,
                     discount=0.99,
                     gae_lambda=0.98)
 
-        runner.setup(algo, self.env, sampler_cls=LocalSampler)
-        last_avg_ret = runner.train(n_epochs=10, batch_size=100)
+        trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+        last_avg_ret = trainer.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 0

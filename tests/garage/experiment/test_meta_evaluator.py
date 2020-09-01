@@ -8,13 +8,13 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import PointEnv
-from garage.experiment import LocalTFRunner, MetaEvaluator, SnapshotConfig
+from garage.experiment import MetaEvaluator, SnapshotConfig
 from garage.experiment.deterministic import set_seed
-from garage.experiment.local_runner import LocalRunner
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.np.algos import MetaRLAlgorithm
 from garage.sampler import LocalSampler
 from garage.tf.policies import GaussianMLPPolicy
+from garage.trainer import TFTrainer, Trainer
 
 
 class RandomPolicy:
@@ -52,8 +52,8 @@ class OptimalActionInference(MetaRLAlgorithm):
         self.policy = RandomPolicy(self.env.spec.action_space)
         self.max_episode_length = max_episode_length
 
-    def train(self, runner):
-        del runner
+    def train(self, trainer):
+        del trainer
 
     def get_exploration_policy(self):
         return self.policy
@@ -70,14 +70,14 @@ def test_meta_evaluator():
     tasks = SetTaskSampler(PointEnv)
     max_episode_length = 200
     with tempfile.TemporaryDirectory() as log_dir_name:
-        runner = LocalRunner(
+        trainer = Trainer(
             SnapshotConfig(snapshot_dir=log_dir_name,
                            snapshot_mode='last',
                            snapshot_gap=1))
         env = PointEnv()
         algo = OptimalActionInference(env=env,
                                       max_episode_length=max_episode_length)
-        runner.setup(algo, env)
+        trainer.setup(algo, env)
         meta_eval = MetaEvaluator(test_task_sampler=tasks,
                                   max_episode_length=max_episode_length,
                                   n_test_tasks=10)
@@ -115,8 +115,8 @@ class MockAlgo:
         self.n_exploration_eps = n_exploration_eps
         self.meta_eval = meta_eval
 
-    def train(self, runner):
-        for step in runner.step_epochs():
+    def train(self, trainer):
+        for step in trainer.step_epochs():
             if step % 5 == 0:
                 self.meta_eval.evaluate(self)
 
@@ -135,7 +135,7 @@ def test_pickle_meta_evaluator():
     env = PointEnv()
     n_eps = 3
     with tempfile.TemporaryDirectory() as log_dir_name:
-        runner = LocalRunner(
+        trainer = Trainer(
             SnapshotConfig(snapshot_dir=log_dir_name,
                            snapshot_mode='last',
                            snapshot_gap=1))
@@ -145,7 +145,7 @@ def test_pickle_meta_evaluator():
                                   n_exploration_eps=n_eps)
         policy = RandomPolicy(env.spec.action_space)
         algo = MockAlgo(env, policy, max_episode_length, n_eps, meta_eval)
-        runner.setup(algo, env)
+        trainer.setup(algo, env)
         log_file = tempfile.NamedTemporaryFile()
         csv_output = CsvOutput(log_file.name)
         logger.add_output(csv_output)
@@ -165,21 +165,21 @@ def test_meta_evaluator_with_tf():
         ctxt = SnapshotConfig(snapshot_dir=log_dir_name,
                               snapshot_mode='none',
                               snapshot_gap=1)
-        with LocalTFRunner(ctxt) as runner:
+        with TFTrainer(ctxt) as trainer:
             meta_eval = MetaEvaluator(test_task_sampler=tasks,
                                       max_episode_length=max_episode_length,
                                       n_test_tasks=10,
                                       n_exploration_eps=n_eps)
             policy = GaussianMLPPolicy(env.spec)
             algo = MockAlgo(env, policy, max_episode_length, n_eps, meta_eval)
-            runner.setup(algo, env)
+            trainer.setup(algo, env)
             log_file = tempfile.NamedTemporaryFile()
             csv_output = CsvOutput(log_file.name)
             logger.add_output(csv_output)
             meta_eval.evaluate(algo)
             algo_pickle = cloudpickle.dumps(algo)
         tf.compat.v1.reset_default_graph()
-        with LocalTFRunner(ctxt) as runner:
+        with TFTrainer(ctxt) as trainer:
             algo2 = cloudpickle.loads(algo_pickle)
-            runner.setup(algo2, env)
-            runner.train(10, 0)
+            trainer.setup(algo2, env)
+            trainer.train(10, 0)

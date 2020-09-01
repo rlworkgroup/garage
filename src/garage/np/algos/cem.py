@@ -86,11 +86,11 @@ class CEM(RLAlgorithm):
         return np.random.standard_normal(
             self._n_params) * sample_std + self._cur_mean
 
-    def train(self, runner):
+    def train(self, trainer):
         """Initialize variables and start training.
 
         Args:
-            runner (LocalRunner): Experiment runner, which provides services
+            trainer (Trainer): Experiment trainer, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -113,12 +113,12 @@ class CEM(RLAlgorithm):
         # start actual training
         last_return = None
 
-        for _ in runner.step_epochs():
+        for _ in trainer.step_epochs():
             for _ in range(self._n_samples):
-                runner.step_path = runner.obtain_samples(runner.step_itr)
-                last_return = self.train_once(runner.step_itr,
-                                              runner.step_path)
-                runner.step_itr += 1
+                trainer.step_path = trainer.obtain_samples(trainer.step_itr)
+                last_return = self.train_once(trainer.step_itr,
+                                              trainer.step_path)
+                trainer.step_itr += 1
 
         return last_return
 

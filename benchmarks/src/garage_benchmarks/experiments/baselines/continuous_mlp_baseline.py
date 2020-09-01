@@ -3,10 +3,11 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalTFRunner
+from garage.experiment import deterministic
 from garage.tf.algos import PPO
 from garage.tf.baselines import ContinuousMLPBaseline
 from garage.tf.policies import GaussianLSTMPolicy
+from garage.trainer import TFTrainer
 
 hyper_params = {
     'policy_hidden_sizes': 32,
@@ -29,14 +30,14 @@ def continuous_mlp_baseline(ctxt, env_id, seed):
 
     Args:
         ctxt (ExperimentContext): The experiment configuration used by
-            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
+            :class:`~Trainer` to create the :class:`~Snapshotter`.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
 
     """
     deterministic.set_seed(seed)
 
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         env = normalize(GymEnv(env_id))
 
         policy = GaussianLSTMPolicy(
@@ -66,8 +67,8 @@ def continuous_mlp_baseline(ctxt, env_id, seed):
                    center_adv=hyper_params['center_adv'],
                    stop_entropy_gradient=True)
 
-        runner.setup(algo,
-                     env,
-                     sampler_args=dict(n_envs=hyper_params['n_envs']))
-        runner.train(n_epochs=hyper_params['n_epochs'],
-                     batch_size=hyper_params['n_exploration_steps'])
+        trainer.setup(algo,
+                      env,
+                      sampler_args=dict(n_envs=hyper_params['n_envs']))
+        trainer.train(n_epochs=hyper_params['n_epochs'],
+                      batch_size=hyper_params['n_exploration_steps'])

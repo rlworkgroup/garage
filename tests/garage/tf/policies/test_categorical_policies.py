@@ -6,7 +6,6 @@ garage.tf.policies.
 import pytest
 
 from garage.envs import GymEnv, normalize
-from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
@@ -15,6 +14,7 @@ from garage.tf.optimizers import (ConjugateGradientOptimizer,
 from garage.tf.policies import (CategoricalGRUPolicy,
                                 CategoricalLSTMPolicy,
                                 CategoricalMLPPolicy)
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -27,7 +27,7 @@ class TestCategoricalPolicies(TfGraphTestCase):
 
     @pytest.mark.parametrize('policy_cls', [*policies])
     def test_categorical_policies(self, policy_cls):
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             env = normalize(GymEnv('CartPole-v0', max_episode_length=100))
 
             policy = policy_cls(name='policy', env_spec=env.spec)
@@ -45,7 +45,7 @@ class TestCategoricalPolicies(TfGraphTestCase):
                     base_eps=1e-5)),
             )
 
-            runner.setup(algo, env, sampler_cls=LocalSampler)
-            runner.train(n_epochs=1, batch_size=4000)
+            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.train(n_epochs=1, batch_size=4000)
 
             env.close()

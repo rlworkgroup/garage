@@ -197,12 +197,12 @@ class VPG(RLAlgorithm):
                                                discount=self._discount)
         return np.mean(undiscounted_returns)
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): Gives the algorithm the access to
-                :method:`~LocalRunner.step_epochs()`, which provides services
+            trainer (Trainer): Gives the algorithm the access to
+                :method:`~Trainer.step_epochs()`, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -211,12 +211,12 @@ class VPG(RLAlgorithm):
         """
         last_return = None
 
-        for _ in runner.step_epochs():
+        for _ in trainer.step_epochs():
             for _ in range(self._n_samples):
-                runner.step_path = runner.obtain_samples(runner.step_itr)
-                last_return = self._train_once(runner.step_itr,
-                                               runner.step_path)
-                runner.step_itr += 1
+                trainer.step_path = trainer.obtain_samples(trainer.step_itr)
+                last_return = self._train_once(trainer.step_itr,
+                                               trainer.step_path)
+                trainer.step_itr += 1
 
         return last_return
 

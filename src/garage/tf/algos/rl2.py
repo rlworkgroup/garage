@@ -325,11 +325,11 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         self._task_sampler = task_sampler
         self._meta_evaluator = meta_evaluator
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): Experiment runner, which provides services
+            trainer (Trainer): Experiment trainer, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -338,15 +338,16 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         """
         last_return = None
 
-        for _ in runner.step_epochs():
-            if runner.step_itr % self._n_epochs_per_eval == 0:
+        for _ in trainer.step_epochs():
+            if trainer.step_itr % self._n_epochs_per_eval == 0:
                 if self._meta_evaluator is not None:
                     self._meta_evaluator.evaluate(self)
-            runner.step_episode = runner.obtain_samples(
-                runner.step_itr,
+            trainer.step_episode = trainer.obtain_samples(
+                trainer.step_itr,
                 env_update=self._task_sampler.sample(self._meta_batch_size))
-            last_return = self.train_once(runner.step_itr, runner.step_episode)
-            runner.step_itr += 1
+            last_return = self.train_once(trainer.step_itr,
+                                          trainer.step_episode)
+            trainer.step_itr += 1
 
         return last_return
 

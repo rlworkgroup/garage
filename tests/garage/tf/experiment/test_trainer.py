@@ -3,31 +3,32 @@ import ray
 import tensorflow as tf
 
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
+from garage.experiment import deterministic
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler, MultiprocessingSampler, RaySampler
 from garage.tf.algos import VPG
 from garage.tf.plotter import Plotter
 from garage.tf.policies import CategoricalMLPPolicy
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 from tests.fixtures.sampler import ray_session_fixture
 
 
-class TestLocalRunner(TfGraphTestCase):
+class TestTrainer(TfGraphTestCase):
 
     def test_session(self):
-        with LocalTFRunner(snapshot_config):
+        with TFTrainer(snapshot_config):
             assert tf.compat.v1.get_default_session() is not None, (
-                'LocalTFRunner() should provide a default tf session.')
+                'TFTrainer() should provide a default tf session.')
 
         sess = tf.compat.v1.Session()
-        with LocalTFRunner(snapshot_config, sess=sess):
+        with TFTrainer(snapshot_config, sess=sess):
             assert tf.compat.v1.get_default_session() is sess, (
-                'LocalTFRunner(sess) should use sess as default session.')
+                'TFTrainer(sess) should use sess as default session.')
 
     def test_train(self):
-        with LocalTFRunner(snapshot_config) as runner:
+        with TFTrainer(snapshot_config) as trainer:
             env = GymEnv('CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
@@ -42,18 +43,19 @@ class TestLocalRunner(TfGraphTestCase):
                        discount=0.99,
                        optimizer_args=dict(learning_rate=0.01, ))
 
-            runner.setup(algo, env)
-            runner.train(n_epochs=1, batch_size=100)
+            trainer.setup(algo, env)
+            trainer.train(n_epochs=1, batch_size=100)
 
     def test_external_sess(self):
         with tf.compat.v1.Session() as sess:
-            with LocalTFRunner(snapshot_config, sess=sess):
+            with TFTrainer(snapshot_config, sess=sess):
                 pass
             # sess should still be the default session here.
             tf.no_op().run()
 
     def test_set_plot(self):
-        with LocalTFRunner(snapshot_config) as runner:
+        deterministic.set_seed(1)
+        with TFTrainer(snapshot_config) as trainer:
             env = GymEnv('CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
@@ -68,24 +70,24 @@ class TestLocalRunner(TfGraphTestCase):
                        discount=0.99,
                        optimizer_args=dict(learning_rate=0.01, ))
 
-            runner.setup(algo, env)
-            runner.train(n_epochs=1, batch_size=100, plot=True)
+            trainer.setup(algo, env)
+            trainer.train(n_epochs=1, batch_size=100, plot=True)
 
-            assert isinstance(runner._plotter, Plotter), (
-                'self.plotter in LocalTFRunner should be set to Plotter.')
+            assert isinstance(trainer._plotter, Plotter), (
+                'self.plotter in TFTrainer should be set to Plotter.')
 
     def test_call_train_before_set_up(self):
         with pytest.raises(Exception):
-            with LocalTFRunner(snapshot_config) as runner:
-                runner.train(n_epochs=1, batch_size=100)
+            with TFTrainer(snapshot_config) as trainer:
+                trainer.train(n_epochs=1, batch_size=100)
 
     def test_call_save_before_set_up(self):
         with pytest.raises(Exception):
-            with LocalTFRunner(snapshot_config) as runner:
-                runner.save(0)
+            with TFTrainer(snapshot_config) as trainer:
+                trainer.save(0)
 
     def test_make_sampler_local_sampler(self):
-        with LocalTFRunner(snapshot_config) as runner:
+        with TFTrainer(snapshot_config) as trainer:
             env = GymEnv('CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
@@ -100,14 +102,14 @@ class TestLocalRunner(TfGraphTestCase):
                        discount=0.99,
                        optimizer_args=dict(learning_rate=0.01, ))
 
-            runner.setup(algo, env, sampler_cls=LocalSampler)
-            assert isinstance(runner._sampler, LocalSampler)
-            runner.train(n_epochs=1, batch_size=10)
+            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            assert isinstance(trainer._sampler, LocalSampler)
+            trainer.train(n_epochs=1, batch_size=10)
 
     def test_make_sampler_ray_sampler(self, ray_session_fixture):
         del ray_session_fixture
         assert ray.is_initialized()
-        with LocalTFRunner(snapshot_config) as runner:
+        with TFTrainer(snapshot_config) as trainer:
             env = GymEnv('CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
@@ -122,6 +124,6 @@ class TestLocalRunner(TfGraphTestCase):
                        discount=0.99,
                        optimizer_args=dict(learning_rate=0.01, ))
 
-            runner.setup(algo, env, sampler_cls=RaySampler)
-            assert isinstance(runner._sampler, RaySampler)
-            runner.train(n_epochs=1, batch_size=10)
+            trainer.setup(algo, env, sampler_cls=RaySampler)
+            assert isinstance(trainer._sampler, RaySampler)
+            trainer.train(n_epochs=1, batch_size=10)

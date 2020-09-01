@@ -3,10 +3,11 @@ import torch
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalRunner
+from garage.experiment import deterministic
 from garage.torch.algos import TRPO as PyTorch_TRPO
 from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
 from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.trainer import Trainer
 
 hyper_parameters = {
     'hidden_sizes': [32, 32],
@@ -24,7 +25,7 @@ def trpo_garage_pytorch(ctxt, env_id, seed):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-                configuration used by LocalRunner to create the
+                configuration used by Trainer to create the
                 snapshotter.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
@@ -32,7 +33,7 @@ def trpo_garage_pytorch(ctxt, env_id, seed):
     """
     deterministic.set_seed(seed)
 
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
 
     env = normalize(GymEnv(env_id))
 
@@ -52,6 +53,6 @@ def trpo_garage_pytorch(ctxt, env_id, seed):
                         discount=hyper_parameters['discount'],
                         gae_lambda=hyper_parameters['gae_lambda'])
 
-    runner.setup(algo, env)
-    runner.train(n_epochs=hyper_parameters['n_epochs'],
-                 batch_size=hyper_parameters['batch_size'])
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=hyper_parameters['n_epochs'],
+                  batch_size=hyper_parameters['batch_size'])

@@ -3,10 +3,11 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalTFRunner
+from garage.experiment import deterministic
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import PPO
 from garage.tf.policies import CategoricalGRUPolicy
+from garage.trainer import TFTrainer
 
 
 @wrap_experiment
@@ -15,7 +16,7 @@ def categorical_gru_policy(ctxt, env_id, seed):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the
+            configuration used by Trainer to create the
             snapshotter.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
@@ -23,7 +24,7 @@ def categorical_gru_policy(ctxt, env_id, seed):
     """
     deterministic.set_seed(seed)
 
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         env = normalize(GymEnv(env_id))
 
         policy = CategoricalGRUPolicy(
@@ -49,5 +50,5 @@ def categorical_gru_policy(ctxt, env_id, seed):
             ),
         )
 
-        runner.setup(algo, env, sampler_args=dict(n_envs=12))
-        runner.train(n_epochs=488, batch_size=2048)
+        trainer.setup(algo, env, sampler_args=dict(n_envs=12))
+        trainer.train(n_epochs=488, batch_size=2048)

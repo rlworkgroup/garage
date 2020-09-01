@@ -167,12 +167,12 @@ class SAC(RLAlgorithm):
             self._log_alpha = torch.Tensor([self._fixed_alpha]).log()
         self.episode_rewards = deque(maxlen=30)
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): Gives the algorithm the access to
-                :method:`~LocalRunner.step_epochs()`, which provides services
+            trainer (Trainer): Gives the algorithm the access to
+                :method:`~Trainer.step_epochs()`, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -180,19 +180,19 @@ class SAC(RLAlgorithm):
 
         """
         if not self._eval_env:
-            self._eval_env = runner.get_env_copy()
+            self._eval_env = trainer.get_env_copy()
         last_return = None
-        for _ in runner.step_epochs():
+        for _ in trainer.step_epochs():
             for _ in range(self._steps_per_epoch):
                 if not (self.replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
                     batch_size = int(self._min_buffer_size)
                 else:
                     batch_size = None
-                runner.step_path = runner.obtain_samples(
-                    runner.step_itr, batch_size)
+                trainer.step_path = trainer.obtain_samples(
+                    trainer.step_itr, batch_size)
                 path_returns = []
-                for path in runner.step_path:
+                for path in trainer.step_path:
                     self.replay_buffer.add_path(
                         dict(observation=path['observations'],
                              action=path['actions'],
@@ -203,14 +203,14 @@ class SAC(RLAlgorithm):
                                  for step_type in path['step_types']
                              ]).reshape(-1, 1)))
                     path_returns.append(sum(path['rewards']))
-                assert len(path_returns) == len(runner.step_path)
+                assert len(path_returns) == len(trainer.step_path)
                 self.episode_rewards.append(np.mean(path_returns))
                 for _ in range(self._gradient_steps):
                     policy_loss, qf1_loss, qf2_loss = self.train_once()
-            last_return = self._evaluate_policy(runner.step_itr)
+            last_return = self._evaluate_policy(trainer.step_itr)
             self._log_statistics(policy_loss, qf1_loss, qf2_loss)
-            tabular.record('TotalEnvSteps', runner.total_env_steps)
-            runner.step_itr += 1
+            tabular.record('TotalEnvSteps', trainer.total_env_steps)
+            trainer.step_itr += 1
 
         return np.mean(last_return)
 

@@ -7,13 +7,14 @@ from torch.nn import functional as F
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalRunner
+from garage.experiment import deterministic
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.torch import set_gpu_mode
 from garage.torch.algos import SAC
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
+from garage.trainer import Trainer
 
 
 @wrap_experiment(snapshot_mode='none')
@@ -22,13 +23,13 @@ def sac_half_cheetah_batch(ctxt=None, seed=1):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
 
     """
     deterministic.set_seed(seed)
-    runner = LocalRunner(snapshot_config=ctxt)
+    trainer = Trainer(snapshot_config=ctxt)
     env = normalize(GymEnv('HalfCheetah-v2'))
 
     policy = TanhGaussianMLPPolicy(
@@ -69,8 +70,8 @@ def sac_half_cheetah_batch(ctxt=None, seed=1):
     else:
         set_gpu_mode(False)
     sac.to()
-    runner.setup(algo=sac, env=env, sampler_cls=LocalSampler)
-    runner.train(n_epochs=1000, batch_size=1000)
+    trainer.setup(algo=sac, env=env, sampler_cls=LocalSampler)
+    trainer.train(n_epochs=1000, batch_size=1000)
 
 
 s = np.random.randint(0, 1000)

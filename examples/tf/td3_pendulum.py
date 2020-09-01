@@ -12,13 +12,13 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddGaussianNoise
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import TD3
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
+from garage.trainer import TFTrainer
 
 
 @wrap_experiment(snapshot_mode='last')
@@ -27,13 +27,13 @@ def td3_pendulum(ctxt=None, seed=1):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
 
     """
     set_seed(seed)
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         env = GymEnv('InvertedDoublePendulum-v2')
 
         policy = ContinuousMLPPolicy(env_spec=env.spec,
@@ -77,8 +77,8 @@ def td3_pendulum(ctxt=None, seed=1):
                   policy_optimizer=tf.compat.v1.train.AdamOptimizer,
                   qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
-        runner.setup(td3, env)
-        runner.train(n_epochs=500, batch_size=250)
+        trainer.setup(td3, env)
+        trainer.train(n_epochs=500, batch_size=250)
 
 
 td3_pendulum(seed=1)

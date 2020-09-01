@@ -13,6 +13,16 @@ from garage.experiment.snapshotter import Snapshotter
 from garage.sampler.default_worker import DefaultWorker
 from garage.sampler.worker_factory import WorkerFactory
 
+# pylint: disable=no-name-in-module
+
+tf = False
+TFWorkerClassWrapper = False
+try:
+    import tensorflow as tf
+    from garage.tf.samplers import TFWorkerClassWrapper  # noqa: E501; pylint: disable=ungrouped-imports
+except ImportError:
+    pass
+
 
 class ExperimentStats:
     # pylint: disable=too-few-public-methods
@@ -35,7 +45,7 @@ class ExperimentStats:
 
 class SetupArgs:
     # pylint: disable=too-few-public-methods
-    """Arguments to setup a runner.
+    """Arguments to setup a trainer.
 
     Args:
         sampler_cls (Sampler): A sampler class.
@@ -74,42 +84,42 @@ class TrainArgs:
         self.start_epoch = start_epoch
 
 
-class LocalRunner:
-    """Base class of local runner.
+class Trainer:
+    """Base class of trainer.
 
-    Use Runner.setup(algo, env) to setup algorithm and environment for runner
-    and Runner.train() to start training.
+    Use trainer.setup(algo, env) to setup algorithm and environment for trainer
+    and trainer.train() to start training.
 
     Args:
         snapshot_config (garage.experiment.SnapshotConfig): The snapshot
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
             If None, it will create one with default settings.
 
     Note:
         For the use of any TensorFlow environments, policies and algorithms,
-        please use LocalTFRunner().
+        please use TFTrainer().
 
     Examples:
         | # to train
-        | runner = LocalRunner()
+        | trainer = Trainer()
         | env = Env(...)
         | policy = Policy(...)
         | algo = Algo(
         |         env=env,
         |         policy=policy,
         |         ...)
-        | runner.setup(algo, env)
-        | runner.train(n_epochs=100, batch_size=4000)
+        | trainer.setup(algo, env)
+        | trainer.train(n_epochs=100, batch_size=4000)
 
         | # to resume immediately.
-        | runner = LocalRunner()
-        | runner.restore(resume_from_dir)
-        | runner.resume()
+        | trainer = Trainer()
+        | trainer.restore(resume_from_dir)
+        | trainer.resume()
 
         | # to resume with modified training arguments.
-        | runner = LocalRunner()
-        | runner.restore(resume_from_dir)
-        | runner.resume(n_epochs=20)
+        | trainer = Trainer()
+        | trainer.restore(resume_from_dir)
+        | trainer.resume(n_epochs=20)
 
     """
 
@@ -181,14 +191,14 @@ class LocalRunner:
         if policy is None:
             policy = getattr(self._algo, 'policy', None)
         if policy is None:
-            raise ValueError('If the runner is used to construct a sampler, '
+            raise ValueError('If the trainer is used to construct a sampler, '
                              'the algorithm must have a `policy` or '
                              '`exploration_policy` field.')
         if max_episode_length is None:
             if hasattr(self._algo, 'max_episode_length'):
                 max_episode_length = self._algo.max_episode_length
         if max_episode_length is None:
-            raise ValueError('If `sampler_cls` is specified in runner.setup, '
+            raise ValueError('If `sampler_cls` is specified in trainer.setup, '
                              'the algorithm must specify `max_episode_length`')
         if worker_class is None:
             worker_class = getattr(self._algo, 'worker_cls', DefaultWorker)
@@ -215,9 +225,9 @@ class LocalRunner:
               n_workers=psutil.cpu_count(logical=False),
               worker_class=None,
               worker_args=None):
-        """Set up runner for algorithm and environment.
+        """Set up trainer for algorithm and environment.
 
-        This method saves algo and env within runner and creates a sampler.
+        This method saves algo and env within trainer and creates a sampler.
 
         Note:
             After setup() is called all variables in session should have been
@@ -304,7 +314,7 @@ class LocalRunner:
                 be spread across the workers.
 
         Raises:
-            ValueError: If the runner was initialized without a sampler, or
+            ValueError: If the trainer was initialized without a sampler, or
                 batch_size wasn't provided here or to train.
 
         Returns:
@@ -312,13 +322,14 @@ class LocalRunner:
 
         """
         if self._sampler is None:
-            raise ValueError('Runner was not initialized with `sampler_cls`. '
-                             'Either provide `sampler_cls` to runner.setup, '
+            raise ValueError('trainer was not initialized with `sampler_cls`. '
+                             'Either provide `sampler_cls` to trainer.setup, '
                              ' or set `algo.sampler_cls`.')
         if batch_size is None and self._train_args.batch_size is None:
-            raise ValueError('Runner was not initialized with `batch_size`. '
-                             'Either provide `batch_size` to runner.train, '
-                             ' or pass `batch_size` to runner.obtain_samples.')
+            raise ValueError(
+                'trainer was not initialized with `batch_size`. '
+                'Either provide `batch_size` to trainer.train, '
+                ' or pass `batch_size` to trainer.obtain_samples.')
         episodes = None
         if agent_update is None:
             agent_update = self._algo.policy.get_param_values()
@@ -350,8 +361,9 @@ class LocalRunner:
                 be spread across the workers.
 
         Raises:
-            ValueError: Raised if the runner was initialized without a sampler,
-                        or batch_size wasn't provided here or to train.
+            ValueError: Raised if the trainer was initialized without a
+                        sampler, or batch_size wasn't provided here
+                        or to train.
 
         Returns:
             list[dict]: One batch of samples.
@@ -367,11 +379,11 @@ class LocalRunner:
             epoch (int): Epoch.
 
         Raises:
-            NotSetupError: if save() is called before the runner is set up.
+            NotSetupError: if save() is called before the trainer is set up.
 
         """
         if not self._has_setup:
-            raise NotSetupError('Use setup() to setup runner before saving.')
+            raise NotSetupError('Use setup() to setup trainer before saving.')
 
         logger.log('Saving snapshot...')
 
@@ -487,7 +499,8 @@ class LocalRunner:
 
         """
         if not self._has_setup:
-            raise NotSetupError('Use setup() to setup runner before training.')
+            raise NotSetupError(
+                'Use setup() to setup trainer before training.')
 
         # Save arguments for restore
         self._train_args = TrainArgs(n_epochs=n_epochs,
@@ -519,10 +532,10 @@ class LocalRunner:
             int: The next training epoch.
 
         Examples:
-            for epoch in runner.step_epochs():
-                runner.step_episode = runner.obtain_samples(...)
+            for epoch in trainer.step_epochs():
+                trainer.step_episode = trainer.obtain_samples(...)
                 self.train_once(...)
-                runner.step_itr += 1
+                trainer.step_itr += 1
 
         """
         self._start_worker()
@@ -625,3 +638,199 @@ class LocalRunner:
 
 class NotSetupError(Exception):
     """Raise when an experiment is about to run without setup."""
+
+
+class TFTrainer(Trainer):
+    """This class implements a trainer for TensorFlow algorithms.
+
+    A trainer provides a default TensorFlow session using python context.
+    This is useful for those experiment components (e.g. policy) that require a
+    TensorFlow session during construction.
+
+    Use trainer.setup(algo, env) to setup algorithm and environment for trainer
+    and trainer.train() to start training.
+
+    Args:
+        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+            configuration used by Trainer to create the snapshotter.
+            If None, it will create one with default settings.
+        sess (tf.Session): An optional TensorFlow session.
+              A new session will be created immediately if not provided.
+
+    Note:
+        When resume via command line, new snapshots will be
+        saved into the SAME directory if not specified.
+
+        When resume programmatically, snapshot directory should be
+        specify manually or through @wrap_experiment interface.
+
+    Examples:
+        # to train
+        with TFTrainer() as trainer:
+            env = gym.make('CartPole-v1')
+            policy = CategoricalMLPPolicy(
+                env_spec=env.spec,
+                hidden_sizes=(32, 32))
+            algo = TRPO(
+                env=env,
+                policy=policy,
+                baseline=baseline,
+                max_episode_length=100,
+                discount=0.99,
+                max_kl_step=0.01)
+            trainer.setup(algo, env)
+            trainer.train(n_epochs=100, batch_size=4000)
+
+        # to resume immediately.
+        with TFTrainer() as trainer:
+            trainer.restore(resume_from_dir)
+            trainer.resume()
+
+        # to resume with modified training arguments.
+        with TFTrainer() as trainer:
+            trainer.restore(resume_from_dir)
+            trainer.resume(n_epochs=20)
+
+    """
+
+    def __init__(self, snapshot_config, sess=None):
+        super().__init__(snapshot_config=snapshot_config)
+        self.sess = sess or tf.compat.v1.Session()
+        self.sess_entered = False
+
+    def __enter__(self):
+        """Set self.sess as the default session.
+
+        Returns:
+            TFTrainer: This trainer.
+
+        """
+        if tf.compat.v1.get_default_session() is not self.sess:
+            self.sess.__enter__()
+            self.sess_entered = True
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Leave session.
+
+        Args:
+            exc_type (str): Type.
+            exc_val (object): Value.
+            exc_tb (object): Traceback.
+
+        """
+        if tf.compat.v1.get_default_session(
+        ) is self.sess and self.sess_entered:
+            self.sess.__exit__(exc_type, exc_val, exc_tb)
+            self.sess_entered = False
+
+    def make_sampler(self,
+                     sampler_cls,
+                     *,
+                     seed=None,
+                     n_workers=psutil.cpu_count(logical=False),
+                     max_episode_length=None,
+                     worker_class=None,
+                     sampler_args=None,
+                     worker_args=None):
+        """Construct a Sampler from a Sampler class.
+
+        Args:
+            sampler_cls (type): The type of sampler to construct.
+            seed (int): Seed to use in sampler workers.
+            max_episode_length (int): Maximum episode length to be sampled by
+                the sampler. Paths longer than this will be truncated.
+            n_workers (int): The number of workers the sampler should use.
+            worker_class (type): Type of worker the sampler should use.
+            sampler_args (dict or None): Additional arguments that should be
+                passed to the sampler.
+            worker_args (dict or None): Additional arguments that should be
+                passed to the worker.
+
+        Returns:
+            sampler_cls: An instance of the sampler class.
+
+        """
+        if worker_class is None:
+            worker_class = getattr(self._algo, 'worker_cls', DefaultWorker)
+        # pylint: disable=useless-super-delegation
+        return super().make_sampler(
+            sampler_cls,
+            seed=seed,
+            n_workers=n_workers,
+            max_episode_length=max_episode_length,
+            worker_class=TFWorkerClassWrapper(worker_class),
+            sampler_args=sampler_args,
+            worker_args=worker_args)
+
+    def setup(self,
+              algo,
+              env,
+              sampler_cls=None,
+              sampler_args=None,
+              n_workers=psutil.cpu_count(logical=False),
+              worker_class=None,
+              worker_args=None):
+        """Set up trainer and sessions for algorithm and environment.
+
+        This method saves algo and env within trainer and creates a sampler,
+        and initializes all uninitialized variables in session.
+
+        Note:
+            After setup() is called all variables in session should have been
+            initialized. setup() respects existing values in session so
+            policy weights can be loaded before setup().
+
+        Args:
+            algo (RLAlgorithm): An algorithm instance.
+            env (Environment): An environment instance.
+            sampler_cls (type): A class which implements :class:`Sampler`
+            sampler_args (dict): Arguments to be passed to sampler constructor.
+            n_workers (int): The number of workers the sampler should use.
+            worker_class (type): Type of worker the sampler should use.
+            worker_args (dict or None): Additional arguments that should be
+                passed to the worker.
+
+        """
+        self.initialize_tf_vars()
+        logger.log(self.sess.graph)
+        super().setup(algo, env, sampler_cls, sampler_args, n_workers,
+                      worker_class, worker_args)
+
+    def _start_worker(self):
+        """Start Plotter and Sampler workers."""
+        self._sampler.start_worker()
+        if self._plot:
+            # pylint: disable=import-outside-toplevel
+            from garage.tf.plotter import Plotter
+            self._plotter = Plotter(self.get_env_copy(),
+                                    self._algo.policy,
+                                    sess=tf.compat.v1.get_default_session())
+            self._plotter.start()
+
+    def initialize_tf_vars(self):
+        """Initialize all uninitialized variables in session."""
+        with tf.name_scope('initialize_tf_vars'):
+            uninited_set = [
+                e.decode() for e in self.sess.run(
+                    tf.compat.v1.report_uninitialized_variables())
+            ]
+            self.sess.run(
+                tf.compat.v1.variables_initializer([
+                    v for v in tf.compat.v1.global_variables()
+                    if v.name.split(':')[0] in uninited_set
+                ]))
+
+
+class __FakeTFTrainer:
+    # noqa: E501; pylint: disable=missing-param-doc,too-few-public-methods,no-method-argument
+    """Raises an ImportError for environments without TensorFlow."""
+
+    def __init__(*args, **kwargs):
+        raise ImportError(
+            'TFTrainer requires TensorFlow. To use it, please install '
+            'TensorFlow.')
+
+
+if not tf:
+    TFTrainer = __FakeTFTrainer  # noqa: F811

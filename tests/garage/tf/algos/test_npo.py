@@ -6,11 +6,11 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import GymEnv, normalize
-from garage.experiment import LocalTFRunner
 from garage.sampler import LocalSampler
 from garage.tf.algos import NPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.policies import GaussianMLPPolicy
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -36,15 +36,15 @@ class TestNPO(TfGraphTestCase):
     @pytest.mark.mujoco
     def test_npo_pendulum(self):
         """Test NPO with Pendulum environment."""
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             algo = NPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
                        discount=0.99,
                        gae_lambda=0.98,
                        policy_ent_coeff=0.0)
-            runner.setup(algo, self.env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
+            trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 20
 
     @pytest.mark.mujoco

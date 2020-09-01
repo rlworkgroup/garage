@@ -4,11 +4,11 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.policies import CategoricalMLPPolicy
+from garage.trainer import TFTrainer
 
 
 @wrap_experiment
@@ -17,13 +17,13 @@ def trpo_gym_tf_cartpole(ctxt=None, seed=1):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
 
     """
     set_seed(seed)
-    with LocalTFRunner(snapshot_config=ctxt) as runner:
+    with TFTrainer(snapshot_config=ctxt) as trainer:
         env = GymEnv('CartPole-v1')
 
         policy = CategoricalMLPPolicy(name='policy',
@@ -40,8 +40,8 @@ def trpo_gym_tf_cartpole(ctxt=None, seed=1):
             max_kl_step=0.01,
         )
 
-        runner.setup(algo, env)
-        runner.train(n_epochs=10, batch_size=10000, plot=False)
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=10, batch_size=10000, plot=False)
 
 
 @wrap_experiment
@@ -53,16 +53,16 @@ def pre_trained_trpo_cartpole(
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         snapshot_dir (path): directory to snapshot
         seed (int): Used to seed the random number generator to produce
             determinism.
 
     """
     set_seed(seed)
-    with LocalTFRunner(snapshot_config=ctxt) as runner:
-        runner.restore(snapshot_dir)
-        runner.resume(n_epochs=30, batch_size=8000)
+    with TFTrainer(snapshot_config=ctxt) as trainer:
+        trainer.restore(snapshot_dir)
+        trainer.resume(n_epochs=30, batch_size=8000)
 
 
 if __name__ == '__main__':
