@@ -14,9 +14,11 @@ from garage import (_Default,
                     StepType)
 from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
-from garage.tf import paths_to_tensors
-from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import flatten_inputs, graph_inputs
+from garage.tf import (compile_function,
+                       flatten_inputs,
+                       graph_inputs,
+                       new_tensor,
+                       paths_to_tensors)
 from garage.tf.optimizers import LbfgsOptimizer
 
 # yapf: disable
@@ -118,9 +120,9 @@ class REPS(RLAlgorithm):  # noqa: D416
         self._episode_reward_mean = collections.deque(maxlen=100)
         self.sampler_cls = RaySampler
 
-        self.init_opt()
+        self._init_opt()
 
-    def init_opt(self):
+    def _init_opt(self):
         """Initialize the optimization procedure."""
         pol_loss_inputs, pol_opt_inputs, dual_opt_inputs = self._build_inputs()
         self._policy_opt_inputs = pol_opt_inputs
@@ -147,12 +149,12 @@ class REPS(RLAlgorithm):  # noqa: D416
 
         for _ in runner.step_epochs():
             runner.step_path = runner.obtain_samples(runner.step_itr)
-            last_return = self.train_once(runner.step_itr, runner.step_path)
+            last_return = self._train_once(runner.step_itr, runner.step_path)
             runner.step_itr += 1
 
         return last_return
 
-    def train_once(self, itr, paths):
+    def _train_once(self, itr, paths):
         """Perform one step of policy optimization given one batch of samples.
 
         Args:
@@ -203,7 +205,8 @@ class REPS(RLAlgorithm):  # noqa: D416
         samples_data['average_return'] = np.mean(undiscounted_returns)
 
         logger.log('Optimizing policy...')
-        self.optimize_policy(samples_data)
+        self._optimize_policy(samples_data)
+
         return samples_data['average_return']
 
     def __getstate__(self):
@@ -233,9 +236,9 @@ class REPS(RLAlgorithm):  # noqa: D416
         """
         self.__dict__ = state
         self._name_scope = tf.name_scope(self._name)
-        self.init_opt()
+        self._init_opt()
 
-    def optimize_policy(self, samples_data):
+    def _optimize_policy(self, samples_data):
         """Optimize the policy using the samples.
 
         Args:
@@ -324,6 +327,7 @@ class REPS(RLAlgorithm):  # noqa: D416
         tabular.record('{}/KLBefore'.format(self.policy.name),
                        policy_kl_before)
         tabular.record('{}/KL'.format(self.policy.name), policy_kl)
+
         self._old_policy.parameters = self.policy.parameters
 
     def _build_inputs(self):
@@ -340,41 +344,41 @@ class REPS(RLAlgorithm):  # noqa: D416
         with tf.name_scope('inputs'):
             obs_var = observation_space.to_tf_placeholder(
                 name='obs',
-                batch_dims=2)  # yapf: disable
+                batch_dims=2)
             action_var = action_space.to_tf_placeholder(
                 name='action',
-                batch_dims=2)  # yapf: disable
-            reward_var = tensor_utils.new_tensor(
+                batch_dims=2)
+            reward_var = new_tensor(
                 name='reward',
                 ndim=2,
-                dtype=tf.float32)  # yapf: disable
-            valid_var = tensor_utils.new_tensor(
+                dtype=tf.float32)
+            valid_var = new_tensor(
                 name='valid',
                 ndim=2,
-                dtype=tf.float32)  # yapf: disable
-            feat_diff = tensor_utils.new_tensor(
+                dtype=tf.float32)
+            feat_diff = new_tensor(
                 name='feat_diff',
                 ndim=2,
-                dtype=tf.float32)  # yapf: disable
-            param_v = tensor_utils.new_tensor(
+                dtype=tf.float32)
+            param_v = new_tensor(
                 name='param_v',
                 ndim=1,
-                dtype=tf.float32)  # yapf: disable
-            param_eta = tensor_utils.new_tensor(
+                dtype=tf.float32)
+            param_eta = new_tensor(
                 name='param_eta',
                 ndim=0,
-                dtype=tf.float32)  # yapf: disable
+                dtype=tf.float32)
             policy_state_info_vars = {
                 k: tf.compat.v1.placeholder(
                     tf.float32,
                     shape=[None] * 2 + list(shape),
                     name=k)
                 for k, shape in self.policy.state_info_specs
-            }  # yapf: disable
+            }
             policy_state_info_vars_list = [
                 policy_state_info_vars[k]
                 for k in self.policy.state_info_keys
-            ]  # yapf: disable
+            ]
 
         self._policy_network = self.policy.build(obs_var, name='policy')
         self._old_policy_network = self._old_policy.build(obs_var,
@@ -470,22 +474,17 @@ class REPS(RLAlgorithm):  # noqa: D416
 
             dual_grad = tf.gradients(dual_loss, [i.param_eta, i.param_v])
 
-        # yapf: disable
-        self._f_dual = tensor_utils.compile_function(
+        self._f_dual = compile_function(
             flatten_inputs(self._dual_opt_inputs),
-            dual_loss,
-            log_name='f_dual')
-        # yapf: enable
+            dual_loss)
 
-        self._f_dual_grad = tensor_utils.compile_function(
+        self._f_dual_grad = compile_function(
             flatten_inputs(self._dual_opt_inputs),
-            dual_grad,
-            log_name='f_dual_grad')
+            dual_grad)
 
-        self._f_policy_kl = tensor_utils.compile_function(
+        self._f_policy_kl = compile_function(
             flatten_inputs(self._policy_opt_inputs),
-            pol_mean_kl,
-            log_name='f_policy_kl')
+            pol_mean_kl)
 
         return loss
 

@@ -6,7 +6,7 @@ import tensorflow as tf
 from garage import make_optimizer
 from garage.experiment import deterministic
 from garage.np.baselines import Baseline
-from garage.tf.misc import tensor_utils
+from garage.tf import compile_function
 from garage.tf.models import NormalizedInputMLPModel
 from garage.tf.optimizers import LbfgsOptimizer
 
@@ -109,8 +109,7 @@ class ContinuousMLPBaseline(NormalizedInputMLPModel, Baseline):
          self._x_std) = self.build(input_var).outputs
 
         loss = tf.reduce_mean(tf.square(self._y_hat - ys_var))
-        self._f_predict = tensor_utils.compile_function([input_var],
-                                                        self._y_hat)
+        self._f_predict = compile_function([input_var], self._y_hat)
         optimizer_args = dict(
             loss=loss,
             target=self,
