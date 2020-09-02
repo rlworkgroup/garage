@@ -7,6 +7,7 @@ from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic, LocalTFRunner
 from garage.np.exploration_policies import AddGaussianNoise
+from garage.np.policies import UniformRandomPolicy
 from garage.replay_buffer import PathBuffer
 from garage.torch.algos import TD3
 from garage.torch.policies import DeterministicMLPPolicy
@@ -18,9 +19,10 @@ hyper_parameters = {
     'policy_hidden_sizes': [256, 256],
     'qf_hidden_sizes': [256, 256],
     'n_epochs': 250,
-    'steps_per_epoch': 120,
+    'steps_per_epoch': 40,
     'batch_size': 100,
-    'start_steps': 1000,
+    'start_steps': 10000,
+    'update_after': 1000,
     'grad_steps_per_env_step': 50,
     'discount': 0.99,
     'target_update_tau': 0.005,
@@ -62,6 +64,8 @@ def td3_garage_pytorch(ctxt, env_id, seed):
             max_sigma=hyper_parameters['sigma'],
             min_sigma=hyper_parameters['sigma'])
 
+        uniform_random_policy = UniformRandomPolicy(env.spec)
+
         qf1 = ContinuousMLPQFunction(
             env_spec=env.spec,
             hidden_sizes=hyper_parameters['qf_hidden_sizes'],
@@ -80,6 +84,7 @@ def td3_garage_pytorch(ctxt, env_id, seed):
                   qf1=qf1,
                   qf2=qf2,
                   exploration_policy=exploration_policy,
+                  uniform_random_policy=uniform_random_policy,
                   replay_buffer=replay_buffer,
                   steps_per_epoch=hyper_parameters['steps_per_epoch'],
                   policy_lr=hyper_parameters['policy_lr'],
