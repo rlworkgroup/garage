@@ -36,7 +36,7 @@ def trpo_swimmer_ray_sampler(ctxt=None, seed=1):
              object_store_memory=78643200,
              ignore_reinit_error=True,
              log_to_driver=False,
-             include_dashboard=False)
+             include_webui=False)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
         set_seed(seed)
         env = GarageEnv(gym.make('Swimmer-v2'))

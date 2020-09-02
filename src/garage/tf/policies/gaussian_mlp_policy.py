@@ -230,8 +230,7 @@ class GaussianMLPPolicy(StochasticPolicy):
                 distribution.
 
         """
-        if not isinstance(observations[0], np.ndarray):
-            observations = self.observation_space.flatten_n(observations)
+        observations = self.observation_space.flatten_n(observations)
         samples, means, log_stds = self._f_dist(np.expand_dims(
             observations, 1))
         samples = self.action_space.unflatten_n(np.squeeze(samples, 1))

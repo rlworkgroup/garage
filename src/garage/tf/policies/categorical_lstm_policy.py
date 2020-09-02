@@ -270,8 +270,7 @@ class CategoricalLSTMPolicy(StochasticPolicy):
             dict(numpy.ndarray): Distribution parameters.
 
         """
-        if not isinstance(observations[0], np.ndarray):
-            observations = self.observation_space.flatten_n(observations)
+        observations = self.observation_space.flatten_n(observations)
         if self._state_include_action:
             assert self._prev_actions is not None
             all_input = np.concatenate([observations, self._prev_actions],
