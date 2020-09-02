@@ -6,7 +6,7 @@ Examples:
     benchmark show
 
     # Run selected benchmarks
-    benchmark run b_1 b_2 ...
+    garage_benchmark run b_1 b_2 ...
 
 """
 # yapf: disable

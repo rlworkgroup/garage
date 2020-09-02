@@ -1,3 +1,4 @@
+
 """A regression test for automatic benchmarking garage-TensorFlow-DDPG."""
 import tensorflow as tf
 
@@ -26,7 +27,7 @@ hyper_parameters = {
 }
 
 
-@wrap_experiment
+@wrap_experiment(snapshot_mode='none')
 def ddpg_garage_tf(ctxt, env_id, seed):
     """Create garage TensorFlow DDPG model and training.
 

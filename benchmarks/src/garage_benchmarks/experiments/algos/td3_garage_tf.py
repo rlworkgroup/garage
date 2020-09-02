@@ -77,10 +77,6 @@ def td3_garage_tf(ctxt, env_id, seed):
                   policy=policy,
                   qf=qf,
                   qf2=qf2,
-<<<<<<< 63bc2c334966796bb56b21148fd3f1596144a8d5
-=======
-                #   max_episode_length=hyper_parameters['max_episode_length'],
->>>>>>> Add benchmark
                   replay_buffer=replay_buffer,
                   steps_per_epoch=hyper_parameters['steps_per_epoch'],
                   policy_lr=hyper_parameters['policy_lr'],

@@ -9,6 +9,7 @@ from garage import (_Default,
                     make_optimizer,
                     obtain_evaluation_episodes)
 from garage.np.algos import RLAlgorithm
+from garage.np.policies import UniformRandomPolicy
 from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf import compile_function, get_target_ops
 
@@ -58,6 +59,8 @@ class DDPG(RLAlgorithm):
             clip_return].
         max_action (float): Maximum action magnitude.
         reward_scale (float): Reward scale.
+        exploration_policy_sigma (float): Action noise sigma.
+        exploration_policy_clip (float): Action noise clip.
         name (str): Name of the algorithm shown in computation graph.
 
     """
@@ -71,14 +74,17 @@ class DDPG(RLAlgorithm):
             *,  # Everything after this is numbers.
             steps_per_epoch=20,
             n_train_steps=50,
+            start_steps=1000,
+            max_episode_length=None,
+            max_episode_length_eval=None,
             buffer_batch_size=64,
             min_buffer_size=int(1e4),
-            max_episode_length_eval=None,
             exploration_policy=None,
             target_update_tau=0.01,
             discount=0.99,
             policy_weight_decay=0,
             qf_weight_decay=0,
+            num_evaluation_episodes=10,
             policy_optimizer=tf.compat.v1.train.AdamOptimizer,
             qf_optimizer=tf.compat.v1.train.AdamOptimizer,
             policy_lr=_Default(1e-4),
@@ -87,8 +93,11 @@ class DDPG(RLAlgorithm):
             clip_return=np.inf,
             max_action=None,
             reward_scale=1.,
+            exploration_policy_sigma=0.2,
+            exploration_policy_clip=0.5,
             name='DDPG'):
-        action_bound = env_spec.action_space.high
+        self.env_spec = env_spec
+        action_bound = env_spec.action_space.high[0]
         self._max_action = action_bound if max_action is None else max_action
         self._tau = target_update_tau
         self._policy_weight_decay = policy_weight_decay
@@ -111,20 +120,24 @@ class DDPG(RLAlgorithm):
 
         self._min_buffer_size = min_buffer_size
         self._qf = qf
+        self._start_steps = start_steps
         self._steps_per_epoch = steps_per_epoch
         self._n_train_steps = n_train_steps
         self._buffer_batch_size = buffer_batch_size
         self._discount = discount
         self._reward_scale = reward_scale
         self.max_episode_length = env_spec.max_episode_length
-        self._max_episode_length_eval = max_episode_length_eval
-
         if max_episode_length_eval is None:
             self._max_episode_length_eval = env_spec.max_episode_length
 
+        self._num_evaluation_episodes = num_evaluation_episodes
+        self.max_episode_length = env_spec.max_episode_length
+        self._exploration_policy_sigma = exploration_policy_sigma
+        self._exploration_policy_clip = exploration_policy_clip
         self._eval_env = None
+        self._act_dim = self.env_spec.action_space.flat_dim
+        self._obs_dim = self.env_spec.observation_space.flat_dim
 
-        self._env_spec = env_spec
         self._replay_buffer = replay_buffer
         self.policy = policy
         self.exploration_policy = exploration_policy
@@ -145,11 +158,11 @@ class DDPG(RLAlgorithm):
                                                    shape=(None, 1),
                                                    name='input_y')
                 obs = tf.compat.v1.placeholder(tf.float32,
-                                               shape=(None, obs_dim),
+                                               shape=(None, self._obs_dim),
                                                name='input_observation')
                 actions = tf.compat.v1.placeholder(
                     tf.float32,
-                    shape=(None, self._env_spec.action_space.flat_dim),
+                    shape=(None, self._act_dim),
                     name='input_action')
 
             policy_network_outputs = self._target_policy.build(obs,
@@ -178,16 +191,15 @@ class DDPG(RLAlgorithm):
                                                outputs=target_update_op)
 
             with tf.name_scope('inputs'):
-                obs_dim = self._env_spec.observation_space.flat_dim
                 input_y = tf.compat.v1.placeholder(tf.float32,
                                                    shape=(None, 1),
                                                    name='input_y')
                 obs = tf.compat.v1.placeholder(tf.float32,
-                                               shape=(None, obs_dim),
+                                               shape=(None, self._obs_dim),
                                                name='input_observation')
                 actions = tf.compat.v1.placeholder(
                     tf.float32,
-                    shape=(None, self._env_spec.action_space.flat_dim),
+                    shape=(None, self._act_dim),
                     name='input_action')
             # Set up policy training function
             next_action = self.policy.build(obs, name='policy_action')
@@ -281,18 +293,31 @@ class DDPG(RLAlgorithm):
         """
         if not self._eval_env:
             self._eval_env = runner.get_env_copy()
-        last_returns = [float('nan')]
+        last_returns = None
         runner.enable_logging = False
 
         for _ in runner.step_epochs():
             for cycle in range(self._steps_per_epoch):
-                runner.step_path = runner.obtain_episodes(runner.step_itr)
-                self._train_once(runner.step_itr, runner.step_path)
-                if (cycle == 0 and self._replay_buffer.n_transitions_stored >=
+                # Get action randomly from environment within warm-up steps.
+                # Afterwards, get action from policy.
+                if runner.step_itr >= self._start_steps:
+                    runner.step_path = runner.obtain_episodes(runner.step_itr, agent_update=self.exploration_policy)
+                else:
+                    uniform_random_policy = UniformRandomPolicy(self.env_spec)
+                    runner.step_path = runner.obtain_episodes(runner.step_itr, agent_update=uniform_random_policy)
+                
+                # Store samples to replay buffer
+                self.replay_buffer.add_episode_batch(runner.step_path)
+
+                # Update after warm-up steps.
+                if runner.total_env_steps >= self._start_steps:
+                    self.train_once(runner.step_itr)
+
+                if (cycle == 0 and self.replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
                     runner.enable_logging = True
                     eval_episodes = obtain_evaluation_episodes(
-                        self.policy, self._eval_env)
+                        self.policy, self._eval_env, num_eps=self._num_evaluation_episodes)
                     last_returns = log_performance(runner.step_itr,
                                                    eval_episodes,
                                                    discount=self._discount)
@@ -300,12 +325,11 @@ class DDPG(RLAlgorithm):
 
         return np.mean(last_returns)
 
-    def _train_once(self, itr, episodes):
+    def train_once(self, itr):
         """Perform one step of policy optimization given one batch of samples.
 
         Args:
             itr (int): Iteration number.
-            episodes (EpisodeBatch): Batch of episodes.
 
         """
         self._replay_buffer.add_episode_batch(episodes)
@@ -364,15 +388,17 @@ class DDPG(RLAlgorithm):
         next_inputs = next_observations
         inputs = observations
 
-        target_actions = self._target_policy_f_prob_online(next_inputs)
-        target_qvals = self._target_qf_f_prob_online(next_inputs,
-                                                     target_actions)
+        target_actions = self.target_policy_f_prob_online(next_inputs)
+        noise = np.random.normal(0.0, self._exploration_policy_sigma,
+                                 target_actions.shape)
+        noise = np.clip(noise, -self._exploration_policy_clip,
+                        self._exploration_policy_clip)
+        target_actions += noise
 
-        clip_range = (-self._clip_return,
-                      0. if self._clip_pos_returns else self._clip_return)
-        ys = np.clip(
-            rewards + (1.0 - terminals) * self._discount * target_qvals,
-            clip_range[0], clip_range[1])
+        target_qvals = self.target_qf_f_prob_online(next_inputs,
+                                                    target_actions)
+        
+        ys = (rewards + (1.0 - terminals) * self._discount * target_qvals)
 
         _, qval_loss, qval = self._f_train_qf(ys, inputs, actions)
         _, action_loss = self._f_train_policy(inputs)

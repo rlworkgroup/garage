@@ -33,6 +33,7 @@ import csv
 import functools
 import json
 import os
+import pandas as pd
 import pathlib
 import random
 
@@ -188,10 +189,36 @@ def _read_csv(log_dir, xcolumn, ycolumn):
 
     """
     xs, ys = [], []
+    # try:
     with open(os.path.join(log_dir, 'progress.csv'), 'r') as csv_file:
         for row in csv.DictReader(csv_file):
             xs.append(float(row[xcolumn]))
             ys.append(float(row[ycolumn]))
+    # except:
+    #     print("No such file:", os.path.join(log_dir, 'progress.csv'))
+
+    return xs, ys
+
+def _read_txt(log_dir, xcolumn):
+    """Read text files and return xs and ys.
+
+    Args:
+        log_dir (str): Log directory for text file.
+        xcolumn (str): Which column should be the JSON x axis.
+        # ycolumn (str): Which column should be the JSON y axis.
+
+    Returns:
+        list: List of x axis points.
+        list: List of y axis points.
+
+    """
+    xs, ys = [], []
+    exp_data = pd.read_table(os.path.join(log_dir, 'progress.txt'))
+    performance = 'AverageTestEpRet' if 'AverageTestEpRet' in exp_data else 'AverageEpRet'
+
+    for index, row in exp_data.iterrows():
+        xs.append(float(row[xcolumn]))
+        ys.append(float(row[performance]))
 
     return xs, ys
 

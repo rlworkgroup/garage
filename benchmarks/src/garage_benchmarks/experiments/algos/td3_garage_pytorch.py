@@ -35,7 +35,7 @@ hyper_parameters = {
 }
 
 
-@wrap_experiment(snapshot_mode='none')
+@wrap_experiment(snapshot_mode='last')
 def td3_garage_pytorch(ctxt, env_id, seed):
     """Create garage TensorFlow TD3 model and training.
 
@@ -104,3 +104,7 @@ def td3_garage_pytorch(ctxt, env_id, seed):
         runner.setup(td3, env)
         runner.train(n_epochs=hyper_parameters['n_epochs'],
                      batch_size=hyper_parameters['batch_size'])
+        # restore_dir = '/home/resl/iris/garage/data/local/benchmarks/td3_benchmarks_3/td3-garage-pytorch_' + env_id + '_' + str(seed)
+        # print('Restoring from >>>>>{}'.format(restore_dir))
+        # runner.restore(restore_dir)
+        # runner.resume(n_epochs=hyper_parameters['n_epochs'], batch_size=hyper_parameters['batch_size'])

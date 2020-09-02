@@ -1,4 +1,6 @@
 """Benchmarking for algorithms."""
+import random
+
 # yapf: disable
 from garage_benchmarks.experiments.algos import (ddpg_garage_tf,
                                                  her_garage_tf,
@@ -19,7 +21,8 @@ from garage_benchmarks.parameters import Fetch1M_ENV_SET, MuJoCo1M_ENV_SET
 @benchmark
 def ddpg_benchmarks():
     """Run experiments for DDPG benchmarking."""
-    iterate_experiments(ddpg_garage_tf, MuJoCo1M_ENV_SET)
+    iterate_experiments(ddpg_garage_tf, MuJoCo1M_ENV_SET, seeds=[30, 75, 69])
+    # iterate_experiments(ddpg_garage_tf, MuJoCo1M_ENV_SET)
 
 
 @benchmark
@@ -38,11 +41,13 @@ def ppo_benchmarks():
 @benchmark
 def td3_benchmarks():
     """Run experiments for TD3 benchmarking."""
-    td3_env_ids = [
-        env_id for env_id in MuJoCo1M_ENV_SET if env_id != 'Reacher-v2'
-    ]
-    iterate_experiments(td3_garage_pytorch, td3_env_ids)
-    iterate_experiments(td3_garage_tf, td3_env_ids)
+    # td3_env_ids = [
+    #     env_id for env_id in MuJoCo1M_ENV_SET if env_id != 'Reacher-v2'
+    # ]
+    td3_env_ids = ['Walker2d-v2', 'Swimmer-v2']
+    seeds = [75]
+    iterate_experiments(td3_garage_pytorch, td3_env_ids, seeds=seeds)
+    # iterate_experiments(td3_garage_tf, td3_env_ids, seeds=seeds)
 
 
 @benchmark
