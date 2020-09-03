@@ -62,6 +62,11 @@ class NPO(RLAlgorithm):
         use_neg_logli_entropy (bool): Whether to estimate the entropy as the
             negative log likelihood of the action.
         stop_entropy_gradient (bool): Whether to stop the entropy gradient.
+        loss_group_by_task_id (bool): If true, losses will be group by task_id,
+            and a list of losses will be sent to optimizer, which is used for
+            multi-task learning and PCGrad optimizer.
+        num_tasks (int): The number of tasks trained together, which is used
+            for multi-task learning and PCGrad optimizer.
         entropy_method (str): A string from: 'max', 'regularized',
             'no_entropy'. The type of entropy method to use. 'max' adds the
             dense entropy to the reward for each time step. 'regularized' adds
@@ -101,6 +106,8 @@ class NPO(RLAlgorithm):
                  use_softplus_entropy=False,
                  use_neg_logli_entropy=False,
                  stop_entropy_gradient=False,
+                 loss_group_by_task_id=False,
+                 num_tasks=0,
                  entropy_method='no_entropy',
                  name='NPO'):
         self.policy = policy
@@ -120,6 +127,8 @@ class NPO(RLAlgorithm):
         self._use_neg_logli_entropy = use_neg_logli_entropy
         self._stop_entropy_gradient = stop_entropy_gradient
         self._pg_loss = pg_loss
+        self._loss_group_by_task_id = loss_group_by_task_id
+        self._num_tasks = num_tasks
         if optimizer is None:
             if optimizer_args is None:
                 optimizer_args = dict()
@@ -257,6 +266,9 @@ class NPO(RLAlgorithm):
         policy_kl = self._f_policy_kl(*policy_opt_input_values)
         logger.log('Computing loss after')
         loss_after = self._optimizer.loss(policy_opt_input_values)
+        if self._loss_group_by_task_id:
+            loss_before = np.mean(loss_before)
+            loss_after = np.mean(loss_after)
         tabular.record('{}/LossBefore'.format(self.policy.name), loss_before)
         tabular.record('{}/LossAfter'.format(self.policy.name), loss_after)
         tabular.record('{}/dLoss'.format(self.policy.name),
@@ -302,6 +314,10 @@ class NPO(RLAlgorithm):
             baseline_var = tf.compat.v1.placeholder(tf.float32,
                                                     shape=[None, None],
                                                     name='baseline')
+            if self._loss_group_by_task_id:
+                task_id_var = tf.compat.v1.placeholder(tf.float32,
+                                                       shape=[None, None],
+                                                       name='task_id')
 
             policy_state_info_vars = {
                 k: tf.compat.v1.placeholder(tf.float32,
@@ -325,23 +341,44 @@ class NPO(RLAlgorithm):
         self._old_policy_network = self._old_policy.build(augmented_obs_var,
                                                           name='policy')
 
-        policy_loss_inputs = graph_inputs(
-            'PolicyLossInputs',
-            action_var=action_var,
-            reward_var=reward_var,
-            baseline_var=baseline_var,
-            valid_var=valid_var,
-            policy_state_info_vars=policy_state_info_vars,
-        )
-        policy_opt_inputs = graph_inputs(
-            'PolicyOptInputs',
-            obs_var=obs_var,
-            action_var=action_var,
-            reward_var=reward_var,
-            baseline_var=baseline_var,
-            valid_var=valid_var,
-            policy_state_info_vars_list=policy_state_info_vars_list,
-        )
+        if not self._loss_group_by_task_id:
+            policy_loss_inputs = graph_inputs(
+                'PolicyLossInputs',
+                action_var=action_var,
+                reward_var=reward_var,
+                baseline_var=baseline_var,
+                valid_var=valid_var,
+                policy_state_info_vars=policy_state_info_vars,
+            )
+            policy_opt_inputs = graph_inputs(
+                'PolicyOptInputs',
+                obs_var=obs_var,
+                action_var=action_var,
+                reward_var=reward_var,
+                baseline_var=baseline_var,
+                valid_var=valid_var,
+                policy_state_info_vars_list=policy_state_info_vars_list,
+            )
+        else:
+            policy_loss_inputs = graph_inputs(
+                'PolicyLossInputs',
+                action_var=action_var,
+                reward_var=reward_var,
+                baseline_var=baseline_var,
+                valid_var=valid_var,
+                task_id_var=task_id_var,
+                policy_state_info_vars=policy_state_info_vars,
+            )
+            policy_opt_inputs = graph_inputs(
+                'PolicyOptInputs',
+                obs_var=obs_var,
+                action_var=action_var,
+                reward_var=reward_var,
+                baseline_var=baseline_var,
+                valid_var=valid_var,
+                task_id_var=task_id_var,
+                policy_state_info_vars_list=policy_state_info_vars_list,
+            )
 
         return policy_loss_inputs, policy_opt_inputs
 
@@ -418,11 +455,31 @@ class NPO(RLAlgorithm):
                 if self._entropy_regularzied:
                     obj += self._policy_ent_coeff * policy_entropy
 
-                # filter only the valid values
-                obj = tf.boolean_mask(obj, i.valid_var)
-                # Maximize E[surrogate objective] by minimizing
-                # -E_t[surrogate objective]
-                loss = -tf.reduce_mean(obj)
+                if not self._loss_group_by_task_id:
+                    # filter only the valid values
+                    obj = tf.boolean_mask(obj, i.valid_var)
+                    # Maximize E[surrogate objective] by minimizing
+                    # -E_t[surrogate objective]
+                    loss = -tf.reduce_mean(obj)
+                else:
+                    # group losses by task id
+                    loss = []
+                    tmp_obj = None
+                    for task_id in range(self._num_tasks):
+                        task_mask = tf.dtypes.cast(i.task_id_var - task_id,
+                                                   tf.bool)
+                        task_mask = tf.math.logical_not(task_mask)
+                        valid_bool = tf.dtypes.cast(i.valid_var, tf.bool)
+
+                        # filter only the valid values
+                        valid_mask = tf.math.logical_and(task_mask, valid_bool)
+                        tmp_obj = tf.boolean_mask(obj, valid_mask)
+
+                        tmp_loss = tf.cond(tf.equal(tf.size(tmp_obj), 0),
+                                           lambda: tf.constant(0.0),
+                                           lambda: -tf.reduce_mean(tmp_obj))
+
+                        loss.append(tmp_loss)
 
             # Diagnostic functions
             self._f_policy_kl = tf.compat.v1.get_default_session(
@@ -526,14 +583,25 @@ class NPO(RLAlgorithm):
         ]
 
         # pylint: disable=unexpected-keyword-arg
-        policy_opt_input_values = self._policy_opt_inputs._replace(
-            obs_var=samples_data['observations'],
-            action_var=samples_data['actions'],
-            reward_var=samples_data['rewards'],
-            baseline_var=samples_data['baselines'],
-            valid_var=samples_data['valids'],
-            policy_state_info_vars_list=policy_state_info_list,
-        )
+        if not self._loss_group_by_task_id:
+            policy_opt_input_values = self._policy_opt_inputs._replace(
+                obs_var=samples_data['observations'],
+                action_var=samples_data['actions'],
+                reward_var=samples_data['rewards'],
+                baseline_var=samples_data['baselines'],
+                valid_var=samples_data['valids'],
+                policy_state_info_vars_list=policy_state_info_list,
+            )
+        else:
+            policy_opt_input_values = self._policy_opt_inputs._replace(
+                obs_var=samples_data['observations'],
+                action_var=samples_data['actions'],
+                reward_var=samples_data['rewards'],
+                baseline_var=samples_data['baselines'],
+                valid_var=samples_data['valids'],
+                task_id_var=samples_data['env_infos']['task_id'],
+                policy_state_info_vars_list=policy_state_info_list,
+            )
 
         return flatten_inputs(policy_opt_input_values)
 
