@@ -8,6 +8,7 @@ coverage:
 codecov:
   ci:
     - "travis-ci.com"
+    - "https://github.com/features/actions"
   notify:
     wait_for_ci: yes
     after_n_builds: 4
