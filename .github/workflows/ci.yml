@@ -68,12 +68,8 @@ jobs:
         docker run \
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
-          -e GITHUB_ACTION \
-          -e GITHUB_REF \
-          -e GITHUB_REPOSITORY \
-          -e GITHUB_HEAD_REF \
-          -e GITHUB_SHA \
-          -e GITHUB_RUN_ID \
+          -e GITHUB_ACTIONS \
+          $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
           "${DOCKER_TAG}" scripts/travisci/check_precommit.sh
@@ -99,12 +95,8 @@ jobs:
         docker run \
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
-          -e GITHUB_ACTION \
-          -e GITHUB_REF \
-          -e GITHUB_REPOSITORY \
-          -e GITHUB_HEAD_REF \
-          -e GITHUB_SHA \
-          -e GITHUB_RUN_ID \
+          -e GITHUB_ACTIONS \
+          $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
           "${DOCKER_TAG}" \
@@ -140,12 +132,8 @@ jobs:
         docker run \
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
-          -e GITHUB_ACTION \
-          -e GITHUB_REF \
-          -e GITHUB_REPOSITORY \
-          -e GITHUB_HEAD_REF \
-          -e GITHUB_SHA \
-          -e GITHUB_RUN_ID \
+          -e GITHUB_ACTIONS \
+          $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
           "${DOCKER_TAG}" \
@@ -180,12 +168,8 @@ jobs:
         docker run \
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
-          -e GITHUB_ACTION \
-          -e GITHUB_REF \
-          -e GITHUB_REPOSITORY \
-          -e GITHUB_HEAD_REF \
-          -e GITHUB_SHA \
-          -e GITHUB_RUN_ID \
+          -e GITHUB_ACTIONS \
+          $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
           "${DOCKER_TAG}" \
@@ -219,12 +203,8 @@ jobs:
         docker run \
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
-          -e GITHUB_ACTION \
-          -e GITHUB_REF \
-          -e GITHUB_REPOSITORY \
-          -e GITHUB_HEAD_REF \
-          -e GITHUB_SHA \
-          -e GITHUB_RUN_ID \
+          -e GITHUB_ACTIONS \
+          $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
           "${DOCKER_TAG}" \
@@ -259,12 +239,8 @@ jobs:
           docker run \
             -e TRAVIS_COMMIT_RANGE \
             -e MJKEY \
-            -e GITHUB_ACTION \
-            -e GITHUB_REF \
-            -e GITHUB_REPOSITORY \
-            -e GITHUB_HEAD_REF \
-            -e GITHUB_SHA \
-            -e GITHUB_RUN_ID \
+            -e GITHUB_ACTIONS \
+            $ci_env\
             --memory 6500m \
             --memory-swap 6500m \
             "${DOCKER_TAG}" pytest -v -m nightly
@@ -292,12 +268,8 @@ jobs:
           docker run \
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
-          -e GITHUB_ACTION \
-          -e GITHUB_REF \
-          -e GITHUB_REPOSITORY \
-          -e GITHUB_HEAD_REF \
-          -e GITHUB_SHA \
-          -e GITHUB_RUN_ID \
+          -e GITHUB_ACTIONS \
+          $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
           "${DOCKER_TAG}" \
@@ -342,12 +314,8 @@ jobs:
           docker run \
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
-          -e GITHUB_ACTION \
-          -e GITHUB_REF \
-          -e GITHUB_REPOSITORY \
-          -e GITHUB_HEAD_REF \
-          -e GITHUB_SHA \
-          -e GITHUB_RUN_ID \
+          -e GITHUB_ACTIONS \
+          $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
           "${DOCKER_TAG}" \
