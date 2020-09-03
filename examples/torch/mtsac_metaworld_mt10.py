@@ -61,7 +61,6 @@ def mtsac_metaworld_mt10(ctxt=None, seed=1, _gpu=None):
         min_std=np.exp(-20.),
         max_std=np.exp(2.),
     )
-
     qf1 = ContinuousMLPQFunction(env_spec=mt10_train_envs.spec,
                                  hidden_sizes=[400, 400, 400],
                                  hidden_nonlinearity=F.relu)
@@ -72,17 +71,16 @@ def mtsac_metaworld_mt10(ctxt=None, seed=1, _gpu=None):
 
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
 
-    timesteps = 20000000
+    timesteps = int(20e6)
     batch_size = int(150 * mt10_train_envs.num_tasks)
-    num_evaluation_points = 500
-    epochs = timesteps // batch_size
-    epoch_cycles = epochs // num_evaluation_points
-    epochs = epochs // epoch_cycles
+    epochs = 250
+    epoch_cycles = timesteps // (epochs * batch_size)
     mtsac = MTSAC(policy=policy,
                   qf1=qf1,
                   qf2=qf2,
                   gradient_steps_per_itr=150,
                   max_path_length=150,
+                  max_eval_path_length=150,
                   eval_env=mt10_test_envs,
                   env_spec=mt10_train_envs.spec,
                   num_tasks=10,
@@ -95,7 +93,10 @@ def mtsac_metaworld_mt10(ctxt=None, seed=1, _gpu=None):
     if _gpu is not None:
         set_gpu_mode(True, _gpu)
     mtsac.to()
-    runner.setup(algo=mtsac, env=mt10_train_envs, sampler_cls=LocalSampler)
+    runner.setup(algo=mtsac,
+                 env=mt10_train_envs,
+                 sampler_cls=LocalSampler,
+                 n_workers=1)
     runner.train(n_epochs=epochs, batch_size=batch_size)
 
 

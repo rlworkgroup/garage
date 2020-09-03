@@ -84,10 +84,11 @@ def mtsac_metaworld_mt50(ctxt=None, seed=1, use_gpu=False, _gpu=0):
                   qf1=qf1,
                   qf2=qf2,
                   gradient_steps_per_itr=150,
-                  max_path_length=250,
+                  max_path_length=150,
+                  max_eval_path_length=150,
                   eval_env=mt50_test_envs,
                   env_spec=mt50_train_envs.spec,
-                  num_tasks=10,
+                  num_tasks=50,
                   steps_per_epoch=epoch_cycles,
                   replay_buffer=replay_buffer,
                   min_buffer_size=7500,
@@ -96,7 +97,10 @@ def mtsac_metaworld_mt50(ctxt=None, seed=1, use_gpu=False, _gpu=0):
                   buffer_batch_size=6400)
     set_gpu_mode(use_gpu, _gpu)
     mtsac.to()
-    runner.setup(algo=mtsac, env=mt50_train_envs, sampler_cls=LocalSampler)
+    runner.setup(algo=mtsac,
+                 env=mt50_train_envs,
+                 sampler_cls=LocalSampler,
+                 n_workers=1)
     runner.train(n_epochs=epochs, batch_size=batch_size)
 
 
