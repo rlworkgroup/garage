@@ -19,7 +19,7 @@ from garage.tf import (compile_function,
                        graph_inputs,
                        new_tensor,
                        paths_to_tensors)
-from garage.tf.optimizers import LbfgsOptimizer
+from garage.tf.optimizers import LBFGSOptimizer
 
 # yapf: disable
 
@@ -78,7 +78,7 @@ class REPS(RLAlgorithm):  # noqa: D416
                  epsilon=0.5,
                  l2_reg_dual=0.,
                  l2_reg_loss=0.,
-                 optimizer=LbfgsOptimizer,
+                 optimizer=LBFGSOptimizer,
                  optimizer_args=None,
                  dual_optimizer=scipy.optimize.fmin_l_bfgs_b,
                  dual_optimizer_args=None,

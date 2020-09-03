@@ -29,7 +29,9 @@ disable =
     # Detection seems buggy or unhelpful
     duplicate-code,
     # Allow more readable code
-    no-else-return
+    no-else-return,
+    # Discourages small interfaces
+    too-few-public-methods,
 
 [REPORTS]
 msg-template = {path}:{line:3d},{column}: {msg} ({symbol})

@@ -1,7 +1,7 @@
 """Trust Region Policy Optimization."""
 from garage.tf.algos.npo import NPO
 from garage.tf.optimizers import (ConjugateGradientOptimizer,
-                                  PenaltyLbfgsOptimizer)
+                                  PenaltyLBFGSOptimizer)
 
 
 class TRPO(NPO):
@@ -77,7 +77,7 @@ class TRPO(NPO):
             if kl_constraint == 'hard':
                 optimizer = ConjugateGradientOptimizer
             elif kl_constraint == 'soft':
-                optimizer = PenaltyLbfgsOptimizer
+                optimizer = PenaltyLBFGSOptimizer
             else:
                 raise ValueError('Invalid kl_constraint')
 

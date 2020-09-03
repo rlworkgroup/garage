@@ -13,7 +13,7 @@ from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
 from garage.tf.baselines import GaussianCNNBaseline, GaussianMLPBaseline
-from garage.tf.optimizers import FiniteDifferenceHvp
+from garage.tf.optimizers import FiniteDifferenceHVP
 from garage.tf.policies import (CategoricalCNNPolicy,
                                 CategoricalGRUPolicy,
                                 CategoricalLSTMPolicy,
@@ -98,7 +98,7 @@ class TestTRPO(TfGraphTestCase):
                         baseline=baseline,
                         discount=0.99,
                         max_kl_step=0.01,
-                        optimizer_args=dict(hvp_approach=FiniteDifferenceHvp(
+                        optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
                             base_eps=1e-5)))
 
             snapshotter.snapshot_dir = './'
@@ -123,7 +123,7 @@ class TestTRPO(TfGraphTestCase):
                         baseline=baseline,
                         discount=0.99,
                         max_kl_step=0.01,
-                        optimizer_args=dict(hvp_approach=FiniteDifferenceHvp(
+                        optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
                             base_eps=1e-5)))
 
             runner.setup(algo, env, sampler_cls=LocalSampler)

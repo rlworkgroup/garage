@@ -19,7 +19,7 @@ from garage.tf import (center_advs,
                        graph_inputs,
                        paths_to_tensors,
                        positive_advs)
-from garage.tf.optimizers import LbfgsOptimizer
+from garage.tf.optimizers import LBFGSOptimizer
 
 # yapf: enable
 
@@ -123,7 +123,7 @@ class NPO(RLAlgorithm):
         if optimizer is None:
             if optimizer_args is None:
                 optimizer_args = dict()
-            optimizer = LbfgsOptimizer
+            optimizer = LBFGSOptimizer
 
         self._check_entropy_configuration(entropy_method, center_adv,
                                           stop_entropy_gradient,

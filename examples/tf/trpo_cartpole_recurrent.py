@@ -19,7 +19,7 @@ from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.optimizers import (ConjugateGradientOptimizer,
-                                  FiniteDifferenceHvp)
+                                  FiniteDifferenceHVP)
 from garage.tf.policies import CategoricalLSTMPolicy
 
 
@@ -56,7 +56,7 @@ def trpo_cartpole_recurrent(ctxt, seed, n_epochs, batch_size, plot):
                     discount=0.99,
                     max_kl_step=0.01,
                     optimizer=ConjugateGradientOptimizer,
-                    optimizer_args=dict(hvp_approach=FiniteDifferenceHvp(
+                    optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
                         base_eps=1e-5)))
 
         runner.setup(algo, env)

@@ -1,7 +1,7 @@
 """Trust Region Policy Optimization for RL2."""
 from garage.tf.algos import RL2
 from garage.tf.optimizers import (ConjugateGradientOptimizer,
-                                  PenaltyLbfgsOptimizer)
+                                  PenaltyLBFGSOptimizer)
 
 
 class RL2TRPO(RL2):
@@ -89,7 +89,7 @@ class RL2TRPO(RL2):
             if kl_constraint == 'hard':
                 optimizer = ConjugateGradientOptimizer
             elif kl_constraint == 'soft':
-                optimizer = PenaltyLbfgsOptimizer
+                optimizer = PenaltyLBFGSOptimizer
             else:
                 raise ValueError('Invalid kl_constraint')
 

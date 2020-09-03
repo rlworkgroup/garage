@@ -5,10 +5,10 @@ import scipy.optimize
 import tensorflow as tf
 
 from garage.tf import compile_function, flatten_tensor_variables
-from garage.tf.optimizers.utils import LazyDict
+from garage.tf.optimizers._dtypes import LazyDict
 
 
-class LbfgsOptimizer:
+class LBFGSOptimizer:
     """Limited-memory BFGS (L-BFGS) optimizer.
 
     Performs unconstrained optimization via L-BFGS.
@@ -30,7 +30,7 @@ class LbfgsOptimizer:
                    target,
                    inputs,
                    extra_inputs=None,
-                   name='LbfgsOptimizer',
+                   name='LBFGSOptimizer',
                    **kwargs):
         """Construct operation graph for the optimizer.
 

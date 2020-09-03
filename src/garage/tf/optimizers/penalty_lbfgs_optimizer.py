@@ -5,10 +5,10 @@ import scipy.optimize
 import tensorflow as tf
 
 from garage.tf import compile_function, flatten_tensor_variables
-from garage.tf.optimizers.utils import LazyDict
+from garage.tf.optimizers._dtypes import LazyDict
 
 
-class PenaltyLbfgsOptimizer:
+class PenaltyLBFGSOptimizer:
     """Penalized Limited-memory BFGS (L-BFGS) optimizer.
 
     Performs constrained optimization via penalized L-BFGS. The penalty term is
@@ -61,7 +61,7 @@ class PenaltyLbfgsOptimizer:
                    leq_constraint,
                    inputs,
                    constraint_name='constraint',
-                   name='PenaltyLbfgsOptimizer',
+                   name='PenaltyLBFGSOptimizer',
                    **kwargs):
         """Construct operation graph for the optimizer.
 

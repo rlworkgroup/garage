@@ -10,9 +10,9 @@ from garage.tf.models import Module
 from garage.tf.optimizers.conjugate_gradient_optimizer import (
     ConjugateGradientOptimizer)  # noqa: E501
 from garage.tf.optimizers.conjugate_gradient_optimizer import (
-    FiniteDifferenceHvp)  # noqa: E501
-from garage.tf.optimizers.conjugate_gradient_optimizer import (cg,
-                                                               PearlmutterHvp)
+    FiniteDifferenceHVP)  # noqa: E501
+from garage.tf.optimizers.conjugate_gradient_optimizer import (_cg,
+                                                               PearlmutterHVP)
 from garage.tf.policies import Policy
 
 from tests.fixtures import TfGraphTestCase
@@ -44,7 +44,7 @@ class TestConjugateGradientOptimizer(TfGraphTestCase):
         a = np.linspace(-np.pi, np.pi, 25).reshape((5, 5))
         a = a.T.dot(a)  # make sure a is positive semi-definite
         b = np.linspace(-np.pi, np.pi, 5)
-        x = cg(a.dot, b, cg_iters=5)
+        x = _cg(a.dot, b, cg_iters=5)
         assert np.allclose(a.dot(x), b)
 
     def test_pickleable(self):
@@ -65,7 +65,7 @@ class TestConjugateGradientOptimizer(TfGraphTestCase):
         assert np.equal(loss_before, loss_after)
 
 
-class TestPearlmutterHvp(TfGraphTestCase):
+class TestPearlmutterHVP(TfGraphTestCase):
     """Test class for PearlmutterHvp"""
 
     def test_pearl_mutter_hvp_1x1(self):
@@ -79,7 +79,7 @@ class TestPearlmutterHvp(TfGraphTestCase):
         vector = np.array([10.0])
         expected_hvp = expected_hessian * vector
         reg_coeff = 1e-5
-        hvp = PearlmutterHvp()
+        hvp = PearlmutterHVP()
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
         hvp.update_hvp(f, policy, (a, ), reg_coeff)
@@ -110,7 +110,7 @@ class TestPearlmutterHvp(TfGraphTestCase):
         expected_hessian = compute_hessian(f, [x, y])
         expected_hvp = tf.matmul(vector, expected_hessian)
         reg_coeff = 1e-5
-        hvp = PearlmutterHvp()
+        hvp = PearlmutterHVP()
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
         self.sess.run(x.assign([x_val]))
@@ -147,7 +147,7 @@ class TestPearlmutterHvp(TfGraphTestCase):
         expected_hessian = compute_hessian(f, [x, y])
         expected_hvp = tf.matmul(vector, expected_hessian)
         reg_coeff = 1e-5
-        hvp = PearlmutterHvp()
+        hvp = PearlmutterHVP()
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
         self.sess.run(x.assign([x_val]))
@@ -166,7 +166,7 @@ class TestPearlmutterHvp(TfGraphTestCase):
         f = a * (x**2)
         vector = np.array([10.0])
         reg_coeff = 1e-5
-        hvp = PearlmutterHvp()
+        hvp = PearlmutterHVP()
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
         hvp.update_hvp(f, policy, (a, ), reg_coeff)
@@ -179,7 +179,7 @@ class TestPearlmutterHvp(TfGraphTestCase):
         assert np.equal(before_pickle, after_pickle)
 
 
-class TestFiniteDifferenceHvp(TfGraphTestCase):
+class TestFiniteDifferenceHVP(TfGraphTestCase):
     """Test class for FiniteDifferenceHvp"""
 
     def test_finite_difference_hvp(self):
@@ -193,7 +193,7 @@ class TestFiniteDifferenceHvp(TfGraphTestCase):
         vector = np.array([10.0])
         expected_hvp = expected_hessian * vector
         reg_coeff = 1e-5
-        hvp = FiniteDifferenceHvp()
+        hvp = FiniteDifferenceHVP()
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
         hvp.update_hvp(f, policy, (a, ), reg_coeff)
@@ -225,7 +225,7 @@ class TestFiniteDifferenceHvp(TfGraphTestCase):
         expected_hessian = compute_hessian(f, [x, y])
         expected_hvp = tf.matmul(vector, expected_hessian)
         reg_coeff = 1e-8
-        hvp = FiniteDifferenceHvp(base_eps=1.0)
+        hvp = FiniteDifferenceHVP(base_eps=1.0)
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
         self.sess.run(x.assign([x_val]))
@@ -262,7 +262,7 @@ class TestFiniteDifferenceHvp(TfGraphTestCase):
         expected_hessian = compute_hessian(f, [x, y])
         expected_hvp = tf.matmul(vector, expected_hessian)
         reg_coeff = 1e-5
-        hvp = FiniteDifferenceHvp(base_eps=1)
+        hvp = FiniteDifferenceHVP(base_eps=1)
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
         self.sess.run(x.assign([x_val]))
@@ -281,7 +281,7 @@ class TestFiniteDifferenceHvp(TfGraphTestCase):
         f = a * (x**2)
         vector = np.array([10.0])
         reg_coeff = 1e-5
-        hvp = FiniteDifferenceHvp()
+        hvp = FiniteDifferenceHVP()
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
         hvp.update_hvp(f, policy, (a, ), reg_coeff)
