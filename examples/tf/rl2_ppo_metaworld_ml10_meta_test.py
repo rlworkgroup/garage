@@ -41,7 +41,9 @@ def rl2_ppo_metaworld_ml10_meta_test(ctxt, seed, meta_batch_size, n_epochs,
         max_episode_length = 150
         inner_max_episode_length = max_episode_length * episode_per_task
         ml10_train_envs = [
-            RL2Env(GymEnv(mwb.ML10.from_task(task_name)))
+            RL2Env(
+                GymEnv(mwb.ML10.from_task(task_name),
+                       max_episode_length=inner_max_episode_length))
             for task_name in mwb.ML10.get_train_tasks().all_task_names
         ]
         tasks = task_sampler.EnvPoolSampler(ml10_train_envs)
