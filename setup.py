@@ -34,7 +34,7 @@ REQUIRED = [
 EXTRAS = {}
 
 EXTRAS['mujoco'] = [
-    'mujoco-py<2.1,>=2.0',
+    'mujoco-py<=2.0.2.8,>=2.0',
     'gym[all]' + GYM_VERSION,
 ]
 
