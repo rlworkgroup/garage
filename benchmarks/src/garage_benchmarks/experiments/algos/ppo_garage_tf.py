@@ -59,7 +59,7 @@ def ppo_garage_tf(ctxt, env_id, seed):
                       center_adv=True,
                       lr_clip_range=0.2,
                       optimizer_args=dict(batch_size=32,
-                                          max_episode_length=10,
+                                          max_optimization_epochs=10,
                                           learning_rate=3e-4,
                                           verbose=True))
 
