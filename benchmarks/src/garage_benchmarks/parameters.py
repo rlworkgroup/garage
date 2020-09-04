@@ -1,5 +1,5 @@
 """Global parameters for benchmarking."""
-from baselines.bench import benchmarks
+from garage_benchmarks import benchmarks
 
 Fetch1M_ENV_SET = [
     task['env_id'] for task in benchmarks.get_benchmark('Fetch1M')['tasks']
