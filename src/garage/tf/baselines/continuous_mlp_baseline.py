@@ -8,7 +8,7 @@ from garage.experiment import deterministic
 from garage.np.baselines import Baseline
 from garage.tf import compile_function
 from garage.tf.models import NormalizedInputMLPModel
-from garage.tf.optimizers import LbfgsOptimizer
+from garage.tf.optimizers import LBFGSOptimizer
 
 
 # pylint: disable=too-many-ancestors
@@ -75,7 +75,7 @@ class ContinuousMLPBaseline(NormalizedInputMLPModel, Baseline):
         if optimizer_args is None:
             optimizer_args = dict()
         if optimizer is None:
-            self._optimizer = make_optimizer(LbfgsOptimizer, **optimizer_args)
+            self._optimizer = make_optimizer(LBFGSOptimizer, **optimizer_args)
         else:
             self._optimizer = make_optimizer(optimizer, **optimizer_args)
 

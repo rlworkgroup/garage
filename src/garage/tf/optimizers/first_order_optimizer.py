@@ -8,7 +8,7 @@ import tensorflow as tf
 from garage import _Default, make_optimizer
 from garage.np.optimizers import BatchDataset
 from garage.tf import compile_function
-from garage.tf.optimizers.utils import LazyDict
+from garage.tf.optimizers._dtypes import LazyDict
 
 
 class FirstOrderOptimizer:

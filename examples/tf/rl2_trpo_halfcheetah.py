@@ -13,7 +13,7 @@ from garage.sampler import LocalSampler
 from garage.tf.algos import RL2TRPO
 from garage.tf.algos.rl2 import RL2Env, RL2Worker
 from garage.tf.optimizers import (ConjugateGradientOptimizer,
-                                  FiniteDifferenceHvp)
+                                  FiniteDifferenceHVP)
 from garage.tf.policies import GaussianGRUPolicy
 
 
@@ -66,7 +66,7 @@ def rl2_trpo_halfcheetah(ctxt, seed, max_episode_length, meta_batch_size,
                        discount=0.99,
                        max_kl_step=0.01,
                        optimizer=ConjugateGradientOptimizer,
-                       optimizer_args=dict(hvp_approach=FiniteDifferenceHvp(
+                       optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
                            base_eps=1e-5)))
 
         runner.setup(algo,

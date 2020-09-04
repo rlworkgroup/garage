@@ -26,7 +26,7 @@ from garage.tf import (center_advs,
                        positive_advs,
                        stack_tensor_dict_list)
 from garage.tf.embeddings import StochasticEncoder
-from garage.tf.optimizers import LbfgsOptimizer
+from garage.tf.optimizers import LBFGSOptimizer
 from garage.tf.policies import TaskEmbeddingPolicy
 
 # yapf: enable
@@ -128,10 +128,10 @@ class TENPO(RLAlgorithm):
         self._use_softplus_entropy = use_softplus_entropy
         self._stop_ce_gradient = stop_ce_gradient
 
-        optimizer = optimizer or LbfgsOptimizer
+        optimizer = optimizer or LBFGSOptimizer
         optimizer_args = optimizer_args or dict()
 
-        inference_opt = inference_optimizer or LbfgsOptimizer
+        inference_opt = inference_optimizer or LBFGSOptimizer
         inference_opt_args = inference_optimizer_args or dict()
 
         with self._name_scope:

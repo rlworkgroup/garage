@@ -1,6 +1,6 @@
 """Episodic Reward Weighted Regression."""
 from garage.tf.algos.vpg import VPG
-from garage.tf.optimizers import LbfgsOptimizer
+from garage.tf.optimizers import LBFGSOptimizer
 
 
 class ERWR(VPG):
@@ -82,7 +82,7 @@ class ERWR(VPG):
                  entropy_method='no_entropy',
                  name='ERWR'):
         if optimizer is None:
-            optimizer = LbfgsOptimizer
+            optimizer = LBFGSOptimizer
             if optimizer_args is None:
                 optimizer_args = dict()
         super().__init__(env_spec=env_spec,

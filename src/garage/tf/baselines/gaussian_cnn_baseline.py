@@ -10,7 +10,7 @@ from garage.np.baselines.baseline import Baseline
 from garage.tf import compile_function
 from garage.tf.baselines.gaussian_cnn_baseline_model import (
     GaussianCNNBaselineModel)
-from garage.tf.optimizers import LbfgsOptimizer, PenaltyLbfgsOptimizer
+from garage.tf.optimizers import LBFGSOptimizer, PenaltyLBFGSOptimizer
 
 
 # pylint: disable=too-many-ancestors
@@ -151,10 +151,10 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
             optimizer_args = dict()
         if optimizer is None:
             if use_trust_region:
-                self._optimizer = make_optimizer(PenaltyLbfgsOptimizer,
+                self._optimizer = make_optimizer(PenaltyLBFGSOptimizer,
                                                  **optimizer_args)
             else:
-                self._optimizer = make_optimizer(LbfgsOptimizer,
+                self._optimizer = make_optimizer(LBFGSOptimizer,
                                                  **optimizer_args)
         else:
             self._optimizer = make_optimizer(optimizer, **optimizer_args)

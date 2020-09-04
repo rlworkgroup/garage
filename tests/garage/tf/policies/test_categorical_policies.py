@@ -11,7 +11,7 @@ from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
 from garage.tf.optimizers import (ConjugateGradientOptimizer,
-                                  FiniteDifferenceHvp)
+                                  FiniteDifferenceHVP)
 from garage.tf.policies import (CategoricalGRUPolicy,
                                 CategoricalLSTMPolicy,
                                 CategoricalMLPPolicy)
@@ -41,7 +41,7 @@ class TestCategoricalPolicies(TfGraphTestCase):
                 discount=0.99,
                 max_kl_step=0.01,
                 optimizer=ConjugateGradientOptimizer,
-                optimizer_args=dict(hvp_approach=FiniteDifferenceHvp(
+                optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
                     base_eps=1e-5)),
             )
 
