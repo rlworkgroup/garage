@@ -33,14 +33,17 @@ policy from prematurely converging to a bad local optimum.
 ## Default Parameters
 
 ```python
-gradient_steps_per_itr=1000
-max_episode_length_eval=1000
-min_buffer_size=1e4
-target_update_tau=5e-3
+initial_log_entropy=0.
 discount=0.99
-buffer_batch_size=256
-reward_scale=1.
+buffer_batch_size=64
+min_buffer_size=int(1e4)
+target_update_tau=5e-3
+policy_lr=3e-4
+qf_lr=3e-4
+reward_scale=1.0
+optimizer=torch.optim.Adam
 steps_per_epoch=1
+num_evaluation_episodes=10
 ```
 
 ## Examples
