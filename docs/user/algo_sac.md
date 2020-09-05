@@ -6,6 +6,8 @@
    :stub-columns: 1
    :widths: auto
 
+   * - **Action Space**
+     - Continuous
    * - **Paper**
      - Soft Actor-Critic Algorithms and Applications :cite:`haarnoja2018soft`
    * - **Framework(s)**
