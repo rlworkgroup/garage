@@ -65,4 +65,4 @@ class DiscreteQFDerivedPolicy(Policy):
             dict: Empty since this policy does not produce a distribution.
         """
         with torch.no_grad():
-            return self(torch.Tensor(observations)).numpy(), dict()
+            return self(torch.Tensor(observations)).cpu().numpy(), dict()

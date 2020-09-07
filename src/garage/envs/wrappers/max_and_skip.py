@@ -33,6 +33,9 @@ class MaxAndSkip(gym.Wrapper):
         """
         total_reward = 0.0
         done = None
+        if not self._obs_buffer.flags.writeable:
+            self._obs_buffer = self._obs_buffer.copy()
+
         for i in range(self._skip):
             obs, reward, done, info = self.env.step(action)
             if i == self._skip - 2:

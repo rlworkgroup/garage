@@ -36,7 +36,7 @@ class StackFrames(gym.Wrapper):
         self._n_frames = n_frames
         self._frames = deque(maxlen=n_frames)
 
-        new_obs_space_shape = env.observation_space.shape + (n_frames, )
+        new_obs_space_shape = (n_frames, ) + env.observation_space.shape
         _low = env.observation_space.low.flatten()[0]
         _high = env.observation_space.high.flatten()[0]
         self._observation_space = gym.spaces.Box(
@@ -55,7 +55,7 @@ class StackFrames(gym.Wrapper):
         self._observation_space = observation_space
 
     def _stack_frames(self):
-        return np.stack(self._frames, axis=2)
+        return np.stack(self._frames, axis=0)
 
     def reset(self):
         """gym.Env reset function."""

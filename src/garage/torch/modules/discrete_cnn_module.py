@@ -73,8 +73,8 @@ class DiscreteCNNModule(nn.Module):
                  hidden_channels,
                  strides,
                  hidden_sizes=(32, 32),
-                 cnn_hidden_nonlinearity=torch.relu,
-                 mlp_hidden_nonlinearity=torch.relu,
+                 cnn_hidden_nonlinearity=nn.ReLU,
+                 mlp_hidden_nonlinearity=nn.ReLU,
                  hidden_w_init=nn.init.xavier_uniform_,
                  hidden_b_init=nn.init.zeros_,
                  paddings=0,
@@ -120,7 +120,10 @@ class DiscreteCNNModule(nn.Module):
                                output_b_init=output_b_init,
                                layer_normalization=layer_normalization)
 
-        self._module = nn.Sequential(cnn_module, mlp_module)
+        self._module = nn.Sequential(cnn_module,
+                                     nn.ReLU(),
+                                     nn.Flatten(),
+                                     mlp_module)
 
     def forward(self, inputs):
         """Forward method.

@@ -3,6 +3,7 @@ import torch
 from torch import nn
 
 from garage.torch.modules import DiscreteCNNModule
+from garage.torch import global_device
 
 
 # pytorch v1.6 issue, see https://github.com/pytorch/pytorch/issues/42305
@@ -88,6 +89,7 @@ class DiscreteCNNQFunction(DiscreteCNNModule):
                  layer_normalization=False,
                  is_image=True):
 
+        self._env_spec = env_spec
         input_shape = (minibatch_size, ) + env_spec.observation_space.shape
         output_dim = env_spec.action_space.flat_dim
         super().__init__(input_shape=input_shape,
@@ -110,3 +112,12 @@ class DiscreteCNNQFunction(DiscreteCNNModule):
                          output_b_init=output_b_init,
                          layer_normalization=layer_normalization,
                          is_image=is_image)
+
+    def forward(self, observations):
+        if observations.shape != self._env_spec.observation_space.shape:
+            # avoid using observation_space.unflatten_n
+            # to support tensors on GPUs
+            obs_shape = ((len(observations), ) +
+                        self._env_spec.observation_space.shape)
+            observations = observations.reshape(obs_shape)
+        return super().forward(observations)

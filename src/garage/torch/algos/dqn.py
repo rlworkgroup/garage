@@ -7,10 +7,10 @@ import torch
 import torch.nn.functional as F
 
 from garage import _Default, log_performance, make_optimizer
-from garage.np import obtain_evaluation_episodes
+from garage._functions import obtain_evaluation_episodes
 from garage.np.algos import RLAlgorithm
-from garage.sampler import DefaultWorker, LocalSampler
-from garage.torch import dict_np_to_torch, torch_to_np
+from garage.sampler import DefaultWorker, FragmentWorker
+from garage.torch import dict_np_to_torch, global_device
 
 
 class DQN(RLAlgorithm):
@@ -108,8 +108,7 @@ class DQN(RLAlgorithm):
                                             module=self._qf,
                                             lr=qf_lr)
         self._eval_env = None
-        self.sampler_cls = LocalSampler
-        self.worker_cls = DefaultWorker
+        self.worker_cls = FragmentWorker
 
     def train(self, runner):
         """Obtain samplers and start actual training for each epoch.
@@ -128,16 +127,24 @@ class DQN(RLAlgorithm):
 
         for _ in runner.step_epochs():
             for cycle in range(self._steps_per_epoch):
+                logger.log('Obtaining episodes')
                 runner.step_path = runner.obtain_episodes(runner.step_itr)
                 self.train_once(runner.step_itr, runner.step_path)
                 if (cycle == 0 and self.replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
                     runner.enable_logging = True
+                    logger.log('Evaluating policy')
+
                     eval_eps = obtain_evaluation_episodes(
-                        self.policy, self._eval_env)
+                        self.policy, self._eval_env, num_eps=10,
+                        max_episode_length=self._max_episode_length_eval)
                     last_returns = log_performance(runner.step_itr,
                                                    eval_eps,
                                                    discount=self._discount)
+                elif not (self.replay_buffer.n_transitions_stored
+                          >= self._min_buffer_size):
+                    logger.log('Prefilling buffer: {} steps'.format(
+                                self.replay_buffer.n_transitions_stored))
                 runner.step_itr += 1
 
         return np.mean(last_returns)
@@ -154,13 +161,15 @@ class DQN(RLAlgorithm):
 
         epoch = itr / self._steps_per_epoch
 
+        logger.log('Optimizing Q Function')
         for _ in range(self._n_train_steps):
             if (self.replay_buffer.n_transitions_stored >=
                     self._min_buffer_size):
                 samples = self.replay_buffer.sample_transitions(
                     self._buffer_batch_size)
                 samples['rewards'] *= self._reward_scale
-                qf_loss, y, q = torch_to_np(self.optimize_qf(samples))
+                qf_loss, y, q = tuple(v.cpu().numpy()
+                                      for v in self.optimize_qf(samples))
 
                 self._episode_qf_losses.append(qf_loss)
                 self._epoch_ys.append(y)
@@ -224,9 +233,7 @@ class DQN(RLAlgorithm):
 
         # optimize qf
         qvals = self._qf(inputs)
-        selected_qs = torch.stack([
-            qs[action.argmax(0)] for qs, action in zip(qvals, actions)
-        ])  # TODO: verify this
+        selected_qs = torch.sum(qvals * actions, axis=1)
         qval_loss = F.smooth_l1_loss(selected_qs, y_target)
 
         self._qf_optimizer.zero_grad()
@@ -239,3 +246,17 @@ class DQN(RLAlgorithm):
         self._qf_optimizer.step()
 
         return (qval_loss.detach(), y_target, selected_qs.detach())
+
+    def to(self, device=None):
+        """Put all the networks within the model on device.
+
+        Args:
+            device (str): ID of GPU or CPU.
+
+        """
+        if device is None:
+            device = global_device()
+        print(device)
+        print(torch.cuda.is_available())
+        self._qf = self._qf.to(device)
+        self._target_qf = self._target_qf.to(device)
