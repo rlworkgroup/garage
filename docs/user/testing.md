@@ -123,9 +123,9 @@ class TestVPG(...):
                        discount=0.99,
                        optimizer_args=dict(learning_rate=0.01, ))
 
-            runner.setup(algo, env)
+            trainer.setup(algo, env)
 
-            last_avg_ret = runner.train(n_epochs=10, batch_size=10000)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=10000)
             assert last_avg_ret > 90
 
             env.close()

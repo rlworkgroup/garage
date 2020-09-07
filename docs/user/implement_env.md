@@ -286,7 +286,7 @@ probably overkill. To do so, create a new script with the following content
     from garage import wrap_experiment
     from garage.envs import PointEnv
     from garage.envs import normalize
-    from garage.experiment import LocalTFRunner
+    from garage.experiment import TFTrainer
     from garage.experiment.deterministic import set_seed
     from garage.np.baselines import LinearFeatureBaseline
     from garage.tf.algos import TRPO
@@ -296,7 +296,7 @@ probably overkill. To do so, create a new script with the following content
     @wrap_experiment
     def trpo_point(ctxt=None, seed=1):
         set_seed(seed)
-        with LocalTFRunner(ctxt) as runner:
+        with TFTrainer(ctxt) as trainer:
             env = normalize(PointEnv())
 
             policy = CategoricalMLPPolicy(name='policy',
@@ -312,8 +312,8 @@ probably overkill. To do so, create a new script with the following content
                         discount=0.99,
                         max_kl_step=0.01)
 
-            runner.setup(algo, env)
-            runner.train(n_epochs=100, batch_size=4000)
+            trainer.setup(algo, env)
+            trainer.train(n_epochs=100, batch_size=4000)
 
 
     trpo_point()

@@ -19,12 +19,12 @@ experiment.
 Within the decorated experiment function, experiment launchers then construct
 the important objects involved in running an experiment, such as the following:
 
- - The :code:`LocalRunner`, which sets up important state (such as a TensorFlow Session) for running the algorithm in the experiment.
+ - The :code:`Trainer`, which sets up important state (such as a TensorFlow Session) for running the algorithm in the experiment.
  - The :code:`environment` object, which is the environment in which reinforcement learning is being done.
  - The :code:`policy` object, which is trained to optimize for maximal reward in the :code:`environment`.
  - The :code:`algorithm`, which trains the :code:`policy`.
 
-Finally, the launcher calls :code:`runner.setup` and :code:`runner.train` which co-ordinate running the algorithm.
+Finally, the launcher calls :code:`trainer.setup` and :code:`trainer.train` which co-ordinate running the algorithm.
 
 The garage repository contains several example experiment launchers. A fairly
 simple one, :code:`examples/tf/trpo_cartpole.py`, is also pasted below:
@@ -33,11 +33,11 @@ simple one, :code:`examples/tf/trpo_cartpole.py`, is also pasted below:
 
   from garage import wrap_experiment
   from garage.envs import GymEnv
-  from garage.experiment import LocalTFRunner
   from garage.experiment.deterministic import set_seed
   from garage.np.baselines import LinearFeatureBaseline
   from garage.tf.algos import TRPO
   from garage.tf.policies import CategoricalMLPPolicy
+  from garage.trainer import TFTrainer
 
 
   @wrap_experiment
@@ -46,13 +46,13 @@ simple one, :code:`examples/tf/trpo_cartpole.py`, is also pasted below:
 
       Args:
           ctxt (garage.experiment.ExperimentContext): The experiment
-              configuration used by LocalRunner to create the snapshotter.
+              configuration used by Trainer to create the snapshotter.
           seed (int): Used to seed the random number generator to produce
               determinism.
 
       """
       set_seed(seed)
-      with LocalTFRunner(ctxt) as runner:
+      with TFTrainer(ctxt) as trainer:
           env = GymEnv('CartPole-v1')
 
           policy = CategoricalMLPPolicy(name='policy',
@@ -67,8 +67,8 @@ simple one, :code:`examples/tf/trpo_cartpole.py`, is also pasted below:
                       discount=0.99,
                       max_kl_step=0.01)
 
-          runner.setup(algo, env)
-          runner.train(n_epochs=100, batch_size=4000)
+          trainer.setup(algo, env)
+          trainer.train(n_epochs=100, batch_size=4000)
 
 
   trpo_cartpole()

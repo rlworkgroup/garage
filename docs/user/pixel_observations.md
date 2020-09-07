@@ -189,7 +189,7 @@ in a launcher file
 def  pixel_observations_example(ctxt=None, seed=1, buffer_size=int(1e4)):
     set_seed(seed)
 
-    with LocalTFRunner(snapshot_config=ctxt) as runner:
+    with TFTrainer(snapshot_config=ctxt) as trainer:
 
         env = gym.make('Pendulum-v0')
         env = PixelObservation(env) # goes first

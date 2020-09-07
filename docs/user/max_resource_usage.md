@@ -9,7 +9,7 @@ The most compute-intensive part in training a policy is sampling. Garage uses
 [`Worker`](sampling.html#worker) to abstract a CPU to perform a rollout and uses
 [`Sampler`](sampling.html#sampler) to manage them. To maximize CPU utilization,
 we only need to choose proper `Sampler` and `Worker` when setting up
-`LocalRunner`.
+`Trainer`.
 
 In the following tests, we will use [`examples/torch/trpo_pendulum.py`](https://github.com/rlworkgroup/garage/blob/master/examples/torch/trpo_pendulum.py)
 as example experiment file.
@@ -23,7 +23,7 @@ sampler will run workers in the same process.
 from garage.sampler import LocalSampler, DefaultWorker
 
     ...
-    runner.setup(algo, env, sampler_cls=LocalSampler, worker_class=DefaultWorker)
+    trainer.setup(algo, env, sampler_cls=LocalSampler, worker_class=DefaultWorker)
     ...
 ```
 
@@ -47,7 +47,7 @@ environments simulated in one step), just set `n_envs` in `worker_args`.
 from garage.sampler import LocalSampler, VecWorker
 
     ...
-    runner.setup(
+    trainer.setup(
         algo=algo,
         env=env,
         worker_class=VecWorker,
@@ -76,7 +76,7 @@ on the local machine.
 from garage.sampler import RaySampler, VecWorker
 
     ...
-    runner.setup(
+    trainer.setup(
         algo=algo,
         env=env,
         sampler_cls=RaySampler,
@@ -133,8 +133,8 @@ def trpo_pendulum(ctxt=None, seed=1):
         set_gpu_mode(False)
     algo.to()
 
-    runner.setup(algo, env)
-    runner.train(n_epochs=1000, batch_size=1024)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=1000, batch_size=1024)
 ```
 
 ### TensorFlow
@@ -159,7 +159,7 @@ def trpo_cartpole(ctxt=None):
         device_count = {'GPU': 0}
     )
     sess = tf.compat.v1.Session(config=sess_config)
-    with LocalTFRunner(ctxt, sess=sess) as runner:
+    with TFTrainer(ctxt, sess=sess) as trainer:
         ...
 ```
 
