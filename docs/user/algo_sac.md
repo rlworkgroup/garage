@@ -16,9 +16,9 @@
 
         PyTorch
    * - **API Reference**
-     - `garage.torch.algos.BC <../_autoapi/garage/torch/algos/index.html#garage.torch.algos.SAC>`_
+     - `garage.torch.algos.SAC <../_autoapi/garage/torch/algos/index.html#garage.torch.algos.SAC>`_
    * - **Code**
-     - `garage/torch/algos/bc.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/torch/algos/sac.py>`_
+     - `garage/torch/algos/sac.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/torch/algos/sac.py>`_
    * - **Examples**
      - `examples <algo_sac.html#examples>`_
 ```
