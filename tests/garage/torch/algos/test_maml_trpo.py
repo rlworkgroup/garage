@@ -3,11 +3,11 @@ import pytest
 import torch
 
 from garage.envs import GymEnv, normalize
-from garage.experiment import LocalRunner
 from garage.sampler import LocalSampler
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config
 from tests.fixtures.envs.dummy import DummyMultiTaskBoxEnv
@@ -45,7 +45,7 @@ def test_maml_trpo_pendulum():
     value_function = GaussianMLPValueFunction(env_spec=env.spec,
                                               hidden_sizes=(32, 32))
 
-    runner = LocalRunner(snapshot_config)
+    trainer = Trainer(snapshot_config)
     algo = MAMLTRPO(env=env,
                     policy=policy,
                     value_function=value_function,
@@ -55,10 +55,10 @@ def test_maml_trpo_pendulum():
                     inner_lr=0.1,
                     num_grad_updates=1)
 
-    runner.setup(algo, env, sampler_cls=LocalSampler)
-    last_avg_ret = runner.train(n_epochs=5,
-                                batch_size=episodes_per_task *
-                                max_episode_length)
+    trainer.setup(algo, env, sampler_cls=LocalSampler)
+    last_avg_ret = trainer.train(n_epochs=5,
+                                 batch_size=episodes_per_task *
+                                 max_episode_length)
 
     assert last_avg_ret > -5
 
@@ -81,7 +81,7 @@ def test_maml_trpo_dummy_named_env():
     episodes_per_task = 2
     max_episode_length = env.spec.max_episode_length
 
-    runner = LocalRunner(snapshot_config)
+    trainer = Trainer(snapshot_config)
     algo = MAMLTRPO(env=env,
                     policy=policy,
                     value_function=value_function,
@@ -91,5 +91,6 @@ def test_maml_trpo_dummy_named_env():
                     inner_lr=0.1,
                     num_grad_updates=1)
 
-    runner.setup(algo, env, sampler_cls=LocalSampler)
-    runner.train(n_epochs=2, batch_size=episodes_per_task * max_episode_length)
+    trainer.setup(algo, env, sampler_cls=LocalSampler)
+    trainer.train(n_epochs=2,
+                  batch_size=episodes_per_task * max_episode_length)

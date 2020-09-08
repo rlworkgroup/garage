@@ -3,11 +3,11 @@
 from garage import wrap_experiment
 from garage.envs import normalize, PointEnv
 from garage.envs.multi_env_wrapper import MultiEnvWrapper
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.policies import GaussianMLPPolicy
+from garage.trainer import TFTrainer
 
 
 @wrap_experiment
@@ -16,13 +16,13 @@ def multi_env_trpo(ctxt=None, seed=1):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
 
     """
     set_seed(seed)
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         env1 = normalize(PointEnv(goal=(-1., 0.), max_episode_length=100))
         env2 = normalize(PointEnv(goal=(1., 0.), max_episode_length=100))
         env = MultiEnvWrapper([env1, env2])
@@ -39,8 +39,8 @@ def multi_env_trpo(ctxt=None, seed=1):
                     lr_clip_range=0.2,
                     policy_ent_coeff=0.0)
 
-        runner.setup(algo, env)
-        runner.train(n_epochs=40, batch_size=2048, plot=False)
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=40, batch_size=2048, plot=False)
 
 
 multi_env_trpo()

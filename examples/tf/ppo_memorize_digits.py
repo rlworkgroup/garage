@@ -7,11 +7,11 @@ import click
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.policies import CategoricalCNNPolicy
+from garage.trainer import TFTrainer
 
 
 @click.command()
@@ -26,7 +26,7 @@ def ppo_memorize_digits(ctxt=None,
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
         batch_size (int): Number of timesteps to use in each training step.
@@ -34,7 +34,7 @@ def ppo_memorize_digits(ctxt=None,
 
     """
     set_seed(seed)
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         env = normalize(
             GymEnv('MemorizeDigits-v0',
                    is_image=True,
@@ -74,8 +74,8 @@ def ppo_memorize_digits(ctxt=None,
                        learning_rate=1e-3,
                    ))
 
-        runner.setup(algo, env)
-        runner.train(n_epochs=1000, batch_size=batch_size)
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=1000, batch_size=batch_size)
 
 
 ppo_memorize_digits()

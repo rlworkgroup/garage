@@ -3,10 +3,11 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalTFRunner
+from garage.experiment import deterministic
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.policies import GaussianMLPPolicy
+from garage.trainer import TFTrainer
 
 hyper_parameters = {
     'hidden_sizes': [32, 32],
@@ -24,7 +25,7 @@ def trpo_garage_tf(ctxt, env_id, seed):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the
+            configuration used by Trainer to create the
             snapshotter.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
@@ -32,7 +33,7 @@ def trpo_garage_tf(ctxt, env_id, seed):
     """
     deterministic.set_seed(seed)
 
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         env = normalize(GymEnv(env_id))
 
         policy = GaussianMLPPolicy(
@@ -51,6 +52,6 @@ def trpo_garage_tf(ctxt, env_id, seed):
                     gae_lambda=hyper_parameters['gae_lambda'],
                     max_kl_step=hyper_parameters['max_kl'])
 
-        runner.setup(algo, env)
-        runner.train(n_epochs=hyper_parameters['n_epochs'],
-                     batch_size=hyper_parameters['batch_size'])
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=hyper_parameters['n_epochs'],
+                      batch_size=hyper_parameters['batch_size'])

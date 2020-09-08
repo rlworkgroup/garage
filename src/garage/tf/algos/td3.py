@@ -288,11 +288,11 @@ class TD3(RLAlgorithm):
         self.__dict__.update(state)
         self._init_opt()
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): Experiment runner, which provides services
+            trainer (Trainer): Experiment trainer, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -300,23 +300,23 @@ class TD3(RLAlgorithm):
 
         """
         if not self._eval_env:
-            self._eval_env = runner.get_env_copy()
+            self._eval_env = trainer.get_env_copy()
         last_returns = [float('nan')]
-        runner.enable_logging = False
+        trainer.enable_logging = False
 
-        for _ in runner.step_epochs():
+        for _ in trainer.step_epochs():
             for cycle in range(self._steps_per_epoch):
-                runner.step_path = runner.obtain_episodes(runner.step_itr)
-                self._train_once(runner.step_itr, runner.step_path)
+                trainer.step_path = trainer.obtain_episodes(trainer.step_itr)
+                self._train_once(trainer.step_itr, trainer.step_path)
                 if (cycle == 0 and self._replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
-                    runner.enable_logging = True
+                    trainer.enable_logging = True
                     eval_episodes = obtain_evaluation_episodes(
                         self.policy, self._eval_env)
-                    last_returns = log_performance(runner.step_itr,
+                    last_returns = log_performance(trainer.step_itr,
                                                    eval_episodes,
                                                    discount=self._discount)
-                runner.step_itr += 1
+                trainer.step_itr += 1
 
         return np.mean(last_returns)
 

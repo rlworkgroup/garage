@@ -17,8 +17,8 @@ All RL algorithms used with garage implement a small interface that allows
 accessing important services such as snapshotting, "plotting" (visualization of
 the current policy in the environment), and resume.
 
-The interface requires a single method, `train(runner)`, which takes a
-`garage.experiment.LocalRunner`. The interface is defined in
+The interface requires a single method, `train(trainer)`, which takes a
+`garage.experiment.Trainer`. The interface is defined in
 `garage.np.algos.RLAlgorithm`, but inheriting from this class isn't necessary.
 
 Some additional functionality (such as sampling and plotting) require additional
@@ -45,13 +45,13 @@ At the core of garage is the assumption that the algorithm runs a series of
 logging, will only have new results once per epoch.
 
 The current epoch is controlled by the algorithm using
-`LocalRunner.step_epochs()`.
+`Trainer.step_epochs()`.
 
 ```py
 class MyAlgorithm:
 
-    def train(self, runner):
-        epoch_stepper = runner.step_epochs()
+    def train(self, trainer):
+        epoch_stepper = trainer.step_epochs()
         print('It is epoch 0')
         next(epoch_stepper)
         print('It is epoch 1')
@@ -64,8 +64,8 @@ In practice, it's used in a loop like this:
 ```py
 class MyAlgorithm:
 
-    def train(self, runner):
-        for epoch in runner.step_epochs():
+    def train(self, trainer):
+        for epoch in trainer.step_epochs():
             print('It is epoch', epoch)
 ```
 
@@ -76,7 +76,7 @@ update, etc.
 When an experiment is resumed, the epoch `train` will be called again, but the
 first epoch yielded by `step_epochs` will be the one after the snapshot.
 
-In order to use the `LocalRunner`, we'll need a set up log directory. This can
+In order to use the `Trainer`, we'll need a set up log directory. This can
 be done manually, but for this tutorial we'll use the `wrap_experiment` function
 to do that for us.
 
@@ -85,15 +85,15 @@ We'll also want an environment to test our algorithm with.
 ```py
 from garage import wrap_experiment
 from garage.envs import PointEnv
-from garage.experiment import LocalRunner
+from garage.experiment import Trainer
 
 @wrap_experiment
 def debug_my_algorithm(ctxt):
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
     env = PointEnv()
     algo = MyAlgorithm()
-    runner.setup(algo, env)
-    runner.train(n_epochs=3)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=3)
 
 debug_my_algorithm()
 ```
@@ -139,7 +139,7 @@ In the above section, we set up an algorithm, but never actually explored the
 environment at all, as can be seen by `TotalEnvSteps` always being zero.
 
 In order to collect samples from the environment, we can set the `sampler_cls`
-and `policy` fields on our algorithm, and call `runner.obtain_samples()`. We'll
+and `policy` fields on our algorithm, and call `trainer.obtain_samples()`. We'll
 also need to seed the random number generators used for the experiment.
 
 ```py
@@ -154,25 +154,25 @@ class SimpleVPG:
         self.policy = policy
         self.max_episode_length = 200
 
-    def train(self, runner):
-        for epoch in runner.step_epochs():
-            samples = runner.obtain_samples(epoch)
+    def train(self, trainer):
+        for epoch in trainer.step_epochs():
+            samples = trainer.obtain_samples(epoch)
 
 from garage import wrap_experiment
 from garage.envs import PointEnv
-from garage.experiment import LocalRunner
+from garage.experiment import Trainer
 from garage.experiment.deterministic import set_seed
 from garage.torch.policies import GaussianMLPPolicy
 
 @wrap_experiment
 def debug_my_algorithm(ctxt):
     set_seed(100)
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
     env = PointEnv()
     policy = GaussianMLPPolicy(env.spec)
     algo = SimpleVPG(policy)
-    runner.setup(algo, env)
-    runner.train(n_epochs=500, batch_size=4000)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=500, batch_size=4000)
 
 debug_my_algorithm()
 ```
@@ -207,9 +207,9 @@ class SimpleVPG:
         self._discount = 0.99
         self._policy_opt = torch.optim.Adam(self.policy.parameters(), lr=1e-3)
 
-    def train(self, runner):
-        for epoch in runner.step_epochs():
-            samples = runner.obtain_samples(epoch)
+    def train(self, trainer):
+        for epoch in trainer.step_epochs():
+            samples = trainer.obtain_samples(epoch)
             self._train_once(samples)
 
     def _train_once(self, samples):
@@ -236,9 +236,9 @@ We can add a little logging to the `train()` method.
 from garage import log_performance, EpisodeBatch
 
 ...
-    def train(self, runner):
-        for epoch in runner.step_epochs():
-            samples = runner.obtain_samples(epoch)
+    def train(self, trainer):
+        for epoch in trainer.step_epochs():
+            samples = trainer.obtain_samples(epoch)
             log_performance(
                 epoch,
                 EpisodeBatch.from_episode_list(self.env_spec, samples),
@@ -297,44 +297,44 @@ TotalEnvSteps                       8202
 
 As `PointEnv` currently not supports visualization, If you want to visualize the
 policy when training, you can solve an Gym environment, for example
-`LunarLanderContinuous-v2`, and set `plot` to `True` in `runner.train()`:
+`LunarLanderContinuous-v2`, and set `plot` to `True` in `trainer.train()`:
 
 ```py
 ...
 @wrap_experiment
 def tutorial_vpg(ctxt=None):
     set_seed(100)
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
     env = GymEnv('LunarLanderContinuous-v2')
     policy = GaussianMLPPolicy(env.spec)
     algo = SimpleVPG(env.spec, policy)
-    runner.setup(algo, env)
-    runner.train(n_epochs=500, batch_size=4000, plot=True)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=500, batch_size=4000, plot=True)
 ...
 ```
 
 ### TensorFlow
 
 Before the training part, TensorFlow version is almost the same as PyTorch's,
-except for the replacement of `LocalRunner` with `LocalTFRunner`.
+except for the replacement of `Trainer` with `TFTrainer`.
 
 ```py
 ...
 from garage import wrap_experiment
 from garage.envs import PointEnv
-from garage.experiment import LocalTFRunner
+from garage.experiment import TFTrainer
 from garage.experiment.deterministic import set_seed
 from garage.tf.policies import GaussianMLPPolicy
 
 @wrap_experiment
 def tutorial_vpg(ctxt=None):
     set_seed(100)
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         env = PointEnv()
         policy = GaussianMLPPolicy(env.spec)
         algo = SimpleVPG(env.spec, policy)
-        runner.setup(algo, env)
-        runner.train(n_epochs=500, batch_size=4000)
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=500, batch_size=4000)
 ...
 ```
 
@@ -381,9 +381,9 @@ The `train()` method is the same, while int the `_train_once()` method, we feed
 the inputs with sample data.
 
 ```py
-    def train(self, runner):
-        for epoch in runner.step_epochs():
-            samples = runner.obtain_samples(epoch)
+    def train(self, trainer):
+        for epoch in trainer.step_epochs():
+            samples = trainer.obtain_samples(epoch)
             log_performance(
                 epoch,
                 EpisodeBatch.from_list(self.env_spec, samples),
@@ -486,19 +486,19 @@ experiment function is similar to that of TensorFlow:
 ```py
 from garage import wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
+from garage.experiment import TFTrainer
 from garage.experiment.deterministic import set_seed
 from garage.tf.policies import CategoricalMLPPolicy
 
 @wrap_experiment
 def tutorial_cem(ctxt=None):
     set_seed(100)
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         env = GymEnv('CartPole-v1')
         policy = CategoricalMLPPolicy(env.spec)
         algo = SimpleCEM(env.spec, policy)
-        runner.setup(algo, env)
-        runner.train(n_epochs=100, batch_size=1000)
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=100, batch_size=1000)
 ```
 
 When training the policy, we use `policy.get_param_values()` method to get the
@@ -528,9 +528,9 @@ class SimpleCEM:
         self._all_params = [self._cur_mean.copy()]
         self._cur_params = None
 
-    def train(self, runner):
-        for epoch in runner.step_epochs():
-            samples = runner.obtain_samples(epoch)
+    def train(self, trainer):
+        for epoch in trainer.step_epochs():
+            samples = trainer.obtain_samples(epoch)
             log_performance(
                 epoch,
                 EpisodeBatch.from_list(self.env_spec, samples),
@@ -570,7 +570,7 @@ class SimpleCEM:
 You can see the full experiment file [here](https://github.com/rlworkgroup/garage/blob/master/examples/np/tutorial_cem.py).
 Running the experiment file should print outputs like the following. If you want
 to visualize the policy when training, you can set `plot` to `True` in
-`runner.train()` as mentioned before in PyTorch section.
+`trainer.train()` as mentioned before in PyTorch section.
 
 ```sh
 2020-07-24 15:33:49 | [tutorial_cem] Logging to /home/ruofu/garage/data/local/experiment/tutorial_cem

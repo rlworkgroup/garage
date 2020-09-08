@@ -74,12 +74,12 @@ class MAML:
                                               eps=_Default(1e-5))
         self._evaluate_every_n_epochs = evaluate_every_n_epochs
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samples and start training for each epoch.
 
         Args:
-            runner (LocalRunner): Gives the algorithm access to
-                :method:`~LocalRunner.step_epochs()`, which provides services
+            trainer (Trainer): Gives the algorithm access to
+                :method:`~Trainer.step_epochs()`, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -88,18 +88,18 @@ class MAML:
         """
         last_return = None
 
-        for _ in runner.step_epochs():
-            all_samples, all_params = self._obtain_samples(runner)
-            last_return = self._train_once(runner, all_samples, all_params)
-            runner.step_itr += 1
+        for _ in trainer.step_epochs():
+            all_samples, all_params = self._obtain_samples(trainer)
+            last_return = self._train_once(trainer, all_samples, all_params)
+            trainer.step_itr += 1
 
         return last_return
 
-    def _train_once(self, runner, all_samples, all_params):
+    def _train_once(self, trainer, all_samples, all_params):
         """Train the algorithm once.
 
         Args:
-            runner (LocalRunner): The experiment runner.
+            trainer (Trainer): The experiment runner.
             all_samples (list[list[_MAMLEpisodeBatch]]): A two
                 dimensional list of _MAMLEpisodeBatch of size
                 [meta_batch_size * (num_grad_updates + 1)]
@@ -111,7 +111,7 @@ class MAML:
             float: Average return.
 
         """
-        itr = runner.step_itr
+        itr = trainer.step_itr
         old_theta = dict(self._policy.named_parameters())
 
         kl_before = self._compute_kl_constraint(all_samples,
@@ -176,11 +176,11 @@ class MAML:
 
         return vf_loss
 
-    def _obtain_samples(self, runner):
+    def _obtain_samples(self, trainer):
         """Obtain samples for each task before and after the fast-adaptation.
 
         Args:
-            runner (LocalRunner): A local runner instance to obtain samples.
+            trainer (Trainer): A trainer instance to obtain samples.
 
         Returns:
             tuple: Tuple of (all_samples, all_params).
@@ -199,8 +199,8 @@ class MAML:
 
             for j in range(self._num_grad_updates + 1):
                 env_up = SetTaskUpdate(None, task=task)
-                episodes = runner.obtain_samples(runner.step_itr,
-                                                 env_update=env_up)
+                episodes = trainer.obtain_samples(trainer.step_itr,
+                                                  env_update=env_up)
                 batch_samples = self._process_samples(episodes)
                 all_samples[i].append(batch_samples)
 

@@ -3,12 +3,13 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalTFRunner
+from garage.experiment import deterministic
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import HERReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
+from garage.trainer import TFTrainer
 
 hyper_parameters = {
     'policy_lr': 1e-3,
@@ -32,14 +33,14 @@ def her_garage_tf(ctxt, env_id, seed):
 
     Args:
         ctxt (ExperimentContext): The experiment configuration used by
-            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
+            :class:`~Trainer` to create the :class:`~Snapshotter`.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
 
     """
     deterministic.set_seed(seed)
 
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         env = normalize(GymEnv(env_id))
 
         policy = ContinuousMLPPolicy(
@@ -82,6 +83,6 @@ def her_garage_tf(ctxt, env_id, seed):
             buffer_batch_size=256,
         )
 
-        runner.setup(algo, env)
-        runner.train(n_epochs=hyper_parameters['n_epochs'],
-                     batch_size=hyper_parameters['n_exploration_steps'])
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=hyper_parameters['n_epochs'],
+                      batch_size=hyper_parameters['n_exploration_steps'])

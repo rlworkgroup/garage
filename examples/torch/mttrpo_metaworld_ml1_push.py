@@ -7,11 +7,11 @@ import torch
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.torch.algos import TRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.trainer import Trainer
 
 
 @click.command()
@@ -24,7 +24,7 @@ def mttrpo_metaworld_ml1_push(ctxt, seed, epochs, batch_size):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
         epochs (int): Number of training epochs.
@@ -53,9 +53,9 @@ def mttrpo_metaworld_ml1_push(ctxt, seed, epochs, batch_size):
                 discount=0.99,
                 gae_lambda=0.95)
 
-    runner = LocalRunner(ctxt)
-    runner.setup(algo, env)
-    runner.train(n_epochs=epochs, batch_size=batch_size)
+    trainer = Trainer(ctxt)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=epochs, batch_size=batch_size)
 
 
 mttrpo_metaworld_ml1_push()

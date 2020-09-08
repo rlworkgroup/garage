@@ -12,13 +12,14 @@ from torch.nn import functional as F
 from garage import wrap_experiment
 from garage.envs import GymEnv, MultiEnvWrapper, normalize
 from garage.envs.multi_env_wrapper import round_robin_strategy
-from garage.experiment import deterministic, LocalRunner
+from garage.experiment import deterministic
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.torch import set_gpu_mode
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
+from garage.trainer import Trainer
 
 
 @click.command()
@@ -31,7 +32,7 @@ def mtsac_metaworld_mt50(ctxt=None, seed=1, use_gpu=False, _gpu=0):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
         use_gpu (bool): Used to enable ussage of GPU in training.
@@ -39,7 +40,7 @@ def mtsac_metaworld_mt50(ctxt=None, seed=1, use_gpu=False, _gpu=0):
 
     """
     deterministic.set_seed(seed)
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
     task_names = mwb.MT50.get_train_tasks().all_task_names
     train_envs = []
     test_envs = []
@@ -98,11 +99,11 @@ def mtsac_metaworld_mt50(ctxt=None, seed=1, use_gpu=False, _gpu=0):
                   buffer_batch_size=6400)
     set_gpu_mode(use_gpu, _gpu)
     mtsac.to()
-    runner.setup(algo=mtsac,
-                 env=mt50_train_envs,
-                 sampler_cls=LocalSampler,
-                 n_workers=1)
-    runner.train(n_epochs=epochs, batch_size=batch_size)
+    trainer.setup(algo=mtsac,
+                  env=mt50_train_envs,
+                  sampler_cls=LocalSampler,
+                  n_workers=1)
+    trainer.train(n_epochs=epochs, batch_size=batch_size)
 
 
 mtsac_metaworld_mt50()

@@ -20,14 +20,14 @@ class DummyAlgo(RLAlgorithm):  # pylint: disable=too-few-public-methods
         self.max_episode_length = 1
         self.n_samples = 10
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.
 
         See garage.np.algos.RLAlgorithm train().
 
         Args:
-            runner (LocalRunner): LocalRunner is passed to give algorithm
-                the access to runner.step_epochs(), which provides services
+            trainer (Trainer): Trainer is passed to give algorithm
+                the access to trainer.step_epochs(), which provides services
                 such as snapshotting and sampler control.
 
         """

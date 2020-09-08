@@ -4,11 +4,11 @@ import numpy as np
 
 from garage import EpisodeBatch, log_performance, wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np import discount_cumsum
 from garage.sampler import LocalSampler
 from garage.tf.policies import CategoricalMLPPolicy
+from garage.trainer import TFTrainer
 
 
 # pylint: disable=too-few-public-methods
@@ -37,15 +37,15 @@ class SimpleCEM:
         self._all_params = [self._cur_mean.copy()]
         self._cur_params = None
 
-    def train(self, runner):
+    def train(self, trainer):
         """Get samples and train the policy.
 
         Args:
-            runner (LocalRunner): LocalRunner.
+            trainer (Trainer): Trainer.
 
         """
-        for epoch in runner.step_epochs():
-            samples = runner.obtain_samples(epoch)
+        for epoch in trainer.step_epochs():
+            samples = trainer.obtain_samples(epoch)
             log_performance(epoch,
                             EpisodeBatch.from_list(self.env_spec, samples),
                             self._discount)
@@ -110,16 +110,16 @@ def tutorial_cem(ctxt=None):
 
     Args:
         ctxt (ExperimentContext): The experiment configuration used by
-            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
+            :class:`~Trainer` to create the :class:`~Snapshotter`.
 
     """
     set_seed(100)
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         env = GymEnv('CartPole-v1')
         policy = CategoricalMLPPolicy(env.spec)
         algo = SimpleCEM(env.spec, policy)
-        runner.setup(algo, env)
-        runner.train(n_epochs=100, batch_size=1000)
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=100, batch_size=1000)
 
 
 tutorial_cem()

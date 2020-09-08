@@ -139,12 +139,12 @@ We have completed our custom worker for RL2. For reference, you can see the
 complete implementation of RL2 algorithm and its worker [here](https://github.com/rlworkgroup/garage/blob/master/src/garage/tf/algos/rl2.py).
 
 To use the custom worker in a launcher, just set the `worker_class` of the
-runner, for example:
+trainer, for example:
 
 ```py
 from garage.tf.algos.rl2 import RL2Worker
 
-    runner.setup(...,
+    trainer.setup(...,
                  worker_class=RL2Worker,
                  ...)
 ```

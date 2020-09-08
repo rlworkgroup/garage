@@ -1,11 +1,12 @@
 import pytest
 
 from garage.envs import GymEnv
-from garage.experiment import deterministic, LocalTFRunner
+from garage.experiment import deterministic
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import ERWR
 from garage.tf.policies import CategoricalMLPPolicy
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -16,7 +17,7 @@ class TestERWR(TfGraphTestCase):
     @pytest.mark.large
     def test_erwr_cartpole(self):
         """Test ERWR with Cartpole-v1 environment."""
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             deterministic.set_seed(1)
             env = GymEnv('CartPole-v1')
 
@@ -31,9 +32,9 @@ class TestERWR(TfGraphTestCase):
                         baseline=baseline,
                         discount=0.99)
 
-            runner.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.setup(algo, env, sampler_cls=LocalSampler)
 
-            last_avg_ret = runner.train(n_epochs=10, batch_size=10000)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=10000)
             assert last_avg_ret > 60
 
             env.close()

@@ -1,9 +1,9 @@
 import tensorflow as tf
 
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.sampler import DefaultWorker
 from garage.tf.samplers import TFWorkerWrapper
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config
 from tests.fixtures.envs.dummy import DummyBoxEnv
@@ -12,7 +12,7 @@ from tests.fixtures.envs.dummy import DummyBoxEnv
 class TestTFWorker:
 
     def test_tf_worker_with_default_session(self):
-        with LocalTFRunner(snapshot_config):
+        with TFTrainer(snapshot_config):
             tf_worker = TFWorkerWrapper()
             worker = DefaultWorker(seed=1,
                                    max_episode_length=100,

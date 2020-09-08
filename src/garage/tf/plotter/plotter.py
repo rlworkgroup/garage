@@ -27,7 +27,7 @@ Message = namedtuple('Message', ['op', 'args', 'kwargs'])
 class Plotter:
     """Visualizes episodes of the policy as it trains.
 
-    Usually, this class is used by sending plot=True to LocalRunner.train().
+    Usually, this class is used by sending plot=True to Trainer.train().
 
     Args:
         env (garage.Environment): Environment from which to visualize episodes.

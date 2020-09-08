@@ -9,7 +9,6 @@ import tensorflow as tf
 
 # yapf: disable
 from garage.envs import GymEnv, normalize
-from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import PPO
@@ -18,6 +17,7 @@ from garage.tf.policies import (CategoricalMLPPolicy,
                                 GaussianGRUPolicy,
                                 GaussianLSTMPolicy,
                                 GaussianMLPPolicy)
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 from tests.fixtures.envs.wrappers import ReshapeObservation
@@ -47,7 +47,7 @@ class TestPPO(TfGraphTestCase):
     @pytest.mark.mujoco
     def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
@@ -55,14 +55,14 @@ class TestPPO(TfGraphTestCase):
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32,
                                            max_optimization_epochs=10))
-            runner.setup(algo, self.env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
+            trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
     @pytest.mark.mujoco
     def test_ppo_with_maximum_entropy(self):
         """Test PPO with maxium entropy method."""
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
@@ -74,8 +74,8 @@ class TestPPO(TfGraphTestCase):
                        entropy_method='max',
                        policy_ent_coeff=0.02,
                        center_adv=False)
-            runner.setup(algo, self.env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
+            trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
     @pytest.mark.mujoco
@@ -84,7 +84,7 @@ class TestPPO(TfGraphTestCase):
         Test PPO with negative log likelihood entropy estimation and max
         entropy method.
         """
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
@@ -97,8 +97,8 @@ class TestPPO(TfGraphTestCase):
                        entropy_method='max',
                        policy_ent_coeff=0.02,
                        center_adv=False)
-            runner.setup(algo, self.env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
+            trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
     @pytest.mark.mujoco
@@ -107,7 +107,7 @@ class TestPPO(TfGraphTestCase):
         Test PPO with negative log likelihood entropy estimation and
         regularized entropy method.
         """
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
@@ -120,14 +120,14 @@ class TestPPO(TfGraphTestCase):
                        entropy_method='regularized',
                        policy_ent_coeff=0.0,
                        center_adv=True)
-            runner.setup(algo, self.env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
+            trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
     @pytest.mark.mujoco
     def test_ppo_with_regularized_entropy(self):
         """Test PPO with regularized entropy method."""
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
@@ -139,8 +139,8 @@ class TestPPO(TfGraphTestCase):
                        entropy_method='regularized',
                        policy_ent_coeff=0.02,
                        center_adv=True)
-            runner.setup(algo, self.env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
+            trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
     def teardown_method(self):
@@ -153,7 +153,7 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
     @pytest.mark.huge
     def test_ppo_pendulum_continuous_baseline(self):
         """Test PPO with Pendulum environment."""
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             env = normalize(
                 GymEnv('InvertedDoublePendulum-v2', max_episode_length=100))
             policy = GaussianMLPPolicy(
@@ -182,8 +182,8 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
                 policy_ent_coeff=0.02,
                 center_adv=False,
             )
-            runner.setup(algo, env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
+            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 100
 
             env.close()
@@ -191,7 +191,7 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
     @pytest.mark.mujoco_long
     def test_ppo_pendulum_recurrent_continuous_baseline(self):
         """Test PPO with Pendulum environment and recurrent policy."""
-        with LocalTFRunner(snapshot_config) as runner:
+        with TFTrainer(snapshot_config) as trainer:
             env = normalize(
                 GymEnv('InvertedDoublePendulum-v2', max_episode_length=100))
             policy = GaussianLSTMPolicy(env_spec=env.spec, )
@@ -215,8 +215,8 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
                 policy_ent_coeff=0.02,
                 center_adv=False,
             )
-            runner.setup(algo, env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
+            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 100
 
             env.close()
@@ -227,7 +227,7 @@ class TestPPOPendulumLSTM(TfGraphTestCase):
     @pytest.mark.mujoco_long
     def test_ppo_pendulum_lstm(self):
         """Test PPO with Pendulum environment and recurrent policy."""
-        with LocalTFRunner(snapshot_config) as runner:
+        with TFTrainer(snapshot_config) as trainer:
             env = normalize(
                 GymEnv('InvertedDoublePendulum-v2', max_episode_length=100))
             lstm_policy = GaussianLSTMPolicy(env_spec=env.spec)
@@ -251,8 +251,8 @@ class TestPPOPendulumLSTM(TfGraphTestCase):
                 policy_ent_coeff=0.02,
                 center_adv=False,
             )
-            runner.setup(algo, env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
+            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 60
 
 
@@ -261,7 +261,7 @@ class TestPPOPendulumGRU(TfGraphTestCase):
     @pytest.mark.mujoco_long
     def test_ppo_pendulum_gru(self):
         """Test PPO with Pendulum environment and recurrent policy."""
-        with LocalTFRunner(snapshot_config) as runner:
+        with TFTrainer(snapshot_config) as trainer:
             env = normalize(
                 GymEnv('InvertedDoublePendulum-v2', max_episode_length=100))
             gru_policy = GaussianGRUPolicy(env_spec=env.spec)
@@ -285,6 +285,6 @@ class TestPPOPendulumGRU(TfGraphTestCase):
                 policy_ent_coeff=0.02,
                 center_adv=False,
             )
-            runner.setup(algo, env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
+            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 80

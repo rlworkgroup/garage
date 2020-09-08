@@ -5,11 +5,11 @@ too low.
 import pytest
 
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import REPS
 from garage.tf.policies import CategoricalMLPPolicy
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -19,7 +19,7 @@ class TestREPS(TfGraphTestCase):
     @pytest.mark.large
     def test_reps_cartpole(self):
         """Test REPS with gym Cartpole environment."""
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             env = GymEnv('CartPole-v0')
 
             policy = CategoricalMLPPolicy(env_spec=env.spec,
@@ -32,9 +32,9 @@ class TestREPS(TfGraphTestCase):
                         baseline=baseline,
                         discount=0.99)
 
-            runner.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.setup(algo, env, sampler_cls=LocalSampler)
 
-            last_avg_ret = runner.train(n_epochs=10, batch_size=4000)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=4000)
             assert last_avg_ret > 5
 
             env.close()

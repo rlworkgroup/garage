@@ -8,7 +8,6 @@ import tensorflow as tf
 from garage import wrap_experiment
 from garage.envs import PointEnv
 from garage.envs.multi_env_wrapper import MultiEnvWrapper, round_robin_strategy
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearMultiFeatureBaseline
 from garage.sampler import LocalSampler
@@ -16,6 +15,7 @@ from garage.tf.algos import TEPPO
 from garage.tf.algos.te import TaskEmbeddingWorker
 from garage.tf.embeddings import GaussianMLPEncoder
 from garage.tf.policies import GaussianMLPTaskEmbeddingPolicy
+from garage.trainer import TFTrainer
 
 
 def circle(r, n):
@@ -58,7 +58,7 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
         n_epochs (int): Total number of epochs for training.
@@ -85,7 +85,7 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
     task_args = [tasks[t]['args'] for t in task_names]
     task_kwargs = [tasks[t]['kwargs'] for t in task_names]
 
-    with LocalTFRunner(snapshot_config=ctxt) as runner:
+    with TFTrainer(snapshot_config=ctxt) as trainer:
         task_envs = [
             PointEnv(*t_args, **t_kwargs, max_episode_length=100)
             for t_args, t_kwargs in zip(task_args, task_kwargs)
@@ -160,12 +160,12 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
                      center_adv=True,
                      stop_ce_gradient=True)
 
-        runner.setup(algo,
-                     env,
-                     sampler_cls=LocalSampler,
-                     sampler_args=None,
-                     worker_class=TaskEmbeddingWorker)
-        runner.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
+        trainer.setup(algo,
+                      env,
+                      sampler_cls=LocalSampler,
+                      sampler_args=None,
+                      worker_class=TaskEmbeddingWorker)
+        trainer.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
 
 
 te_ppo_pointenv()

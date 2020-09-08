@@ -31,7 +31,7 @@ class BC(RLAlgorithm):
         learner (garage.torch.Policy): Policy to train.
         batch_size (int): Size of optimization batch.
         source (Policy or Generator[TimeStepBatch]): Expert to clone. If a
-            policy is passed, will set `.policy` to source and use the runner
+            policy is passed, will set `.policy` to source and use the trainer
             to sample from the policy.
         policy_optimizer (torch.optim.Optimizer): Optimizer to be used to
             optimize the policy.
@@ -88,32 +88,32 @@ class BC(RLAlgorithm):
         else:
             self._source = itertools.cycle(iter(source))
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): Experiment runner, for services such as
+            trainer (Trainer): Experiment trainer, for services such as
                 snapshotting and sampler control.
 
         """
         if not self._eval_env:
-            self._eval_env = runner.get_env_copy()
-        for epoch in runner.step_epochs():
+            self._eval_env = trainer.get_env_copy()
+        for epoch in trainer.step_epochs():
             if self._eval_env is not None:
                 log_performance(epoch,
                                 obtain_evaluation_episodes(
                                     self.learner, self._eval_env),
                                 discount=1.0)
-            losses = self._train_once(runner, epoch)
+            losses = self._train_once(trainer, epoch)
             with tabular.prefix(self._name + '/'):
                 tabular.record('MeanLoss', np.mean(losses))
                 tabular.record('StdLoss', np.std(losses))
 
-    def _train_once(self, runner, epoch):
+    def _train_once(self, trainer, epoch):
         """Obtain samplers and train for one epoch.
 
         Args:
-            runner (LocalRunner): Experiment runner, which may be used to
+            trainer (Trainer): Experiment trainer, which may be used to
                 obtain samples.
             epoch (int): The current epoch.
 
@@ -121,7 +121,7 @@ class BC(RLAlgorithm):
             List[float]: Losses.
 
         """
-        batch = self._obtain_samples(runner, epoch)
+        batch = self._obtain_samples(trainer, epoch)
         indices = np.random.permutation(len(batch.actions))
         minibatches = np.array_split(indices, self._minibatches_per_epoch)
         losses = []
@@ -135,11 +135,11 @@ class BC(RLAlgorithm):
             self._optimizer.step()
         return losses
 
-    def _obtain_samples(self, runner, epoch):
+    def _obtain_samples(self, trainer, epoch):
         """Obtain samples from self._source.
 
         Args:
-            runner (LocalRunner): Experiment runner, which may be used to
+            trainer (Trainer): Experiment trainer, which may be used to
                 obtain samples.
             epoch (int): The current epoch.
 
@@ -149,7 +149,7 @@ class BC(RLAlgorithm):
         """
         if isinstance(self._source, Policy):
             batch = EpisodeBatch.from_list(self._env_spec,
-                                           runner.obtain_samples(epoch))
+                                           trainer.obtain_samples(epoch))
             log_performance(epoch, batch, 1.0, prefix='Expert')
             return batch
         else:

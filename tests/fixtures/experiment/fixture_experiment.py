@@ -1,10 +1,10 @@
 """A dummy experiment fixture."""
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import VPG
 from garage.tf.policies import CategoricalMLPPolicy
+from garage.trainer import TFTrainer
 
 
 # pylint: disable=missing-return-type-doc
@@ -13,7 +13,7 @@ def fixture_exp(snapshot_config, sess):
 
     Args:
         snapshot_config (garage.experiment.SnapshotConfig): The snapshot
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
             If None, it will create one with default settings.
         sess (tf.Session): An optional TensorFlow session.
               A new session will be created immediately if not provided.
@@ -23,7 +23,7 @@ def fixture_exp(snapshot_config, sess):
             the current session
 
     """
-    with LocalTFRunner(snapshot_config=snapshot_config, sess=sess) as runner:
+    with TFTrainer(snapshot_config=snapshot_config, sess=sess) as trainer:
         env = GymEnv('CartPole-v1', max_episode_length=100)
 
         policy = CategoricalMLPPolicy(name='policy',
@@ -38,7 +38,7 @@ def fixture_exp(snapshot_config, sess):
                    discount=0.99,
                    optimizer_args=dict(learning_rate=0.01, ))
 
-        runner.setup(algo, env, sampler_cls=LocalSampler)
-        runner.train(n_epochs=5, batch_size=100)
+        trainer.setup(algo, env, sampler_cls=LocalSampler)
+        trainer.train(n_epochs=5, batch_size=100)
 
         return policy.get_param_values()

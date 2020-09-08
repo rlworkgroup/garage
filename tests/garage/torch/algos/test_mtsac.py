@@ -6,13 +6,14 @@ from torch.nn import functional as F
 
 from garage.envs import GymEnv, MultiEnvWrapper
 from garage.envs.multi_env_wrapper import round_robin_strategy
-from garage.experiment import deterministic, LocalRunner
+from garage.experiment import deterministic
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.torch import global_device, set_gpu_mode
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config
 
@@ -132,7 +133,7 @@ def test_mtsac_inverted_double_pendulum():
     test_envs = MultiEnvWrapper(task_envs,
                                 sample_strategy=round_robin_strategy)
     deterministic.set_seed(0)
-    runner = LocalRunner(snapshot_config=snapshot_config)
+    trainer = Trainer(snapshot_config=snapshot_config)
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=[32, 32],
@@ -165,8 +166,8 @@ def test_mtsac_inverted_double_pendulum():
                   target_update_tau=5e-3,
                   discount=0.99,
                   buffer_batch_size=buffer_batch_size)
-    runner.setup(mtsac, env, sampler_cls=LocalSampler)
-    ret = runner.train(n_epochs=8, batch_size=128, plot=False)
+    trainer.setup(mtsac, env, sampler_cls=LocalSampler)
+    ret = trainer.train(n_epochs=8, batch_size=128, plot=False)
     assert ret > 0
 
 
@@ -238,7 +239,7 @@ def test_fixed_alpha():
     test_envs = MultiEnvWrapper(task_envs,
                                 sample_strategy=round_robin_strategy)
     deterministic.set_seed(0)
-    runner = LocalRunner(snapshot_config=snapshot_config)
+    trainer = Trainer(snapshot_config=snapshot_config)
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=[32, 32],
@@ -279,8 +280,8 @@ def test_fixed_alpha():
     mtsac.to()
     assert torch.allclose(torch.Tensor([0.5] * num_tasks),
                           mtsac._log_alpha.to('cpu'))
-    runner.setup(mtsac, env, sampler_cls=LocalSampler)
-    runner.train(n_epochs=1, batch_size=128, plot=False)
+    trainer.setup(mtsac, env, sampler_cls=LocalSampler)
+    trainer.train(n_epochs=1, batch_size=128, plot=False)
     assert torch.allclose(torch.Tensor([0.5] * num_tasks),
                           mtsac._log_alpha.to('cpu'))
     assert not mtsac._use_automatic_entropy_tuning

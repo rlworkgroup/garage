@@ -9,13 +9,14 @@ There are some important details in this example launcher file.
 
 ```python
 from garage import wrap_experiment
-from garage.experiment import deterministic, LocalRunner
+from garage.experiment import deterministic
+from garage.trainer import Trainer
 import a.b.c
 
 @wrap_experiment(wrap_experiment_args, wrap_experiment_kwargs)
 def experiment(ctxt=None, seed):
     deterministic.set_seed(seed)
-    runner = LocalRunner(snapshot_config=ctxt)
+    trainer = Trainer(snapshot_config=ctxt)
     env = YOUR_ENV
 
     # Initialize algorithm dependencies (policy, Q-functions,
@@ -23,8 +24,8 @@ def experiment(ctxt=None, seed):
     policy = ...
     algo = ...
 
-    runner.setup(algo=algo, env=env)
-    runner.train(n_epochs=num_epochs, batch_size=)
+    trainer.setup(algo=algo, env=env)
+    trainer.train(n_epochs=num_epochs, batch_size=)
 
 seed = 0
 experiment(seed)
@@ -74,17 +75,17 @@ under different sequences of random numbers.
 *Note: In experiments using Pytorch+GPU, there is a small runtime performance
 cost for using `deterministic.set_seed`*
 
-### Use `garage.experiment.LocalRunner` for managing your training process
+### Use `garage.trainer.Trainer` for managing your training process
 
-`LocalRunner` manages the boiler-plate interactions between your sampler,
+`Trainer` manages the boiler-plate interactions between your sampler,
 algorithm, logger, and snapshotter.
 
-To setup the `LocalRunner` use the function
-`LocalRunner.setup(algo, env, ...)`. It takes your algorithm and environment as
+To setup the `Trainer` use the function
+`Trainer.setup(algo, env, ...)`. It takes your algorithm and environment as
 required parameters. You can also control the sampling process you would like
 to use by specifying information such as the `sampler_cls`, `worker_cls`, etc.
 Lastly, to trigger the training process of your experiment, use the function
-`LocalRunner.train(n_epochs, batch_size, ...)`. The required parameter
+`Trainer.train(n_epochs, batch_size, ...)`. The required parameter
 `n_epochs` is used for specifying the number of training epochs that your
 experiment’s algorithm is run for. The parameter `batch_size` is used for
 specifying the default number of time steps that will be collected from your

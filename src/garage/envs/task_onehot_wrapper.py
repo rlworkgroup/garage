@@ -127,7 +127,7 @@ class TaskOnehotWrapper(Wrapper):
 
             envs = get_mt10_envs()
             wrapped = TaskOnehotWrapper.wrap_env_list(envs)
-            sampler = runner.make_sampler(LocalSampler, env=wrapped)
+            sampler = trainer.make_sampler(LocalSampler, env=wrapped)
         '''
 
         Args:
@@ -164,7 +164,7 @@ class TaskOnehotWrapper(Wrapper):
             wrapped = TaskOnehotWrapper.wrap_env_cons_list(env_constructors)
             env_updates = [NewEnvUpdate(wrapped_con)
                            for wrapped_con in wrapped]
-            sampler = runner.make_sampler(RaySampler, env=env_updates)
+            sampler = trainer.make_sampler(RaySampler, env=env_updates)
         '''
 
 

@@ -6,7 +6,6 @@ import metaworld.benchmarks as mwb
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import EnvPoolSampler
 from garage.sampler import LocalSampler
@@ -17,6 +16,7 @@ from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import (ContextConditionedPolicy,
                                    TanhGaussianMLPPolicy)
 from garage.torch.q_functions import ContinuousMLPQFunction
+from garage.trainer import Trainer
 
 
 @click.command()
@@ -58,7 +58,7 @@ def pearl_metaworld_ml10(ctxt=None,
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
         num_epochs (int): Number of training epochs.
@@ -110,7 +110,7 @@ def pearl_metaworld_ml10(ctxt=None,
     test_env_sampler = EnvPoolSampler(ML_test_envs)
     test_env_sampler.grow_pool(num_test_tasks)
 
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
 
     # instantiate networks
     augmented_env = PEARL.augment_env_spec(env[0](), latent_size)
@@ -153,14 +153,14 @@ def pearl_metaworld_ml10(ctxt=None,
     if use_gpu:
         pearl.to()
 
-    runner.setup(algo=pearl,
-                 env=env[0](),
-                 sampler_cls=LocalSampler,
-                 sampler_args=dict(max_episode_length=max_episode_length),
-                 n_workers=1,
-                 worker_class=PEARLWorker)
+    trainer.setup(algo=pearl,
+                  env=env[0](),
+                  sampler_cls=LocalSampler,
+                  sampler_args=dict(max_episode_length=max_episode_length),
+                  n_workers=1,
+                  worker_class=PEARLWorker)
 
-    runner.train(n_epochs=num_epochs, batch_size=batch_size)
+    trainer.train(n_epochs=num_epochs, batch_size=batch_size)
 
 
 pearl_metaworld_ml10()

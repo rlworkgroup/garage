@@ -3,7 +3,8 @@ import tempfile
 import numpy as np
 import tensorflow as tf
 
-from garage.experiment import LocalTFRunner, SnapshotConfig
+from garage.experiment import SnapshotConfig
+from garage.trainer import TFTrainer
 
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.experiment import fixture_exp
@@ -27,25 +28,25 @@ class TestResume(TfGraphTestCase):
 
     def test_resume(self):
         sess = tf.compat.v1.Session(graph=tf.Graph())
-        with LocalTFRunner(self.snapshot_config, sess) as runner:
-            args = runner.restore(self.temp_dir.name)
+        with TFTrainer(self.snapshot_config, sess) as trainer:
+            args = trainer.restore(self.temp_dir.name)
             assert np.equal(
-                runner._algo.policy.get_param_values(),
+                trainer._algo.policy.get_param_values(),
                 self.policy_params).all(), 'Policy parameters should persist'
             assert args.n_epochs == 5, (
                 'Snapshot should save training parameters')
             assert args.start_epoch == 5, (
                 'Last experiment should end at 5th iterations')
 
-            batch_size = runner._train_args.batch_size
+            batch_size = trainer._train_args.batch_size
 
-            runner.resume(n_epochs=10,
-                          plot=False,
-                          store_episodes=True,
-                          pause_for_plot=False)
+            trainer.resume(n_epochs=10,
+                           plot=False,
+                           store_episodes=True,
+                           pause_for_plot=False)
 
-            assert runner._train_args.n_epochs == 10
-            assert runner._train_args.batch_size == batch_size
-            assert not runner._train_args.plot
-            assert runner._train_args.store_episodes
-            assert not runner._train_args.pause_for_plot
+            assert trainer._train_args.n_epochs == 10
+            assert trainer._train_args.batch_size == batch_size
+            assert not trainer._train_args.plot
+            assert trainer._train_args.store_episodes
+            assert not trainer._train_args.pause_for_plot

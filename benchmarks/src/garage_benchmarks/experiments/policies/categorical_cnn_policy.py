@@ -1,10 +1,11 @@
 """Benchmarking experiment of the CategoricalCNNPolicy."""
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalTFRunner
+from garage.experiment import deterministic
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.policies import CategoricalCNNPolicy
+from garage.trainer import TFTrainer
 
 hyper_params = {
     'conv_filters': (
@@ -27,7 +28,7 @@ def categorical_cnn_policy(ctxt, env_id, seed):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the
+            configuration used by Trainer to create the
             snapshotter.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
@@ -35,7 +36,7 @@ def categorical_cnn_policy(ctxt, env_id, seed):
     """
     deterministic.set_seed(seed)
 
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         env = normalize(GymEnv(env_id))
 
         policy = CategoricalCNNPolicy(
@@ -66,6 +67,6 @@ def categorical_cnn_policy(ctxt, env_id, seed):
                        learning_rate=1e-3,
                    ))
 
-        runner.setup(algo, env)
-        runner.train(n_epochs=hyper_params['n_epochs'],
-                     batch_size=hyper_params['batch_size'])
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=hyper_params['n_epochs'],
+                      batch_size=hyper_params['batch_size'])

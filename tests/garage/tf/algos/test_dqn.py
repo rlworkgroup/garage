@@ -9,12 +9,13 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import GymEnv
-from garage.experiment import deterministic, LocalTFRunner
+from garage.experiment import deterministic
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DQN
 from garage.tf.policies import DiscreteQfDerivedPolicy
 from garage.tf.q_functions import DiscreteMLPQFunction
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -25,7 +26,7 @@ class TestDQN(TfGraphTestCase):
     def test_dqn_cartpole(self):
         """Test DQN with CartPole environment."""
         deterministic.set_seed(100)
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             n_epochs = 10
             steps_per_epoch = 10
             sampler_batch_size = 500
@@ -55,9 +56,9 @@ class TestDQN(TfGraphTestCase):
                        target_network_update_freq=1,
                        buffer_batch_size=32)
 
-            runner.setup(algo, env)
-            last_avg_ret = runner.train(n_epochs=n_epochs,
-                                        batch_size=sampler_batch_size)
+            trainer.setup(algo, env)
+            last_avg_ret = trainer.train(n_epochs=n_epochs,
+                                         batch_size=sampler_batch_size)
             assert last_avg_ret > 8.8
 
             env.close()
@@ -66,7 +67,7 @@ class TestDQN(TfGraphTestCase):
     def test_dqn_cartpole_double_q(self):
         """Test DQN with CartPole environment."""
         deterministic.set_seed(100)
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             n_epochs = 10
             steps_per_epoch = 10
             sampler_batch_size = 500
@@ -96,9 +97,9 @@ class TestDQN(TfGraphTestCase):
                        target_network_update_freq=1,
                        buffer_batch_size=32)
 
-            runner.setup(algo, env)
-            last_avg_ret = runner.train(n_epochs=n_epochs,
-                                        batch_size=sampler_batch_size)
+            trainer.setup(algo, env)
+            last_avg_ret = trainer.train(n_epochs=n_epochs,
+                                         batch_size=sampler_batch_size)
             assert last_avg_ret > 8.8
 
             env.close()
@@ -107,7 +108,7 @@ class TestDQN(TfGraphTestCase):
     def test_dqn_cartpole_grad_clip(self):
         """Test DQN with CartPole environment."""
         deterministic.set_seed(100)
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             n_epochs = 10
             steps_per_epoch = 10
             sampler_batch_size = 500
@@ -138,9 +139,9 @@ class TestDQN(TfGraphTestCase):
                        target_network_update_freq=1,
                        buffer_batch_size=32)
 
-            runner.setup(algo, env)
-            last_avg_ret = runner.train(n_epochs=n_epochs,
-                                        batch_size=sampler_batch_size)
+            trainer.setup(algo, env)
+            last_avg_ret = trainer.train(n_epochs=n_epochs,
+                                         batch_size=sampler_batch_size)
             assert last_avg_ret > 8.8
 
             env.close()
@@ -148,7 +149,7 @@ class TestDQN(TfGraphTestCase):
     def test_dqn_cartpole_pickle(self):
         """Test DQN with CartPole environment."""
         deterministic.set_seed(100)
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             n_epochs = 10
             steps_per_epoch = 10
             sampler_batch_size = 500
@@ -178,7 +179,7 @@ class TestDQN(TfGraphTestCase):
                        steps_per_epoch=steps_per_epoch,
                        target_network_update_freq=1,
                        buffer_batch_size=32)
-            runner.setup(algo, env)
+            trainer.setup(algo, env)
             with tf.compat.v1.variable_scope(
                     'DiscreteMLPQFunction/mlp/hidden_0', reuse=True):
                 bias = tf.compat.v1.get_variable('bias')

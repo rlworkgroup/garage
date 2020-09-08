@@ -1,7 +1,7 @@
 # Sampling
 
-`LocalRunner` gets episodes through Sampling to train the policy. In
-Garage, [`LocalRunner`](https://github.com/rlworkgroup/garage/blob/a767dcb95988abc14165a2a320ee39932a1c85ca/src/garage/experiment/local_runner.py)
+`Trainer` gets episodes through Sampling to train the policy. In
+Garage, [`Trainer`](https://github.com/rlworkgroup/garage/blob/a767dcb95988abc14165a2a320ee39932a1c85ca/src/garage/trainer.py)
 uses [`Sampler`](https://github.com/rlworkgroup/garage/blob/a767dcb95988abc14165a2a320ee39932a1c85ca/src/garage/sampler/sampler.py)
 to perform sampling. `Sampler` manages [`Worker`](https://github.com/rlworkgroup/garage/blob/a767dcb95988abc14165a2a320ee39932a1c85ca/src/garage/sampler/worker.py)s
 and assign specific tasks to them, which is doing rollouts with agents and
@@ -40,10 +40,10 @@ on a single CPU. `VecWorker` can compute a batch of actions from a policy
 regarding multiple environments to reduce of overhead of sampling (e.g. feeding
 forward a neural network).
 
-## Setup Sampler and Worker for a LocalRunner
+## Setup Sampler and Worker for a Trainer
 
-Setup the sampler and worker for a `LocalRunner` is easy. Just passing
-`sampler_cls` and `worker_class` to `runner.setup()`. The number of workers in
+Setup the sampler and worker for a `Trainer` is easy. Just passing
+`sampler_cls` and `worker_class` to `trainer.setup()`. The number of workers in
 the sampler can be set by the parameter `n_workers`.
 
 For `VecWorker`, you can set the level of vectorization (i.e. the number of
@@ -53,7 +53,7 @@ environments simulated in one step) by setting `n_envs` in `worker_args`.
 from garage.sampler import RaySampler, VecWorker
 
 ...
-runner.setup(
+trainer.setup(
     algo=algo,
     env=env,
     sampler_cls=RaySampler,
