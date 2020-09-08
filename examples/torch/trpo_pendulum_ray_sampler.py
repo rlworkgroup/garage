@@ -34,7 +34,8 @@ def trpo_pendulum_ray_sampler(ctxt=None, seed=1):
     ray.init(memory=52428800,
              object_store_memory=78643200,
              ignore_reinit_error=True,
-             log_to_driver=False)
+             log_to_driver=False,
+             include_dashboard=False)
     deterministic.set_seed(seed)
     env = GymEnv('InvertedDoublePendulum-v2')
 

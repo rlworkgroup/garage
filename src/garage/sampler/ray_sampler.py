@@ -30,7 +30,9 @@ class RaySampler(Sampler):
     def __init__(self, worker_factory, agents, envs):
         # pylint: disable=super-init-not-called
         if not ray.is_initialized():
-            ray.init(log_to_driver=False)
+            ray.init(log_to_driver=False,
+                     ignore_reinit_error=True,
+                     include_dashboard=False)
         self._sampler_worker = ray.remote(SamplerWorker)
         self._worker_factory = worker_factory
         self._agents = agents
