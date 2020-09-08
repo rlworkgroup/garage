@@ -112,7 +112,7 @@ jobs:
                   echo "Retry ${i}..."
                   sleep 30
               fi
-          done
+          done'
 
 
   large_test:
@@ -152,7 +152,7 @@ jobs:
                   echo "Retry ${i}..."
                   sleep 30
               fi
-          done
+          done'
 
 
   mujoco_test:
@@ -191,7 +191,7 @@ jobs:
                   echo "Retry ${i}..."
                   sleep 30
               fi
-          done
+          done'
 
 
   mujoco_test_long:
@@ -230,7 +230,7 @@ jobs:
                   echo "Retry ${i}..."
                   sleep 30
               fi
-          done
+          done'
 
 
   nightly_test:
