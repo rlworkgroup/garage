@@ -120,9 +120,7 @@ class DiscreteCNNModule(nn.Module):
                                output_b_init=output_b_init,
                                layer_normalization=layer_normalization)
 
-        self._module = nn.Sequential(cnn_module,
-                                     nn.ReLU(),
-                                     nn.Flatten(),
+        self._module = nn.Sequential(cnn_module, nn.ReLU(), nn.Flatten(),
                                      mlp_module)
 
     def forward(self, inputs):

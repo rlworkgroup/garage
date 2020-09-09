@@ -25,28 +25,28 @@ from garage.sampler import DefaultWorker, RaySampler, LocalSampler
 
 import gym
 import torch
+import click
 
 hyperparams = dict(
-    n_epochs=200,
-    steps_per_epoch=10,
-    sampler_batch_size=1000, #10k
+    n_epochs=500,
+    steps_per_epoch=20,
+    sampler_batch_size=500, #10k
     lr=1e-4,
     discount=0.99,
     min_buffer_size=int(1e4), #deepmind 5e4
     n_train_steps=500,
-    target_update_freq=30,
+    target_update_freq=20,
     buffer_batch_size=32,
     max_epsilon=1.0,
-    min_epsilon=0.02,
-    decay_ratio=0.05,
+    min_epsilon=0.01,
+    decay_ratio=0.1,
     buffer_size=int(1e4),
-    hidden_sizes=(256, ),
+    hidden_sizes=(512, ),
 )
 
-
-
-
-@wrap_experiment(snapshot_mode='none')
+@click.command()
+@click.option('--seed', default=1)
+@wrap_experiment(snapshot_mode='last', snapshot_gap=3)
 def dqn_pong(ctxt=None, seed=24, **kwargs):
     """Train DQN with PongNoFrameskip-v4 environment.
 
@@ -106,6 +106,7 @@ def dqn_pong(ctxt=None, seed=24, **kwargs):
                replay_buffer=replay_buffer,
                steps_per_epoch=steps_per_epoch,
                qf_lr=hyperparams['lr'],
+               clip_gradient=None,
                discount=hyperparams['discount'],
                min_buffer_size=hyperparams['min_buffer_size'],
                n_train_steps=hyperparams['n_train_steps'],
@@ -123,4 +124,4 @@ def dqn_pong(ctxt=None, seed=24, **kwargs):
     runner.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
 
 
-dqn_pong(**hyperparams)
+dqn_pong()

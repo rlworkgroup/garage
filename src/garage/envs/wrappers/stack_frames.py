@@ -13,8 +13,10 @@ class StackFrames(gym.Wrapper):
     Only works with gym.spaces.Box environment with 2D single channel frames.
 
     Args:
-        env: gym.Env to wrap.
-        n_frames: number of frames to stack.
+        env (gym.Env): gym.Env to wrap.
+        n_frames (int): number of frames to stack.
+        axis (int): Axis to stack frames on. This should be 2 for tensorflow
+            and 0 for pytorch.
 
     Raises:
         ValueError: If observation space shape is not 2 or
@@ -22,7 +24,7 @@ class StackFrames(gym.Wrapper):
 
     """
 
-    def __init__(self, env, n_frames):
+    def __init__(self, env, n_frames, axis=2):
         if not isinstance(env.observation_space, gym.spaces.Box):
             raise ValueError('Stack frames only works with gym.spaces.Box '
                              'environment.')
@@ -34,6 +36,7 @@ class StackFrames(gym.Wrapper):
         super().__init__(env)
 
         self._n_frames = n_frames
+        self._axis = axis
         self._frames = deque(maxlen=n_frames)
 
         new_obs_space_shape = (n_frames, ) + env.observation_space.shape
@@ -55,7 +58,7 @@ class StackFrames(gym.Wrapper):
         self._observation_space = observation_space
 
     def _stack_frames(self):
-        return np.stack(self._frames, axis=0)
+        return np.stack(self._frames, axis=self._axis)
 
     def reset(self):
         """gym.Env reset function."""

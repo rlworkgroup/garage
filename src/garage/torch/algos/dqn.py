@@ -4,6 +4,7 @@ import copy
 from dowel import logger, tabular
 import numpy as np
 import torch
+import collections
 import torch.nn.functional as F
 
 from garage import _Default, log_performance, make_optimizer
@@ -97,6 +98,7 @@ class DQN(RLAlgorithm):
         self.max_episode_length = env_spec.max_episode_length
         self._max_episode_length_eval = (max_episode_length_eval
                                          or self.max_episode_length)
+        self._episode_reward_mean = collections.deque(maxlen=100)
 
         self.env_spec = env_spec
         self.replay_buffer = replay_buffer
@@ -127,7 +129,6 @@ class DQN(RLAlgorithm):
 
         for _ in runner.step_epochs():
             for cycle in range(self._steps_per_epoch):
-                logger.log('Obtaining episodes')
                 runner.step_path = runner.obtain_episodes(runner.step_itr)
                 self.train_once(runner.step_itr, runner.step_path)
                 if (cycle == 0 and self.replay_buffer.n_transitions_stored >=
@@ -136,15 +137,16 @@ class DQN(RLAlgorithm):
                     logger.log('Evaluating policy')
 
                     eval_eps = obtain_evaluation_episodes(
-                        self.policy, self._eval_env, num_eps=10,
+                        self.policy,
+                        self._eval_env,
+                        num_eps=10,
                         max_episode_length=self._max_episode_length_eval)
                     last_returns = log_performance(runner.step_itr,
                                                    eval_eps,
                                                    discount=self._discount)
-                elif not (self.replay_buffer.n_transitions_stored
-                          >= self._min_buffer_size):
-                    logger.log('Prefilling buffer: {} steps'.format(
-                                self.replay_buffer.n_transitions_stored))
+                    self._episode_reward_mean.extend(last_returns)
+                    tabular.record('Evaluation/100EpRewardMean',
+                                   np.mean(self._episode_reward_mean))
                 runner.step_itr += 1
 
         return np.mean(last_returns)
@@ -161,7 +163,6 @@ class DQN(RLAlgorithm):
 
         epoch = itr / self._steps_per_epoch
 
-        logger.log('Optimizing Q Function')
         for _ in range(self._n_train_steps):
             if (self.replay_buffer.n_transitions_stored >=
                     self._min_buffer_size):

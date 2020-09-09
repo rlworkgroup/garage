@@ -12,6 +12,7 @@ from garage.replay_buffer import PathBuffer
 from garage.torch.algos import DQN
 from garage.torch.policies import DiscreteQFDerivedPolicy
 from garage.torch.q_functions import DiscreteMLPQFunction
+from garage.sampler import LocalSampler
 
 hyperparams = dict(
     n_epochs=100,
@@ -76,7 +77,7 @@ def dqn_cartpole(ctxt=None, seed=24, **kwargs):
                target_update_freq=hyperparams['target_update_freq'],
                buffer_batch_size=hyperparams['buffer_batch_size'])
 
-    runner.setup(algo, env)
+    runner.setup(algo, env, sampler_cls=LocalSampler)
     runner.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
 
 
