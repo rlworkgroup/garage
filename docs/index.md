@@ -55,6 +55,7 @@ and how to implement new MDPs and new algorithms.
    :caption: Reference Guide
 
    user/environment_libraries
+   user/concept_experiment
    user/sampling
 
 .. toctree::
