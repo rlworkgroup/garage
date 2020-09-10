@@ -1,10 +1,10 @@
 """This modules creates a DDPG model in PyTorch."""
+import collections
 import copy
 
 from dowel import logger, tabular
 import numpy as np
 import torch
-import collections
 import torch.nn.functional as F
 
 from garage import _Default, log_performance, make_optimizer
@@ -49,9 +49,8 @@ class DQN(RLAlgorithm):
         qf_lr (float): Learning rate for Q-value network parameters.
         clip_rewards (float): Clip reward to be in [-clip_rewards,
             clip_rewards]. If None, rewards are not clipped.
-        clip_gradient (float): Clip gradients to be in
-            [-clip_gradient, clip_gradient]. If None, gradients are not
-            clipped. Defaults to 1.0.
+        clip_gradient (float): Clip gradient norm to `clip_gradient`. If None, gradients are not
+             clipped. Defaults to 10.
         reward_scale (float): Reward scale.
     """
 
@@ -72,7 +71,7 @@ class DQN(RLAlgorithm):
             discount=0.99,
             qf_lr=_Default(1e-3),
             clip_rewards=None,
-            clip_gradient=1.0,
+            clip_gradient=10,
             target_update_freq=5,
             reward_scale=1.):
         self._clip_reward = clip_rewards
@@ -242,8 +241,8 @@ class DQN(RLAlgorithm):
 
         # optionally clip the gradients
         if self._clip_grad is not None:
-            for param in self._qf.parameters():
-                param.grad.data.clamp_(-self._clip_grad, self._clip_grad)
+            torch.nn.utils.clip_grad_norm_(self.policy.parameters(),
+                                           self._clip_grad)
         self._qf_optimizer.step()
 
         return (qval_loss.detach(), y_target, selected_qs.detach())

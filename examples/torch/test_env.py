@@ -27,6 +27,7 @@ from baselines.common.atari_wrappers import make_atari, wrap_deepmind
 
 import gym
 import torch
+from baselines.common.atari_wrappers import WarpFrame
 
 import gym
 import matplotlib.pyplot as plt
@@ -42,12 +43,25 @@ env = MaxAndSkip(env, skip=4)
 env = EpisodicLife(env)
 if 'FIRE' in env.unwrapped.get_action_meanings():
     env = FireReset(env)
-env = Grayscale(env)
-env = Resize(env, 84, 84)
+# env = Grayscale(env)
+# env = Resize(env, 84, 84)
+env = WarpFrame(env)
+
 env = ClipReward(env)
 env = StackFrames(env, 3)
 
+print(env.observation_space.shape)
+
+# class StepWrapper:
+#     def __init__(self, env):
+#         self._env = env
+#     def step(self, input):
+#         return env.step(input)[0].frame()
+
+
 # env = make_atari('PongNoFrameskip-v4')
-# env = wrap_deepmind(env, frame_stack=False, scale=True)
+# env = wrap_deepmind(env, frame_stack=True, scale=False)
+# print(env.observation_space.shape)
+# env = StepWrapper(env)
 
 play(env)

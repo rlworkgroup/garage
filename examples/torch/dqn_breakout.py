@@ -35,20 +35,20 @@ hyperparams = dict(
     discount=0.99,
     min_buffer_size=int(1e4),  #deepmind 5e4
     n_train_steps=500,
-    target_update_freq=20,
+    target_update_freq=5,
     buffer_batch_size=32,
     max_epsilon=1.0,
     min_epsilon=0.01,
     decay_ratio=0.1,
     buffer_size=int(1e4),
-    hidden_sizes=(512, ),
+    hidden_sizes=(256, ),
 )
 
 
 @click.command()
 @click.option('--seed', default=1)
-@wrap_experiment(snapshot_mode='last', snapshot_gap=3)
-def dqn_pong(ctxt=None, seed=24, **kwargs):
+@wrap_experiment(snapshot_mode='gap', snapshot_gap=30)
+def dqn_beamrider(ctxt=None, seed=24, **kwargs):
     """Train DQN with PongNoFrameskip-v4 environment.
 
     Args:
@@ -59,7 +59,7 @@ def dqn_pong(ctxt=None, seed=24, **kwargs):
 
     """
 
-    env = gym.make('PongNoFrameskip-v4')
+    env = gym.make('BeamRiderNoFrameskip-v4')
     env = Noop(env, noop_max=30)
     env = MaxAndSkip(env, skip=4)
     env = EpisodicLife(env)
@@ -89,6 +89,7 @@ def dqn_pong(ctxt=None, seed=24, **kwargs):
                               kernel_sizes=(8, 4, 3),
                               strides=(4, 2, 1),
                               hidden_sizes=hyperparams['hidden_sizes'],
+                              output_nonlinearity=torch.nn.ReLU,
                               is_image=True)
 
     policy = DiscreteQFDerivedPolicy(env_spec=env.spec, qf=qf)
@@ -107,7 +108,7 @@ def dqn_pong(ctxt=None, seed=24, **kwargs):
                replay_buffer=replay_buffer,
                steps_per_epoch=steps_per_epoch,
                qf_lr=hyperparams['lr'],
-               clip_gradient=None,
+               clip_gradient=10,
                discount=hyperparams['discount'],
                min_buffer_size=hyperparams['min_buffer_size'],
                n_train_steps=hyperparams['n_train_steps'],
@@ -125,4 +126,4 @@ def dqn_pong(ctxt=None, seed=24, **kwargs):
     runner.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
 
 
-dqn_pong()
+dqn_beamrider()

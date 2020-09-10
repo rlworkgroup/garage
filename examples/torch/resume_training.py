@@ -5,7 +5,9 @@ import click
 
 from garage import wrap_experiment
 from garage.experiment import LocalRunner
+from garage.torch import set_gpu_mode
 
+import torch
 
 @click.command()
 @click.option('--saved_dir',
@@ -21,6 +23,12 @@ def resume_experiment(ctxt, saved_dir):
         saved_dir (str): Path where snapshots are saved.
 
     """
+
+    if torch.cuda.is_available():
+        set_gpu_mode(True)
+        torch.set_default_tensor_type(torch.cuda.FloatTensor)
+    else:
+        set_gpu_mode(False)
     runner = LocalRunner(snapshot_config=ctxt)
     runner.restore(from_dir=saved_dir)
     runner.resume()
