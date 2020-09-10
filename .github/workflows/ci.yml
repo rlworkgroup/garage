@@ -2,6 +2,7 @@ name: Garage CI
 
 env:
   GARAGE_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   TRAVIS_COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
   DOCKER_TAG: garage-ci-${{ github.run_id }}
   OWNER: "rlworkgroup"
@@ -69,6 +70,7 @@ jobs:
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTIONS \
+          -e CODECOV_TOKEN \
           $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
@@ -96,6 +98,7 @@ jobs:
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTIONS \
+          -e CODECOV_TOKEN \
           $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
@@ -137,6 +140,7 @@ jobs:
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTIONS \
+          -e CODECOV_TOKEN \
           $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
@@ -177,6 +181,7 @@ jobs:
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTIONS \
+          -e CODECOV_TOKEN \
           $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
@@ -216,6 +221,7 @@ jobs:
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTIONS \
+          -e CODECOV_TOKEN \
           $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
@@ -256,6 +262,7 @@ jobs:
             -e TRAVIS_COMMIT_RANGE \
             -e MJKEY \
             -e GITHUB_ACTIONS \
+            -e CODECOV_TOKEN \
             $ci_env\
             --memory 6500m \
             --memory-swap 6500m \
@@ -285,6 +292,7 @@ jobs:
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTIONS \
+          -e CODECOV_TOKEN \
           $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
@@ -331,6 +339,7 @@ jobs:
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTIONS \
+          -e CODECOV_TOKEN \
           $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
