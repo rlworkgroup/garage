@@ -1,7 +1,7 @@
 import pytest
 
+from garage import set_seed
 from garage.envs import GymEnv
-from garage.experiment import deterministic
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import ERWR
@@ -18,7 +18,7 @@ class TestERWR(TfGraphTestCase):
     def test_erwr_cartpole(self):
         """Test ERWR with Cartpole-v1 environment."""
         with TFTrainer(snapshot_config, sess=self.sess) as trainer:
-            deterministic.set_seed(1)
+            set_seed(1)
             env = GymEnv('CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',

@@ -1,9 +1,11 @@
 """CNN Model."""
 import tensorflow as tf
 
-from garage.experiment import deterministic
+from garage import get_tf_seed_stream
 from garage.tf.models.cnn import cnn
 from garage.tf.models.model import Model
+
+_seed = get_tf_seed_stream()
 
 
 class CNNModel(Model):
@@ -39,8 +41,7 @@ class CNNModel(Model):
                  padding,
                  name=None,
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  hidden_b_init=tf.zeros_initializer()):
         super().__init__(name)
         self._filters = filters

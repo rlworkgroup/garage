@@ -24,11 +24,10 @@ The garage repository contains several meta-RL experiment examples. We will take
 from metaworld.benchmarks import ML1
 import tensorflow as tf
 
-from garage import wrap_experiment
+from garage import wrap_experiment, set_seed
 from garage.envs import GymEnv, normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper
 from garage.experiment import TFTrainer
-from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearMultiFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TEPPO
@@ -157,11 +156,10 @@ In this example, we assume one-hot task id is appened to observation and to excl
 When performing a multi-task RL experiment, we can use multi-task learning environment such as `MT50`, `MT10` etc. We will take a look at `te_ppo_metaworld_mt50.py` as below:
 
 ```py
-from garage import wrap_experiment
+from garage import wrap_experiment, set_seed
 from garage.envs import GymEnv, normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper, round_robin_strategy
 from garage.experiment import TFTrainer
-from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearMultiFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TEPPO

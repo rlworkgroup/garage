@@ -8,7 +8,7 @@ from dowel import logger, tabular
 import psutil
 
 # This is avoiding a circular import
-from garage.experiment.deterministic import get_seed, set_seed
+from garage import get_seed, set_seed
 from garage.experiment.snapshotter import Snapshotter
 from garage.sampler.default_worker import DefaultWorker
 from garage.sampler.worker_factory import WorkerFactory

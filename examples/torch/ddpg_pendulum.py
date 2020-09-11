@@ -8,9 +8,8 @@ Here it creates a gym environment InvertedDoublePendulum. And uses a DDPG with
 import torch
 from torch.nn import functional as F
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
 from garage.torch.algos import DDPG

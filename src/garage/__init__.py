@@ -1,5 +1,6 @@
 """Garage Base."""
 # yapf: disable
+from garage._determinism import get_seed, get_tf_seed_stream, set_seed
 from garage._dtypes import (EpisodeBatch,
                             InOutSpec,
                             StepType,
@@ -33,4 +34,7 @@ __all__ = [
     'Wrapper',
     'rollout',
     'obtain_evaluation_episodes',
+    'get_seed',
+    'set_seed',
+    'get_tf_seed_stream',
 ]

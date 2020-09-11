@@ -9,10 +9,9 @@ import numpy as np
 from torch import nn
 from torch.nn import functional as F
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv, MultiEnvWrapper, normalize
 from garage.envs.multi_env_wrapper import round_robin_strategy
-from garage.experiment import deterministic
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.torch import set_gpu_mode
@@ -37,7 +36,7 @@ def mtsac_metaworld_mt10(ctxt=None, seed=1, _gpu=None):
         _gpu (int): The ID of the gpu to be used (used on multi-gpu machines).
 
     """
-    deterministic.set_seed(seed)
+    set_seed(seed)
     trainer = Trainer(ctxt)
     task_names = mwb.MT10.get_train_tasks().all_task_names
     train_envs = []

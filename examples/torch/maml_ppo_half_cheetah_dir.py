@@ -4,11 +4,10 @@
 import click
 import torch
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import MetaEvaluator
-from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.torch.algos import MAMLPPO
 from garage.torch.policies import GaussianMLPPolicy

@@ -33,7 +33,7 @@ simple one, :code:`examples/tf/trpo_cartpole.py`, is also pasted below:
 
   from garage import wrap_experiment
   from garage.envs import GymEnv
-  from garage.experiment.deterministic import set_seed
+  from garage import set_seed
   from garage.np.baselines import LinearFeatureBaseline
   from garage.tf.algos import TRPO
   from garage.tf.policies import CategoricalMLPPolicy

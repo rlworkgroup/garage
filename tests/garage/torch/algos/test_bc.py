@@ -2,9 +2,8 @@
 import numpy as np
 import ray
 
-from garage import TimeStepBatch
+from garage import set_seed, TimeStepBatch
 from garage.envs import PointEnv
-from garage.experiment import deterministic
 from garage.sampler import LocalSampler, WorkerFactory
 from garage.torch.algos import BC
 from garage.torch.policies import (DeterministicMLPPolicy,
@@ -84,7 +83,7 @@ def run_bc(trainer, algo, batch_size):
 def test_bc_point_deterministic(ray_local_session_fixture):  # NOQA
     del ray_local_session_fixture
     assert ray.is_initialized()
-    deterministic.set_seed(100)
+    set_seed(100)
     trainer = Trainer(snapshot_config)
     goal = np.array([1., 1.])
     env = PointEnv(goal=goal, max_episode_length=200)
@@ -104,7 +103,7 @@ def test_bc_point_deterministic(ray_local_session_fixture):  # NOQA
 def test_bc_point(ray_local_session_fixture):  # NOQA
     del ray_local_session_fixture
     assert ray.is_initialized()
-    deterministic.set_seed(100)
+    set_seed(100)
     trainer = Trainer(snapshot_config)
     goal = np.array([1., 1.])
     env = PointEnv(goal=goal, max_episode_length=200)
@@ -131,7 +130,7 @@ def expert_source(env, goal, max_episode_length, n_eps):
 
 
 def test_bc_point_sample_batches():
-    deterministic.set_seed(100)
+    set_seed(100)
     trainer = Trainer(snapshot_config)
     goal = np.array([1., 1.])
     env = PointEnv(goal=goal)

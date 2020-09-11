@@ -5,9 +5,8 @@ Here it creates a gym environment FetchReach.
 """
 import tensorflow as tf
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import HERReplayBuffer
 from garage.tf.algos import DDPG

@@ -2,10 +2,9 @@
 """PEARL HalfCheetahVel example."""
 import click
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.envs.mujoco import HalfCheetahVelEnv
-from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.sampler import LocalSampler
 from garage.torch import set_gpu_mode

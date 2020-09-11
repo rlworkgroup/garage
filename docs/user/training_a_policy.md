@@ -105,9 +105,8 @@ experiment function. You can find the full example in [`examples/tf/trpo_cartpol
 which is also pasted below:
 
 ```py
-from garage import wrap_experiment
+from garage import wrap_experiment, set_seed
 from garage.envs import GymEnv
-from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.policies import CategoricalMLPPolicy

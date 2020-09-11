@@ -6,9 +6,8 @@ Here it runs CartPoleBulletEnv environment with 100 iterations.
 """
 import gym
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs.bullet import BulletEnv
-from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.policies import CategoricalMLPPolicy

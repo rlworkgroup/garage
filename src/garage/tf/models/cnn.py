@@ -2,7 +2,9 @@
 
 import tensorflow as tf
 
-from garage.experiment import deterministic
+from garage import get_tf_seed_stream
+
+_seed = get_tf_seed_stream()
 
 
 def cnn(input_var,
@@ -11,8 +13,7 @@ def cnn(input_var,
         name,
         padding,
         hidden_nonlinearity=tf.nn.relu,
-        hidden_w_init=tf.initializers.glorot_uniform(
-            seed=deterministic.get_tf_seed_stream()),
+        hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
         hidden_b_init=tf.zeros_initializer()):
     """Convolutional neural network (CNN).
 
@@ -60,17 +61,17 @@ def cnn(input_var,
         return tf.reshape(h, [-1, dim])
 
 
-def cnn_with_max_pooling(input_var,
-                         filters,
-                         strides,
-                         name,
-                         pool_shapes,
-                         pool_strides,
-                         padding,
-                         hidden_nonlinearity=tf.nn.relu,
-                         hidden_w_init=tf.initializers.glorot_uniform(
-                             seed=deterministic.get_tf_seed_stream()),
-                         hidden_b_init=tf.zeros_initializer()):
+def cnn_with_max_pooling(
+    input_var,
+    filters,
+    strides,
+    name,
+    pool_shapes,
+    pool_strides,
+    padding,
+    hidden_nonlinearity=tf.nn.relu,
+    hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
+    hidden_b_init=tf.zeros_initializer()):  # noqa: E125
     """Convolutional neural network (CNN) with max-pooling.
 
     Note:

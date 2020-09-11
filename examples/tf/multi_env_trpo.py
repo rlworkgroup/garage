@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """This is an example to train multiple tasks with TRPO algorithm."""
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import normalize, PointEnv
 from garage.envs.multi_env_wrapper import MultiEnvWrapper
-from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.policies import GaussianMLPPolicy

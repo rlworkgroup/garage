@@ -5,9 +5,8 @@ Here it runs MemorizeDigits-v0 environment with 1000 iterations.
 """
 import click
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment.deterministic import set_seed
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.policies import CategoricalCNNPolicy

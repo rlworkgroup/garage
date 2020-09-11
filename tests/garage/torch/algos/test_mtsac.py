@@ -4,9 +4,9 @@ import pytest
 import torch
 from torch.nn import functional as F
 
+from garage import set_seed
 from garage.envs import GymEnv, MultiEnvWrapper
 from garage.envs.multi_env_wrapper import round_robin_strategy
-from garage.experiment import deterministic
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.torch import global_device, set_gpu_mode
@@ -28,7 +28,7 @@ def test_mtsac_get_log_alpha(monkeypatch):
     env_names = ['CartPole-v0', 'CartPole-v1']
     task_envs = [GymEnv(name, max_episode_length=100) for name in env_names]
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
-    deterministic.set_seed(0)
+    set_seed(0)
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=[1, 1],
@@ -82,7 +82,7 @@ def test_mtsac_get_log_alpha_incorrect_num_tasks(monkeypatch):
     env_names = ['CartPole-v0', 'CartPole-v1']
     task_envs = [GymEnv(name, max_episode_length=150) for name in env_names]
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
-    deterministic.set_seed(0)
+    set_seed(0)
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=[1, 1],
@@ -132,7 +132,7 @@ def test_mtsac_inverted_double_pendulum():
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
     test_envs = MultiEnvWrapper(task_envs,
                                 sample_strategy=round_robin_strategy)
-    deterministic.set_seed(0)
+    set_seed(0)
     trainer = Trainer(snapshot_config=snapshot_config)
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
@@ -181,7 +181,7 @@ def test_to():
     env_names = ['CartPole-v0', 'CartPole-v1']
     task_envs = [GymEnv(name, max_episode_length=100) for name in env_names]
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
-    deterministic.set_seed(0)
+    set_seed(0)
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=[1, 1],
@@ -238,7 +238,7 @@ def test_fixed_alpha():
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
     test_envs = MultiEnvWrapper(task_envs,
                                 sample_strategy=round_robin_strategy)
-    deterministic.set_seed(0)
+    set_seed(0)
     trainer = Trainer(snapshot_config=snapshot_config)
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,

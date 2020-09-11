@@ -2,8 +2,8 @@
 import pytest
 import torch
 
+from garage import set_seed
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic
 from garage.sampler import LocalSampler
 from garage.torch.algos import MAMLPPO
 from garage.torch.policies import GaussianMLPPolicy
@@ -51,7 +51,7 @@ class TestMAMLPPO:
 
     def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
-        deterministic.set_seed(0)
+        set_seed(0)
 
         episodes_per_task = 5
         max_episode_length = self.env.spec.max_episode_length

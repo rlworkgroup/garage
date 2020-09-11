@@ -7,7 +7,7 @@ import os
 from dowel import logger
 import tensorflow as tf
 
-from garage.experiment import deterministic
+from garage import set_seed
 from garage.experiment.snapshotter import SnapshotConfig
 
 from tests.fixtures.logger import NullOutput
@@ -49,7 +49,7 @@ class TfGraphTestCase:
         self.sess_manager.__enter__()
         self.sess.__enter__()
         logger.add_output(NullOutput())
-        deterministic.set_seed(1)
+        set_seed(1)
 
     def teardown_method(self):
         """Teardown the Session and default Graph."""

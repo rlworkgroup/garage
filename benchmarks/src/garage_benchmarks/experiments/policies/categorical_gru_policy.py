@@ -1,9 +1,8 @@
 """Benchmarking experiment of the CategoricalGRUPolicy."""
 import tensorflow as tf
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import PPO
 from garage.tf.policies import CategoricalGRUPolicy
@@ -22,7 +21,7 @@ def categorical_gru_policy(ctxt, env_id, seed):
         seed (int): Random positive integer for the trial.
 
     """
-    deterministic.set_seed(seed)
+    set_seed(seed)
 
     with TFTrainer(ctxt) as trainer:
         env = normalize(GymEnv(env_id))

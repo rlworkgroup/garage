@@ -11,9 +11,8 @@ Results:
 """
 import tensorflow as tf
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment.deterministic import set_seed
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.policies import GaussianMLPPolicy

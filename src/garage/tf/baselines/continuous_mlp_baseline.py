@@ -3,12 +3,13 @@ from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
-from garage import make_optimizer
-from garage.experiment import deterministic
+from garage import get_tf_seed_stream, make_optimizer
 from garage.np.baselines import Baseline
 from garage.tf import compile_function
 from garage.tf.models import NormalizedInputMLPModel
 from garage.tf.optimizers import LBFGSOptimizer
+
+_seed = get_tf_seed_stream()
 
 
 # pylint: disable=too-many-ancestors
@@ -58,12 +59,10 @@ class ContinuousMLPBaseline(NormalizedInputMLPModel, Baseline):
                  name='ContinuousMLPBaseline',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 output_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  output_b_init=tf.zeros_initializer(),
                  optimizer=None,
                  optimizer_args=None,

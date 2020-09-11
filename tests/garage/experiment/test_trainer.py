@@ -1,8 +1,8 @@
 import pytest
 import torch
 
+from garage import set_seed
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic
 from garage.plotter import Plotter
 from garage.sampler import LocalSampler
 from garage.torch.algos import PPO
@@ -26,7 +26,7 @@ class TestTrainer:
             output_nonlinearity=None,
         )
         self.value_function = GaussianMLPValueFunction(env_spec=self.env.spec)
-        deterministic.set_seed(0)
+        set_seed(0)
 
     def teardown_method(self):
         """Teardown method which is called after every test."""

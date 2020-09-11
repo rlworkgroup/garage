@@ -1,7 +1,6 @@
 """Benchmarking experiment of the GaussianCNNBaseline."""
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.policies import CategoricalCNNPolicy
@@ -34,7 +33,7 @@ def gaussian_cnn_baseline(ctxt, env_id, seed):
         seed (int): Random positive integer for the trial.
 
     """
-    deterministic.set_seed(seed)
+    set_seed(seed)
 
     with TFTrainer(ctxt) as trainer:
         env = normalize(GymEnv(env_id))

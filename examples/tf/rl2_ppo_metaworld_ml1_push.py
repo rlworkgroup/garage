@@ -4,10 +4,9 @@
 import click
 import metaworld.benchmarks as mwb
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv
 from garage.experiment import task_sampler
-from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import RL2PPO

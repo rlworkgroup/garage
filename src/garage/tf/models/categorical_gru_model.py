@@ -6,8 +6,10 @@ which is parameterized by a Gated Recurrent Unit (GRU).
 import tensorflow as tf
 import tensorflow_probability as tfp
 
-from garage.experiment import deterministic
+from garage import get_tf_seed_stream
 from garage.tf.models.gru_model import GRUModel
+
+_seed = get_tf_seed_stream()
 
 
 class CategoricalGRUModel(GRUModel):
@@ -57,15 +59,12 @@ class CategoricalGRUModel(GRUModel):
                  hidden_dim,
                  name=None,
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
-                 recurrent_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 recurrent_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  output_nonlinearity=tf.nn.softmax,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 output_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
                  hidden_state_init_trainable=False,

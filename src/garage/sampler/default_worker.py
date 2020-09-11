@@ -3,8 +3,7 @@ from collections import defaultdict
 
 import numpy as np
 
-from garage import EpisodeBatch, StepType
-from garage.experiment import deterministic
+from garage import EpisodeBatch, set_seed, StepType
 from garage.sampler import _apply_env_update
 from garage.sampler.worker import Worker
 
@@ -49,7 +48,7 @@ class DefaultWorker(Worker):
     def worker_init(self):
         """Initialize a worker."""
         if self._seed is not None:
-            deterministic.set_seed(self._seed + self._worker_number)
+            set_seed(self._seed + self._worker_number)
 
     def update_agent(self, agent_update):
         """Update an agent, assuming it implements :class:`~Policy`.

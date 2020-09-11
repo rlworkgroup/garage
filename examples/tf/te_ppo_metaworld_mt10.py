@@ -5,10 +5,9 @@ import click
 from metaworld.benchmarks import MT10
 import tensorflow as tf
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper, round_robin_strategy
-from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearMultiFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TEPPO

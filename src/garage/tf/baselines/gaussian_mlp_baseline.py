@@ -3,13 +3,14 @@ from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
-from garage import make_optimizer
-from garage.experiment import deterministic
+from garage import get_tf_seed_stream, make_optimizer
 from garage.np.baselines import Baseline
 from garage.tf import compile_function
 from garage.tf.baselines.gaussian_mlp_baseline_model import (
     GaussianMLPBaselineModel)
 from garage.tf.optimizers import LBFGSOptimizer, PenaltyLBFGSOptimizer
+
+_seed = get_tf_seed_stream()
 
 
 # pylint: disable=too-many-ancestors
@@ -78,12 +79,10 @@ class GaussianMLPBaseline(GaussianMLPBaselineModel, Baseline):
                  name='GaussianMLPBaseline',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 output_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  output_b_init=tf.zeros_initializer(),
                  optimizer=None,
                  optimizer_args=None,

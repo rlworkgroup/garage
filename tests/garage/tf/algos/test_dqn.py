@@ -8,8 +8,8 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
+from garage import set_seed
 from garage.envs import GymEnv
-from garage.experiment import deterministic
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DQN
@@ -25,7 +25,7 @@ class TestDQN(TfGraphTestCase):
     @pytest.mark.large
     def test_dqn_cartpole(self):
         """Test DQN with CartPole environment."""
-        deterministic.set_seed(100)
+        set_seed(100)
         with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             n_epochs = 10
             steps_per_epoch = 10
@@ -66,7 +66,7 @@ class TestDQN(TfGraphTestCase):
     @pytest.mark.large
     def test_dqn_cartpole_double_q(self):
         """Test DQN with CartPole environment."""
-        deterministic.set_seed(100)
+        set_seed(100)
         with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             n_epochs = 10
             steps_per_epoch = 10
@@ -107,7 +107,7 @@ class TestDQN(TfGraphTestCase):
     @pytest.mark.large
     def test_dqn_cartpole_grad_clip(self):
         """Test DQN with CartPole environment."""
-        deterministic.set_seed(100)
+        set_seed(100)
         with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             n_epochs = 10
             steps_per_epoch = 10
@@ -148,7 +148,7 @@ class TestDQN(TfGraphTestCase):
 
     def test_dqn_cartpole_pickle(self):
         """Test DQN with CartPole environment."""
-        deterministic.set_seed(100)
+        set_seed(100)
         with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             n_epochs = 10
             steps_per_epoch = 10

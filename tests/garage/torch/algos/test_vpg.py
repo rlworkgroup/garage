@@ -2,8 +2,8 @@
 import pytest
 import torch
 
+from garage import set_seed
 from garage.envs import GymEnv
-from garage.experiment import deterministic
 from garage.sampler import LocalSampler
 from garage.torch.algos import VPG
 from garage.torch.policies import GaussianMLPPolicy
@@ -36,7 +36,7 @@ class TestVPG:
     @classmethod
     def setup_class(cls):
         """Setup method which is called once before all tests in this class."""
-        deterministic.set_seed(0)
+        set_seed(0)
 
     def setup_method(self):
         """Setup method which is called before every test."""
