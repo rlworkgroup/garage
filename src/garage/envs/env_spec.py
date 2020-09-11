@@ -54,3 +54,16 @@ class EnvSpec(InOutSpec):
 
         """
         self._output_space = observation_space
+
+    def __eq__(self, other):
+        """See :meth:`object.__eq__`.
+
+        Args:
+            other (EnvSpec): :class:`~EnvSpec` to compare with.
+
+        Returns:
+            bool: Whether these :class:`~EnvSpec` instances are equal.
+
+        """
+        return (self.observation_space == other.observation_space
+                and self.action_space == other.action_space)
