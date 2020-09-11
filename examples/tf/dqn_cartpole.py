@@ -3,9 +3,8 @@
 
 Here it creates a gym environment CartPole, and trains a DQN with 50k steps.
 """
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DQN

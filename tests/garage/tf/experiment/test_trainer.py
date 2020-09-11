@@ -2,8 +2,8 @@ import pytest
 import ray
 import tensorflow as tf
 
+from garage import set_seed
 from garage.envs import GymEnv
-from garage.experiment import deterministic
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler, MultiprocessingSampler, RaySampler
 from garage.tf.algos import VPG
@@ -54,7 +54,7 @@ class TestTrainer(TfGraphTestCase):
             tf.no_op().run()
 
     def test_set_plot(self):
-        deterministic.set_seed(1)
+        set_seed(1)
         with TFTrainer(snapshot_config) as trainer:
             env = GymEnv('CartPole-v1')
 

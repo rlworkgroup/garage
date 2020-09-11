@@ -2,8 +2,9 @@
 import pytest
 import torch
 
+from garage import set_seed
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, MetaEvaluator
+from garage.experiment import MetaEvaluator
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.sampler import LocalSampler
 from garage.torch.algos import MAMLVPG
@@ -52,7 +53,7 @@ class TestMAMLVPG:
 
     def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
-        deterministic.set_seed(0)
+        set_seed(0)
 
         episodes_per_task = 5
         max_episode_length = self.env.spec.max_episode_length

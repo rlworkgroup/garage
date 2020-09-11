@@ -6,8 +6,8 @@ import pytest
 import torch
 from torch.nn import functional as F
 
+from garage import set_seed
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.torch import set_gpu_mode
@@ -180,7 +180,7 @@ def test_sac_inverted_double_pendulum():
     # pylint: disable=unexpected-keyword-arg
     env = normalize(GymEnv('InvertedDoublePendulum-v2',
                            max_episode_length=100))
-    deterministic.set_seed(0)
+    set_seed(0)
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=[32, 32],
@@ -234,7 +234,7 @@ def test_fixed_alpha():
     # pylint: disable=unexpected-keyword-arg
     env = normalize(GymEnv('InvertedDoublePendulum-v2',
                            max_episode_length=100))
-    deterministic.set_seed(0)
+    set_seed(0)
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=[32, 32],

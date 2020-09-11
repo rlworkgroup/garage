@@ -6,8 +6,10 @@ which is parameterized by a multilayer perceptron (MLP).
 import tensorflow as tf
 import tensorflow_probability as tfp
 
-from garage.experiment import deterministic
+from garage import get_tf_seed_stream
 from garage.tf.models.mlp_model import MLPModel
+
+_seed = get_tf_seed_stream()
 
 
 class CategoricalMLPModel(MLPModel):
@@ -49,12 +51,10 @@ class CategoricalMLPModel(MLPModel):
                  name=None,
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=tf.nn.softmax,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 output_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         super().__init__(output_dim, name, hidden_sizes, hidden_nonlinearity,

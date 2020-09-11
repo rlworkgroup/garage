@@ -4,9 +4,11 @@ A model composed only of a Gated Recurrent Unit (GRU).
 """
 import tensorflow as tf
 
-from garage.experiment import deterministic
+from garage import get_tf_seed_stream
 from garage.tf.models.gru import gru
 from garage.tf.models.model import Model
+
+_seed = get_tf_seed_stream()
 
 
 class GRUModel(Model):
@@ -53,15 +55,12 @@ class GRUModel(Model):
                  hidden_dim,
                  name=None,
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
-                 recurrent_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 recurrent_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 output_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
                  hidden_state_init_trainable=False,

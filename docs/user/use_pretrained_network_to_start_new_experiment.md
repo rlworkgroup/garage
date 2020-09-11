@@ -84,7 +84,7 @@ from garage.envs.wrappers import Noop
 from garage.envs.wrappers import Resize
 from garage.envs.wrappers import StackFrames
 from garage.experiment import Snapshotter  # Add this import!
-from garage.experiment.deterministic import set_seed
+from garage import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DQN

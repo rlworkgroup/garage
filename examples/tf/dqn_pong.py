@@ -6,7 +6,7 @@ Here it creates a gym environment Pong, and trains a DQN with 1M steps.
 import click
 import gym
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv
 from garage.envs.wrappers.clip_reward import ClipReward
 from garage.envs.wrappers.episodic_life import EpisodicLife
@@ -16,7 +16,6 @@ from garage.envs.wrappers.max_and_skip import MaxAndSkip
 from garage.envs.wrappers.noop import Noop
 from garage.envs.wrappers.resize import Resize
 from garage.envs.wrappers.stack_frames import StackFrames
-from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DQN

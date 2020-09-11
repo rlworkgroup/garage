@@ -1,9 +1,8 @@
 """A regression test for automatic benchmarking garage-PyTorch-TRPO."""
 import torch
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic
 from garage.torch.algos import TRPO as PyTorch_TRPO
 from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -31,7 +30,7 @@ def trpo_garage_pytorch(ctxt, env_id, seed):
         seed (int): Random positive integer for the trial.
 
     """
-    deterministic.set_seed(seed)
+    set_seed(seed)
 
     trainer = Trainer(ctxt)
 

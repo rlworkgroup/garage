@@ -7,10 +7,12 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
 
-from garage.experiment import deterministic
+from garage import get_tf_seed_stream
 from garage.tf.models.mlp import mlp
 from garage.tf.models.model import Model
 from garage.tf.models.parameter import parameter
+
+_seed = get_tf_seed_stream()
 
 
 class GaussianMLPModel(Model):
@@ -78,34 +80,31 @@ class GaussianMLPModel(Model):
 
     """
 
-    def __init__(self,
-                 output_dim,
-                 name=None,
-                 hidden_sizes=(32, 32),
-                 hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
-                 hidden_b_init=tf.zeros_initializer(),
-                 output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
-                 output_b_init=tf.zeros_initializer(),
-                 learn_std=True,
-                 adaptive_std=False,
-                 std_share_network=False,
-                 init_std=1.0,
-                 min_std=1e-6,
-                 max_std=None,
-                 std_hidden_sizes=(32, 32),
-                 std_hidden_nonlinearity=tf.nn.tanh,
-                 std_hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
-                 std_hidden_b_init=tf.zeros_initializer(),
-                 std_output_nonlinearity=None,
-                 std_output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
-                 std_parameterization='exp',
-                 layer_normalization=False):
+    def __init__(
+            self,
+            output_dim,
+            name=None,
+            hidden_sizes=(32, 32),
+            hidden_nonlinearity=tf.nn.tanh,
+            hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
+            hidden_b_init=tf.zeros_initializer(),
+            output_nonlinearity=None,
+            output_w_init=tf.initializers.glorot_uniform(seed=_seed()),
+            output_b_init=tf.zeros_initializer(),
+            learn_std=True,
+            adaptive_std=False,
+            std_share_network=False,
+            init_std=1.0,
+            min_std=1e-6,
+            max_std=None,
+            std_hidden_sizes=(32, 32),
+            std_hidden_nonlinearity=tf.nn.tanh,
+            std_hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
+            std_hidden_b_init=tf.zeros_initializer(),
+            std_output_nonlinearity=None,
+            std_output_w_init=tf.initializers.glorot_uniform(seed=_seed()),
+            std_parameterization='exp',
+            layer_normalization=False):
         # Network parameters
         super().__init__(name)
         self._hidden_sizes = hidden_sizes

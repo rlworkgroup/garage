@@ -7,8 +7,9 @@ import pytest
 import tensorflow as tf
 
 # yapf: disable
+from garage import set_seed
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, snapshotter
+from garage.experiment import snapshotter
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
@@ -111,7 +112,7 @@ class TestTRPO(TfGraphTestCase):
 
     @pytest.mark.mujoco_long
     def test_trpo_gru_cartpole(self):
-        deterministic.set_seed(2)
+        set_seed(2)
         with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             env = normalize(GymEnv('CartPole-v1', max_episode_length=100))
 

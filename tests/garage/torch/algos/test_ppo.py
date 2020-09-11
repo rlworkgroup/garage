@@ -2,8 +2,8 @@
 import pytest
 import torch
 
+from garage import set_seed
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic
 from garage.sampler import LocalSampler
 from garage.torch.algos import PPO
 from garage.torch.policies import GaussianMLPPolicy
@@ -35,7 +35,7 @@ class TestPPO:
     @pytest.mark.mujoco
     def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
-        deterministic.set_seed(0)
+        set_seed(0)
 
         trainer = Trainer(snapshot_config)
         algo = PPO(env_spec=self.env.spec,

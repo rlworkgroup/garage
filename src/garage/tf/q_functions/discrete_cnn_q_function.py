@@ -3,7 +3,7 @@
 import akro
 import tensorflow as tf
 
-from garage.experiment import deterministic
+from garage import get_tf_seed_stream
 from garage.tf.models import (CNNModel,
                               CNNModelWithMaxPooling,
                               MLPDuelingModel,
@@ -11,6 +11,8 @@ from garage.tf.models import (CNNModel,
                               Sequential)
 
 # yapf: enable
+
+_seed = get_tf_seed_stream()
 
 
 class DiscreteCNNQFunction(Sequential):
@@ -81,12 +83,10 @@ class DiscreteCNNQFunction(Sequential):
                  pool_shapes=(2, 2),
                  cnn_hidden_nonlinearity=tf.nn.relu,
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 output_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  output_b_init=tf.zeros_initializer(),
                  dueling=False,
                  layer_normalization=False):

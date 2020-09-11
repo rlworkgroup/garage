@@ -8,14 +8,12 @@ files. Launcher files are used to initialize the algorithm, its components
 There are some important details in this example launcher file.
 
 ```python
-from garage import wrap_experiment
-from garage.experiment import deterministic
+from garage import wrap_experiment, set_seed
 from garage.trainer import Trainer
-import a.b.c
 
 @wrap_experiment(wrap_experiment_args, wrap_experiment_kwargs)
 def experiment(ctxt=None, seed):
-    deterministic.set_seed(seed)
+    set_seed(seed)
     trainer = Trainer(snapshot_config=ctxt)
     env = YOUR_ENV
 
@@ -63,7 +61,7 @@ the rate at which you collect snapshots for your experiment using the parameter
 be saved), "last" (only the last iteration will be saved), “gap” (every
 `snapshot_gap` iterations are saved), or "none" (do not save snapshots).
 
-### Use `deterministic.set_seed`
+### Use `set_seed`
 
 In machine learning research, setting the seed of the random number generator
 that is used by your algorithm and its components will allow you to reproduce
@@ -73,7 +71,7 @@ setting the seed of your experiment to different numbers will allow you to
 observe the different behavior modes of your algorithm and its components
 under different sequences of random numbers.
 *Note: In experiments using Pytorch+GPU, there is a small runtime performance
-cost for using `deterministic.set_seed`*
+cost for using `set_seed`*
 
 ### Use `garage.trainer.Trainer` for managing your training process
 

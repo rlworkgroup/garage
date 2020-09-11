@@ -7,9 +7,9 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
+from garage import set_seed
 from garage.envs import PointEnv
 from garage.experiment import MetaEvaluator, SnapshotConfig
-from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.np.algos import MetaRLAlgorithm
 from garage.sampler import LocalSampler

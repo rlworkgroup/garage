@@ -3,9 +3,8 @@
 import numpy as np
 import torch
 
-from garage import EpisodeBatch, log_performance, wrap_experiment
+from garage import EpisodeBatch, log_performance, set_seed, wrap_experiment
 from garage.envs import PointEnv
-from garage.experiment.deterministic import set_seed
 from garage.np import discount_cumsum
 from garage.sampler import LocalSampler
 from garage.torch.policies import GaussianMLPPolicy

@@ -3,8 +3,10 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
 
-from garage.experiment import deterministic
+from garage import get_tf_seed_stream
 from garage.tf.models import GaussianCNNModel
+
+_seed = get_tf_seed_stream()
 
 
 class GaussianCNNBaselineModel(GaussianCNNModel):
@@ -92,41 +94,38 @@ class GaussianCNNBaselineModel(GaussianCNNModel):
 
     """
 
-    def __init__(self,
-                 input_shape,
-                 output_dim,
-                 filters,
-                 strides,
-                 padding,
-                 hidden_sizes,
-                 name='GaussianCNNRegressorModel',
-                 hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
-                 hidden_b_init=tf.zeros_initializer(),
-                 output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
-                 output_b_init=tf.zeros_initializer(),
-                 learn_std=True,
-                 adaptive_std=False,
-                 std_share_network=False,
-                 init_std=1.0,
-                 min_std=1e-6,
-                 max_std=None,
-                 std_filters=(),
-                 std_strides=(),
-                 std_padding='SAME',
-                 std_hidden_sizes=(32, 32),
-                 std_hidden_nonlinearity=tf.nn.tanh,
-                 std_hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
-                 std_hidden_b_init=tf.zeros_initializer(),
-                 std_output_nonlinearity=None,
-                 std_output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
-                 std_parameterization='exp',
-                 layer_normalization=False):
+    def __init__(
+            self,
+            input_shape,
+            output_dim,
+            filters,
+            strides,
+            padding,
+            hidden_sizes,
+            name='GaussianCNNRegressorModel',
+            hidden_nonlinearity=tf.nn.tanh,
+            hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
+            hidden_b_init=tf.zeros_initializer(),
+            output_nonlinearity=None,
+            output_w_init=tf.initializers.glorot_uniform(seed=_seed()),
+            output_b_init=tf.zeros_initializer(),
+            learn_std=True,
+            adaptive_std=False,
+            std_share_network=False,
+            init_std=1.0,
+            min_std=1e-6,
+            max_std=None,
+            std_filters=(),
+            std_strides=(),
+            std_padding='SAME',
+            std_hidden_sizes=(32, 32),
+            std_hidden_nonlinearity=tf.nn.tanh,
+            std_hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
+            std_hidden_b_init=tf.zeros_initializer(),
+            std_output_nonlinearity=None,
+            std_output_w_init=tf.initializers.glorot_uniform(seed=_seed()),
+            std_parameterization='exp',
+            layer_normalization=False):
         super().__init__(output_dim=output_dim,
                          filters=filters,
                          strides=strides,

@@ -5,12 +5,12 @@ import numpy as np
 import tensorflow as tf
 import torch
 
-from garage.experiment import deterministic
+from garage import get_seed, get_tf_seed_stream, set_seed
 
 
 def test_deterministic_pytorch():
     """Test deterministic behavior of PyTorch"""
-    deterministic.set_seed(111)
+    set_seed(111)
     rand_tensor = torch.rand((5, 5))
     deterministic_tensor = torch.Tensor(
         [[0.715565920, 0.913992643, 0.281857729, 0.258099794, 0.631108642],
@@ -24,7 +24,7 @@ def test_deterministic_pytorch():
 
 def test_deterministic_tensorflow():
     """Test deterministic behavior of Tensorflow"""
-    deterministic.set_seed(0)
+    set_seed(0)
     with tf.compat.v1.Session() as sess:
         rand_tensor = sess.run(
             tf.random.uniform((5, 5), seed=0, dtype=tf.dtypes.float32))
@@ -41,17 +41,14 @@ def test_deterministic_tensorflow():
 
 def test_deterministic_tfp_seed_stream():
     """Test deterministic behavior of TFP SeedStream"""
-    deterministic.set_seed(0)
+    set_seed(0)
+    _seed = get_tf_seed_stream()
     with tf.compat.v1.Session() as sess:
         rand_tensor = sess.run(
-            tf.random.uniform((5, 5),
-                              seed=deterministic.get_tf_seed_stream(),
-                              dtype=tf.dtypes.float32))
+            tf.random.uniform((5, 5), seed=_seed(), dtype=tf.dtypes.float32))
         sess.run(tf.random.uniform((5, 5), dtype=tf.dtypes.float32))
         rand_tensor2 = sess.run(
-            tf.random.uniform((5, 5),
-                              seed=deterministic.get_tf_seed_stream(),
-                              dtype=tf.dtypes.float32))
+            tf.random.uniform((5, 5), seed=_seed(), dtype=tf.dtypes.float32))
     deterministic_tensor = np.array(
         [[0.10550332, 0.14218152, 0.5544759, 0.3720839, 0.6899766],
          [0.47086394, 0.5401237, 0.21653509, 0.42823565, 0.6927656],
@@ -73,7 +70,7 @@ def test_deterministic_tfp_seed_stream():
 
 def test_deterministic_numpy():
     """Test deterministic behavior of numpy"""
-    deterministic.set_seed(22)
+    set_seed(22)
     rand_tensor = np.random.rand(5, 5)
     deterministic_tensor = np.array(
         [[0.20846054, 0.48168106, 0.42053804, 0.859182, 0.17116155],
@@ -86,7 +83,7 @@ def test_deterministic_numpy():
 
 def test_deterministic_random():
     """Test deterministic behavior of random"""
-    deterministic.set_seed(55)
+    set_seed(55)
     rand_array = [random.random() for _ in range(10)]
     deterministic_array = [
         0.09033985426934954, 0.9506335645634441, 0.14997105299598545,

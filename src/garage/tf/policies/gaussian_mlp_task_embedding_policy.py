@@ -4,9 +4,11 @@ import akro
 import numpy as np
 import tensorflow as tf
 
-from garage.experiment import deterministic
+from garage import get_tf_seed_stream
 from garage.tf.models import GaussianMLPModel
 from garage.tf.policies.task_embedding_policy import TaskEmbeddingPolicy
+
+_seed = get_tf_seed_stream()
 
 
 # pylint: disable=too-many-ancestors
@@ -72,12 +74,10 @@ class GaussianMLPTaskEmbeddingPolicy(GaussianMLPModel, TaskEmbeddingPolicy):
                  name='GaussianMLPTaskEmbeddingPolicy',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 output_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  output_b_init=tf.zeros_initializer(),
                  learn_std=True,
                  adaptive_std=False,
@@ -168,26 +168,19 @@ class GaussianMLPTaskEmbeddingPolicy(GaussianMLPModel, TaskEmbeddingPolicy):
             # compensate tf default worker
             name='default').outputs
 
-        embed_state_input = tf.concat([
-            obs_input,
-            encoder_dist.sample(seed=deterministic.get_tf_seed_stream())
-        ], -1)
+        embed_state_input = tf.concat(
+            [obs_input, encoder_dist.sample(seed=_seed())], -1)
         dist_given_task, mean_g_t, log_std_g_t = super().build(
             embed_state_input, name='given_task').outputs
 
         self._f_dist_obs_latent = tf.compat.v1.get_default_session(
-        ).make_callable([
-            dist.sample(seed=deterministic.get_tf_seed_stream()), mean_var,
-            log_std_var
-        ],
+        ).make_callable([dist.sample(seed=_seed()), mean_var, log_std_var],
                         feed_list=[obs_input, latent_input])
 
         self._f_dist_obs_task = tf.compat.v1.get_default_session(
-        ).make_callable([
-            dist_given_task.sample(seed=deterministic.get_tf_seed_stream()),
-            mean_g_t, log_std_g_t
-        ],
-                        feed_list=[obs_input, encoder_input])
+        ).make_callable(
+            [dist_given_task.sample(seed=_seed()), mean_g_t, log_std_g_t],
+            feed_list=[obs_input, encoder_input])
 
     # pylint: disable=arguments-differ
     def build(self, obs_input, task_input, name=None):

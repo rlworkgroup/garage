@@ -8,9 +8,8 @@ Results:
     RiseTime: epoch 38 (itr 760),
               but regression is observed in the course of training.
 """
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment.deterministic import set_seed
 from garage.np.algos import CMAES
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.policies import CategoricalMLPPolicy

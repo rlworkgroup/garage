@@ -161,7 +161,7 @@ class SimpleVPG:
 from garage import wrap_experiment
 from garage.envs import PointEnv
 from garage.experiment import Trainer
-from garage.experiment.deterministic import set_seed
+from garage import set_seed
 from garage.torch.policies import GaussianMLPPolicy
 
 @wrap_experiment
@@ -323,7 +323,7 @@ except for the replacement of `Trainer` with `TFTrainer`.
 from garage import wrap_experiment
 from garage.envs import PointEnv
 from garage.experiment import TFTrainer
-from garage.experiment.deterministic import set_seed
+from garage import set_seed
 from garage.tf.policies import GaussianMLPPolicy
 
 @wrap_experiment
@@ -487,7 +487,7 @@ experiment function is similar to that of TensorFlow:
 from garage import wrap_experiment
 from garage.envs import GymEnv
 from garage.experiment import TFTrainer
-from garage.experiment.deterministic import set_seed
+from garage import set_seed
 from garage.tf.policies import CategoricalMLPPolicy
 
 @wrap_experiment

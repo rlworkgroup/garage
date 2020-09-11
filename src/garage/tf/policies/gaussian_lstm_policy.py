@@ -8,9 +8,11 @@ import akro
 import numpy as np
 import tensorflow as tf
 
-from garage.experiment import deterministic
+from garage import get_tf_seed_stream
 from garage.tf.models import GaussianLSTMModel
 from garage.tf.policies.policy import Policy
+
+_seed = get_tf_seed_stream()
 
 
 # pylint: disable=too-many-ancestors
@@ -75,15 +77,12 @@ class GaussianLSTMPolicy(GaussianLSTMModel, Policy):
                  hidden_dim=32,
                  name='GaussianLSTMPolicy',
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
-                 recurrent_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 recurrent_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 output_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
                  hidden_state_init_trainable=False,

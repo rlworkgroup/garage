@@ -2,8 +2,7 @@
 
 from dowel import logger, tabular
 
-from garage import EpisodeBatch, log_multitask_performance
-from garage.experiment.deterministic import get_seed
+from garage import EpisodeBatch, get_seed, log_multitask_performance
 from garage.sampler import DefaultWorker, LocalSampler, WorkerFactory
 
 

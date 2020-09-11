@@ -7,9 +7,8 @@ Here it runs Swimmer-v2 environment with 40 iterations.
 """
 import ray
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import RaySampler
 from garage.tf.algos import TRPO

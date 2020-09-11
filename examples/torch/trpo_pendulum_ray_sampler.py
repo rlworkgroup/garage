@@ -8,9 +8,8 @@ import numpy as np
 import ray
 import torch
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment import deterministic
 from garage.sampler import RaySampler
 from garage.torch.algos import TRPO
 from garage.torch.policies import GaussianMLPPolicy
@@ -35,7 +34,7 @@ def trpo_pendulum_ray_sampler(ctxt=None, seed=1):
              object_store_memory=78643200,
              ignore_reinit_error=True,
              log_to_driver=False)
-    deterministic.set_seed(seed)
+    set_seed(seed)
     env = GymEnv('InvertedDoublePendulum-v2')
 
     trainer = Trainer(ctxt)

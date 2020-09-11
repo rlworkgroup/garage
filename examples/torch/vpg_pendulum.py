@@ -8,9 +8,8 @@ Results:
 """
 import torch
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment.deterministic import set_seed
 from garage.torch.algos import VPG
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction

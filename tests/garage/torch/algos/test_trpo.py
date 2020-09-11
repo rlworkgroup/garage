@@ -2,8 +2,8 @@
 import pytest
 import torch
 
+from garage import set_seed
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic
 from garage.sampler import LocalSampler
 from garage.torch.algos import TRPO
 from garage.torch.policies import GaussianMLPPolicy
@@ -35,7 +35,7 @@ class TestTRPO:
     @pytest.mark.mujoco
     def test_trpo_pendulum(self):
         """Test TRPO with Pendulum environment."""
-        deterministic.set_seed(0)
+        set_seed(0)
 
         trainer = Trainer(snapshot_config)
         algo = TRPO(env_spec=self.env.spec,

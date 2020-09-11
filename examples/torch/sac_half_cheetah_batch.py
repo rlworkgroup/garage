@@ -5,9 +5,8 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.torch import set_gpu_mode
@@ -28,7 +27,7 @@ def sac_half_cheetah_batch(ctxt=None, seed=1):
             determinism.
 
     """
-    deterministic.set_seed(seed)
+    set_seed(seed)
     trainer = Trainer(snapshot_config=ctxt)
     env = normalize(GymEnv('HalfCheetah-v2'))
 

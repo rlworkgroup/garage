@@ -4,9 +4,8 @@
 import click
 import metaworld.benchmarks as mwb
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import EnvPoolSampler
 from garage.sampler import LocalSampler
 from garage.torch import set_gpu_mode

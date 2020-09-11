@@ -1,9 +1,8 @@
 """A regression test for automatic benchmarking garage-PyTorch-PPO."""
 import torch
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic
 from garage.torch.algos import PPO as PyTorch_PPO
 from garage.torch.optimizers import OptimizerWrapper
 from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
@@ -28,7 +27,7 @@ def ppo_garage_pytorch(ctxt, env_id, seed):
         seed (int): Random positive integer for the trial.
 
     """
-    deterministic.set_seed(seed)
+    set_seed(seed)
 
     trainer = Trainer(ctxt)
 

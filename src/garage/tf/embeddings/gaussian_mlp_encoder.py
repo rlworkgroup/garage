@@ -2,9 +2,11 @@
 import numpy as np
 import tensorflow as tf
 
-from garage.experiment import deterministic
+from garage import get_tf_seed_stream
 from garage.tf.embeddings import StochasticEncoder
 from garage.tf.models import GaussianMLPModel, StochasticModule
+
+_seed = get_tf_seed_stream()
 
 
 class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
@@ -71,12 +73,10 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
                  name='GaussianMLPEncoder',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 output_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  output_b_init=tf.zeros_initializer(),
                  learn_std=True,
                  adaptive_std=False,
@@ -150,8 +150,7 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
             self._network = self.model.build(embedding_input)
             self._f_dist = tf.compat.v1.get_default_session().make_callable(
                 [
-                    self._network.dist.sample(
-                        seed=deterministic.get_tf_seed_stream()),
+                    self._network.dist.sample(seed=_seed()),
                     self._network.mean, self._network.log_std
                 ],
                 feed_list=[embedding_input])

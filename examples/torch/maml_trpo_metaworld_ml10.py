@@ -5,10 +5,9 @@ import click
 import metaworld.benchmarks as mwb
 import torch
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.experiment import MetaEvaluator
-from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import EnvPoolSampler
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy

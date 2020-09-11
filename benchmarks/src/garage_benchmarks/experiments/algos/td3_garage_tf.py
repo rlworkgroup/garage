@@ -1,9 +1,8 @@
 """A regression test for automatic benchmarking garage-TensorFlow-TD3."""
 import tensorflow as tf
 
-from garage import wrap_experiment
+from garage import set_seed, wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic
 from garage.np.exploration_policies import AddGaussianNoise
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import TD3
@@ -40,7 +39,7 @@ def td3_garage_tf(ctxt, env_id, seed):
         seed (int): Random positive integer for the trial.
 
     """
-    deterministic.set_seed(seed)
+    set_seed(seed)
 
     with TFTrainer(ctxt) as trainer:
         env = normalize(GymEnv(env_id))

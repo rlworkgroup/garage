@@ -7,8 +7,7 @@ import numpy as np
 import scipy.stats
 import tensorflow as tf
 
-from garage import EpisodeBatch, InOutSpec, log_performance
-from garage.experiment import deterministic
+from garage import EpisodeBatch, get_tf_seed_stream, InOutSpec, log_performance
 from garage.np import explained_variance_1d, rrse, sliding_window
 from garage.np.algos import RLAlgorithm
 from garage.sampler import LocalSampler
@@ -30,6 +29,8 @@ from garage.tf.optimizers import LBFGSOptimizer
 from garage.tf.policies import TaskEmbeddingPolicy
 
 # yapf: enable
+
+_seed = get_tf_seed_stream()
 
 
 class TENPO(RLAlgorithm):
@@ -641,9 +642,8 @@ class TENPO(RLAlgorithm):
             with tf.name_scope('inference_ce'):
                 # Build inference with trajectory windows
 
-                traj_ll = infer_dist.log_prob(
-                    enc_dist.sample(seed=deterministic.get_tf_seed_stream()),
-                    name='traj_ll')
+                traj_ll = infer_dist.log_prob(enc_dist.sample(seed=_seed()),
+                                              name='traj_ll')
 
                 inference_ce_raw = -traj_ll
                 inference_ce = tf.clip_by_value(inference_ce_raw, -3, 3)

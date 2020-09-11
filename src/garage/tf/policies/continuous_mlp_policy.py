@@ -7,9 +7,11 @@ continuous action.
 import numpy as np
 import tensorflow as tf
 
-from garage.experiment import deterministic
+from garage import get_tf_seed_stream
 from garage.tf.models import MLPModel
 from garage.tf.policies.policy import Policy
+
+_seed = get_tf_seed_stream()
 
 
 # pylint: disable=too-many-ancestors
@@ -52,12 +54,10 @@ class ContinuousMLPPolicy(MLPModel, Policy):
                  name='ContinuousMLPPolicy',
                  hidden_sizes=(64, 64),
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=tf.nn.tanh,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
+                 output_w_init=tf.initializers.glorot_uniform(seed=_seed()),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         self._env_spec = env_spec

@@ -12,7 +12,7 @@ regarding saving, loading and resuming of Garage experiments.
 ```python
 import garage
 from garage.experiment import Trainer, TFTrainer
-from garage.experiment.deterministic import set_seed
+from garage import set_seed
 ```
 
 ## Trainer & TFTrainer for Garage experiment

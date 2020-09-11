@@ -3,8 +3,8 @@ import pickle
 
 import pytest
 
+from garage import set_seed
 from garage.envs import GymEnv, normalize, PointEnv
-from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.sampler import LocalSampler
 from garage.torch import set_gpu_mode

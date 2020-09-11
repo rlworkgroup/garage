@@ -1,11 +1,13 @@
 """CNN and MLP Merge Model."""
 import tensorflow as tf
 
-from garage.experiment import deterministic
+from garage import get_tf_seed_stream
 from garage.tf.models.cnn_model import CNNModel
 from garage.tf.models.cnn_model_max_pooling import CNNModelWithMaxPooling
 from garage.tf.models.mlp_merge_model import MLPMergeModel
 from garage.tf.models.model import Model
+
+_seed = get_tf_seed_stream()
 
 
 class CNNMLPMergeModel(Model):
@@ -75,30 +77,28 @@ class CNNMLPMergeModel(Model):
 
     """
 
-    def __init__(self,
-                 filters,
-                 strides,
-                 hidden_sizes=(256, ),
-                 output_dim=1,
-                 action_merge_layer=-2,
-                 name=None,
-                 padding='SAME',
-                 max_pooling=False,
-                 pool_strides=(2, 2),
-                 pool_shapes=(2, 2),
-                 cnn_hidden_nonlinearity=tf.nn.relu,
-                 cnn_hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
-                 cnn_hidden_b_init=tf.zeros_initializer(),
-                 hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
-                 hidden_b_init=tf.zeros_initializer(),
-                 output_nonlinearity=None,
-                 output_w_init=tf.initializers.glorot_uniform(
-                     seed=deterministic.get_tf_seed_stream()),
-                 output_b_init=tf.zeros_initializer(),
-                 layer_normalization=False):
+    def __init__(
+            self,
+            filters,
+            strides,
+            hidden_sizes=(256, ),
+            output_dim=1,
+            action_merge_layer=-2,
+            name=None,
+            padding='SAME',
+            max_pooling=False,
+            pool_strides=(2, 2),
+            pool_shapes=(2, 2),
+            cnn_hidden_nonlinearity=tf.nn.relu,
+            cnn_hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
+            cnn_hidden_b_init=tf.zeros_initializer(),
+            hidden_nonlinearity=tf.nn.relu,
+            hidden_w_init=tf.initializers.glorot_uniform(seed=_seed()),
+            hidden_b_init=tf.zeros_initializer(),
+            output_nonlinearity=None,
+            output_w_init=tf.initializers.glorot_uniform(seed=_seed()),
+            output_b_init=tf.zeros_initializer(),
+            layer_normalization=False):
         super().__init__(name)
 
         if not max_pooling:

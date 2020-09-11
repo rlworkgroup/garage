@@ -3,8 +3,8 @@ import pytest
 import torch
 from torch.nn import functional as F  # NOQA
 
+from garage import set_seed
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
 from garage.torch.algos import DDPG
@@ -21,7 +21,7 @@ class TestDDPG:
     @pytest.mark.mujoco_long
     def test_ddpg_double_pendulum(self):
         """Test DDPG with Pendulum environment."""
-        deterministic.set_seed(0)
+        set_seed(0)
         trainer = Trainer(snapshot_config)
         env = GymEnv('InvertedDoublePendulum-v2', max_episode_length=100)
         policy = DeterministicMLPPolicy(env_spec=env.spec,
@@ -62,7 +62,7 @@ class TestDDPG:
 
         This environment has a [-3, 3] action_space bound.
         """
-        deterministic.set_seed(0)
+        set_seed(0)
         trainer = Trainer(snapshot_config)
         env = normalize(GymEnv('InvertedPendulum-v2'))
 
