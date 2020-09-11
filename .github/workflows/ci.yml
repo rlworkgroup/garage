@@ -69,9 +69,6 @@ jobs:
         docker run \
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
-          -e GITHUB_ACTIONS \
-          -e CODECOV_TOKEN \
-          $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
           "${DOCKER_TAG}" scripts/travisci/check_precommit.sh
@@ -288,13 +285,9 @@ jobs:
         run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
       - name: Verify Conda
         run: |
-          ci_env="$(bash <(curl -s https://codecov.io/env))" &&
           docker run \
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
-          -e GITHUB_ACTIONS \
-          -e CODECOV_TOKEN \
-          $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
           "${DOCKER_TAG}" \
@@ -335,13 +328,9 @@ jobs:
         run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
       - name: Verify Pipenv
         run: |
-          ci_env="$(bash <(curl -s https://codecov.io/env))" &&
           docker run \
           -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
-          -e GITHUB_ACTIONS \
-          -e CODECOV_TOKEN \
-          $ci_env\
           --memory 6500m \
           --memory-swap 6500m \
           "${DOCKER_TAG}" \
