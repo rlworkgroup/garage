@@ -43,7 +43,10 @@ def step_env_with_gym_quirks(env, spec, n=10, render=True,
     if serialize_env:
         # Roundtrip serialization
         round_trip = pickle.loads(pickle.dumps(env))
+        assert round_trip.spec == env.spec
         assert round_trip.env.spec.id == env.env.spec.id
+        assert (round_trip.env.spec.max_episode_steps ==
+                env.env.spec.max_episode_steps)
         env = round_trip
 
     env.reset()
@@ -63,7 +66,10 @@ def step_env_with_gym_quirks(env, spec, n=10, render=True,
     if serialize_env:
         # Roundtrip serialization
         round_trip = pickle.loads(pickle.dumps(env))
+        assert round_trip.spec == env.spec
         assert round_trip.env.spec.id == env.env.spec.id
+        assert (round_trip.env.spec.max_episode_steps ==
+                env.env.spec.max_episode_steps)
 
 
 def convolve(_input, filter_weights, filter_bias, strides, filters,
