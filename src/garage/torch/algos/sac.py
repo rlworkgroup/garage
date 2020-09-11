@@ -44,11 +44,10 @@ class SAC(RLAlgorithm):
         env_spec (garage.envs.env_spec.EnvSpec): The env_spec attribute of the
             environment that the agent is being trained in. Usually accessable
             by calling env.spec.
-        max_path_length (int): Max path length of the algorithm.
+        max_path_length (int): Max path length of the environment.
         max_eval_path_length (int or None): Maximum length of paths used for
             off-policy evaluation. If None, defaults to `max_path_length`.
         gradient_steps_per_itr (int): Number of optimization steps that should
-        max_path_length(int): Max path length of the environment.
         gradient_steps_per_itr(int): Number of optimization steps that should
             occur before the training step is over and a new batch of
             transitions is collected by the sampler.
@@ -129,7 +128,7 @@ class SAC(RLAlgorithm):
         self._discount = discount
         self._reward_scale = reward_scale
         self.max_path_length = max_path_length
-        self._max_eval_path_length = max_eval_path_length
+        self._max_eval_path_length = (max_eval_path_length or max_path_length)
 
         # used by OffPolicyVectorizedSampler
         self.policy = policy
@@ -461,6 +460,7 @@ class SAC(RLAlgorithm):
         eval_trajectories = obtain_evaluation_samples(
             self.policy,
             self._eval_env,
+            max_path_length=self._max_eval_path_length,
             num_trajs=self._num_evaluation_trajectories)
         last_return = log_performance(epoch,
                                       eval_trajectories,

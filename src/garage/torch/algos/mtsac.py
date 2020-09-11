@@ -34,6 +34,8 @@ class MTSAC(SAC):
             by calling env.spec.
         num_tasks (int): The number of tasks being learned.
         max_path_length (int): The max path length of the algorithm.
+        max_eval_path_length (int or None): Maximum length of paths used for
+            off-policy evaluation. If None, defaults to `max_path_length`.
         eval_env (garage.envs.GarageEnv): The environment used for collecting
             evaluation trajectories.
         gradient_steps_per_itr (int): Number of optimization steps that should
@@ -78,7 +80,9 @@ class MTSAC(SAC):
             replay_buffer,
             env_spec,
             num_tasks,
+            *,  # Everything after this is numbers.
             max_path_length,
+            max_eval_path_length=None,
             eval_env,
             gradient_steps_per_itr,
             fixed_alpha=None,
@@ -93,8 +97,9 @@ class MTSAC(SAC):
             reward_scale=1.0,
             optimizer=torch.optim.Adam,
             steps_per_epoch=1,
-            num_evaluation_trajectories=5,
-    ):
+            # yapf: disable
+            num_evaluation_trajectories=5):
+        # yapf: enable
 
         super().__init__(
             policy=policy,
@@ -103,6 +108,7 @@ class MTSAC(SAC):
             replay_buffer=replay_buffer,
             env_spec=env_spec,
             max_path_length=max_path_length,
+            max_eval_path_length=max_eval_path_length,
             gradient_steps_per_itr=gradient_steps_per_itr,
             fixed_alpha=fixed_alpha,
             target_entropy=target_entropy,
@@ -147,6 +153,11 @@ class MTSAC(SAC):
                 the replay buffer. It should have the keys 'observation',
                 'action', 'reward', 'terminal', and 'next_observations'.
 
+        Raises:
+            ValueError: If the number of tasks, num_tasks passed to
+                this algorithm doesn't match the length of the task
+                one-hot id in the observation vector.
+
         Note:
             samples_data's entries should be torch.Tensor's with the following
             shapes:
@@ -163,6 +174,13 @@ class MTSAC(SAC):
         obs = samples_data['observation']
         log_alpha = self._log_alpha
         one_hots = obs[:, -self._num_tasks:]
+        if (log_alpha.shape[0] != one_hots.shape[1]
+                or one_hots.shape[1] != self._num_tasks
+                or log_alpha.shape[0] != self._num_tasks):
+            raise ValueError(
+                'The number of tasks in the environment does '
+                'not match self._num_tasks. Are you sure that you passed '
+                'The correct number of tasks?')
         ret = torch.mm(one_hots, log_alpha.unsqueeze(0).t()).squeeze()
         return ret
 
@@ -186,6 +204,7 @@ class MTSAC(SAC):
                 obtain_evaluation_samples(
                     self.policy,
                     self._eval_env,
+                    max_path_length=self._max_eval_path_length,
                     num_trajs=self._num_evaluation_trajectories))
         eval_trajs = TrajectoryBatch.concatenate(*eval_trajs)
         last_return = log_multitask_performance(epoch, eval_trajs,

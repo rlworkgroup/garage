@@ -161,8 +161,9 @@ class GarageEnv(gym.Wrapper):
         # will be saved inside env_infos as
         # 'GarageEnv.TimeLimitTerminated'
         if 'TimeLimit.truncated' in info:
-            info['GarageEnv.TimeLimitTerminated'] = done  # done = True always
-            done = not info['TimeLimit.truncated']
+            info['GarageEnv.TimeLimitTerminated'] = info['TimeLimit.truncated']
+            if info['TimeLimit.truncated']:
+                done = False
         else:
             info['TimeLimit.truncated'] = False
             info['GarageEnv.TimeLimitTerminated'] = False
