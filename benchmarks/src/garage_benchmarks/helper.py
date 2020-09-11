@@ -35,6 +35,7 @@ import json
 import os
 import pathlib
 import random
+import subprocess
 
 from google.cloud import storage
 import matplotlib.pyplot as plt
@@ -217,7 +218,19 @@ def _export_to_json(json_name, xs, xlabel, ys, ylabel, ys_std):
                  y_min=(ys - ys_std).tolist(),
                  y_max=(ys + ys_std).tolist(),
                  xlabel=xlabel,
-                 ylabel=ylabel), json_file)
+                 ylabel=ylabel,
+                 git_hash=_get_git_hash()), json_file)
+
+
+def _get_git_hash():
+    """Get current git hash.
+
+    Returns:
+        str: git hash.
+
+    """
+    cmd = ['git', 'rev-parse', 'HEAD']
+    return subprocess.check_output(cmd).decode('ascii').strip()
 
 
 def _upload_to_gcp_storage(exec_dir):
