@@ -81,34 +81,36 @@ class SAC(RLAlgorithm):
             for computing eval stats at the end of every epoch.
         eval_env (Environment): environment used for collecting evaluation
             episodes. If None, a copy of the train env is used.
+        use_deterministic_evaluation (bool): True if the trained policy
+            should be evaluated deterministically.
 
     """
 
     def __init__(
-        self,
-        env_spec,
-        policy,
-        qf1,
-        qf2,
-        replay_buffer,
-        *,  # Everything after this is numbers.
-        max_episode_length_eval=None,
-        gradient_steps_per_itr,
-        fixed_alpha=None,
-        target_entropy=None,
-        initial_log_entropy=0.,
-        discount=0.99,
-        buffer_batch_size=64,
-        min_buffer_size=int(1e4),
-        target_update_tau=5e-3,
-        policy_lr=3e-4,
-        qf_lr=3e-4,
-        reward_scale=1.0,
-        optimizer=torch.optim.Adam,
-        steps_per_epoch=1,
-        num_evaluation_episodes=10,
-        eval_env=None,
-    ):
+            self,
+            env_spec,
+            policy,
+            qf1,
+            qf2,
+            replay_buffer,
+            *,  # Everything after this is numbers.
+            max_episode_length_eval=None,
+            gradient_steps_per_itr,
+            fixed_alpha=None,
+            target_entropy=None,
+            initial_log_entropy=0.,
+            discount=0.99,
+            buffer_batch_size=64,
+            min_buffer_size=int(1e4),
+            target_update_tau=5e-3,
+            policy_lr=3e-4,
+            qf_lr=3e-4,
+            reward_scale=1.0,
+            optimizer=torch.optim.Adam,
+            steps_per_epoch=1,
+            num_evaluation_episodes=10,
+            eval_env=None,
+            use_deterministic_evaluation=True):
 
         self._qf1 = qf1
         self._qf2 = qf2
@@ -132,6 +134,7 @@ class SAC(RLAlgorithm):
 
         if max_episode_length_eval is not None:
             self._max_episode_length_eval = max_episode_length_eval
+        self._use_deterministic_evaluation = use_deterministic_evaluation
 
         self.policy = policy
         self.env_spec = env_spec
@@ -465,8 +468,9 @@ class SAC(RLAlgorithm):
         eval_episodes = obtain_evaluation_episodes(
             self.policy,
             self._eval_env,
+            self._max_episode_length_eval,
             num_eps=self._num_evaluation_episodes,
-            deterministic=False)
+            deterministic=self._use_deterministic_evaluation)
         last_return = log_performance(epoch,
                                       eval_episodes,
                                       discount=self._discount)
