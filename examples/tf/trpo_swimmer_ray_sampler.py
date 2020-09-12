@@ -34,7 +34,8 @@ def trpo_swimmer_ray_sampler(ctxt=None, seed=1):
     ray.init(memory=52428800,
              object_store_memory=78643200,
              ignore_reinit_error=True,
-             log_to_driver=False)
+             log_to_driver=False,
+             include_dashboard=False)
     with TFTrainer(snapshot_config=ctxt) as trainer:
         set_seed(seed)
         env = GymEnv('Swimmer-v2')
