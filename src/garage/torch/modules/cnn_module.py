@@ -1,11 +1,14 @@
 """CNN Module."""
 import copy
 
+import torch
 from torch import nn
 
 from garage.torch import flatten_to_single_vector, NonLinearity
 
 
+# pytorch v1.6 issue, see https://github.com/pytorch/pytorch/issues/42305
+# pylint: disable=abstract-method
 # pylint: disable=unused-argument
 class CNNModule(nn.Module):
     """Convolutional neural network (CNN) model in pytorch.
@@ -55,7 +58,7 @@ class CNNModule(nn.Module):
                  input_var,
                  hidden_channels,
                  kernel_sizes,
-                 strides=1,
+                 strides,
                  hidden_nonlinearity=nn.ReLU,
                  hidden_w_init=nn.init.xavier_uniform_,
                  hidden_b_init=nn.init.zeros_,
@@ -67,6 +70,9 @@ class CNNModule(nn.Module):
                  layer_normalization=False,
                  n_layers=None,
                  is_image=True):
+        if len(strides) != len(hidden_channels):
+            raise ValueError('Strides and hidden_channels must have the same'
+                             ' number of dimensions')
         super().__init__()
         self._hidden_channels = hidden_channels
         self._kernel_sizes = kernel_sizes
@@ -125,7 +131,7 @@ class CNNModule(nn.Module):
 
         """
         if self._is_image:
-            input_val /= 255.0
+            input_val = torch.div(input_val, 255.0)
         x = input_val
         for layer in self._cnn_layers:
             x = layer(x)
