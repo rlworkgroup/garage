@@ -8,7 +8,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from garage import log_performance, obtain_evaluation_episodes, StepType
+from garage import log_performance, obtain_evaluation_episodes
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, RaySampler
 from garage.torch import dict_np_to_torch, global_device
@@ -192,22 +192,14 @@ class SAC(RLAlgorithm):
                     batch_size = int(self._min_buffer_size)
                 else:
                     batch_size = None
-                trainer.step_path = trainer.obtain_samples(
-                    trainer.step_itr, batch_size)
-                path_returns = []
-                for path in trainer.step_path:
-                    self.replay_buffer.add_path(
-                        dict(observation=path['observations'],
-                             action=path['actions'],
-                             reward=path['rewards'].reshape(-1, 1),
-                             next_observation=path['next_observations'],
-                             terminal=np.array([
-                                 step_type == StepType.TERMINAL
-                                 for step_type in path['step_types']
-                             ]).reshape(-1, 1)))
-                    path_returns.append(sum(path['rewards']))
-                assert len(path_returns) == len(trainer.step_path)
-                self.episode_rewards.append(np.mean(path_returns))
+
+                eps = trainer.obtain_episodes(trainer.step_itr, batch_size)
+                self.replay_buffer.add_episode_batch(eps)
+
+                returns = list(map(lambda e: sum(e.rewards), eps.split()))
+
+                assert len(returns) == len(eps.lengths)
+                self.episode_rewards.append(np.mean(returns))
                 for _ in range(self._gradient_steps):
                     policy_loss, qf1_loss, qf2_loss = self.train_once()
             last_return = self._evaluate_policy(trainer.step_itr)
@@ -217,12 +209,12 @@ class SAC(RLAlgorithm):
 
         return np.mean(last_return)
 
-    def train_once(self, itr=None, paths=None):
+    def train_once(self, itr=None, eps=None):
         """Complete 1 training iteration of SAC.
 
         Args:
             itr (int): Iteration number. This argument is deprecated.
-            paths (list[dict]): A list of collected paths.
+            eps (EpisodeBatch): An EpisodeBatch.
                 This argument is deprecated.
 
         Returns:
@@ -232,7 +224,7 @@ class SAC(RLAlgorithm):
 
         """
         del itr
-        del paths
+        del eps
         if self.replay_buffer.n_transitions_stored >= self._min_buffer_size:
             samples = self.replay_buffer.sample_transitions(
                 self._buffer_batch_size)
@@ -316,17 +308,17 @@ class SAC(RLAlgorithm):
         Note:
             samples_data's entries should be torch.Tensor's with the following
             shapes:
-                observation: :math:`(N, O^*)`
-                action: :math:`(N, A^*)`
-                reward: :math:`(N, 1)`
-                terminal: :math:`(N, 1)`
-                next_observation: :math:`(N, O^*)`
+                observations: :math:`(N, O^*)`
+                actions: :math:`(N, A^*)`
+                rewards: :math:`(N, 1)`
+                terminals: :math:`(N, 1)`
+                next_observations: :math:`(N, O^*)`
 
         Returns:
             torch.Tensor: loss from the Policy/Actor.
 
         """
-        obs = samples_data['observation']
+        obs = samples_data['observations']
         with torch.no_grad():
             alpha = self._get_log_alpha(samples_data).exp()
         min_q_new_actions = torch.min(self._qf1(obs, new_actions),
@@ -346,22 +338,22 @@ class SAC(RLAlgorithm):
         Note:
             samples_data's entries should be torch.Tensor's with the following
             shapes:
-                observation: :math:`(N, O^*)`
-                action: :math:`(N, A^*)`
-                reward: :math:`(N, 1)`
-                terminal: :math:`(N, 1)`
-                next_observation: :math:`(N, O^*)`
+                observations: :math:`(N, O^*)`
+                actions: :math:`(N, A^*)`
+                rewards: :math:`(N, 1)`
+                terminals: :math:`(N, 1)`
+                next_observations: :math:`(N, O^*)`
 
         Returns:
             torch.Tensor: loss from 1st q-function after optimization.
             torch.Tensor: loss from 2nd q-function after optimization.
 
         """
-        obs = samples_data['observation']
-        actions = samples_data['action']
-        rewards = samples_data['reward'].flatten()
-        terminals = samples_data['terminal'].flatten()
-        next_obs = samples_data['next_observation']
+        obs = samples_data['observations']
+        actions = samples_data['actions']
+        rewards = samples_data['rewards'].flatten()
+        terminals = samples_data['terminals'].flatten()
+        next_obs = samples_data['next_observations']
         with torch.no_grad():
             alpha = self._get_log_alpha(samples_data).exp()
 
@@ -418,7 +410,7 @@ class SAC(RLAlgorithm):
             torch.Tensor: loss from 2nd q-function after optimization.
 
         """
-        obs = samples_data['observation']
+        obs = samples_data['observations']
         qf1_loss, qf2_loss = self._critic_objective(samples_data)
 
         self._qf1_optimizer.zero_grad()
