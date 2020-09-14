@@ -2,6 +2,7 @@
 
 Random exploration according to the value of epsilon.
 """
+from dowel import tabular
 import numpy as np
 
 from garage.np.exploration_policies.exploration_policy import ExplorationPolicy
@@ -105,6 +106,7 @@ class EpsilonGreedyPolicy(ExplorationPolicy):
         self._total_env_steps = (self._last_total_env_steps +
                                  np.sum(episode_batch.lengths))
         self._last_total_env_steps = self._total_env_steps
+        tabular.record('EpsilonGreedyPolicy/Epsilon', self._epsilon())
 
     def get_param_values(self):
         """Get parameter values.
