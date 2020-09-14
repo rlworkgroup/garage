@@ -13,7 +13,7 @@
         :scale: 10%
 
         PyTorch
-   * - **API Reference**
+   * - **API Reference**metaworld_ml1_push
      - `garage.torch.algos.BC <../_autoapi/garage/torch/algos/index.html#garage.torch.algos.BC>`_
    * - **Code**
      - `garage/torch/algos/bc.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/torch/algos/bc.py>`_
