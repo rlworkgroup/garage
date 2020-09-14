@@ -11,7 +11,7 @@ from garage.experiment.deterministic import set_seed
 from garage.tf.algos import TRPO
 from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.policies import CategoricalCNNPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 @click.command()
@@ -31,32 +31,33 @@ def trpo_cubecrash(ctxt=None, seed=1, max_episode_length=5, batch_size=4000):
 
     """
     set_seed(seed)
-    with TFTrainer(ctxt) as trainer:
-        env = normalize(
-            GymEnv('CubeCrash-v0', max_episode_length=max_episode_length))
-        policy = CategoricalCNNPolicy(env_spec=env.spec,
-                                      filters=((32, (8, 8)), (64, (4, 4))),
-                                      strides=(4, 2),
-                                      padding='VALID',
-                                      hidden_sizes=(32, 32))
+    trainer = Trainer(ctxt)
 
-        baseline = GaussianCNNBaseline(env_spec=env.spec,
-                                       filters=((32, (8, 8)), (64, (4, 4))),
-                                       strides=(4, 2),
-                                       padding='VALID',
-                                       hidden_sizes=(32, 32),
-                                       use_trust_region=True)
+    env = normalize(
+        GymEnv('CubeCrash-v0', max_episode_length=max_episode_length))
+    policy = CategoricalCNNPolicy(env_spec=env.spec,
+                                  filters=((32, (8, 8)), (64, (4, 4))),
+                                  strides=(4, 2),
+                                  padding='VALID',
+                                  hidden_sizes=(32, 32))
 
-        algo = TRPO(env_spec=env.spec,
-                    policy=policy,
-                    baseline=baseline,
-                    discount=0.99,
-                    gae_lambda=0.95,
-                    lr_clip_range=0.2,
-                    policy_ent_coeff=0.0)
+    baseline = GaussianCNNBaseline(env_spec=env.spec,
+                                   filters=((32, (8, 8)), (64, (4, 4))),
+                                   strides=(4, 2),
+                                   padding='VALID',
+                                   hidden_sizes=(32, 32),
+                                   use_trust_region=True)
 
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=100, batch_size=batch_size)
+    algo = TRPO(env_spec=env.spec,
+                policy=policy,
+                baseline=baseline,
+                discount=0.99,
+                gae_lambda=0.95,
+                lr_clip_range=0.2,
+                policy_ent_coeff=0.0)
+
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=100, batch_size=batch_size)
 
 
 trpo_cubecrash()

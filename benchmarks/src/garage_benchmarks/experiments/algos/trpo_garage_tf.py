@@ -7,7 +7,7 @@ from garage.experiment import deterministic
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.policies import GaussianMLPPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 hyper_parameters = {
     'hidden_sizes': [32, 32],
@@ -33,25 +33,26 @@ def trpo_garage_tf(ctxt, env_id, seed):
     """
     deterministic.set_seed(seed)
 
-    with TFTrainer(ctxt) as trainer:
-        env = normalize(GymEnv(env_id))
+    trainer = Trainer(ctxt)
 
-        policy = GaussianMLPPolicy(
-            env_spec=env.spec,
-            hidden_sizes=hyper_parameters['hidden_sizes'],
-            hidden_nonlinearity=tf.nn.tanh,
-            output_nonlinearity=None,
-        )
+    env = normalize(GymEnv(env_id))
 
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
+    policy = GaussianMLPPolicy(
+        env_spec=env.spec,
+        hidden_sizes=hyper_parameters['hidden_sizes'],
+        hidden_nonlinearity=tf.nn.tanh,
+        output_nonlinearity=None,
+    )
 
-        algo = TRPO(env_spec=env.spec,
-                    policy=policy,
-                    baseline=baseline,
-                    discount=hyper_parameters['discount'],
-                    gae_lambda=hyper_parameters['gae_lambda'],
-                    max_kl_step=hyper_parameters['max_kl'])
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=hyper_parameters['n_epochs'],
-                      batch_size=hyper_parameters['batch_size'])
+    algo = TRPO(env_spec=env.spec,
+                policy=policy,
+                baseline=baseline,
+                discount=hyper_parameters['discount'],
+                gae_lambda=hyper_parameters['gae_lambda'],
+                max_kl_step=hyper_parameters['max_kl'])
+
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=hyper_parameters['n_epochs'],
+                  batch_size=hyper_parameters['batch_size'])

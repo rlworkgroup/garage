@@ -5,7 +5,7 @@ from garage.experiment import deterministic
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.policies import CategoricalCNNPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 params = {
     'conv_filters': (
@@ -36,38 +36,37 @@ def gaussian_cnn_baseline(ctxt, env_id, seed):
     """
     deterministic.set_seed(seed)
 
-    with TFTrainer(ctxt) as trainer:
-        env = normalize(GymEnv(env_id))
+    trainer = Trainer(ctxt)
 
-        policy = CategoricalCNNPolicy(env_spec=env.spec,
-                                      filters=params['conv_filters'],
-                                      strides=params['conv_strides'],
-                                      padding=params['conv_pad'],
-                                      hidden_sizes=params['hidden_sizes'])
+    env = normalize(GymEnv(env_id))
 
-        baseline = GaussianCNNBaseline(
-            env_spec=env.spec,
-            filters=params['conv_filters'],
-            strides=params['conv_strides'],
-            padding=params['conv_pad'],
-            hidden_sizes=params['hidden_sizes'],
-            use_trust_region=params['use_trust_region'])
+    policy = CategoricalCNNPolicy(env_spec=env.spec,
+                                  filters=params['conv_filters'],
+                                  strides=params['conv_strides'],
+                                  padding=params['conv_pad'],
+                                  hidden_sizes=params['hidden_sizes'])
 
-        algo = PPO(
-            env_spec=env.spec,
-            policy=policy,
-            baseline=baseline,
-            discount=0.99,
-            gae_lambda=0.95,
-            lr_clip_range=0.2,
-            policy_ent_coeff=0.0,
-            optimizer_args=dict(
-                batch_size=32,
-                max_optimization_epochs=10,
-                learning_rate=1e-3,
-            ),
-        )
+    baseline = GaussianCNNBaseline(env_spec=env.spec,
+                                   filters=params['conv_filters'],
+                                   strides=params['conv_strides'],
+                                   padding=params['conv_pad'],
+                                   hidden_sizes=params['hidden_sizes'],
+                                   use_trust_region=params['use_trust_region'])
 
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=params['n_epochs'],
-                      batch_size=params['batch_size'])
+    algo = PPO(
+        env_spec=env.spec,
+        policy=policy,
+        baseline=baseline,
+        discount=0.99,
+        gae_lambda=0.95,
+        lr_clip_range=0.2,
+        policy_ent_coeff=0.0,
+        optimizer_args=dict(
+            batch_size=32,
+            max_optimization_epochs=10,
+            learning_rate=1e-3,
+        ),
+    )
+
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=params['n_epochs'], batch_size=params['batch_size'])

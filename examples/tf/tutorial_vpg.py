@@ -9,7 +9,7 @@ from garage.experiment.deterministic import set_seed
 from garage.np import discount_cumsum
 from garage.sampler import LocalSampler
 from garage.tf.policies import GaussianMLPPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 class SimpleVPG:
@@ -124,12 +124,13 @@ def tutorial_vpg(ctxt=None):
 
     """
     set_seed(100)
-    with TFTrainer(ctxt) as trainer:
-        env = PointEnv(max_episode_length=200)
-        policy = GaussianMLPPolicy(env.spec)
-        algo = SimpleVPG(env.spec, policy)
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=200, batch_size=4000)
+    trainer = Trainer(ctxt)
+
+    env = PointEnv(max_episode_length=200)
+    policy = GaussianMLPPolicy(env.spec)
+    algo = SimpleVPG(env.spec, policy)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=200, batch_size=4000)
 
 
 tutorial_vpg()

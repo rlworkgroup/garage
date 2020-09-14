@@ -14,7 +14,7 @@ from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import RaySampler
 from garage.tf.algos import TRPO
 from garage.tf.policies import GaussianMLPPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 @wrap_experiment
@@ -36,25 +36,26 @@ def trpo_swimmer_ray_sampler(ctxt=None, seed=1):
              ignore_reinit_error=True,
              log_to_driver=False,
              include_dashboard=False)
-    with TFTrainer(snapshot_config=ctxt) as trainer:
-        set_seed(seed)
-        env = GymEnv('Swimmer-v2')
+    trainer = Trainer(snapshot_config=ctxt)
 
-        policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
+    set_seed(seed)
+    env = GymEnv('Swimmer-v2')
 
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
+    policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
 
-        algo = TRPO(env_spec=env.spec,
-                    policy=policy,
-                    baseline=baseline,
-                    discount=0.99,
-                    max_kl_step=0.01)
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        trainer.setup(algo,
-                      env,
-                      sampler_cls=RaySampler,
-                      sampler_args={'seed': seed})
-        trainer.train(n_epochs=40, batch_size=4000)
+    algo = TRPO(env_spec=env.spec,
+                policy=policy,
+                baseline=baseline,
+                discount=0.99,
+                max_kl_step=0.01)
+
+    trainer.setup(algo,
+                  env,
+                  sampler_cls=RaySampler,
+                  sampler_args={'seed': seed})
+    trainer.train(n_epochs=40, batch_size=4000)
 
 
 trpo_swimmer_ray_sampler(seed=100)

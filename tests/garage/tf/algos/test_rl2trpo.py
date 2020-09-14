@@ -15,7 +15,7 @@ from garage.tf.optimizers import (ConjugateGradientOptimizer,
                                   FiniteDifferenceHVP,
                                   PenaltyLBFGSOptimizer)
 from garage.tf.policies import GaussianGRUPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -59,69 +59,68 @@ class TestRL2TRPO(TfGraphTestCase):
         self.baseline = LinearFeatureBaseline(env_spec=self.env_spec)
 
     def test_rl2_trpo_pendulum(self):
-        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
-            algo = RL2TRPO(
-                meta_batch_size=self.meta_batch_size,
-                task_sampler=self.tasks,
-                env_spec=self.env_spec,
-                policy=self.policy,
-                baseline=self.baseline,
-                episodes_per_trial=self.episode_per_task,
-                discount=0.99,
-                max_kl_step=0.01,
-                optimizer=ConjugateGradientOptimizer,
-                optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
-                    base_eps=1e-5)))
+        trainer = Trainer(snapshot_config, sess=self.sess)
 
-            trainer.setup(algo,
-                          self.tasks.sample(self.meta_batch_size),
-                          sampler_cls=LocalSampler,
-                          n_workers=self.meta_batch_size,
-                          worker_class=RL2Worker)
+        algo = RL2TRPO(meta_batch_size=self.meta_batch_size,
+                       task_sampler=self.tasks,
+                       env_spec=self.env_spec,
+                       policy=self.policy,
+                       baseline=self.baseline,
+                       episodes_per_trial=self.episode_per_task,
+                       discount=0.99,
+                       max_kl_step=0.01,
+                       optimizer=ConjugateGradientOptimizer,
+                       optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
+                           base_eps=1e-5)))
 
-            last_avg_ret = trainer.train(n_epochs=1,
-                                         batch_size=self.episode_per_task *
-                                         self.max_episode_length *
-                                         self.meta_batch_size)
-            assert last_avg_ret > -40
+        trainer.setup(algo,
+                      self.tasks.sample(self.meta_batch_size),
+                      sampler_cls=LocalSampler,
+                      n_workers=self.meta_batch_size,
+                      worker_class=RL2Worker)
+
+        last_avg_ret = trainer.train(n_epochs=1,
+                                     batch_size=self.episode_per_task *
+                                     self.max_episode_length *
+                                     self.meta_batch_size)
+        assert last_avg_ret > -40
 
     def test_rl2_trpo_pendulum_default_optimizer(self):
-        with TFTrainer(snapshot_config, sess=self.sess):
-            algo = RL2TRPO(meta_batch_size=self.meta_batch_size,
-                           task_sampler=self.tasks,
-                           env_spec=self.env_spec,
-                           policy=self.policy,
-                           baseline=self.baseline,
-                           kl_constraint='hard',
-                           episodes_per_trial=self.episode_per_task,
-                           discount=0.99,
-                           max_kl_step=0.01)
-            assert isinstance(algo._inner_algo._optimizer,
-                              ConjugateGradientOptimizer)
+        Trainer(snapshot_config, sess=self.sess)
+        algo = RL2TRPO(meta_batch_size=self.meta_batch_size,
+                       task_sampler=self.tasks,
+                       env_spec=self.env_spec,
+                       policy=self.policy,
+                       baseline=self.baseline,
+                       kl_constraint='hard',
+                       episodes_per_trial=self.episode_per_task,
+                       discount=0.99,
+                       max_kl_step=0.01)
+        assert isinstance(algo._inner_algo._optimizer,
+                          ConjugateGradientOptimizer)
 
     def test_ppo_pendulum_default_optimizer2(self):
-        with TFTrainer(snapshot_config, sess=self.sess):
-            algo = RL2TRPO(meta_batch_size=self.meta_batch_size,
-                           task_sampler=self.tasks,
-                           env_spec=self.env_spec,
-                           policy=self.policy,
-                           baseline=self.baseline,
-                           kl_constraint='soft',
-                           episodes_per_trial=self.episode_per_task,
-                           discount=0.99,
-                           max_kl_step=0.01)
-            assert isinstance(algo._inner_algo._optimizer,
-                              PenaltyLBFGSOptimizer)
+        Trainer(snapshot_config, sess=self.sess)
+        algo = RL2TRPO(meta_batch_size=self.meta_batch_size,
+                       task_sampler=self.tasks,
+                       env_spec=self.env_spec,
+                       policy=self.policy,
+                       baseline=self.baseline,
+                       kl_constraint='soft',
+                       episodes_per_trial=self.episode_per_task,
+                       discount=0.99,
+                       max_kl_step=0.01)
+        assert isinstance(algo._inner_algo._optimizer, PenaltyLBFGSOptimizer)
 
     def test_rl2_trpo_pendulum_invalid_kl_constraint(self):
-        with TFTrainer(snapshot_config, sess=self.sess):
-            with pytest.raises(ValueError):
-                RL2TRPO(meta_batch_size=self.meta_batch_size,
-                        task_sampler=self.tasks,
-                        env_spec=self.env_spec,
-                        policy=self.policy,
-                        baseline=self.baseline,
-                        kl_constraint='xyz',
-                        episodes_per_trial=self.episode_per_task,
-                        discount=0.99,
-                        max_kl_step=0.01)
+        Trainer(snapshot_config, sess=self.sess)
+        with pytest.raises(ValueError):
+            RL2TRPO(meta_batch_size=self.meta_batch_size,
+                    task_sampler=self.tasks,
+                    env_spec=self.env_spec,
+                    policy=self.policy,
+                    baseline=self.baseline,
+                    kl_constraint='xyz',
+                    episodes_per_trial=self.episode_per_task,
+                    discount=0.99,
+                    max_kl_step=0.01)

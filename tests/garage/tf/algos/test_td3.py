@@ -10,7 +10,7 @@ from garage.sampler import LocalSampler
 from garage.tf.algos import TD3
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -21,60 +21,61 @@ class TestTD3(TfGraphTestCase):
     @pytest.mark.mujoco_long
     def test_td3_pendulum(self):
         """Test TD3 with Pendulum environment."""
-        with TFTrainer(snapshot_config) as trainer:
-            n_epochs = 10
-            steps_per_epoch = 20
-            sampler_batch_size = 250
-            num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
+        trainer = Trainer(snapshot_config)
 
-            env = GymEnv('InvertedDoublePendulum-v2', max_episode_length=100)
+        n_epochs = 10
+        steps_per_epoch = 20
+        sampler_batch_size = 250
+        num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
 
-            policy = ContinuousMLPPolicy(env_spec=env.spec,
-                                         hidden_sizes=[400, 300],
-                                         hidden_nonlinearity=tf.nn.relu,
-                                         output_nonlinearity=tf.nn.tanh)
+        env = GymEnv('InvertedDoublePendulum-v2', max_episode_length=100)
 
-            exploration_policy = AddGaussianNoise(
-                env.spec,
-                policy,
-                total_timesteps=num_timesteps,
-                max_sigma=0.1,
-                min_sigma=0.1)
+        policy = ContinuousMLPPolicy(env_spec=env.spec,
+                                     hidden_sizes=[400, 300],
+                                     hidden_nonlinearity=tf.nn.relu,
+                                     output_nonlinearity=tf.nn.tanh)
 
-            qf = ContinuousMLPQFunction(name='ContinuousMLPQFunction',
-                                        env_spec=env.spec,
-                                        hidden_sizes=[400, 300],
-                                        action_merge_layer=0,
-                                        hidden_nonlinearity=tf.nn.relu)
+        exploration_policy = AddGaussianNoise(
+            env.spec,
+            policy,
+            total_timesteps=num_timesteps,
+            max_sigma=0.1,
+            min_sigma=0.1)
 
-            qf2 = ContinuousMLPQFunction(name='ContinuousMLPQFunction2',
-                                         env_spec=env.spec,
-                                         hidden_sizes=[400, 300],
-                                         action_merge_layer=0,
-                                         hidden_nonlinearity=tf.nn.relu)
+        qf = ContinuousMLPQFunction(name='ContinuousMLPQFunction',
+                                    env_spec=env.spec,
+                                    hidden_sizes=[400, 300],
+                                    action_merge_layer=0,
+                                    hidden_nonlinearity=tf.nn.relu)
 
-            replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
+        qf2 = ContinuousMLPQFunction(name='ContinuousMLPQFunction2',
+                                     env_spec=env.spec,
+                                     hidden_sizes=[400, 300],
+                                     action_merge_layer=0,
+                                     hidden_nonlinearity=tf.nn.relu)
 
-            algo = TD3(env_spec=env.spec,
-                       policy=policy,
-                       policy_lr=1e-3,
-                       qf_lr=1e-3,
-                       qf=qf,
-                       qf2=qf2,
-                       replay_buffer=replay_buffer,
-                       steps_per_epoch=steps_per_epoch,
-                       target_update_tau=0.005,
-                       n_train_steps=50,
-                       discount=0.99,
-                       min_buffer_size=int(1e4),
-                       buffer_batch_size=100,
-                       policy_weight_decay=0.001,
-                       qf_weight_decay=0.001,
-                       exploration_policy=exploration_policy,
-                       policy_optimizer=tf.compat.v1.train.AdamOptimizer,
-                       qf_optimizer=tf.compat.v1.train.AdamOptimizer)
+        replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
 
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
-            last_avg_ret = trainer.train(n_epochs=n_epochs,
-                                         batch_size=sampler_batch_size)
-            assert last_avg_ret > 200
+        algo = TD3(env_spec=env.spec,
+                   policy=policy,
+                   policy_lr=1e-3,
+                   qf_lr=1e-3,
+                   qf=qf,
+                   qf2=qf2,
+                   replay_buffer=replay_buffer,
+                   steps_per_epoch=steps_per_epoch,
+                   target_update_tau=0.005,
+                   n_train_steps=50,
+                   discount=0.99,
+                   min_buffer_size=int(1e4),
+                   buffer_batch_size=100,
+                   policy_weight_decay=0.001,
+                   qf_weight_decay=0.001,
+                   exploration_policy=exploration_policy,
+                   policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+                   qf_optimizer=tf.compat.v1.train.AdamOptimizer)
+
+        trainer.setup(algo, env, sampler_cls=LocalSampler)
+        last_avg_ret = trainer.train(n_epochs=n_epochs,
+                                     batch_size=sampler_batch_size)
+        assert last_avg_ret > 200

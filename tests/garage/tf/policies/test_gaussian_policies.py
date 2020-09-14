@@ -10,7 +10,7 @@ from garage.tf.optimizers import (ConjugateGradientOptimizer,
 from garage.tf.policies import (GaussianGRUPolicy,
                                 GaussianLSTMPolicy,
                                 GaussianMLPPolicy)
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -23,24 +23,25 @@ class TestGaussianPolicies(TfGraphTestCase):
 
     @pytest.mark.parametrize('policy_cls', policies)
     def test_gaussian_policies(self, policy_cls):
-        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
-            env = normalize(GymEnv('Pendulum-v0'))
+        trainer = Trainer(snapshot_config, sess=self.sess)
 
-            policy = policy_cls(name='policy', env_spec=env.spec)
+        env = normalize(GymEnv('Pendulum-v0'))
 
-            baseline = LinearFeatureBaseline(env_spec=env.spec)
+        policy = policy_cls(name='policy', env_spec=env.spec)
 
-            algo = TRPO(
-                env_spec=env.spec,
-                policy=policy,
-                baseline=baseline,
-                discount=0.99,
-                max_kl_step=0.01,
-                optimizer=ConjugateGradientOptimizer,
-                optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
-                    base_eps=1e-5)),
-            )
+        baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
-            trainer.train(n_epochs=1, batch_size=4000)
-            env.close()
+        algo = TRPO(
+            env_spec=env.spec,
+            policy=policy,
+            baseline=baseline,
+            discount=0.99,
+            max_kl_step=0.01,
+            optimizer=ConjugateGradientOptimizer,
+            optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
+                base_eps=1e-5)),
+        )
+
+        trainer.setup(algo, env, sampler_cls=LocalSampler)
+        trainer.train(n_epochs=1, batch_size=4000)
+        env.close()

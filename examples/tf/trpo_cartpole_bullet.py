@@ -12,7 +12,7 @@ from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.policies import CategoricalMLPPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 @wrap_experiment
@@ -27,26 +27,25 @@ def trpo_cartpole_bullet(ctxt=None, seed=1):
 
     """
     set_seed(seed)
-    with TFTrainer(ctxt) as trainer:
-        env = BulletEnv(
-            gym.make('CartPoleBulletEnv-v1',
-                     renders=False,
-                     discrete_actions=True))
+    trainer = Trainer(ctxt)
 
-        policy = CategoricalMLPPolicy(name='policy',
-                                      env_spec=env.spec,
-                                      hidden_sizes=(32, 32))
+    env = BulletEnv(
+        gym.make('CartPoleBulletEnv-v1', renders=False, discrete_actions=True))
 
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
+    policy = CategoricalMLPPolicy(name='policy',
+                                  env_spec=env.spec,
+                                  hidden_sizes=(32, 32))
 
-        algo = TRPO(env_spec=env.spec,
-                    policy=policy,
-                    baseline=baseline,
-                    discount=0.99,
-                    max_kl_step=0.01)
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=100, batch_size=4000)
+    algo = TRPO(env_spec=env.spec,
+                policy=policy,
+                baseline=baseline,
+                discount=0.99,
+                max_kl_step=0.01)
+
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=100, batch_size=4000)
 
 
 trpo_cartpole_bullet()

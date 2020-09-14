@@ -20,7 +20,7 @@ from garage.tf.algos import TRPO
 from garage.tf.optimizers import (ConjugateGradientOptimizer,
                                   FiniteDifferenceHVP)
 from garage.tf.policies import CategoricalLSTMPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 @click.command()
@@ -43,24 +43,24 @@ def trpo_cartpole_recurrent(ctxt, seed, n_epochs, batch_size, plot):
 
     """
     set_seed(seed)
-    with TFTrainer(snapshot_config=ctxt) as trainer:
-        env = GymEnv('CartPole-v1', max_episode_length=100)
+    trainer = Trainer(snapshot_config=ctxt)
+    env = GymEnv('CartPole-v1', max_episode_length=100)
 
-        policy = CategoricalLSTMPolicy(name='policy', env_spec=env.spec)
+    policy = CategoricalLSTMPolicy(name='policy', env_spec=env.spec)
 
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        algo = TRPO(env_spec=env.spec,
-                    policy=policy,
-                    baseline=baseline,
-                    discount=0.99,
-                    max_kl_step=0.01,
-                    optimizer=ConjugateGradientOptimizer,
-                    optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
-                        base_eps=1e-5)))
+    algo = TRPO(
+        env_spec=env.spec,
+        policy=policy,
+        baseline=baseline,
+        discount=0.99,
+        max_kl_step=0.01,
+        optimizer=ConjugateGradientOptimizer,
+        optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(base_eps=1e-5)))
 
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=n_epochs, batch_size=batch_size, plot=plot)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=n_epochs, batch_size=batch_size, plot=plot)
 
 
 trpo_cartpole_recurrent()

@@ -9,7 +9,7 @@ from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import REPS
 from garage.tf.policies import CategoricalMLPPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -19,22 +19,22 @@ class TestREPS(TfGraphTestCase):
     @pytest.mark.large
     def test_reps_cartpole(self):
         """Test REPS with gym Cartpole environment."""
-        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
-            env = GymEnv('CartPole-v0')
+        trainer = Trainer(snapshot_config, sess=self.sess)
 
-            policy = CategoricalMLPPolicy(env_spec=env.spec,
-                                          hidden_sizes=[32, 32])
+        env = GymEnv('CartPole-v0')
 
-            baseline = LinearFeatureBaseline(env_spec=env.spec)
+        policy = CategoricalMLPPolicy(env_spec=env.spec, hidden_sizes=[32, 32])
 
-            algo = REPS(env_spec=env.spec,
-                        policy=policy,
-                        baseline=baseline,
-                        discount=0.99)
+        baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
+        algo = REPS(env_spec=env.spec,
+                    policy=policy,
+                    baseline=baseline,
+                    discount=0.99)
 
-            last_avg_ret = trainer.train(n_epochs=10, batch_size=4000)
-            assert last_avg_ret > 5
+        trainer.setup(algo, env, sampler_cls=LocalSampler)
 
-            env.close()
+        last_avg_ret = trainer.train(n_epochs=10, batch_size=4000)
+        assert last_avg_ret > 5
+
+        env.close()

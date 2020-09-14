@@ -15,7 +15,7 @@ from garage.tf.algos.rl2 import RL2Env, RL2Worker
 from garage.tf.optimizers import (ConjugateGradientOptimizer,
                                   FiniteDifferenceHVP)
 from garage.tf.policies import GaussianGRUPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 @click.command()
@@ -42,44 +42,45 @@ def rl2_trpo_halfcheetah(ctxt, seed, max_episode_length, meta_batch_size,
 
     """
     set_seed(seed)
-    with TFTrainer(snapshot_config=ctxt) as trainer:
-        inner_max_episode_length = max_episode_length * episode_per_task
+    trainer = Trainer(snapshot_config=ctxt)
 
-        tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
-            GymEnv(HalfCheetahVelEnv())))
+    inner_max_episode_length = max_episode_length * episode_per_task
 
-        env_spec = RL2Env(
-            GymEnv(HalfCheetahVelEnv(),
-                   max_episode_length=inner_max_episode_length)).spec
-        policy = GaussianGRUPolicy(name='policy',
-                                   hidden_dim=64,
-                                   env_spec=env_spec,
-                                   state_include_action=False)
+    tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
+        GymEnv(HalfCheetahVelEnv())))
 
-        baseline = LinearFeatureBaseline(env_spec=env_spec)
+    env_spec = RL2Env(
+        GymEnv(HalfCheetahVelEnv(),
+               max_episode_length=inner_max_episode_length)).spec
+    policy = GaussianGRUPolicy(name='policy',
+                               hidden_dim=64,
+                               env_spec=env_spec,
+                               state_include_action=False)
 
-        algo = RL2TRPO(meta_batch_size=meta_batch_size,
-                       task_sampler=tasks,
-                       env_spec=env_spec,
-                       policy=policy,
-                       baseline=baseline,
-                       episodes_per_trial=episode_per_task,
-                       discount=0.99,
-                       max_kl_step=0.01,
-                       optimizer=ConjugateGradientOptimizer,
-                       optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
-                           base_eps=1e-5)))
+    baseline = LinearFeatureBaseline(env_spec=env_spec)
 
-        trainer.setup(algo,
-                      tasks.sample(meta_batch_size),
-                      sampler_cls=LocalSampler,
-                      n_workers=meta_batch_size,
-                      worker_class=RL2Worker,
-                      worker_args=dict(n_episodes_per_trial=episode_per_task))
+    algo = RL2TRPO(
+        meta_batch_size=meta_batch_size,
+        task_sampler=tasks,
+        env_spec=env_spec,
+        policy=policy,
+        baseline=baseline,
+        episodes_per_trial=episode_per_task,
+        discount=0.99,
+        max_kl_step=0.01,
+        optimizer=ConjugateGradientOptimizer,
+        optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(base_eps=1e-5)))
 
-        trainer.train(n_epochs=n_epochs,
-                      batch_size=episode_per_task * max_episode_length *
-                      meta_batch_size)
+    trainer.setup(algo,
+                  tasks.sample(meta_batch_size),
+                  sampler_cls=LocalSampler,
+                  n_workers=meta_batch_size,
+                  worker_class=RL2Worker,
+                  worker_args=dict(n_episodes_per_trial=episode_per_task))
+
+    trainer.train(n_epochs=n_epochs,
+                  batch_size=episode_per_task * max_episode_length *
+                  meta_batch_size)
 
 
 rl2_trpo_halfcheetah()

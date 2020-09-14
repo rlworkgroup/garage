@@ -6,7 +6,7 @@ from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
 from garage.tf.policies import GaussianMLPPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -17,25 +17,26 @@ class TestDmControlTfPolicy(TfGraphTestCase):
     def test_dm_control_tf_policy(self):
         task = ALL_TASKS[0]
 
-        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
-            env = DMControlEnv.from_suite(*task)
+        trainer = Trainer(snapshot_config, sess=self.sess)
 
-            policy = GaussianMLPPolicy(
-                env_spec=env.spec,
-                hidden_sizes=(32, 32),
-            )
+        env = DMControlEnv.from_suite(*task)
 
-            baseline = LinearFeatureBaseline(env_spec=env.spec)
+        policy = GaussianMLPPolicy(
+            env_spec=env.spec,
+            hidden_sizes=(32, 32),
+        )
 
-            algo = TRPO(
-                env_spec=env.spec,
-                policy=policy,
-                baseline=baseline,
-                discount=0.99,
-                max_kl_step=0.01,
-            )
+        baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
-            trainer.train(n_epochs=1, batch_size=10)
+        algo = TRPO(
+            env_spec=env.spec,
+            policy=policy,
+            baseline=baseline,
+            discount=0.99,
+            max_kl_step=0.01,
+        )
 
-            env.close()
+        trainer.setup(algo, env, sampler_cls=LocalSampler)
+        trainer.train(n_epochs=1, batch_size=10)
+
+        env.close()

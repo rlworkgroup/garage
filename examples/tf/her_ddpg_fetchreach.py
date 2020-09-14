@@ -13,7 +13,7 @@ from garage.replay_buffer import HERReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 @wrap_experiment(snapshot_mode='last')
@@ -28,54 +28,53 @@ def her_ddpg_fetchreach(ctxt=None, seed=1):
 
     """
     set_seed(seed)
-    with TFTrainer(snapshot_config=ctxt) as trainer:
-        env = GymEnv('FetchReach-v1')
+    trainer = Trainer(snapshot_config=ctxt)
 
-        policy = ContinuousMLPPolicy(
-            env_spec=env.spec,
-            name='Policy',
-            hidden_sizes=[256, 256, 256],
-            hidden_nonlinearity=tf.nn.relu,
-            output_nonlinearity=tf.nn.tanh,
-        )
+    env = GymEnv('FetchReach-v1')
 
-        exploration_policy = AddOrnsteinUhlenbeckNoise(env.spec,
-                                                       policy,
-                                                       sigma=0.2)
+    policy = ContinuousMLPPolicy(
+        env_spec=env.spec,
+        name='Policy',
+        hidden_sizes=[256, 256, 256],
+        hidden_nonlinearity=tf.nn.relu,
+        output_nonlinearity=tf.nn.tanh,
+    )
 
-        qf = ContinuousMLPQFunction(
-            env_spec=env.spec,
-            name='QFunction',
-            hidden_sizes=[256, 256, 256],
-            hidden_nonlinearity=tf.nn.relu,
-        )
+    exploration_policy = AddOrnsteinUhlenbeckNoise(env.spec, policy, sigma=0.2)
 
-        # pylint: disable=no-member
-        replay_buffer = HERReplayBuffer(capacity_in_transitions=int(1e6),
-                                        replay_k=4,
-                                        reward_fn=env.compute_reward,
-                                        env_spec=env.spec)
+    qf = ContinuousMLPQFunction(
+        env_spec=env.spec,
+        name='QFunction',
+        hidden_sizes=[256, 256, 256],
+        hidden_nonlinearity=tf.nn.relu,
+    )
 
-        ddpg = DDPG(
-            env_spec=env.spec,
-            policy=policy,
-            policy_lr=1e-3,
-            qf_lr=1e-3,
-            qf=qf,
-            replay_buffer=replay_buffer,
-            target_update_tau=0.01,
-            steps_per_epoch=50,
-            n_train_steps=40,
-            discount=0.95,
-            exploration_policy=exploration_policy,
-            policy_optimizer=tf.compat.v1.train.AdamOptimizer,
-            qf_optimizer=tf.compat.v1.train.AdamOptimizer,
-            buffer_batch_size=256,
-        )
+    # pylint: disable=no-member
+    replay_buffer = HERReplayBuffer(capacity_in_transitions=int(1e6),
+                                    replay_k=4,
+                                    reward_fn=env.compute_reward,
+                                    env_spec=env.spec)
 
-        trainer.setup(algo=ddpg, env=env)
+    ddpg = DDPG(
+        env_spec=env.spec,
+        policy=policy,
+        policy_lr=1e-3,
+        qf_lr=1e-3,
+        qf=qf,
+        replay_buffer=replay_buffer,
+        target_update_tau=0.01,
+        steps_per_epoch=50,
+        n_train_steps=40,
+        discount=0.95,
+        exploration_policy=exploration_policy,
+        policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+        qf_optimizer=tf.compat.v1.train.AdamOptimizer,
+        buffer_batch_size=256,
+    )
 
-        trainer.train(n_epochs=50, batch_size=256)
+    trainer.setup(algo=ddpg, env=env)
+
+    trainer.train(n_epochs=50, batch_size=256)
 
 
 her_ddpg_fetchreach()

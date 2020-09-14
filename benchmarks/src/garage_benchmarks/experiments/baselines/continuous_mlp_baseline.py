@@ -7,7 +7,7 @@ from garage.experiment import deterministic
 from garage.tf.algos import PPO
 from garage.tf.baselines import ContinuousMLPBaseline
 from garage.tf.policies import GaussianLSTMPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 hyper_params = {
     'policy_hidden_sizes': 32,
@@ -37,38 +37,37 @@ def continuous_mlp_baseline(ctxt, env_id, seed):
     """
     deterministic.set_seed(seed)
 
-    with TFTrainer(ctxt) as trainer:
-        env = normalize(GymEnv(env_id))
+    trainer = Trainer(ctxt)
 
-        policy = GaussianLSTMPolicy(
-            env_spec=env.spec,
-            hidden_dim=hyper_params['policy_hidden_sizes'],
-            hidden_nonlinearity=hyper_params['hidden_nonlinearity'],
-        )
+    env = normalize(GymEnv(env_id))
 
-        baseline = ContinuousMLPBaseline(
-            env_spec=env.spec,
-            hidden_sizes=(64, 64),
-        )
+    policy = GaussianLSTMPolicy(
+        env_spec=env.spec,
+        hidden_dim=hyper_params['policy_hidden_sizes'],
+        hidden_nonlinearity=hyper_params['hidden_nonlinearity'],
+    )
 
-        algo = PPO(env_spec=env.spec,
-                   policy=policy,
-                   baseline=baseline,
-                   discount=hyper_params['discount'],
-                   gae_lambda=hyper_params['gae_lambda'],
-                   lr_clip_range=hyper_params['lr_clip_range'],
-                   entropy_method=hyper_params['entropy_method'],
-                   policy_ent_coeff=hyper_params['policy_ent_coeff'],
-                   optimizer_args=dict(
-                       batch_size=32,
-                       max_optimization_epochs=10,
-                       learning_rate=1e-3,
-                   ),
-                   center_adv=hyper_params['center_adv'],
-                   stop_entropy_gradient=True)
+    baseline = ContinuousMLPBaseline(
+        env_spec=env.spec,
+        hidden_sizes=(64, 64),
+    )
 
-        trainer.setup(algo,
-                      env,
-                      sampler_args=dict(n_envs=hyper_params['n_envs']))
-        trainer.train(n_epochs=hyper_params['n_epochs'],
-                      batch_size=hyper_params['n_exploration_steps'])
+    algo = PPO(env_spec=env.spec,
+               policy=policy,
+               baseline=baseline,
+               discount=hyper_params['discount'],
+               gae_lambda=hyper_params['gae_lambda'],
+               lr_clip_range=hyper_params['lr_clip_range'],
+               entropy_method=hyper_params['entropy_method'],
+               policy_ent_coeff=hyper_params['policy_ent_coeff'],
+               optimizer_args=dict(
+                   batch_size=32,
+                   max_optimization_epochs=10,
+                   learning_rate=1e-3,
+               ),
+               center_adv=hyper_params['center_adv'],
+               stop_entropy_gradient=True)
+
+    trainer.setup(algo, env, sampler_args=dict(n_envs=hyper_params['n_envs']))
+    trainer.train(n_epochs=hyper_params['n_epochs'],
+                  batch_size=hyper_params['n_exploration_steps'])

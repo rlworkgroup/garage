@@ -13,7 +13,7 @@ from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import VPG
 from garage.tf.policies import CategoricalMLPPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 @wrap_experiment
@@ -28,23 +28,25 @@ def vpg_cartpole(ctxt=None, seed=1):
 
     """
     set_seed(seed)
-    with TFTrainer(snapshot_config=ctxt) as trainer:
-        env = GymEnv('CartPole-v1')
 
-        policy = CategoricalMLPPolicy(name='policy',
-                                      env_spec=env.spec,
-                                      hidden_sizes=(32, 32))
+    trainer = Trainer(snapshot_config=ctxt)
 
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
+    env = GymEnv('CartPole-v1')
 
-        algo = VPG(env_spec=env.spec,
-                   policy=policy,
-                   baseline=baseline,
-                   discount=0.99,
-                   optimizer_args=dict(learning_rate=0.01, ))
+    policy = CategoricalMLPPolicy(name='policy',
+                                  env_spec=env.spec,
+                                  hidden_sizes=(32, 32))
 
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=100, batch_size=10000)
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
+
+    algo = VPG(env_spec=env.spec,
+               policy=policy,
+               baseline=baseline,
+               discount=0.99,
+               optimizer_args=dict(learning_rate=0.01, ))
+
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=100, batch_size=10000)
 
 
 vpg_cartpole()

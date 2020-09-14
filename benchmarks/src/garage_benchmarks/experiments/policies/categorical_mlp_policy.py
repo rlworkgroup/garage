@@ -7,7 +7,7 @@ from garage.experiment import deterministic
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import PPO
 from garage.tf.policies import CategoricalMLPPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 @wrap_experiment
@@ -24,29 +24,30 @@ def categorical_mlp_policy(ctxt, env_id, seed):
     """
     deterministic.set_seed(seed)
 
-    with TFTrainer(ctxt) as trainer:
-        env = normalize(GymEnv(env_id))
+    trainer = Trainer(ctxt)
 
-        policy = CategoricalMLPPolicy(
-            env_spec=env.spec,
-            hidden_nonlinearity=tf.nn.tanh,
-        )
+    env = normalize(GymEnv(env_id))
 
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
+    policy = CategoricalMLPPolicy(
+        env_spec=env.spec,
+        hidden_nonlinearity=tf.nn.tanh,
+    )
 
-        algo = PPO(env_spec=env.spec,
-                   policy=policy,
-                   baseline=baseline,
-                   discount=0.99,
-                   gae_lambda=0.95,
-                   lr_clip_range=0.2,
-                   policy_ent_coeff=0.0,
-                   optimizer_args=dict(
-                       batch_size=32,
-                       max_optimization_epochs=10,
-                       learning_rate=1e-3,
-                   ),
-                   name='CategoricalMLPPolicyBenchmark')
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        trainer.setup(algo, env, sampler_args=dict(n_envs=12))
-        trainer.train(n_epochs=5, batch_size=2048)
+    algo = PPO(env_spec=env.spec,
+               policy=policy,
+               baseline=baseline,
+               discount=0.99,
+               gae_lambda=0.95,
+               lr_clip_range=0.2,
+               policy_ent_coeff=0.0,
+               optimizer_args=dict(
+                   batch_size=32,
+                   max_optimization_epochs=10,
+                   learning_rate=1e-3,
+               ),
+               name='CategoricalMLPPolicyBenchmark')
+
+    trainer.setup(algo, env, sampler_args=dict(n_envs=12))
+    trainer.train(n_epochs=5, batch_size=2048)

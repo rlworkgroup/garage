@@ -6,7 +6,7 @@ from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.policies import CategoricalMLPPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 @wrap_experiment
@@ -21,25 +21,25 @@ def trpo_gym_tf_cartpole(ctxt=None, seed=1):
 
     """
     set_seed(seed)
-    with TFTrainer(snapshot_config=ctxt) as trainer:
-        env = GymEnv('CartPole-v0')
+    trainer = Trainer(snapshot_config=ctxt)
+    env = GymEnv('CartPole-v0')
 
-        policy = CategoricalMLPPolicy(name='policy',
-                                      env_spec=env.spec,
-                                      hidden_sizes=(32, 32))
+    policy = CategoricalMLPPolicy(name='policy',
+                                  env_spec=env.spec,
+                                  hidden_sizes=(32, 32))
 
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        algo = TRPO(
-            env_spec=env.spec,
-            policy=policy,
-            baseline=baseline,
-            discount=0.99,
-            max_kl_step=0.01,
-        )
+    algo = TRPO(
+        env_spec=env.spec,
+        policy=policy,
+        baseline=baseline,
+        discount=0.99,
+        max_kl_step=0.01,
+    )
 
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=120, batch_size=4000)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=120, batch_size=4000)
 
 
 trpo_gym_tf_cartpole()

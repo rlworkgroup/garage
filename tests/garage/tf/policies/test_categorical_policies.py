@@ -14,7 +14,7 @@ from garage.tf.optimizers import (ConjugateGradientOptimizer,
 from garage.tf.policies import (CategoricalGRUPolicy,
                                 CategoricalLSTMPolicy,
                                 CategoricalMLPPolicy)
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -27,25 +27,26 @@ class TestCategoricalPolicies(TfGraphTestCase):
 
     @pytest.mark.parametrize('policy_cls', [*policies])
     def test_categorical_policies(self, policy_cls):
-        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
-            env = normalize(GymEnv('CartPole-v0', max_episode_length=100))
+        trainer = Trainer(snapshot_config, sess=self.sess)
 
-            policy = policy_cls(name='policy', env_spec=env.spec)
+        env = normalize(GymEnv('CartPole-v0', max_episode_length=100))
 
-            baseline = LinearFeatureBaseline(env_spec=env.spec)
+        policy = policy_cls(name='policy', env_spec=env.spec)
 
-            algo = TRPO(
-                env_spec=env.spec,
-                policy=policy,
-                baseline=baseline,
-                discount=0.99,
-                max_kl_step=0.01,
-                optimizer=ConjugateGradientOptimizer,
-                optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
-                    base_eps=1e-5)),
-            )
+        baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
-            trainer.train(n_epochs=1, batch_size=4000)
+        algo = TRPO(
+            env_spec=env.spec,
+            policy=policy,
+            baseline=baseline,
+            discount=0.99,
+            max_kl_step=0.01,
+            optimizer=ConjugateGradientOptimizer,
+            optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
+                base_eps=1e-5)),
+        )
 
-            env.close()
+        trainer.setup(algo, env, sampler_cls=LocalSampler)
+        trainer.train(n_epochs=1, batch_size=4000)
+
+        env.close()

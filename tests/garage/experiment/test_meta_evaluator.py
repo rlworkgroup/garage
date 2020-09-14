@@ -14,7 +14,7 @@ from garage.experiment.task_sampler import SetTaskSampler
 from garage.np.algos import MetaRLAlgorithm
 from garage.sampler import LocalSampler
 from garage.tf.policies import GaussianMLPPolicy
-from garage.trainer import TFTrainer, Trainer
+from garage.trainer import Trainer
 
 
 class RandomPolicy:
@@ -165,21 +165,23 @@ def test_meta_evaluator_with_tf():
         ctxt = SnapshotConfig(snapshot_dir=log_dir_name,
                               snapshot_mode='none',
                               snapshot_gap=1)
-        with TFTrainer(ctxt) as trainer:
-            meta_eval = MetaEvaluator(test_task_sampler=tasks,
-                                      max_episode_length=max_episode_length,
-                                      n_test_tasks=10,
-                                      n_exploration_eps=n_eps)
-            policy = GaussianMLPPolicy(env.spec)
-            algo = MockAlgo(env, policy, max_episode_length, n_eps, meta_eval)
-            trainer.setup(algo, env)
-            log_file = tempfile.NamedTemporaryFile()
-            csv_output = CsvOutput(log_file.name)
-            logger.add_output(csv_output)
-            meta_eval.evaluate(algo)
-            algo_pickle = cloudpickle.dumps(algo)
+        trainer = Trainer(ctxt)
+
+        meta_eval = MetaEvaluator(test_task_sampler=tasks,
+                                  max_episode_length=max_episode_length,
+                                  n_test_tasks=10,
+                                  n_exploration_eps=n_eps)
+        policy = GaussianMLPPolicy(env.spec)
+        algo = MockAlgo(env, policy, max_episode_length, n_eps, meta_eval)
+        trainer.setup(algo, env)
+        log_file = tempfile.NamedTemporaryFile()
+        csv_output = CsvOutput(log_file.name)
+        logger.add_output(csv_output)
+        meta_eval.evaluate(algo)
+        algo_pickle = cloudpickle.dumps(algo)
         tf.compat.v1.reset_default_graph()
-        with TFTrainer(ctxt) as trainer:
-            algo2 = cloudpickle.loads(algo_pickle)
-            trainer.setup(algo2, env)
-            trainer.train(10, 0)
+
+        trainer = Trainer(ctxt)
+        algo2 = cloudpickle.loads(algo_pickle)
+        trainer.setup(algo2, env)
+        trainer.train(10, 0)

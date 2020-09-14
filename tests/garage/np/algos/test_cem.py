@@ -5,7 +5,7 @@ from garage.np.algos import CEM
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.policies import CategoricalMLPPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -15,24 +15,25 @@ class TestCEM(TfGraphTestCase):
     @pytest.mark.large
     def test_cem_cartpole(self):
         """Test CEM with Cartpole-v1 environment."""
-        with TFTrainer(snapshot_config) as trainer:
-            env = GymEnv('CartPole-v1')
+        trainer = Trainer(snapshot_config)
 
-            policy = CategoricalMLPPolicy(name='policy',
-                                          env_spec=env.spec,
-                                          hidden_sizes=(32, 32))
-            baseline = LinearFeatureBaseline(env_spec=env.spec)
+        env = GymEnv('CartPole-v1')
 
-            n_samples = 10
+        policy = CategoricalMLPPolicy(name='policy',
+                                      env_spec=env.spec,
+                                      hidden_sizes=(32, 32))
+        baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            algo = CEM(env_spec=env.spec,
-                       policy=policy,
-                       baseline=baseline,
-                       best_frac=0.1,
-                       n_samples=n_samples)
+        n_samples = 10
 
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
-            rtn = trainer.train(n_epochs=10, batch_size=2048)
-            assert rtn > 40
+        algo = CEM(env_spec=env.spec,
+                   policy=policy,
+                   baseline=baseline,
+                   best_frac=0.1,
+                   n_samples=n_samples)
 
-            env.close()
+        trainer.setup(algo, env, sampler_cls=LocalSampler)
+        rtn = trainer.train(n_epochs=10, batch_size=2048)
+        assert rtn > 40
+
+        env.close()

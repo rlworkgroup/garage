@@ -7,7 +7,7 @@ from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.policies import GaussianMLPPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 @wrap_experiment
@@ -22,25 +22,26 @@ def multi_env_trpo(ctxt=None, seed=1):
 
     """
     set_seed(seed)
-    with TFTrainer(ctxt) as trainer:
-        env1 = normalize(PointEnv(goal=(-1., 0.), max_episode_length=100))
-        env2 = normalize(PointEnv(goal=(1., 0.), max_episode_length=100))
-        env = MultiEnvWrapper([env1, env2])
+    trainer = Trainer(ctxt)
 
-        policy = GaussianMLPPolicy(env_spec=env.spec)
+    env1 = normalize(PointEnv(goal=(-1., 0.), max_episode_length=100))
+    env2 = normalize(PointEnv(goal=(1., 0.), max_episode_length=100))
+    env = MultiEnvWrapper([env1, env2])
 
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
+    policy = GaussianMLPPolicy(env_spec=env.spec)
 
-        algo = TRPO(env_spec=env.spec,
-                    policy=policy,
-                    baseline=baseline,
-                    discount=0.99,
-                    gae_lambda=0.95,
-                    lr_clip_range=0.2,
-                    policy_ent_coeff=0.0)
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=40, batch_size=2048, plot=False)
+    algo = TRPO(env_spec=env.spec,
+                policy=policy,
+                baseline=baseline,
+                discount=0.99,
+                gae_lambda=0.95,
+                lr_clip_range=0.2,
+                policy_ent_coeff=0.0)
+
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=40, batch_size=2048, plot=False)
 
 
 multi_env_trpo()

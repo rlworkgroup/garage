@@ -12,7 +12,7 @@ from garage.tf.algos import TEPPO
 from garage.tf.algos.te import TaskEmbeddingWorker
 from garage.tf.embeddings import GaussianMLPEncoder
 from garage.tf.policies import GaussianMLPTaskEmbeddingPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -142,31 +142,31 @@ class TestTE(TfGraphTestCase):
         assert episodes.agent_infos['latent'][0].shape == (1, )
 
     def test_te_ppo(self):
-        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
-            algo = TEPPO(env_spec=self.env.spec,
-                         policy=self.policy,
-                         baseline=self.baseline,
-                         inference=self.inference,
-                         discount=0.99,
-                         lr_clip_range=0.2,
-                         policy_ent_coeff=self.policy_ent_coeff,
-                         encoder_ent_coeff=self.encoder_ent_coeff,
-                         inference_ce_coeff=self.inference_ce_coeff,
-                         use_softplus_entropy=True,
-                         optimizer_args=dict(
-                             batch_size=32,
-                             max_optimization_epochs=10,
-                         ),
-                         inference_optimizer_args=dict(
-                             batch_size=32,
-                             max_optimization_epochs=10,
-                         ),
-                         center_adv=True,
-                         stop_ce_gradient=True)
+        trainer = Trainer(snapshot_config, sess=self.sess)
+        algo = TEPPO(env_spec=self.env.spec,
+                     policy=self.policy,
+                     baseline=self.baseline,
+                     inference=self.inference,
+                     discount=0.99,
+                     lr_clip_range=0.2,
+                     policy_ent_coeff=self.policy_ent_coeff,
+                     encoder_ent_coeff=self.encoder_ent_coeff,
+                     inference_ce_coeff=self.inference_ce_coeff,
+                     use_softplus_entropy=True,
+                     optimizer_args=dict(
+                         batch_size=32,
+                         max_optimization_epochs=10,
+                     ),
+                     inference_optimizer_args=dict(
+                         batch_size=32,
+                         max_optimization_epochs=10,
+                     ),
+                     center_adv=True,
+                     stop_ce_gradient=True)
 
-            trainer.setup(algo,
-                          self.env,
-                          sampler_cls=LocalSampler,
-                          sampler_args=None,
-                          worker_class=TaskEmbeddingWorker)
-            trainer.train(n_epochs=1, batch_size=self.batch_size, plot=False)
+        trainer.setup(algo,
+                      self.env,
+                      sampler_cls=LocalSampler,
+                      sampler_args=None,
+                      worker_class=TaskEmbeddingWorker)
+        trainer.train(n_epochs=1, batch_size=self.batch_size, plot=False)
