@@ -124,9 +124,9 @@ class ContinuousMLPPolicy(Policy):
             dict: Empty dict since this policy does not model a distribution.
 
         """
-        action = self._f_prob([observation])
-        action = self.action_space.unflatten(action)
-        return action, dict()
+        actions, agent_infos = self.get_actions([observation])
+        action = actions[0]
+        return action, {k: v[0] for k, v in agent_infos.items()}
 
     def get_actions(self, observations):
         """Get multiple actions from this policy for the input observations.
@@ -139,6 +139,7 @@ class ContinuousMLPPolicy(Policy):
             dict: Empty dict since this policy does not model a distribution.
 
         """
+        observations = self.observation_space.flatten_n(observations)
         actions = self._f_prob(observations)
         actions = self.action_space.unflatten_n(actions)
         return actions, dict()

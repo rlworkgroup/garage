@@ -9,24 +9,34 @@ import tensorflow as tf
 from garage.envs import GarageEnv
 from garage.tf.policies import ContinuousMLPPolicy
 from tests.fixtures import TfGraphTestCase
-from tests.fixtures.envs.dummy import DummyBoxEnv
+from tests.fixtures.envs.dummy import DummyBoxEnv, DummyDictEnv
 from tests.fixtures.models import SimpleMLPModel
 
 
 class TestContinuousMLPPolicy(TfGraphTestCase):
     """Test class for ContinuousMLPPolicy"""
 
-    @pytest.mark.parametrize('obs_dim, action_dim', [
-        ((1, ), (1, )),
-        ((1, ), (2, )),
-        ((2, ), (2, )),
-        ((1, 1), (1, 1)),
-        ((1, 1), (2, 2)),
-        ((2, 2), (2, 2)),
-    ])
-    def test_get_action(self, obs_dim, action_dim):
+    @pytest.mark.parametrize(
+        'obs_dim, action_dim, obs_type',
+        [
+            # ((1, ), (1, ), 'box'),
+            ((1, ), (2, ), 'box'),
+            ((2, ), (2, ), 'box'),
+            ((1, 1), (1, 1), 'box'),
+            ((1, 1), (2, 2), 'box'),
+            ((2, 2), (2, 2), 'box'),
+            ((1, ), (1, ), 'dict'),
+        ])
+    def test_get_action(self, obs_dim, action_dim, obs_type):
         """Test get_action method"""
-        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        assert obs_type in ['box', 'dict']
+        if obs_type == 'box':
+            env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim,
+                                        action_dim=action_dim))
+        else:
+            env = GarageEnv(
+                DummyDictEnv(obs_space_type='box', act_space_type='box'))
+
         with mock.patch(('garage.tf.policies.'
                          'continuous_mlp_policy.MLPModel'),
                         new=SimpleMLPModel):
@@ -34,17 +44,17 @@ class TestContinuousMLPPolicy(TfGraphTestCase):
 
         env.reset()
         obs, _, _, _ = env.step(1)
+        if obs_type == 'box':
+            obs = obs.flatten()
 
-        action, _ = policy.get_action(obs.flatten())
+        action, _ = policy.get_action(obs)
 
         expected_action = np.full(action_dim, 0.5)
 
         assert env.action_space.contains(action)
         assert np.array_equal(action, expected_action)
 
-        actions, _ = policy.get_actions(
-            [obs.flatten(), obs.flatten(),
-             obs.flatten()])
+        actions, _ = policy.get_actions([obs, obs, obs])
         for action in actions:
             assert env.action_space.contains(action)
             assert np.array_equal(action, expected_action)

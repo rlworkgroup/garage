@@ -13,7 +13,7 @@ from garage.envs import GarageEnv
 from garage.tf.embeddings import GaussianMLPEncoder
 from garage.tf.policies import GaussianMLPTaskEmbeddingPolicy
 from tests.fixtures import TfGraphTestCase
-from tests.fixtures.envs.dummy import DummyBoxEnv
+from tests.fixtures.envs.dummy import DummyBoxEnv, DummyDictEnv
 from tests.fixtures.models import SimpleGaussianMLPModel
 
 
@@ -167,3 +167,39 @@ class TestGaussianMLPTaskEmbeddingPolicy(TfGraphTestCase):
             unpickled = pickle.loads(pickled)
             assert hasattr(unpickled, '_f_dist_obs_latent')
             assert hasattr(unpickled, '_f_dist_obs_task')
+
+    def test_does_not_support_non_box_obs_space(self):
+        """Test that policy raises error if passed a dict obs space."""
+        task_num, latent_dim = 5, 2
+        env = GarageEnv(DummyDictEnv(act_space_type='box'))
+        with pytest.raises(ValueError,
+                           match=('This task embedding policy does not support'
+                                  'non akro.Box observation spaces.')):
+            embedding_spec = InOutSpec(
+                input_space=akro.Box(low=np.zeros(task_num),
+                                     high=np.ones(task_num)),
+                output_space=akro.Box(low=np.zeros(latent_dim),
+                                      high=np.ones(latent_dim)))
+            encoder = GaussianMLPEncoder(embedding_spec,
+                                         hidden_sizes=[32, 32, 32])
+            GaussianMLPTaskEmbeddingPolicy(env_spec=env.spec,
+                                           encoder=encoder,
+                                           hidden_sizes=[32, 32, 32])
+
+    def test_does_not_support_non_box_action_space(self):
+        """Test that policy raises error if passed a discrete action space."""
+        task_num, latent_dim = 5, 2
+        env = GarageEnv(DummyDictEnv(act_space_type='discrete'))
+        with pytest.raises(ValueError,
+                           match=('This task embedding policy does not support'
+                                  'non akro.Box action spaces.')):
+            embedding_spec = InOutSpec(
+                input_space=akro.Box(low=np.zeros(task_num),
+                                     high=np.ones(task_num)),
+                output_space=akro.Box(low=np.zeros(latent_dim),
+                                      high=np.ones(latent_dim)))
+            encoder = GaussianMLPEncoder(embedding_spec,
+                                         hidden_sizes=[32, 32, 32])
+            GaussianMLPTaskEmbeddingPolicy(env_spec=env.spec,
+                                           encoder=encoder,
+                                           hidden_sizes=[32, 32, 32])

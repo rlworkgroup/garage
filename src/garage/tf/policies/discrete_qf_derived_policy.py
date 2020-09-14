@@ -20,9 +20,13 @@ class DiscreteQfDerivedPolicy(Policy):
     """
 
     def __init__(self, env_spec, qf, name='DiscreteQfDerivedPolicy'):
+        assert isinstance(env_spec.action_space, akro.Discrete), (
+            'DiscreteQfDerivedPolicy only supports akro.Discrete action spaces'
+        )
+        if isinstance(env_spec.observation_space, akro.Dict):
+            raise ValueError('CNN policies do not support'
+                             'with akro.Dict observation spaces.')
         super().__init__(name, env_spec)
-
-        assert isinstance(env_spec.action_space, akro.Discrete)
         self._env_spec = env_spec
         self._qf = qf
 
@@ -54,15 +58,8 @@ class DiscreteQfDerivedPolicy(Policy):
                 dict since there is no parameterization.
 
         """
-        if isinstance(self.env_spec.observation_space, akro.Image) and \
-                len(observation.shape) < \
-                len(self.env_spec.observation_space.shape):
-            observation = self.env_spec.observation_space.unflatten(
-                observation)
-        q_vals = self._f_qval([observation])
-        opt_action = np.argmax(q_vals)
-
-        return opt_action, dict()
+        opt_actions, agent_infos = self.get_actions([observation])
+        return opt_actions[0], {k: v[0] for k, v in agent_infos.items()}
 
     def get_actions(self, observations):
         """Get actions from this policy for the input observations.

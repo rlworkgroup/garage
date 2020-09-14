@@ -6,9 +6,14 @@ import tensorflow as tf
 
 from garage.envs import GarageEnv
 from garage.tf.policies import CategoricalGRUPolicy
-from tests.fixtures import TfGraphTestCase
-from tests.fixtures.envs.dummy import DummyBoxEnv
-from tests.fixtures.envs.dummy import DummyDiscreteEnv
+
+# yapf: disable
+from tests.fixtures import TfGraphTestCase  # noqa: I202
+from tests.fixtures.envs.dummy import (DummyBoxEnv,
+                                       DummyDictEnv,
+                                       DummyDiscreteEnv)
+
+# yapf: enable
 
 
 class TestCategoricalGRUPolicy(TfGraphTestCase):
@@ -98,25 +103,34 @@ class TestCategoricalGRUPolicy(TfGraphTestCase):
             feed_dict={state_input: [[obs.flatten()], [obs.flatten()]]})
         assert np.array_equal(output1, output2)
 
-    @pytest.mark.parametrize('obs_dim, action_dim, hidden_dim', [
-        ((1, ), 1, 4),
-        ((2, ), 2, 4),
-        ((1, 1), 1, 4),
-        ((2, 2), 2, 4),
+    @pytest.mark.parametrize('obs_dim, action_dim, hidden_dim, obs_type', [
+        ((1, ), 1, 4, 'discrete'),
+        ((2, ), 2, 4, 'discrete'),
+        ((1, 1), 1, 4, 'discrete'),
+        ((2, 2), 2, 4, 'discrete'),
+        ((1, ), 1, 4, 'dict'),
     ])
-    def test_get_action(self, obs_dim, action_dim, hidden_dim):
-        env = GarageEnv(
-            DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+    def test_get_action(self, obs_dim, action_dim, hidden_dim, obs_type):
+        assert obs_type in ['discrete', 'dict']
+        if obs_type == 'discrete':
+            env = GarageEnv(
+                DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        else:
+            env = GarageEnv(
+                DummyDictEnv(obs_space_type='box', act_space_type='discrete'))
         policy = CategoricalGRUPolicy(env_spec=env.spec,
                                       hidden_dim=hidden_dim,
                                       state_include_action=False)
         policy.reset(do_resets=None)
         obs = env.reset()
 
-        action, _ = policy.get_action(obs.flatten())
+        if obs_type == 'discrete':
+            obs = obs.flatten()
+
+        action, _ = policy.get_action(obs)
         assert env.action_space.contains(action)
 
-        actions, _ = policy.get_actions([obs.flatten()])
+        actions, _ = policy.get_actions([obs])
         for action in actions:
             assert env.action_space.contains(action)
 

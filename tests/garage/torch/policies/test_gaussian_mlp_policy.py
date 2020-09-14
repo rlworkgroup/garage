@@ -8,7 +8,11 @@ from torch import nn
 
 from garage.envs import GarageEnv
 from garage.torch.policies import GaussianMLPPolicy
-from tests.fixtures.envs.dummy import DummyBoxEnv
+
+# yapf: Disable
+from tests.fixtures.envs.dummy import DummyBoxEnv, DummyDictEnv  # noqa: I202
+
+# yapf: Enable
 
 
 class TestGaussianMLPPolicies:
@@ -195,3 +199,24 @@ class TestGaussianMLPPolicies:
 
         assert np.array_equal(output1_prob['mean'], output2_prob['mean'])
         assert output1_action.shape == output2_action.shape
+
+    def test_get_action_dict_space(self):
+        """Test if observations from dict obs spaces are properly flattened."""
+        env = GarageEnv(
+            DummyDictEnv(obs_space_type='box', act_space_type='box'))
+        policy = GaussianMLPPolicy(env_spec=env.spec,
+                                   hidden_nonlinearity=None,
+                                   hidden_sizes=(1, ),
+                                   hidden_w_init=nn.init.ones_,
+                                   output_w_init=nn.init.ones_)
+        obs = env.reset()
+
+        action, _ = policy.get_action(obs)
+        assert env.action_space.shape == action.shape
+
+        actions, _ = policy.get_actions(np.array([obs, obs]))
+        for action in actions:
+            assert env.action_space.shape == action.shape
+        actions, _ = policy.get_actions(np.array([obs, obs]))
+        for action in actions:
+            assert env.action_space.shape == action.shape

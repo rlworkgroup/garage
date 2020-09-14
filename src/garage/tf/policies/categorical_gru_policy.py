@@ -241,6 +241,7 @@ class CategoricalGRUPolicy(StochasticPolicy):
             dict(numpy.ndarray): Distribution parameters.
 
         """
+        observations = self.observation_space.flatten_n(observations)
         if self._state_include_action:
             assert self._prev_actions is not None
             all_input = np.concatenate([observations, self._prev_actions],

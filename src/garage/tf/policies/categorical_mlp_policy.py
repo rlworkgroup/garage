@@ -162,8 +162,8 @@ class CategoricalMLPPolicy(StochasticPolicy):
             dict(numpy.ndarray): Distribution parameters.
 
         """
-        sample, prob = self._f_prob(np.expand_dims([observation], 1))
-        return np.squeeze(sample[0]), dict(prob=np.squeeze(prob, axis=1)[0])
+        actions, agent_infos = self.get_actions([observation])
+        return actions, {k: v[0] for k, v in agent_infos.items()}
 
     def get_actions(self, observations):
         """Return multiple actions.
@@ -176,8 +176,6 @@ class CategoricalMLPPolicy(StochasticPolicy):
             dict(numpy.ndarray): Distribution parameters.
 
         """
-        # Flatten the observation, will be removed soon
-        # Flattening should be done in sampler
         observations = self.observation_space.flatten_n(observations)
         samples, probs = self._f_prob(np.expand_dims(observations, 1))
         return np.squeeze(samples), dict(prob=np.squeeze(probs, axis=1))

@@ -3,6 +3,8 @@
 A neural network can be used as policy method in different RL algorithms.
 It accepts an observation of the environment and predicts an action.
 """
+import akro
+import numpy as np
 import torch
 
 from garage.torch.modules import MLPModule
@@ -62,9 +64,13 @@ class DeterministicMLPPolicy(Policy):
                         distribution
 
         """
+        if not isinstance(observation, np.ndarray) and not isinstance(
+                observation, torch.Tensor):
+            observation = self._env_spec.observation_space.flatten(observation)
         with torch.no_grad():
-            x = self(torch.Tensor(observation).unsqueeze(0))
-            return x.squeeze(0).numpy(), dict()
+            observation = torch.Tensor(observation).unsqueeze(0)
+            action, agent_infos = self.get_actions(observation)
+            return action[0], {k: v[0] for k, v in agent_infos.items()}
 
     def get_actions(self, observations):
         """Get actions given observations.
@@ -81,6 +87,23 @@ class DeterministicMLPPolicy(Policy):
                         distribution
 
         """
+        if not isinstance(observations[0], np.ndarray) and not isinstance(
+                observations[0], torch.Tensor):
+            observations = self._env_spec.observation_space.flatten_n(
+                observations)
+        # frequently users like to pass lists of torch tensors or lists of
+        # numpy arrays. This handles those conversions.
+        if isinstance(observations, list):
+            if isinstance(observations[0], np.ndarray):
+                observations = np.stack(observations)
+            elif isinstance(observations[0], torch.Tensor):
+                observations = torch.stack(observations)
+
+        if isinstance(self._env_spec.observation_space, akro.Image) and \
+                len(observations.shape) < \
+                len(self._env_spec.observation_space.shape):
+            observations = self._env_spec.observation_space.unflatten_n(
+                observations)
         with torch.no_grad():
             x = self(torch.Tensor(observations))
             return x.numpy(), dict()
