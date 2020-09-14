@@ -7,7 +7,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from garage import EpisodeBatch, log_performance
+from garage import log_performance
 from garage.np import discount_cumsum
 from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
@@ -132,27 +132,26 @@ class VPG(RLAlgorithm):
         """
         return self._discount
 
-    def _train_once(self, itr, paths):
+    def _train_once(self, itr, eps):
         """Train the algorithm once.
 
         Args:
             itr (int): Iteration number.
-            paths (list[dict]): A list of collected paths.
+            eps (EpisodeBatch): A batch of collected paths.
 
         Returns:
             numpy.float64: Calculated mean value of undiscounted returns.
 
         """
-        obs, actions, rewards, returns, valids, baselines = \
-            self._process_samples(paths)
+        obs, rewards, returns, valids, baselines = self._process_samples(eps)
 
         if self._maximum_entropy:
             policy_entropies = self._compute_policy_entropy(obs)
             rewards += self._policy_ent_coeff * policy_entropies
 
-        obs_flat = torch.cat(filter_valids(obs, valids))
-        actions_flat = torch.cat(filter_valids(actions, valids))
-        rewards_flat = torch.cat(filter_valids(rewards, valids))
+        obs_flat = torch.from_numpy(eps.observations).float()
+        actions_flat = torch.from_numpy(eps.actions).float()
+        rewards_flat = torch.from_numpy(eps.rewards).float()
         returns_flat = torch.cat(filter_valids(returns, valids))
         advs_flat = self._compute_advantage(rewards, valids, baselines)
 
@@ -192,8 +191,7 @@ class VPG(RLAlgorithm):
         self._old_policy.load_state_dict(self.policy.state_dict())
 
         undiscounted_returns = log_performance(itr,
-                                               EpisodeBatch.from_list(
-                                                   self._env_spec, paths),
+                                               eps,
                                                discount=self._discount)
         return np.mean(undiscounted_returns)
 
@@ -213,9 +211,8 @@ class VPG(RLAlgorithm):
 
         for _ in trainer.step_epochs():
             for _ in range(self._n_samples):
-                trainer.step_path = trainer.obtain_samples(trainer.step_itr)
-                last_return = self._train_once(trainer.step_itr,
-                                               trainer.step_path)
+                eps = trainer.obtain_episodes(trainer.step_itr)
+                last_return = self._train_once(trainer.step_itr, eps)
                 trainer.step_itr += 1
 
         return last_return
@@ -447,13 +444,13 @@ class VPG(RLAlgorithm):
 
         return log_likelihoods * advantages
 
-    def _process_samples(self, paths):
+    def _process_samples(self, eps):
         r"""Process sample data based on the collected paths.
 
         Notes: P is the maximum episode length (self.max_episode_length)
 
         Args:
-            paths (list[dict]): A list of collected paths
+            eps (EpisodeBatch): An episode batch
 
         Returns:
             torch.Tensor: The observations of the environment
@@ -466,14 +463,11 @@ class VPG(RLAlgorithm):
                 with shape :math:`(N, P)`.
 
         """
-        valids = torch.Tensor([len(path['actions']) for path in paths]).int()
+        paths = eps.to_list()
+        valids = torch.Tensor(eps.lengths).int()
+
         obs = torch.stack([
             pad_to_last(path['observations'],
-                        total_length=self.max_episode_length,
-                        axis=0) for path in paths
-        ])
-        actions = torch.stack([
-            pad_to_last(path['actions'],
                         total_length=self.max_episode_length,
                         axis=0) for path in paths
         ])
@@ -488,4 +482,4 @@ class VPG(RLAlgorithm):
         with torch.no_grad():
             baselines = self._value_function(obs)
 
-        return obs, actions, rewards, returns, valids, baselines
+        return obs, rewards, returns, valids, baselines
