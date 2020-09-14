@@ -60,4 +60,4 @@ use_deterministic_evaluation=True,
 
 ----
 
-*This page was authored by Nicole Ng ([@nicolengsy](https://github.com/nicolengsy)).*
+*This page was authored by Nicole Shin Ying Ng ([@nicolengsy](https://github.com/nicolengsy)).*
