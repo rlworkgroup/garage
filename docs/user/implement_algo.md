@@ -315,26 +315,26 @@ def tutorial_vpg(ctxt=None):
 
 ### TensorFlow
 
-Before the training part, TensorFlow version is almost the same as PyTorch's,
-except for the replacement of `Trainer` with `TFTrainer`.
+Before the training part, TensorFlow version is almost the same as PyTorch's.
 
 ```py
 ...
 from garage import wrap_experiment
 from garage.envs import PointEnv
-from garage.experiment import TFTrainer
+from garage.experiment import Trainer
 from garage.experiment.deterministic import set_seed
 from garage.tf.policies import GaussianMLPPolicy
 
 @wrap_experiment
 def tutorial_vpg(ctxt=None):
     set_seed(100)
-    with TFTrainer(ctxt) as trainer:
-        env = PointEnv()
-        policy = GaussianMLPPolicy(env.spec)
-        algo = SimpleVPG(env.spec, policy)
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=500, batch_size=4000)
+    trainer = Trainer(ctxt)
+
+    env = PointEnv()
+    policy = GaussianMLPPolicy(env.spec)
+    algo = SimpleVPG(env.spec, policy)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=500, batch_size=4000)
 ...
 ```
 
@@ -486,19 +486,20 @@ experiment function is similar to that of TensorFlow:
 ```py
 from garage import wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment import TFTrainer
+from garage.experiment import Trainer
 from garage.experiment.deterministic import set_seed
 from garage.tf.policies import CategoricalMLPPolicy
 
 @wrap_experiment
 def tutorial_cem(ctxt=None):
     set_seed(100)
-    with TFTrainer(ctxt) as trainer:
-        env = GymEnv('CartPole-v1')
-        policy = CategoricalMLPPolicy(env.spec)
-        algo = SimpleCEM(env.spec, policy)
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=100, batch_size=1000)
+    trainer = Trainer(ctxt)
+
+    env = GymEnv('CartPole-v1')
+    policy = CategoricalMLPPolicy(env.spec)
+    algo = SimpleCEM(env.spec, policy)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=100, batch_size=1000)
 ```
 
 When training the policy, we use `policy.get_param_values()` method to get the

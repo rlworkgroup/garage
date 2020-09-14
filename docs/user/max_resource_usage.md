@@ -159,8 +159,7 @@ def trpo_cartpole(ctxt=None):
         device_count = {'GPU': 0}
     )
     sess = tf.compat.v1.Session(config=sess_config)
-    with TFTrainer(ctxt, sess=sess) as trainer:
-        ...
+    trainer = Trainer(ctxt, sess=sess)
 ```
 
 You can see more information about using GPU in the [experiments page](experiments.html#running-experiments-on-gpu-cpu).

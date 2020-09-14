@@ -5,17 +5,17 @@ regarding saving, loading and resuming of Garage experiments.
 
 **Contents**:
 
-- [Trainer & TFTrainer for Garage experiment](#Trainer-TFTrainer-for-garage-experiment)
+- [Trainer for Garage experiment](#Trainer-for-garage-experiment)
 - [Saving & Training Models in an experiment](#saving-training-models-in-an-experiment)
 - [Loading Models & Resuming an experiment](#loading-models-resuming-an-experiment)
 
 ```python
 import garage
-from garage.experiment import Trainer, TFTrainer
+from garage.experiment import Trainer
 from garage.experiment.deterministic import set_seed
 ```
 
-## Trainer & TFTrainer for Garage experiment
+## Trainer for Garage experiment
 
 `Trainer` class in Garage provides users with a range
 of utilities to set up environment and train an algorithm
@@ -23,14 +23,6 @@ for an experiment.
 
 ```Python
 trainer = Trainer()
-```
-
-`TFTrainer` inherits `Trainer` class and provides
-a default TensorFlow session using Python context.
-
-```Python
-with TFTrainer(snapshot_config=ctxt) as trainer:
-    ...
 ```
 
 To perform the save, load and resume operations of
@@ -57,7 +49,7 @@ an experiment, `Local_trainer` provides four core functions:
 In general, saving and training models in an experiment includes
  the following steps:
 
-- Initialize the `Trainer`/ `TFTrainer` instance
+- Initialize the `Trainer` instance
 - Define the environment and algorithms for an experiment
 - Setup the trainer for algorithm and environment with `Trainer.setup`.
 - Run the training step with `Trainer.train`
@@ -79,7 +71,7 @@ trainer.train(n_epochs=100, batch_size=4000)
 In general, loading models and resuming an experiment includes
  the following steps:
 
-- Initialize the `Trainer`/ `TFTrainer` instance
+- Initialize the `Trainer` instance
 - Restore the algorithm and experiment setup with `Trainer.restore`
 - Define for the parameters we want to update during training
 - Run the training step with `Trainer.resume`
@@ -125,9 +117,10 @@ def pre_trained_trpo_cartpole(ctxt=None,
     snapshot_dir='data/local/experiment/trpo_gym_tf_cartpole',
     seed=1):
     set_seed(seed)
-    with TFTrainer(snapshot_config=ctxt) as trainer:
-        trainer.restore(snapshot_dir)
-        trainer.resume(n_epochs=30, batch_size=8000)
+    trainer = Trainer(snapshot_config=ctxt)
+
+    trainer.restore(snapshot_dir)
+    trainer.resume(n_epochs=30, batch_size=8000)
 
 ```
 
