@@ -10,8 +10,8 @@ from garage.tf.models import Module
 from garage.tf.policies.policy import Policy
 
 
-class DiscreteQfDerivedPolicy(Module, Policy):
-    """DiscreteQfDerived policy.
+class DiscreteQFArgmaxPolicy(Module, Policy):
+    """DiscreteQFArgmax policy.
 
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
@@ -20,10 +20,9 @@ class DiscreteQfDerivedPolicy(Module, Policy):
 
     """
 
-    def __init__(self, env_spec, qf, name='DiscreteQfDerivedPolicy'):
+    def __init__(self, env_spec, qf, name='DiscreteQFArgmaxPolicy'):
         assert isinstance(env_spec.action_space, akro.Discrete), (
-            'DiscreteQfDerivedPolicy only supports akro.Discrete action spaces'
-        )
+            'DiscreteQFArgmaxPolicy only supports akro.Discrete action spaces')
         if isinstance(env_spec.observation_space, akro.Dict):
             raise ValueError('CNN policies do not support'
                              'with akro.Dict observation spaces.')
