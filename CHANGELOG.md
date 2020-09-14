@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2020.06.3
+- Fixed
+  * PyTorch 1.7 support ([#1934](https://github.com/rlworkgroup/garage/pull/1934))
+  * `LocalRunner` ignores `worker_cls` attribute of algorithms ([#1984](https://github.com/rlworkgroup/garage/pull/1984))
+  * `mujoco_py` versions greater than v2.0.2.8 are incompatible with some GCC versions in conda ([#2000](https://github.com/rlworkgroup/garage/pull/2000))
+  * MTSAC not learning because it corrupts the termination signal by wrapping with `GarageEnv` twice ([#2029](https://github.com/rlworkgroup/garage/pull/2029))
+  * MTSAC does not respect `max_episode_length_eval` hyperparameter ([#2029](https://github.com/rlworkgroup/garage/pull/2029))
+  * MTSAC MetaWorld examples do not use the correct number of tasks ([#2029](https://github.com/rlworkgroup/garage/pull/2029))
+  * MTSAC now supports a separate `max_episode_length` for evalaution via the `max_episode_length_eval` hyperparameter ([#2029](https://github.com/rlworkgroup/garage/pull/2029))
+  * MTSAC MetaWorld MT50 example used an incorrect `max_episode_length` ([#2029](https://github.com/rlworkgroup/garage/pull/2029))
+
 ## 2020.06.2
 - Fixed
   * Better parameters for example `her_ddpg_fetchreach` ([#1763](https://github.com/rlworkgroup/garage/pull/1763))
