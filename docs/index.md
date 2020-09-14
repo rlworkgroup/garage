@@ -49,6 +49,7 @@ and how to implement new MDPs and new algorithms.
 
    user/algo_bc
    user/algo_sac
+   user/algo_mtsac
 
 .. toctree::
    :maxdepth: 2
