@@ -374,6 +374,23 @@ jobs:
           pipenv run pylint --disable=all --enable=import-error garage"
 
 
+  deploy_to_PYPI:
+    name: Deploy to PYPI
+    runs-on: ubuntu-latest
+    needs: [normal_test, large_test, mujoco_test, mujoco_test_long]
+    if: startsWith(github.ref == 'ref/tags/*)
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Deploy to PYPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
+
+
   delete_docker_container:
     name: Delete Docker Container
     runs-on: ubuntu-latest
