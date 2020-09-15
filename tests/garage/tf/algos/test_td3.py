@@ -35,12 +35,11 @@ class TestTD3(TfGraphTestCase):
                                      hidden_nonlinearity=tf.nn.relu,
                                      output_nonlinearity=tf.nn.tanh)
 
-        exploration_policy = AddGaussianNoise(
-            env.spec,
-            policy,
-            total_timesteps=num_timesteps,
-            max_sigma=0.1,
-            min_sigma=0.1)
+        exploration_policy = AddGaussianNoise(env.spec,
+                                              policy,
+                                              total_timesteps=num_timesteps,
+                                              max_sigma=0.1,
+                                              min_sigma=0.1)
 
         qf = ContinuousMLPQFunction(name='ContinuousMLPQFunction',
                                     env_spec=env.spec,

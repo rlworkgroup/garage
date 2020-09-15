@@ -221,8 +221,8 @@ class Trainer:
                              'the algorithm must specify `max_episode_length`')
         if worker_class is None:
             worker_class = getattr(self._algo, 'worker_cls', DefaultWorker)
-            if self._tf:
-                worker_class = TFWorkerClassWrapper(worker_class)
+        if self._tf:
+            worker_class = TFWorkerClassWrapper(worker_class)
         if seed is None:
             seed = get_seed()
         if sampler_args is None:

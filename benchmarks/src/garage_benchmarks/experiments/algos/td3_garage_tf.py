@@ -32,11 +32,13 @@ hyper_parameters = {
 @wrap_experiment
 def td3_garage_tf(ctxt, env_id, seed):
     """Create garage TensorFlow TD3 model and training.
+
     Args:
         ctxt (ExperimentContext): The experiment configuration used by
             :class:`~Trainer` to create the :class:`~Snapshotter`.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
+
     """
     deterministic.set_seed(seed)
 
@@ -54,12 +56,11 @@ def td3_garage_tf(ctxt, env_id, seed):
         hidden_nonlinearity=tf.nn.relu,
         output_nonlinearity=tf.nn.tanh)
 
-    exploration_policy = AddGaussianNoise(
-        env.spec,
-        policy,
-        total_timesteps=num_timesteps,
-        max_sigma=hyper_parameters['sigma'],
-        min_sigma=hyper_parameters['sigma'])
+    exploration_policy = AddGaussianNoise(env.spec,
+                                          policy,
+                                          total_timesteps=num_timesteps,
+                                          max_sigma=hyper_parameters['sigma'],
+                                          min_sigma=hyper_parameters['sigma'])
 
     qf = ContinuousMLPQFunction(
         name='ContinuousMLPQFunction',
