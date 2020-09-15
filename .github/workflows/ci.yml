@@ -90,7 +90,12 @@ jobs:
     - name: Tag docker image
       run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Doctest
-      run: pushd docs && make doctest clean && popd
+      run: |
+        docker run \
+          -e MJKEY \
+          --memory 6500m \
+          --memory-swap 6500m \
+          "${DOCKER_TAG}" pushd docs && make doctest clean && popd
 
 
   normal_test:
