@@ -210,6 +210,8 @@ class DQN(RLAlgorithm):
         for _ in trainer.step_epochs():
             for cycle in range(self._steps_per_epoch):
                 trainer.step_path = trainer.obtain_episodes(trainer.step_itr)
+                if hasattr(self.exploration_policy, 'update'):
+                    self.exploration_policy.update(trainer.step_path)
                 qf_losses.extend(
                     self._train_once(trainer.step_itr, trainer.step_path))
                 if (cycle == 0 and self._replay_buffer.n_transitions_stored >=

@@ -332,7 +332,12 @@ class Trainer:
                 ' or pass `batch_size` to trainer.obtain_samples.')
         episodes = None
         if agent_update is None:
-            agent_update = self._algo.policy.get_param_values()
+            policy = getattr(self._algo, 'exploration_policy', None)
+            if policy is None:
+                # This field should exist, since self.make_sampler would have
+                # failed otherwise.
+                policy = self._algo.policy
+            agent_update = policy.get_param_values()
         episodes = self._sampler.obtain_samples(
             itr, (batch_size or self._train_args.batch_size),
             agent_update=agent_update,
