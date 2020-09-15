@@ -19,8 +19,6 @@
      - `garage.tf.algos.RL2 <../_autoapi/garage/tf/algos/index.html#garage.tf.algos.RL2>`_
    * - **Code**
      - `garage/tf/algos/rl2.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/tf/algos/rl2.py>`_
-   * - **Examples**
-     - `examples <algo_rl2.html#examples>`_
 ```
 
 When sampling for RL<sup>2</sup>, there are more than one environments to be
@@ -29,14 +27,37 @@ sampled will be concatenated into one single episode, and fed to the
 inner algorithm. Thus, returns and advantages are calculated across the
 episode.
 
-User should not instantiate RL2 directly. Currently garage supports [PPO](https://github.com/rlworkgroup/garage/blob/master/src/garage/tf/algos/rl2ppo.py)
-and [TRPO](https://github.com/rlworkgroup/garage/blob/master/src/garage/tf/algos/rl2trpo.py)
-as the inner algorithm.
+## RL<sup>2</sup>PPO
 
-## Examples
+Proximal Policy Optimization specific for RL<sup>2</sup>. Below are some
+examples of running RL<sup>2</sup> in different environments.
+
+### RL<sup>2</sup>PPO HalfCheetah
 
 ```eval_rst
 .. literalinclude:: ../../examples/tf/rl2_ppo_halfcheetah.py
+```
+
+### RL<sup>2</sup>PPO MetaWorld Meta-Learning 10
+
+```eval_rst
+.. literalinclude:: ../../examples/tf/rl2_ppo_metaworld_ml10.py
+```
+
+### RL<sup>2</sup>PPO MetaWorld Meta-Learning 10 with meta-test
+
+```eval_rst
+.. literalinclude:: ../../examples/tf/rl2_ppo_metaworld_ml10_meta_test.py
+```
+
+## RL<sup>2</sup>TRPO
+
+Trust Region Policy Optimization specific for RL<sup>2</sup>.
+
+## RL<sup>2</sup>TRPO HalfCheetah
+
+```eval_rst
+.. literalinclude:: ../../examples/tf/rl2_trpo_halfcheetah.py
 ```
 
 ## References
