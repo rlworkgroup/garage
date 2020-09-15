@@ -22,13 +22,28 @@ methods which alternate between sampling data through interaction with the
 environment, and optimizing a "surrogate" objective function using stochastic
 gradient ascent.
 
+```eval_rst
+Garage's implementation also supports adding entropy bonus to the objective.
+Two types of entropy approaches could be used here. Maximum entropy approach
+adds the dense entropy to the reward for each time step, while entropy
+regularization adds the mean entropy to the surrogate objective. See
+:cite:`levine2018reinforcement` for more details.
+```
+
 ## Examples
 
-Garage has implementations of PPO with PyTorch and TensorFlow. The following is
-an example of PyTorch version.
+Garage has implementations of PPO with PyTorch and TensorFlow.
+
+## PyTorch
 
 ```eval_rst
 .. literalinclude:: ../../examples/torch/ppo_pendulum.py
+```
+
+## TensorFlow
+
+```eval_rst
+.. literalinclude:: ../../examples/tf/ppo_pendulum.py
 ```
 
 ## References
