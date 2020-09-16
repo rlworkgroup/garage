@@ -8,6 +8,7 @@ function, and a rollout function.
 """
 from collections import defaultdict
 import itertools
+import math
 
 import click
 import cloudpickle
@@ -33,7 +34,13 @@ class RaySampler(Sampler):
             ray.init(log_to_driver=False,
                      ignore_reinit_error=True,
                      include_dashboard=False)
-        self._sampler_worker = ray.remote(SamplerWorker)
+        # Assume the user has a big enough GPU to fit all workers, if they're
+        # using GPU.
+        # Avoid floating point rounding issues by rounding number of workers up
+        # to a power of 2:
+        n_workers_pow_2 = 2**math.ceil(math.log2(worker_factory.n_workers))
+        remote_wrapper = ray.remote(num_gpus=1 / n_workers_pow_2)
+        self._sampler_worker = remote_wrapper(SamplerWorker)
         self._worker_factory = worker_factory
         self._agents = agents
         self._envs = self._worker_factory.prepare_worker_messages(envs)
