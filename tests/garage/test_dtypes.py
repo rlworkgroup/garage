@@ -17,11 +17,8 @@ from garage import (EnvSpec,
 @pytest.fixture
 def eps_data():
     # spaces
-    obs_space = gym.spaces.Box(low=1,
-                               high=np.inf,
-                               shape=(4, 3, 2),
-                               dtype=np.float32)
-    act_space = gym.spaces.MultiDiscrete([2, 5])
+    obs_space = akro.Box(low=1, high=np.inf, shape=(4, 3, 2), dtype=np.float32)
+    act_space = akro.Discrete(2)
     env_spec = EnvSpec(obs_space, act_space)
 
     # generate data
@@ -29,7 +26,7 @@ def eps_data():
     n_t = lens.sum()
     obs = np.stack([obs_space.low] * n_t)
     last_obs = np.stack([obs_space.low] * len(lens))
-    act = np.stack([[1, 3]] * n_t)
+    act = np.stack([1] * n_t)
     rew = np.arange(n_t)
 
     # env_infos
