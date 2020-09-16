@@ -31,6 +31,8 @@ class DQN(RLAlgorithm):
         replay_buffer (ReplayBuffer): Replay buffer.
         steps_per_epoch (int): Number of train_once calls per epoch.
         n_train_steps (int): Training steps.
+        eval_env (gym.Env): Evaluation environment. If None, a copy of the main
+            environment is used for evaluation.
         max_episode_length_eval (int or None): Maximum length of episodes used
             for off-policy evaluation. If `None`, defaults to
             `env_spec.max_episode_length`.
@@ -61,6 +63,7 @@ class DQN(RLAlgorithm):
             qf,
             replay_buffer,
             exploration_policy=None,
+            eval_env=None,
             qf_optimizer=torch.optim.Adam,
             *,  # Everything after this is numbers.
             steps_per_epoch=20,
@@ -108,7 +111,7 @@ class DQN(RLAlgorithm):
         self._qf_optimizer = make_optimizer(qf_optimizer,
                                             module=self._qf,
                                             lr=qf_lr)
-        self._eval_env = None
+        self._eval_env = eval_env
         self.worker_cls = FragmentWorker
 
     def train(self, runner):
@@ -135,11 +138,14 @@ class DQN(RLAlgorithm):
                     runner.enable_logging = True
                     logger.log('Evaluating policy')
 
+                    epsilon_before = self.exploration_policy.epsilon
                     eval_eps = obtain_evaluation_episodes(
-                        self.policy,
+                        self.exploration_policy,
                         self._eval_env,
                         num_eps=10,
                         max_episode_length=self._max_episode_length_eval)
+                    self.exploration_policy.epsilon = epsilon_before
+
                     last_returns = log_performance(runner.step_itr,
                                                    eval_eps,
                                                    discount=self._discount)

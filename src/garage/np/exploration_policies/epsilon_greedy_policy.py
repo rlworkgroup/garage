@@ -45,6 +45,13 @@ class EpsilonGreedyPolicy(ExplorationPolicy):
         self._epsilon = self._max_epsilon
         self._decrement = (self._max_epsilon -
                            self._min_epsilon) / self._decay_period
+    @property
+    def epsilon(self):
+        return self._epsilon
+
+    @epsilon.setter
+    def epsilon(self, epsilon):
+        self._episilon = epsilon
 
     def get_action(self, observation):
         """Get action from this policy for the input observation.

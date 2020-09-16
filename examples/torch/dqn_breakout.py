@@ -21,7 +21,7 @@ from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
-from garage.sampler import DefaultWorker, LocalSampler, RaySampler
+from garage.sampler import DefaultWorker, LocalSampler, RaySampler, FragmentWorker
 from garage.torch import set_gpu_mode
 from garage.torch.algos import DQN
 from garage.torch.policies import DiscreteQFDerivedPolicy
@@ -34,14 +34,14 @@ hyperparams = dict(
     lr=1e-4,
     discount=0.99,
     min_buffer_size=int(1e4),  #deepmind 5e4
-    n_train_steps=500,
-    target_update_freq=5,
+    n_train_steps=125,
+    target_update_freq=2,
     buffer_batch_size=32,
     max_epsilon=1.0,
     min_epsilon=0.01,
     decay_ratio=0.1,
     buffer_size=int(1e4),
-    hidden_sizes=(256, ),
+    hidden_sizes=(512, ),
 )
 
 
@@ -122,7 +122,7 @@ def dqn_beamrider(ctxt=None, seed=24, **kwargs):
         set_gpu_mode(False)
     algo.to()
 
-    runner.setup(algo, env, sampler_cls=LocalSampler)
+    runner.setup(algo, env, sampler_cls=LocalSampler, worker_class=FragmentWorker)
     runner.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
 
 
