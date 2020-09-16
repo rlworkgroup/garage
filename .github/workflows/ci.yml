@@ -95,7 +95,9 @@ jobs:
           -e MJKEY \
           --memory 6500m \
           --memory-swap 6500m \
-          "${DOCKER_TAG}" pushd docs && make doctest clean && popd
+          "${DOCKER_TAG}"
+          /bin/bash -c \
+          'pushd docs && make doctest clean && popd'
 
 
   normal_test:
