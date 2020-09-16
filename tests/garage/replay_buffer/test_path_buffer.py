@@ -2,9 +2,11 @@
 import numpy as np
 import pytest
 
+from garage import EpisodeBatch
 from garage.replay_buffer import PathBuffer
 
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
+from tests.garage.test_dtypes import eps_data
 
 
 class TestPathBuffer:
@@ -25,6 +27,13 @@ class TestPathBuffer:
 
         assert sample_obs.dtype == env.observation_space.dtype
         assert sample_action.dtype == env.action_space.dtype
+
+    def test_episode_batch_to_timestep_batch(self, eps_data):
+        t = EpisodeBatch(**eps_data)
+        replay_buffer = PathBuffer(capacity_in_transitions=100)
+        replay_buffer.add_episode_batch(t)
+        timesteps = replay_buffer.sample_timesteps(10)
+        assert len(timesteps.rewards) == 10
 
     def test_eviction_policy(self):
         obs = np.array([[1], [1]])
