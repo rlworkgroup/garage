@@ -83,6 +83,10 @@ class Snapshotter:
 
         if self._snapshot_mode == 'all':
             file_name = os.path.join(self._snapshot_dir, 'itr_%d.pkl' % itr)
+        elif self._snapshot_mode == 'gap_overwrite':
+            assert self._snapshot_gap > 1
+            if itr % self._snapshot_gap == 0:
+                file_name = os.path.join(self._snapshot_dir, 'params.pkl')
         elif self._snapshot_mode == 'last':
             # override previous params
             file_name = os.path.join(self._snapshot_dir, 'params.pkl')

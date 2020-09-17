@@ -6,6 +6,8 @@ Here it creates a gym environment CartPole, and trains a DQN with 50k steps.
 import click
 import gym
 import torch
+import numpy as np
+import psutil
 
 from garage import wrap_experiment
 from garage.envs import GymEnv
@@ -44,11 +46,21 @@ hyperparams = dict(
     hidden_sizes=(512, ),
 )
 
-
 @click.command()
-@click.option('--seed', default=1)
-@wrap_experiment(snapshot_mode='gap', snapshot_gap=30)
-def dqn_beamrider(ctxt=None, seed=24, **kwargs):
+@click.argument('env', type=str)
+@click.option('--seed', default=24)
+@click.option('--n', type=int, default=psutil.cpu_count(logical=False))
+def main(env, seed, n):
+    # wrap the main experiment here to use the env name
+    # as a prefix
+    if '-v' not in env:
+        env += 'NoFrameskip-v4'
+    logdir = 'data/local/experiment/' + env
+    dqn_atari(dict(log_dir=logdir), env=env, seed=seed, n_workers=n,
+              **hyperparams)
+
+@wrap_experiment(snapshot_mode='gap_overwrite', snapshot_gap=30)
+def dqn_atari(ctxt=None, env=None, seed=24, n_workers=psutil.cpu_count(logical=False), **kwargs):
     """Train DQN with PongNoFrameskip-v4 environment.
 
     Args:
@@ -58,8 +70,9 @@ def dqn_beamrider(ctxt=None, seed=24, **kwargs):
             determinism.
 
     """
-
-    env = gym.make('BeamRiderNoFrameskip-v4')
+    assert n_workers > 0
+    assert env is not None
+    env = gym.make(env)
     env = Noop(env, noop_max=30)
     env = MaxAndSkip(env, skip=4)
     env = EpisodicLife(env)
@@ -68,7 +81,7 @@ def dqn_beamrider(ctxt=None, seed=24, **kwargs):
     env = Grayscale(env)
     env = Resize(env, 84, 84)
     env = ClipReward(env)
-    env = StackFrames(env, 4)
+    env = StackFrames(env, 4, axis=0)
     env = GymEnv(env)
     set_seed(seed)
     runner = LocalRunner(ctxt)
@@ -83,11 +96,13 @@ def dqn_beamrider(ctxt=None, seed=24, **kwargs):
     replay_buffer = PathBuffer(
         capacity_in_transitions=hyperparams['buffer_size'])
 
+    w_init = lambda x: torch.nn.init.orthogonal_(x, gain=np.sqrt(2))
     qf = DiscreteCNNQFunction(env_spec=env.spec,
                               minibatch_size=hyperparams['buffer_batch_size'],
                               hidden_channels=(32, 64, 64),
                               kernel_sizes=(8, 4, 3),
                               strides=(4, 2, 1),
+                              hidden_w_init=w_init,
                               hidden_sizes=hyperparams['hidden_sizes'],
                               output_nonlinearity=torch.nn.ReLU,
                               is_image=True)
@@ -118,12 +133,14 @@ def dqn_beamrider(ctxt=None, seed=24, **kwargs):
     if torch.cuda.is_available():
         set_gpu_mode(True)
         torch.set_default_tensor_type(torch.cuda.FloatTensor)
+        algo.to()
+
     else:
         set_gpu_mode(False)
-    algo.to()
 
-    runner.setup(algo, env, sampler_cls=LocalSampler, worker_class=FragmentWorker)
+    runner.setup(algo, env, sampler_cls=LocalSampler, worker_class=FragmentWorker, n_workers=n_workers)
+
     runner.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
 
 
-dqn_beamrider()
+main()
