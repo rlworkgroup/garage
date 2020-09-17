@@ -89,7 +89,7 @@ from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DQN
 from garage.tf.policies import DiscreteQFArgmaxPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 @click.command()
 @click.option('--buffer_size', type=int, default=int(5e4))
@@ -108,58 +108,59 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
             the memory required to store a single path.
     """
     set_seed(seed)
-    with TFTrainer(ctxt) as trainer:
-        n_epochs = 100
-        steps_per_epoch = 20
-        sampler_batch_size = 500
-        num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
+    trainer = Trainer(ctxt)
 
-        env = gym.make('PongNoFrameskip-v4')
-        env = Noop(env, noop_max=30)
-        env = MaxAndSkip(env, skip=4)
-        env = EpisodicLife(env)
-        if 'FIRE' in env.unwrapped.get_action_meanings():
-            env = FireReset(env)
-        env = Grayscale(env)
-        env = Resize(env, 84, 84)
-        env = ClipReward(env)
-        env = StackFrames(env, 4)
+    n_epochs = 100
+    steps_per_epoch = 20
+    sampler_batch_size = 500
+    num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
 
-        env = GymEnv(env, is_image=True)
+    env = gym.make('PongNoFrameskip-v4')
+    env = Noop(env, noop_max=30)
+    env = MaxAndSkip(env, skip=4)
+    env = EpisodicLife(env)
+    if 'FIRE' in env.unwrapped.get_action_meanings():
+        env = FireReset(env)
+    env = Grayscale(env)
+    env = Resize(env, 84, 84)
+    env = ClipReward(env)
+    env = StackFrames(env, 4)
 
-        replay_buffer = PathBuffer(capacity_in_transitions=buffer_size)
+    env = GymEnv(env, is_image=True)
 
-        # MARK: begin modifications to existing example
-        snapshotter = Snapshotter()
-        snapshot = snapshotter.load('path/to/previous/run/snapshot/dir')
-        qf = snapshot['algo']._qf
-        # MARK: end modifications to existing example
+    replay_buffer = PathBuffer(capacity_in_transitions=buffer_size)
 
-        policy = DiscreteQFArgmaxPolicy(env_spec=env.spec, qf=qf)
-        exploration_policy = EpsilonGreedyPolicy(env_spec=env.spec,
-                                                 policy=policy,
-                                                 total_timesteps=num_timesteps,
-                                                 max_epsilon=1.0,
-                                                 min_epsilon=0.02,
-                                                 decay_ratio=0.1)
+    # MARK: begin modifications to existing example
+    snapshotter = Snapshotter()
+    snapshot = snapshotter.load('path/to/previous/run/snapshot/dir')
+    qf = snapshot['algo']._qf
+    # MARK: end modifications to existing example
 
-        algo = DQN(env_spec=env.spec,
-                   policy=policy,
-                   qf=qf,
-                   exploration_policy=exploration_policy,
-                   replay_buffer=replay_buffer,
-                   qf_lr=1e-4,
-                   discount=0.99,
-                   min_buffer_size=int(1e4),
-                   max_episode_length=max_episode_length,
-                   double_q=False,
-                   n_train_steps=500,
-                   steps_per_epoch=steps_per_epoch,
-                   target_network_update_freq=2,
-                   buffer_batch_size=32)
+    policy = DiscreteQFArgmaxPolicy(env_spec=env.spec, qf=qf)
+    exploration_policy = EpsilonGreedyPolicy(env_spec=env.spec,
+                                             policy=policy,
+                                             total_timesteps=num_timesteps,
+                                             max_epsilon=1.0,
+                                             min_epsilon=0.02,
+                                             decay_ratio=0.1)
 
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
+    algo = DQN(env_spec=env.spec,
+               policy=policy,
+               qf=qf,
+               exploration_policy=exploration_policy,
+               replay_buffer=replay_buffer,
+               qf_lr=1e-4,
+               discount=0.99,
+               min_buffer_size=int(1e4),
+               max_episode_length=max_episode_length,
+               double_q=False,
+               n_train_steps=500,
+               steps_per_epoch=steps_per_epoch,
+               target_network_update_freq=2,
+               buffer_batch_size=32)
+
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
 
 
 dqn_pong()

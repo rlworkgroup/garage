@@ -8,7 +8,7 @@ from garage.experiment.deterministic import set_seed
 from garage.np import discount_cumsum
 from garage.sampler import LocalSampler
 from garage.tf.policies import CategoricalMLPPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 # pylint: disable=too-few-public-methods
@@ -114,12 +114,13 @@ def tutorial_cem(ctxt=None):
 
     """
     set_seed(100)
-    with TFTrainer(ctxt) as trainer:
-        env = GymEnv('CartPole-v1')
-        policy = CategoricalMLPPolicy(env.spec)
-        algo = SimpleCEM(env.spec, policy)
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=100, batch_size=1000)
+    trainer = Trainer(ctxt)
+
+    env = GymEnv('CartPole-v1')
+    policy = CategoricalMLPPolicy(env.spec)
+    algo = SimpleCEM(env.spec, policy)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=100, batch_size=1000)
 
 
 tutorial_cem()

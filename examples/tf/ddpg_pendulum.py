@@ -18,7 +18,7 @@ from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DDPG
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 @wrap_experiment
@@ -33,42 +33,42 @@ def ddpg_pendulum(ctxt=None, seed=1):
 
     """
     set_seed(seed)
-    with TFTrainer(snapshot_config=ctxt) as trainer:
-        env = GymEnv('InvertedDoublePendulum-v2')
 
-        policy = ContinuousMLPPolicy(env_spec=env.spec,
-                                     hidden_sizes=[64, 64],
-                                     hidden_nonlinearity=tf.nn.relu,
-                                     output_nonlinearity=tf.nn.tanh)
+    trainer = Trainer(snapshot_config=ctxt)
 
-        exploration_policy = AddOrnsteinUhlenbeckNoise(env.spec,
-                                                       policy,
-                                                       sigma=0.2)
+    env = GymEnv('InvertedDoublePendulum-v2')
 
-        qf = ContinuousMLPQFunction(env_spec=env.spec,
-                                    hidden_sizes=[64, 64],
-                                    hidden_nonlinearity=tf.nn.relu)
+    policy = ContinuousMLPPolicy(env_spec=env.spec,
+                                 hidden_sizes=[64, 64],
+                                 hidden_nonlinearity=tf.nn.relu,
+                                 output_nonlinearity=tf.nn.tanh)
 
-        replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
+    exploration_policy = AddOrnsteinUhlenbeckNoise(env.spec, policy, sigma=0.2)
 
-        ddpg = DDPG(env_spec=env.spec,
-                    policy=policy,
-                    policy_lr=1e-4,
-                    qf_lr=1e-3,
-                    qf=qf,
-                    replay_buffer=replay_buffer,
-                    steps_per_epoch=20,
-                    target_update_tau=1e-2,
-                    n_train_steps=50,
-                    discount=0.9,
-                    min_buffer_size=int(1e4),
-                    exploration_policy=exploration_policy,
-                    policy_optimizer=tf.compat.v1.train.AdamOptimizer,
-                    qf_optimizer=tf.compat.v1.train.AdamOptimizer)
+    qf = ContinuousMLPQFunction(env_spec=env.spec,
+                                hidden_sizes=[64, 64],
+                                hidden_nonlinearity=tf.nn.relu)
 
-        trainer.setup(algo=ddpg, env=env)
+    replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
 
-        trainer.train(n_epochs=500, batch_size=100)
+    ddpg = DDPG(env_spec=env.spec,
+                policy=policy,
+                policy_lr=1e-4,
+                qf_lr=1e-3,
+                qf=qf,
+                replay_buffer=replay_buffer,
+                steps_per_epoch=20,
+                target_update_tau=1e-2,
+                n_train_steps=50,
+                discount=0.9,
+                min_buffer_size=int(1e4),
+                exploration_policy=exploration_policy,
+                policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+                qf_optimizer=tf.compat.v1.train.AdamOptimizer)
+
+    trainer.setup(algo=ddpg, env=env)
+
+    trainer.train(n_epochs=500, batch_size=100)
 
 
 ddpg_pendulum(seed=1)

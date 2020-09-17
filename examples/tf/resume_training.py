@@ -4,7 +4,7 @@
 import click
 
 from garage import wrap_experiment
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 @click.command()
@@ -21,9 +21,9 @@ def resume_experiment(ctxt, saved_dir):
         saved_dir (str): Path where snapshots are saved.
 
     """
-    with TFTrainer(snapshot_config=ctxt) as trainer:
-        trainer.restore(from_dir=saved_dir)
-        trainer.resume()
+    trainer = Trainer(snapshot_config=ctxt)
+    trainer.restore(from_dir=saved_dir)
+    trainer.resume()
 
 
 resume_experiment()

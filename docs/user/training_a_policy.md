@@ -22,8 +22,7 @@ as a TensorFlow Session) for training a policy. To construct a `Trainer`, an
 experiment context called `ctxt` is needed. This is used to create the
 snapshotter, and we can set it `None` here to make it simple.
 
-Garage supports both PyTorch and TensorFlow. If you use TensorFlow, you should
-use `TFTrainer`.
+Garage supports both PyTorch and TensorFlow.
 
 Besides, in order to produce determinism, you can set a seed for the random
 number generator.
@@ -35,9 +34,6 @@ def my_first_experiment(ctxt=None, seed=1):
     # PyTorch
     trainer = Trainer(ctxt)
     ...
-    # TensorFlow
-    with TFTrainer(ctxt) as trainer:
-        ...
 ```
 
 ### Construct an Environment
@@ -111,7 +107,7 @@ from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.policies import CategoricalMLPPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 @wrap_experiment
@@ -126,23 +122,24 @@ def trpo_cartpole(ctxt=None, seed=1):
 
     """
     set_seed(seed)
-    with TFTrainer(ctxt) as trainer:
-        env = GymEnv('CartPole-v1')
+    trainer = Trainer(ctxt)
 
-        policy = CategoricalMLPPolicy(name='policy',
-                                      env_spec=env.spec,
-                                      hidden_sizes=(32, 32))
+    env = GymEnv('CartPole-v1')
 
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
+    policy = CategoricalMLPPolicy(name='policy',
+                                  env_spec=env.spec,
+                                  hidden_sizes=(32, 32))
 
-        algo = TRPO(env_spec=env.spec,
-                    policy=policy,
-                    baseline=baseline,
-                    discount=0.99,
-                    max_kl_step=0.01)
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=100, batch_size=4000)
+    algo = TRPO(env_spec=env.spec,
+                policy=policy,
+                baseline=baseline,
+                discount=0.99,
+                max_kl_step=0.01)
+
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=100, batch_size=4000)
 
 
 trpo_cartpole()

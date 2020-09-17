@@ -189,19 +189,19 @@ in a launcher file
 def  pixel_observations_example(ctxt=None, seed=1, buffer_size=int(1e4)):
     set_seed(seed)
 
-    with TFTrainer(snapshot_config=ctxt) as trainer:
+    trainer = Trainer(snapshot_config=ctxt)
 
-        env = gym.make('Pendulum-v0')
-        env = PixelObservation(env) # goes first
-        env = Grayscale(env)
-        env = Resize(env, 86, 86)
-        env = StackFrames(env, 2) # goes after all pixel wrappers
+    env = gym.make('Pendulum-v0')
+    env = PixelObservation(env) # goes first
+    env = Grayscale(env)
+    env = Resize(env, 86, 86)
+    env = StackFrames(env, 2) # goes after all pixel wrappers
 
-        env = GymEnv(env, is_image=True) # goes last
+    env = GymEnv(env, is_image=True) # goes last
 
-        ...
-        # setup policy, Q function, etc.
-        # pass env to the algorithm
+    ...
+    # setup policy, Q function, etc.
+    # pass env to the algorithm
 
 ```
 

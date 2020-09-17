@@ -4,7 +4,7 @@ from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import VPG
 from garage.tf.policies import CategoricalMLPPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 # pylint: disable=missing-return-type-doc
@@ -23,22 +23,23 @@ def fixture_exp(snapshot_config, sess):
             the current session
 
     """
-    with TFTrainer(snapshot_config=snapshot_config, sess=sess) as trainer:
-        env = GymEnv('CartPole-v1', max_episode_length=100)
+    trainer = Trainer(snapshot_config=snapshot_config, sess=sess)
 
-        policy = CategoricalMLPPolicy(name='policy',
-                                      env_spec=env.spec,
-                                      hidden_sizes=(8, 8))
+    env = GymEnv('CartPole-v1', max_episode_length=100)
 
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
+    policy = CategoricalMLPPolicy(name='policy',
+                                  env_spec=env.spec,
+                                  hidden_sizes=(8, 8))
 
-        algo = VPG(env_spec=env.spec,
-                   policy=policy,
-                   baseline=baseline,
-                   discount=0.99,
-                   optimizer_args=dict(learning_rate=0.01, ))
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        trainer.setup(algo, env, sampler_cls=LocalSampler)
-        trainer.train(n_epochs=5, batch_size=100)
+    algo = VPG(env_spec=env.spec,
+               policy=policy,
+               baseline=baseline,
+               discount=0.99,
+               optimizer_args=dict(learning_rate=0.01, ))
 
-        return policy.get_param_values()
+    trainer.setup(algo, env, sampler_cls=LocalSampler)
+    trainer.train(n_epochs=5, batch_size=100)
+
+    return policy.get_param_values()

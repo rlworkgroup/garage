@@ -9,7 +9,7 @@ from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DDPG
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 hyper_parameters = {
     'policy_lr': 1e-4,
@@ -40,41 +40,42 @@ def ddpg_garage_tf(ctxt, env_id, seed):
     """
     deterministic.set_seed(seed)
 
-    with TFTrainer(ctxt) as trainer:
-        env = normalize(GymEnv(env_id))
+    trainer = Trainer(ctxt)
 
-        policy = ContinuousMLPPolicy(
-            env_spec=env.spec,
-            hidden_sizes=hyper_parameters['policy_hidden_sizes'],
-            hidden_nonlinearity=tf.nn.relu,
-            output_nonlinearity=tf.nn.tanh)
+    env = normalize(GymEnv(env_id))
 
-        exploration_policy = AddOrnsteinUhlenbeckNoise(
-            env.spec, policy, sigma=hyper_parameters['sigma'])
+    policy = ContinuousMLPPolicy(
+        env_spec=env.spec,
+        hidden_sizes=hyper_parameters['policy_hidden_sizes'],
+        hidden_nonlinearity=tf.nn.relu,
+        output_nonlinearity=tf.nn.tanh)
 
-        qf = ContinuousMLPQFunction(
-            env_spec=env.spec,
-            hidden_sizes=hyper_parameters['qf_hidden_sizes'],
-            hidden_nonlinearity=tf.nn.relu)
+    exploration_policy = AddOrnsteinUhlenbeckNoise(
+        env.spec, policy, sigma=hyper_parameters['sigma'])
 
-        replay_buffer = PathBuffer(
-            capacity_in_transitions=hyper_parameters['replay_buffer_size'])
+    qf = ContinuousMLPQFunction(
+        env_spec=env.spec,
+        hidden_sizes=hyper_parameters['qf_hidden_sizes'],
+        hidden_nonlinearity=tf.nn.relu)
 
-        algo = DDPG(env_spec=env.spec,
-                    policy=policy,
-                    qf=qf,
-                    replay_buffer=replay_buffer,
-                    steps_per_epoch=hyper_parameters['steps_per_epoch'],
-                    policy_lr=hyper_parameters['policy_lr'],
-                    qf_lr=hyper_parameters['qf_lr'],
-                    target_update_tau=hyper_parameters['tau'],
-                    n_train_steps=hyper_parameters['n_train_steps'],
-                    discount=hyper_parameters['discount'],
-                    min_buffer_size=int(1e4),
-                    exploration_policy=exploration_policy,
-                    policy_optimizer=tf.compat.v1.train.AdamOptimizer,
-                    qf_optimizer=tf.compat.v1.train.AdamOptimizer)
+    replay_buffer = PathBuffer(
+        capacity_in_transitions=hyper_parameters['replay_buffer_size'])
 
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=hyper_parameters['n_epochs'],
-                      batch_size=hyper_parameters['n_exploration_steps'])
+    algo = DDPG(env_spec=env.spec,
+                policy=policy,
+                qf=qf,
+                replay_buffer=replay_buffer,
+                steps_per_epoch=hyper_parameters['steps_per_epoch'],
+                policy_lr=hyper_parameters['policy_lr'],
+                qf_lr=hyper_parameters['qf_lr'],
+                target_update_tau=hyper_parameters['tau'],
+                n_train_steps=hyper_parameters['n_train_steps'],
+                discount=hyper_parameters['discount'],
+                min_buffer_size=int(1e4),
+                exploration_policy=exploration_policy,
+                policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+                qf_optimizer=tf.compat.v1.train.AdamOptimizer)
+
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=hyper_parameters['n_epochs'],
+                  batch_size=hyper_parameters['n_exploration_steps'])

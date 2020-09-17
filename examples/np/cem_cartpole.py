@@ -13,7 +13,7 @@ from garage.experiment.deterministic import set_seed
 from garage.np.algos import CEM
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.policies import CategoricalMLPPolicy
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 @wrap_experiment
@@ -28,24 +28,25 @@ def cem_cartpole(ctxt=None, seed=1):
 
     """
     set_seed(seed)
-    with TFTrainer(snapshot_config=ctxt) as trainer:
-        env = GymEnv('CartPole-v1')
+    trainer = Trainer(snapshot_config=ctxt)
 
-        policy = CategoricalMLPPolicy(name='policy',
-                                      env_spec=env.spec,
-                                      hidden_sizes=(32, 32))
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
+    env = GymEnv('CartPole-v1')
 
-        n_samples = 20
+    policy = CategoricalMLPPolicy(name='policy',
+                                  env_spec=env.spec,
+                                  hidden_sizes=(32, 32))
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        algo = CEM(env_spec=env.spec,
-                   policy=policy,
-                   baseline=baseline,
-                   best_frac=0.05,
-                   n_samples=n_samples)
+    n_samples = 20
 
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=100, batch_size=1000)
+    algo = CEM(env_spec=env.spec,
+               policy=policy,
+               baseline=baseline,
+               best_frac=0.05,
+               n_samples=n_samples)
+
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=100, batch_size=1000)
 
 
 cem_cartpole(seed=1)

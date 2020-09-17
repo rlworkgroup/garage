@@ -7,7 +7,7 @@ from garage.experiment import deterministic
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import VPG as TF_VPG
 from garage.tf.policies import GaussianMLPPolicy as TF_GMP
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 hyper_parameters = {
     'hidden_sizes': [64, 64],
@@ -33,26 +33,27 @@ def vpg_garage_tf(ctxt, env_id, seed):
     """
     deterministic.set_seed(seed)
 
-    with TFTrainer(ctxt) as trainer:
-        env = normalize(GymEnv(env_id))
+    trainer = Trainer(ctxt)
 
-        policy = TF_GMP(
-            env_spec=env.spec,
-            hidden_sizes=hyper_parameters['hidden_sizes'],
-            hidden_nonlinearity=tf.nn.tanh,
-            output_nonlinearity=None,
-        )
+    env = normalize(GymEnv(env_id))
 
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
+    policy = TF_GMP(
+        env_spec=env.spec,
+        hidden_sizes=hyper_parameters['hidden_sizes'],
+        hidden_nonlinearity=tf.nn.tanh,
+        output_nonlinearity=None,
+    )
 
-        algo = TF_VPG(env_spec=env.spec,
-                      policy=policy,
-                      baseline=baseline,
-                      discount=hyper_parameters['discount'],
-                      center_adv=hyper_parameters['center_adv'],
-                      optimizer_args=dict(
-                          learning_rate=hyper_parameters['learning_rate'], ))
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=hyper_parameters['n_epochs'],
-                      batch_size=hyper_parameters['batch_size'])
+    algo = TF_VPG(env_spec=env.spec,
+                  policy=policy,
+                  baseline=baseline,
+                  discount=hyper_parameters['discount'],
+                  center_adv=hyper_parameters['center_adv'],
+                  optimizer_args=dict(
+                      learning_rate=hyper_parameters['learning_rate'], ))
+
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=hyper_parameters['n_epochs'],
+                  batch_size=hyper_parameters['batch_size'])

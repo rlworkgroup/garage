@@ -18,7 +18,7 @@ from garage.replay_buffer import PathBuffer
 from garage.tf.algos import TD3
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 
 @wrap_experiment(snapshot_mode='last')
@@ -33,58 +33,59 @@ def td3_pendulum(ctxt=None, seed=1):
 
     """
     set_seed(seed)
-    with TFTrainer(ctxt) as trainer:
-        n_epochs = 500
-        steps_per_epoch = 20
-        sampler_batch_size = 250
-        num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
+    trainer = Trainer(ctxt)
 
-        env = GymEnv('InvertedDoublePendulum-v2')
+    n_epochs = 500
+    steps_per_epoch = 20
+    sampler_batch_size = 250
+    num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
 
-        policy = ContinuousMLPPolicy(env_spec=env.spec,
-                                     hidden_sizes=[400, 300],
-                                     hidden_nonlinearity=tf.nn.relu,
-                                     output_nonlinearity=tf.nn.tanh)
+    env = GymEnv('InvertedDoublePendulum-v2')
 
-        exploration_policy = AddGaussianNoise(env.spec,
-                                              policy,
-                                              total_timesteps=num_timesteps,
-                                              max_sigma=0.1,
-                                              min_sigma=0.1)
+    policy = ContinuousMLPPolicy(env_spec=env.spec,
+                                 hidden_sizes=[400, 300],
+                                 hidden_nonlinearity=tf.nn.relu,
+                                 output_nonlinearity=tf.nn.tanh)
 
-        qf = ContinuousMLPQFunction(name='ContinuousMLPQFunction',
-                                    env_spec=env.spec,
-                                    hidden_sizes=[400, 300],
-                                    action_merge_layer=0,
-                                    hidden_nonlinearity=tf.nn.relu)
+    exploration_policy = AddGaussianNoise(env.spec,
+                                          policy,
+                                          total_timesteps=num_timesteps,
+                                          max_sigma=0.1,
+                                          min_sigma=0.1)
 
-        qf2 = ContinuousMLPQFunction(name='ContinuousMLPQFunction2',
-                                     env_spec=env.spec,
-                                     hidden_sizes=[400, 300],
-                                     action_merge_layer=0,
-                                     hidden_nonlinearity=tf.nn.relu)
+    qf = ContinuousMLPQFunction(name='ContinuousMLPQFunction',
+                                env_spec=env.spec,
+                                hidden_sizes=[400, 300],
+                                action_merge_layer=0,
+                                hidden_nonlinearity=tf.nn.relu)
 
-        replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
+    qf2 = ContinuousMLPQFunction(name='ContinuousMLPQFunction2',
+                                 env_spec=env.spec,
+                                 hidden_sizes=[400, 300],
+                                 action_merge_layer=0,
+                                 hidden_nonlinearity=tf.nn.relu)
 
-        td3 = TD3(env_spec=env.spec,
-                  policy=policy,
-                  policy_lr=1e-4,
-                  qf_lr=1e-3,
-                  qf=qf,
-                  qf2=qf2,
-                  replay_buffer=replay_buffer,
-                  target_update_tau=1e-2,
-                  steps_per_epoch=steps_per_epoch,
-                  n_train_steps=1,
-                  discount=0.99,
-                  buffer_batch_size=100,
-                  min_buffer_size=1e4,
-                  exploration_policy=exploration_policy,
-                  policy_optimizer=tf.compat.v1.train.AdamOptimizer,
-                  qf_optimizer=tf.compat.v1.train.AdamOptimizer)
+    replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
 
-        trainer.setup(td3, env)
-        trainer.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
+    td3 = TD3(env_spec=env.spec,
+              policy=policy,
+              policy_lr=1e-4,
+              qf_lr=1e-3,
+              qf=qf,
+              qf2=qf2,
+              replay_buffer=replay_buffer,
+              target_update_tau=1e-2,
+              steps_per_epoch=steps_per_epoch,
+              n_train_steps=1,
+              discount=0.99,
+              buffer_batch_size=100,
+              min_buffer_size=1e4,
+              exploration_policy=exploration_policy,
+              policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+              qf_optimizer=tf.compat.v1.train.AdamOptimizer)
+
+    trainer.setup(td3, env)
+    trainer.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
 
 
 td3_pendulum(seed=1)
