@@ -131,7 +131,7 @@ class SAC(RLAlgorithm):
         self._discount = discount
         self._reward_scale = reward_scale
         self.max_path_length = max_path_length
-        self._max_eval_path_length = max_eval_path_length
+        self._max_eval_path_length = max_eval_path_length or max_path_length
 
         self.policy = policy
         self.env_spec = env_spec
@@ -191,7 +191,8 @@ class SAC(RLAlgorithm):
                     batch_size = None
                 new_trajectories = runner.obtain_trajectories(
                     runner.step_itr, batch_size)
-                log_performance(epoch, new_trajectories,
+                log_performance(epoch,
+                                new_trajectories,
                                 discount=self._discount,
                                 prefix='Training')
 
