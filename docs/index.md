@@ -35,6 +35,7 @@ and how to implement new MDPs and new algorithms.
    user/ensure_your_experiments_are_reproducible
    user/meta_multi_task_rl_exp.md
    user/max_resource_usage
+   user/cluster_docs
 
 .. toctree::
    :maxdepth: 2
