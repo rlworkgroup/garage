@@ -46,6 +46,10 @@ def td3_garage_tf(ctxt, env_id, seed):
     deterministic.set_seed(seed)
 
     with LocalTFRunner(ctxt) as runner:
+        num_timesteps = (hyper_parameters['n_epochs'] *
+                         hyper_parameters['steps_per_epoch'] *
+                         hyper_parameters['n_exploration_steps'])
+
         env = GarageEnv(normalize(gym.make(env_id)))
 
         policy = ContinuousMLPPolicy(
@@ -57,6 +61,7 @@ def td3_garage_tf(ctxt, env_id, seed):
         exploration_policy = AddGaussianNoise(
             env.spec,
             policy,
+            total_timesteps=num_timesteps,
             max_sigma=hyper_parameters['sigma'],
             min_sigma=hyper_parameters['sigma'])
 

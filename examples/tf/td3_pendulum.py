@@ -35,6 +35,11 @@ def td3_pendulum(ctxt=None, seed=1):
     """
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
+        n_epochs = 500
+        steps_per_epoch = 20
+        batch_size = 250
+        num_timesteps = n_epochs * steps_per_epoch * batch_size
+
         env = GarageEnv(gym.make('InvertedDoublePendulum-v2'))
 
         policy = ContinuousMLPPolicy(env_spec=env.spec,
@@ -44,6 +49,7 @@ def td3_pendulum(ctxt=None, seed=1):
 
         exploration_policy = AddGaussianNoise(env.spec,
                                               policy,
+                                              total_timesteps=num_timesteps,
                                               max_sigma=0.1,
                                               min_sigma=0.1)
 
@@ -69,7 +75,7 @@ def td3_pendulum(ctxt=None, seed=1):
                   qf2=qf2,
                   replay_buffer=replay_buffer,
                   target_update_tau=1e-2,
-                  steps_per_epoch=20,
+                  steps_per_epoch=steps_per_epoch,
                   n_train_steps=1,
                   smooth_return=False,
                   discount=0.99,
@@ -80,7 +86,7 @@ def td3_pendulum(ctxt=None, seed=1):
                   qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
         runner.setup(td3, env)
-        runner.train(n_epochs=500, batch_size=250)
+        runner.train(n_epochs=n_epochs, batch_size=batch_size)
 
 
 td3_pendulum(seed=1)
