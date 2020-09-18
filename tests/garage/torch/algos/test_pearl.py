@@ -3,7 +3,7 @@ import pickle
 
 import pytest
 
-from garage.envs import GymEnv, normalize, PointEnv
+from garage.envs import MetaWorldSetTaskEnv, normalize, PointEnv
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.sampler import LocalSampler
@@ -29,7 +29,7 @@ except Exception:  # pylint: disable=broad-except
         'Skipping tests, failed to import mujoco. Do you have a '
         'valid mujoco key installed?',
         allow_module_level=True)
-from metaworld.benchmarks import ML1  # isort:skip
+import metaworld  # isort:skip
 
 
 @pytest.mark.mujoco
@@ -42,7 +42,6 @@ class TestPEARL:
         params = dict(seed=1,
                       num_epochs=1,
                       num_train_tasks=5,
-                      num_test_tasks=1,
                       latent_size=7,
                       encoder_hidden_sizes=[10, 10, 10],
                       net_size=30,
@@ -55,7 +54,6 @@ class TestPEARL:
                       batch_size=256,
                       embedding_batch_size=8,
                       embedding_mini_batch_size=8,
-                      max_episode_length=50,
                       reward_scale=10.,
                       use_information_bottleneck=True,
                       use_next_obs_in_context=False,
@@ -63,12 +61,18 @@ class TestPEARL:
 
         net_size = params['net_size']
         set_seed(params['seed'])
-        env_sampler = SetTaskSampler(lambda: normalize(
-            GymEnv(ML1.get_train_tasks('push-v1'))))
+        # create multi-task environment and sample tasks
+        ml1 = metaworld.ML1('push-v1')
+        train_env = MetaWorldSetTaskEnv(ml1, 'train')
+        env_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
+                                     env=train_env,
+                                     wrapper=lambda env, _: normalize(env))
         env = env_sampler.sample(params['num_train_tasks'])
-
-        test_env_sampler = SetTaskSampler(lambda: normalize(
-            GymEnv(ML1.get_test_tasks('push-v1'))))
+        test_env = MetaWorldSetTaskEnv(ml1, 'test')
+        test_env_sampler = SetTaskSampler(
+            MetaWorldSetTaskEnv,
+            env=test_env,
+            wrapper=lambda env, _: normalize(env))
 
         augmented_env = PEARL.augment_env_spec(env[0](), params['latent_size'])
         qf = ContinuousMLPQFunction(
@@ -91,7 +95,6 @@ class TestPEARL:
             qf=qf,
             vf=vf,
             num_train_tasks=params['num_train_tasks'],
-            num_test_tasks=params['num_test_tasks'],
             latent_dim=params['latent_size'],
             encoder_hidden_sizes=params['encoder_hidden_sizes'],
             test_env_sampler=test_env_sampler,
@@ -105,7 +108,6 @@ class TestPEARL:
             batch_size=params['batch_size'],
             embedding_batch_size=params['embedding_batch_size'],
             embedding_mini_batch_size=params['embedding_mini_batch_size'],
-            max_episode_length=params['max_episode_length'],
             reward_scale=params['reward_scale'],
         )
 
@@ -114,13 +116,11 @@ class TestPEARL:
             pearl.to()
 
         trainer = Trainer(snapshot_config)
-        trainer.setup(
-            algo=pearl,
-            env=env[0](),
-            sampler_cls=LocalSampler,
-            sampler_args=dict(max_episode_length=params['max_episode_length']),
-            n_workers=1,
-            worker_class=PEARLWorker)
+        trainer.setup(algo=pearl,
+                      env=env[0](),
+                      sampler_cls=LocalSampler,
+                      n_workers=1,
+                      worker_class=PEARLWorker)
 
         trainer.train(n_epochs=params['num_epochs'],
                       batch_size=params['batch_size'])

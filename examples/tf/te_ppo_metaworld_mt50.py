@@ -2,13 +2,14 @@
 """This is an example to train Task Embedding PPO with PointEnv."""
 # pylint: disable=no-value-for-parameter
 import click
-from metaworld.benchmarks import MT50
+import metaworld
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import GymEnv, normalize
+from garage.envs import normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper, round_robin_strategy
 from garage.experiment.deterministic import set_seed
+from garage.experiment.task_sampler import MetaWorldTaskSampler
 from garage.np.baselines import LinearMultiFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TEPPO
@@ -22,8 +23,9 @@ from garage.trainer import TFTrainer
 @click.option('--seed', default=1)
 @click.option('--n_epochs', default=600)
 @click.option('--batch_size_per_task', default=1024)
+@click.option('--n_tasks', default=50)
 @wrap_experiment
-def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task):
+def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task, n_tasks):
     """Train Task Embedding PPO with PointEnv.
 
     Args:
@@ -33,21 +35,25 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task):
             determinism.
         n_epochs (int): Total number of epochs for training.
         batch_size_per_task (int): Batch size of samples for each task.
+        n_tasks (int): Number of tasks to use. Should be a multiple of 50.
 
     """
     set_seed(seed)
-    tasks = MT50.get_train_tasks().all_task_names
-    envs = [
-        normalize(GymEnv(MT50.from_task(task), max_episode_length=150))
-        for task in tasks
-    ]
+    mt50 = metaworld.MT50()
+    task_sampler = MetaWorldTaskSampler(mt50,
+                                        'train',
+                                        lambda env, _: normalize(env),
+                                        add_env_onehot=False)
+    assert n_tasks % 50 == 0
+    assert n_tasks <= 2500
+    envs = [env_up() for env_up in task_sampler.sample(n_tasks)]
     env = MultiEnvWrapper(envs,
                           sample_strategy=round_robin_strategy,
-                          mode='del-onehot')
+                          mode='vanilla')
 
     latent_length = 6
     inference_window = 6
-    batch_size = batch_size_per_task * len(tasks)
+    batch_size = batch_size_per_task * n_tasks
     policy_ent_coeff = 2e-2
     encoder_ent_coeff = 2e-4
     inference_ce_coeff = 5e-2

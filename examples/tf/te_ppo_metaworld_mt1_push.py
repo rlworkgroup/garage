@@ -2,13 +2,14 @@
 """This is an example to train Task Embedding PPO with PointEnv."""
 # pylint: disable=no-value-for-parameter
 import click
-from metaworld.benchmarks import ML1
+import metaworld
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import GymEnv, normalize
-from garage.envs.multi_env_wrapper import MultiEnvWrapper
+from garage.envs import normalize
+from garage.envs.multi_env_wrapper import MultiEnvWrapper, round_robin_strategy
 from garage.experiment.deterministic import set_seed
+from garage.experiment.task_sampler import MetaWorldTaskSampler
 from garage.np.baselines import LinearMultiFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TEPPO
@@ -23,7 +24,7 @@ from garage.trainer import TFTrainer
 @click.option('--n_epochs', default=600)
 @click.option('--batch_size_per_task', default=1024)
 @wrap_experiment
-def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
+def te_ppo_mt1_push(ctxt, seed, n_epochs, batch_size_per_task):
     """Train Task Embedding PPO with PointEnv.
 
     Args:
@@ -36,15 +37,20 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
 
     """
     set_seed(seed)
-    envs = [
-        normalize(
-            GymEnv(ML1.get_train_tasks('push-v1'), max_episode_length=150))
-    ]
-    env = MultiEnvWrapper(envs, mode='del-onehot')
+    n_tasks = 50
+    mt1 = metaworld.MT1('push-v1')
+    task_sampler = MetaWorldTaskSampler(mt1,
+                                        'train',
+                                        lambda env, _: normalize(env),
+                                        add_env_onehot=False)
+    envs = [env_up() for env_up in task_sampler.sample(n_tasks)]
+    env = MultiEnvWrapper(envs,
+                          sample_strategy=round_robin_strategy,
+                          mode='vanilla')
 
     latent_length = 2
     inference_window = 6
-    batch_size = batch_size_per_task
+    batch_size = batch_size_per_task * n_tasks
     policy_ent_coeff = 2e-2
     encoder_ent_coeff = 2e-4
     inference_ce_coeff = 5e-2
@@ -130,4 +136,4 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
         trainer.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
 
 
-te_ppo_ml1_push()
+te_ppo_mt1_push()

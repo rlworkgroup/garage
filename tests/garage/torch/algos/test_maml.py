@@ -5,6 +5,7 @@ import pytest
 import torch
 
 from garage.envs import GymEnv, normalize
+from garage.experiment import SetTaskSampler
 from garage.sampler import LocalSampler, WorkerFactory
 from garage.torch.algos import MAMLPPO
 from garage.torch.policies import GaussianMLPPolicy
@@ -34,6 +35,8 @@ class TestMAML:
         self.env = normalize(GymEnv(HalfCheetahDirEnv(),
                                     max_episode_length=100),
                              expected_action_scale=10.)
+        task_sampler = SetTaskSampler(lambda: normalize(
+            GymEnv(HalfCheetahDirEnv()), expected_action_scale=10.))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
             hidden_sizes=(64, 64),
@@ -44,6 +47,7 @@ class TestMAML:
                                                        hidden_sizes=(32, 32))
         self.algo = MAMLPPO(env=self.env,
                             policy=self.policy,
+                            task_sampler=task_sampler,
                             value_function=self.value_function,
                             meta_batch_size=5,
                             discount=0.99,

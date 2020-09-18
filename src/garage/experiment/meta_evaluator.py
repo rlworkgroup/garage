@@ -14,7 +14,6 @@ class MetaEvaluator:
         test_task_sampler (TaskSampler): Sampler for test
             tasks. To demonstrate the effectiveness of a meta-learning method,
             these should be different from the training tasks.
-        max_episode_length (int): Maximum length of evaluation episodes.
         n_test_tasks (int or None): Number of test tasks to sample each time
             evaluation is performed. Note that tasks are sampled "without
             replacement". If None, is set to `test_task_sampler.n_tasks`.
@@ -41,7 +40,6 @@ class MetaEvaluator:
     def __init__(self,
                  *,
                  test_task_sampler,
-                 max_episode_length,
                  n_exploration_eps=10,
                  n_test_tasks=None,
                  n_test_episodes=1,
@@ -60,11 +58,11 @@ class MetaEvaluator:
         self._n_test_tasks = n_test_tasks
         self._n_test_episodes = n_test_episodes
         self._n_exploration_eps = n_exploration_eps
-        self._max_episode_length = max_episode_length
         self._eval_itr = 0
         self._prefix = prefix
         self._test_task_names = test_task_names
         self._test_sampler = None
+        self._max_episode_length = None
 
     def evaluate(self, algo, test_episodes_per_task=None):
         """Evaluate the Meta-RL algorithm on the test tasks.
@@ -78,7 +76,10 @@ class MetaEvaluator:
             test_episodes_per_task = self._n_test_episodes
         adapted_episodes = []
         logger.log('Sampling for adapation and meta-testing...')
+        env_updates = self._test_task_sampler.sample(self._n_test_tasks)
         if self._test_sampler is None:
+            env = env_updates[0]()
+            self._max_episode_length = env.spec.max_episode_length
             self._test_sampler = LocalSampler.from_worker_factory(
                 WorkerFactory(seed=get_seed(),
                               max_episode_length=self._max_episode_length,
@@ -86,8 +87,8 @@ class MetaEvaluator:
                               worker_class=self._worker_class,
                               worker_args=self._worker_args),
                 agents=algo.get_exploration_policy(),
-                envs=self._test_task_sampler.sample(1))
-        for env_up in self._test_task_sampler.sample(self._n_test_tasks):
+                envs=env)
+        for env_up in env_updates:
             policy = algo.get_exploration_policy()
             eps = EpisodeBatch.concatenate(*[
                 self._test_sampler.obtain_samples(self._eval_itr, 1, policy,

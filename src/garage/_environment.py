@@ -458,3 +458,8 @@ class Wrapper(Environment):
     def close(self):
         """Close the wrapped env."""
         self._env.close()
+
+    @property
+    def unwrapped(self):
+        """garage.Environment: The inner environment."""
+        return getattr(self._env, 'unwrapped', self._env)

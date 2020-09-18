@@ -1,23 +1,20 @@
 #!/usr/bin/env python3
-"""MTSAC implementation based on Metaworld. Benchmarked on ML1.
+"""MTSAC implementation based on Metaworld. Benchmarked on MT1.
 
 This experiment shows how MTSAC adapts to 50 environents of the same type
 but each environment has a goal variation.
 
 https://arxiv.org/pdf/1910.10897.pdf
 """
-import pickle
-
 import click
-import metaworld.benchmarks as mwb
+import metaworld
 import numpy as np
 from torch import nn
 from torch.nn import functional as F
 
 from garage import wrap_experiment
-from garage.envs import GymEnv, MultiEnvWrapper, normalize
-from garage.envs.multi_env_wrapper import round_robin_strategy
-from garage.experiment import deterministic
+from garage.envs import normalize
+from garage.experiment import deterministic, MetaWorldTaskSampler
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.torch import set_gpu_mode
@@ -29,10 +26,11 @@ from garage.trainer import Trainer
 
 @click.command()
 @click.option('--seed', 'seed', type=int, default=1)
+@click.option('--timesteps', default=10000000)
 @click.option('--gpu', '_gpu', type=int, default=None)
 @wrap_experiment(snapshot_mode='none')
-def mtsac_metaworld_ml1_pick_place(ctxt=None, seed=1, _gpu=None):
-    """Train MTSAC with the ML1 pick-place-v1 environment.
+def mtsac_metaworld_mt1_pick_place(ctxt=None, *, seed, timesteps, _gpu):
+    """Train MTSAC with the MT1 pick-place-v1 environment.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
@@ -40,30 +38,25 @@ def mtsac_metaworld_ml1_pick_place(ctxt=None, seed=1, _gpu=None):
         seed (int): Used to seed the random number generator to produce
             determinism.
         _gpu (int): The ID of the gpu to be used (used on multi-gpu machines).
+        timesteps (int): Number of timesteps to run.
 
     """
     deterministic.set_seed(seed)
-    trainer = Trainer(ctxt)
-    train_envs = []
+    mt1 = metaworld.MT1('pick-place-v1')
+    mt1_test = metaworld.MT1('pick-place-v1')
+    train_task_sampler = MetaWorldTaskSampler(mt1, 'train',
+                                              lambda env, _: normalize(env))
+    test_task_sampler = MetaWorldTaskSampler(mt1_test, 'train',
+                                             lambda env, _: normalize(env))
+    n_tasks = 50
+    train_envs = train_task_sampler.sample(n_tasks)
+    env = train_envs[0]()
+    test_envs = [env_up() for env_up in test_task_sampler.sample(n_tasks)]
 
-    test_envs = []
-    env_names = []
-    for i in range(50):
-        train_env = normalize(GymEnv(mwb.ML1.get_train_tasks('pick-place-v1'),
-                                     max_episode_length=150),
-                              normalize_reward=True)
-        test_env = pickle.loads(pickle.dumps(train_env))
-        env_names.append('pick_place_{}'.format(i))
-        train_envs.append(train_env)
-        test_envs.append(test_env)
-    ml1_train_envs = MultiEnvWrapper(train_envs,
-                                     sample_strategy=round_robin_strategy,
-                                     env_names=env_names)
-    ml1_test_envs = MultiEnvWrapper(test_envs,
-                                    sample_strategy=round_robin_strategy,
-                                    env_names=env_names)
+    trainer = Trainer(ctxt)
+
     policy = TanhGaussianMLPPolicy(
-        env_spec=ml1_train_envs.spec,
+        env_spec=env.spec,
         hidden_sizes=[400, 400, 400],
         hidden_nonlinearity=nn.ReLU,
         output_nonlinearity=None,
@@ -71,45 +64,42 @@ def mtsac_metaworld_ml1_pick_place(ctxt=None, seed=1, _gpu=None):
         max_std=np.exp(2.),
     )
 
-    qf1 = ContinuousMLPQFunction(env_spec=ml1_train_envs.spec,
+    qf1 = ContinuousMLPQFunction(env_spec=env.spec,
                                  hidden_sizes=[400, 400, 400],
                                  hidden_nonlinearity=F.relu)
 
-    qf2 = ContinuousMLPQFunction(env_spec=ml1_train_envs.spec,
+    qf2 = ContinuousMLPQFunction(env_spec=env.spec,
                                  hidden_sizes=[400, 400, 400],
                                  hidden_nonlinearity=F.relu)
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
 
-    timesteps = 10000000
-    batch_size = int(150 * ml1_train_envs.num_tasks)
+    batch_size = int(env.spec.max_episode_length * n_tasks)
     num_evaluation_points = 500
     epochs = timesteps // batch_size
     epoch_cycles = epochs // num_evaluation_points
     epochs = epochs // epoch_cycles
-    mtsac = MTSAC(
-        policy=policy,
-        qf1=qf1,
-        qf2=qf2,
-        gradient_steps_per_itr=150,
-        max_episode_length_eval=150,
-        eval_env=ml1_test_envs,
-        env_spec=ml1_train_envs.spec,
-        num_tasks=50,
-        steps_per_epoch=epoch_cycles,
-        replay_buffer=replay_buffer,
-        min_buffer_size=1500,
-        target_update_tau=5e-3,
-        discount=0.99,
-        buffer_batch_size=1280,
-    )
+    mtsac = MTSAC(policy=policy,
+                  qf1=qf1,
+                  qf2=qf2,
+                  gradient_steps_per_itr=150,
+                  eval_env=test_envs,
+                  env_spec=env.spec,
+                  num_tasks=1,
+                  steps_per_epoch=epoch_cycles,
+                  replay_buffer=replay_buffer,
+                  min_buffer_size=1500,
+                  target_update_tau=5e-3,
+                  discount=0.99,
+                  buffer_batch_size=1280)
     if _gpu is not None:
         set_gpu_mode(True, _gpu)
     mtsac.to()
     trainer.setup(algo=mtsac,
-                  env=ml1_train_envs,
+                  env=train_envs,
                   sampler_cls=LocalSampler,
-                  n_workers=1)
+                  n_workers=n_tasks)
     trainer.train(n_epochs=epochs, batch_size=batch_size)
 
 
-mtsac_metaworld_ml1_pick_place()
+# pylint: disable=missing-kwoa
+mtsac_metaworld_mt1_pick_place()

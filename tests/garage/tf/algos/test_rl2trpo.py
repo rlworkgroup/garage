@@ -44,14 +44,16 @@ class TestRL2TRPO(TfGraphTestCase):
         self.meta_batch_size = 10
         self.episode_per_task = 4
         self.max_episode_length = 100
-        self.inner_max_episode_length = (self.max_episode_length *
-                                         self.episode_per_task)
-        self.tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
-            normalize(GymEnv(HalfCheetahDirEnv()))))
+        # Avoid pickling self
+        max_episode_length = 100
+        self.tasks = task_sampler.SetTaskSampler(
+            HalfCheetahDirEnv,
+            wrapper=lambda env, _: RL2Env(
+                normalize(GymEnv(env, max_episode_length=max_episode_length))))
         self.env_spec = RL2Env(
             normalize(
                 GymEnv(HalfCheetahDirEnv(),
-                       max_episode_length=self.inner_max_episode_length))).spec
+                       max_episode_length=max_episode_length))).spec
 
         self.policy = GaussianGRUPolicy(env_spec=self.env_spec,
                                         hidden_dim=64,

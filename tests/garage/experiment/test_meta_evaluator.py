@@ -64,23 +64,26 @@ class OptimalActionInference(MetaRLAlgorithm):
         return SingleActionPolicy(best_action)
 
 
+def set_length(env, _task):
+    env.close()
+    return PointEnv(max_episode_length=200)
+
+
 @pytest.mark.serial
 def test_meta_evaluator():
     set_seed(100)
-    tasks = SetTaskSampler(PointEnv)
+    tasks = SetTaskSampler(PointEnv, wrapper=set_length)
     max_episode_length = 200
     with tempfile.TemporaryDirectory() as log_dir_name:
         trainer = Trainer(
             SnapshotConfig(snapshot_dir=log_dir_name,
                            snapshot_mode='last',
                            snapshot_gap=1))
-        env = PointEnv()
+        env = PointEnv(max_episode_length=max_episode_length)
         algo = OptimalActionInference(env=env,
                                       max_episode_length=max_episode_length)
         trainer.setup(algo, env)
-        meta_eval = MetaEvaluator(test_task_sampler=tasks,
-                                  max_episode_length=max_episode_length,
-                                  n_test_tasks=10)
+        meta_eval = MetaEvaluator(test_task_sampler=tasks, n_test_tasks=10)
         log_file = tempfile.NamedTemporaryFile()
         csv_output = CsvOutput(log_file.name)
         logger.add_output(csv_output)
@@ -130,9 +133,9 @@ class MockAlgo:
 
 def test_pickle_meta_evaluator():
     set_seed(100)
-    tasks = SetTaskSampler(PointEnv)
+    tasks = SetTaskSampler(PointEnv, wrapper=set_length)
     max_episode_length = 200
-    env = PointEnv()
+    env = PointEnv(max_episode_length=max_episode_length)
     n_eps = 3
     with tempfile.TemporaryDirectory() as log_dir_name:
         trainer = Trainer(
@@ -140,7 +143,6 @@ def test_pickle_meta_evaluator():
                            snapshot_mode='last',
                            snapshot_gap=1))
         meta_eval = MetaEvaluator(test_task_sampler=tasks,
-                                  max_episode_length=max_episode_length,
                                   n_test_tasks=10,
                                   n_exploration_eps=n_eps)
         policy = RandomPolicy(env.spec.action_space)
@@ -157,7 +159,7 @@ def test_pickle_meta_evaluator():
 
 def test_meta_evaluator_with_tf():
     set_seed(100)
-    tasks = SetTaskSampler(PointEnv)
+    tasks = SetTaskSampler(PointEnv, wrapper=set_length)
     max_episode_length = 200
     env = PointEnv()
     n_eps = 3
@@ -167,7 +169,6 @@ def test_meta_evaluator_with_tf():
                               snapshot_gap=1)
         with TFTrainer(ctxt) as trainer:
             meta_eval = MetaEvaluator(test_task_sampler=tasks,
-                                      max_episode_length=max_episode_length,
                                       n_test_tasks=10,
                                       n_exploration_eps=n_eps)
             policy = GaussianMLPPolicy(env.spec)
