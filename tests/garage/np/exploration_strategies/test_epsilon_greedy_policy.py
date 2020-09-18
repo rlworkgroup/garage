@@ -1,5 +1,4 @@
 """Tests for epsilon greedy policy."""
-import collections
 import pickle
 
 import numpy as np
@@ -71,8 +70,13 @@ class TestEpsilonGreedyPolicy:
         assert np.isclose(self.epsilon_greedy_policy._epsilon(), 0.412)
 
     def test_update(self):
-        DummyBatch = collections.namedtuple('EpisodeBatch', ['lengths'])
-        batch = DummyBatch(np.array([1, 2, 3]))
+        batch = [{
+            'rewards': [None]
+        }, {
+            'rewards': [None] * 2
+        }, {
+            'rewards': [None] * 3
+        }]
         self.epsilon_greedy_policy.update(batch)
         assert np.isclose(self.epsilon_greedy_policy._epsilon(), 0.412)
 

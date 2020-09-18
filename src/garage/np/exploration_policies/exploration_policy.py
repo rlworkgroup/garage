@@ -51,12 +51,11 @@ class ExplorationPolicy(abc.ABC):
         """
         self.policy.reset(dones)
 
-    def update(self, episode_batch):
+    def update(self, paths):
         """Update the exploration policy using a batch of trajectories.
 
         Args:
-            episode_batch (EpisodeBatch): A batch of trajectories which
-                were sampled with this policy active.
+            paths(list[dict]): One batch of samples.
 
         """
 

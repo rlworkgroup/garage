@@ -1,6 +1,4 @@
 """Tests for epsilon greedy policy."""
-import collections
-
 import numpy as np
 import pytest
 
@@ -74,8 +72,7 @@ def test_update(env):
     exp_policy.get_action(None)
     exp_policy.get_action(None)
 
-    DummyBatch = collections.namedtuple('EpisodeBatch', ['lengths'])
-    batch = DummyBatch(np.array([1, 2]))
+    batch = [{'rewards': [None]}, {'rewards': [None] * 2}]
 
     # new sigma will be 1 - 0.1 * (1 + 2) = 0.7
     exp_policy.update(batch)
@@ -83,7 +80,7 @@ def test_update(env):
 
     exp_policy.get_action(None)
 
-    batch = DummyBatch(np.array([1, 1, 2]))
+    batch = [{'rewards': [None]}, {'rewards': [None]}, {'rewards': [None] * 2}]
     # new sigma will be 0.7 - 0.1 * (1 + 1 + 2) = 0.3
     exp_policy.update(batch)
     assert np.isclose(exp_policy._sigma(), 0.3)

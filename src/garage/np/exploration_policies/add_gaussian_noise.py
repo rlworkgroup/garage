@@ -90,16 +90,15 @@ class AddGaussianNoise(ExplorationPolicy):
             return self._min_sigma
         return self._max_sigma - self._decrement * self._total_env_steps
 
-    def update(self, episode_batch):
+    def update(self, paths):
         """Update the exploration policy using a batch of trajectories.
 
         Args:
-            episode_batch (EpisodeBatch): A batch of trajectories which
-                were sampled with this policy active.
+            paths(list[dict]): One batch of samples.
 
         """
         self._total_env_steps = (self._last_total_env_steps +
-                                 np.sum(episode_batch.lengths))
+                                 sum([len(p['rewards']) for p in paths]))
         self._last_total_env_steps = self._total_env_steps
         tabular.record('AddGaussianNoise/Sigma', self._sigma())
 
