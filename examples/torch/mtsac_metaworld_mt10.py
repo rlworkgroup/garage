@@ -48,7 +48,7 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed, _gpu, n_tasks, timesteps):
 
     # pylint: disable=missing-return-doc, missing-return-type-doc
     def wrap(env, _):
-        return normalize(env)
+        return normalize(env, normalize_reward=True)
 
     train_task_sampler = MetaWorldTaskSampler(mt10,
                                               'train',
@@ -56,7 +56,6 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed, _gpu, n_tasks, timesteps):
                                               add_env_onehot=True)
     test_task_sampler = MetaWorldTaskSampler(mt10_test,
                                              'train',
-                                             wrap,
                                              add_env_onehot=True)
     assert n_tasks % 10 == 0
     assert n_tasks <= 500
@@ -92,7 +91,7 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed, _gpu, n_tasks, timesteps):
     mtsac = MTSAC(policy=policy,
                   qf1=qf1,
                   qf2=qf2,
-                  gradient_steps_per_itr=150,
+                  gradient_steps_per_itr=env.spec.max_episode_length,
                   eval_env=mt10_test_envs,
                   env_spec=env.spec,
                   num_tasks=10,
@@ -105,10 +104,20 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed, _gpu, n_tasks, timesteps):
     if _gpu is not None:
         set_gpu_mode(True, _gpu)
     mtsac.to()
-    trainer.setup(algo=mtsac,
-                  env=mt10_train_envs,
-                  sampler_cls=LocalSampler,
-                  n_workers=meta_batch_size)
+    trainer.setup(
+        algo=mtsac,
+        env=mt10_train_envs,
+        sampler_cls=LocalSampler,
+        # 1 sampler worker for each environment
+        n_workers=meta_batch_size,
+        # increasing n_envs increases the vectorization of a sampler worker
+        # which improves runtime performance, but you will need to adjust this
+        # depending on your memory constraints. For reference, each worker by
+        # default uses n_envs=8. Each environment is approximately ~50mb large
+        # so creating 10 envs with 8 copies comes out to 20gb of memory. Many
+        # users want to be able to run multiple seeds on 1 machine, so I have
+        # reduced this to n_envs = 2 for 2 copies in the meantime.
+        worker_args=dict(n_envs=2))
     trainer.train(n_epochs=epochs, batch_size=batch_size)
 
 
