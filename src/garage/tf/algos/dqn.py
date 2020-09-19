@@ -217,6 +217,8 @@ class DQN(RLAlgorithm):
         for _ in runner.step_epochs():
             for cycle in range(self._steps_per_epoch):
                 runner.step_path = runner.obtain_samples(runner.step_itr)
+                if hasattr(self.exploration_policy, 'update'):
+                    self.exploration_policy.update(runner.step_path)
                 for path in runner.step_path:
                     path['rewards'] *= self._reward_scale
                 last_return = self.train_once(runner.step_itr,

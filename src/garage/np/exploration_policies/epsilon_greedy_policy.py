@@ -2,6 +2,7 @@
 
 Random exploration according to the value of epsilon.
 """
+from dowel import tabular
 import numpy as np
 
 from garage.np.exploration_policies.exploration_policy import ExplorationPolicy
@@ -42,9 +43,10 @@ class EpsilonGreedyPolicy(ExplorationPolicy):
         self._min_epsilon = min_epsilon
         self._decay_period = int(total_timesteps * decay_ratio)
         self._action_space = env_spec.action_space
-        self._epsilon = self._max_epsilon
         self._decrement = (self._max_epsilon -
                            self._min_epsilon) / self._decay_period
+        self._total_env_steps = 0
+        self._last_total_env_steps = 0
 
     def get_action(self, observation):
         """Get action from this policy for the input observation.
@@ -58,10 +60,10 @@ class EpsilonGreedyPolicy(ExplorationPolicy):
 
         """
         opt_action, _ = self.policy.get_action(observation)
-        self._decay()
-        if np.random.random() < self._epsilon:
+        if np.random.random() < self._epsilon():
             opt_action = self._action_space.sample()
 
+        self._total_env_steps += 1
         return opt_action, dict()
 
     def get_actions(self, observations):
@@ -77,12 +79,54 @@ class EpsilonGreedyPolicy(ExplorationPolicy):
         """
         opt_actions, _ = self.policy.get_actions(observations)
         for itr, _ in enumerate(opt_actions):
-            self._decay()
-            if np.random.random() < self._epsilon:
+            if np.random.random() < self._epsilon():
                 opt_actions[itr] = self._action_space.sample()
+            self._total_env_steps += 1
 
         return opt_actions, dict()
 
-    def _decay(self):
-        if self._epsilon > self._min_epsilon:
-            self._epsilon -= self._decrement
+    def _epsilon(self):
+        """Get the current epsilon.
+
+        Returns:
+            double: Epsilon.
+
+        """
+        if self._total_env_steps >= self._decay_period:
+            return self._min_epsilon
+        return self._max_epsilon - self._decrement * self._total_env_steps
+
+    def update(self, paths):
+        """Update the exploration policy using a batch of trajectories.
+
+        Args:
+            paths(list[dict]): One batch of samples.
+
+        """
+        self._total_env_steps = (self._last_total_env_steps +
+                                 sum([len(p['rewards']) for p in paths]))
+        self._last_total_env_steps = self._total_env_steps
+        tabular.record('EpsilonGreedyPolicy/Epsilon', self._epsilon())
+
+    def get_param_values(self):
+        """Get parameter values.
+
+        Returns:
+            list or dict: Values of each parameter.
+
+        """
+        return {
+            'total_env_steps': self._total_env_steps,
+            'inner_params': self.policy.get_param_values()
+        }
+
+    def set_param_values(self, params):
+        """Set param values.
+
+        Args:
+            params (np.ndarray): A numpy array of parameter values.
+
+        """
+        self._total_env_steps = params['total_env_steps']
+        self.policy.set_param_values(params['inner_params'])
+        self._last_total_env_steps = self._total_env_steps

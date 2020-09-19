@@ -51,6 +51,14 @@ class ExplorationPolicy(abc.ABC):
         """
         self.policy.reset(dones)
 
+    def update(self, paths):
+        """Update the exploration policy using a batch of trajectories.
+
+        Args:
+            paths(list[dict]): One batch of samples.
+
+        """
+
     def get_param_values(self):
         """Get parameter values.
 

@@ -1,6 +1,4 @@
 """Tests for epsilon greedy policy."""
-import pickle
-
 import numpy as np
 import pytest
 
@@ -40,22 +38,49 @@ def test_params(env):
     policy2 = ConstantPolicy(env.action_space.sample())
     assert (policy1.get_action(None)[0] != policy2.get_action(None)[0]).all()
 
-    exp_policy1 = AddGaussianNoise(env, policy1)
-    exp_policy2 = AddGaussianNoise(env, policy2)
+    exp_policy1 = AddGaussianNoise(env, policy1, 1)
+    exp_policy2 = AddGaussianNoise(env, policy2, 1)
+    exp_policy2.get_action(None)
+
+    assert exp_policy1._sigma() != exp_policy2._sigma()
+
     exp_policy1.set_param_values(exp_policy2.get_param_values())
 
     assert (policy1.get_action(None)[0] == policy2.get_action(None)[0]).all()
+    assert exp_policy1._sigma() == exp_policy2._sigma()
 
 
 def test_decay_period(env):
     policy = ConstantPolicy(env.action_space.sample())
     exp_policy = AddGaussianNoise(env,
                                   policy,
+                                  total_timesteps=2,
                                   max_sigma=1.,
-                                  min_sigma=0.,
-                                  decay_period=2)
+                                  min_sigma=0.)
     assert (exp_policy.get_action(None)[0] != policy.get_action(None)[0]).all()
-    exp_policy.reset()
     assert (exp_policy.get_action(None)[0] != policy.get_action(None)[0]).all()
-    exp_policy.reset()
     assert (exp_policy.get_action(None)[0] == policy.get_action(None)[0]).all()
+
+
+def test_update(env):
+    policy = ConstantPolicy(env.action_space.sample())
+    exp_policy = AddGaussianNoise(env,
+                                  policy,
+                                  total_timesteps=10,
+                                  max_sigma=1.,
+                                  min_sigma=0.)
+    exp_policy.get_action(None)
+    exp_policy.get_action(None)
+
+    batch = [{'rewards': [None]}, {'rewards': [None] * 2}]
+
+    # new sigma will be 1 - 0.1 * (1 + 2) = 0.7
+    exp_policy.update(batch)
+    assert np.isclose(exp_policy._sigma(), 0.7)
+
+    exp_policy.get_action(None)
+
+    batch = [{'rewards': [None]}, {'rewards': [None]}, {'rewards': [None] * 2}]
+    # new sigma will be 0.7 - 0.1 * (1 + 1 + 2) = 0.3
+    exp_policy.update(batch)
+    assert np.isclose(exp_policy._sigma(), 0.3)
