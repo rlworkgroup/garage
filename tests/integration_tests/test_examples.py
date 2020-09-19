@@ -378,7 +378,7 @@ def test_maml_vpg():
 
 @pytest.mark.nightly
 @pytest.mark.no_cover
-@pytest.mark.timeout(120)
+@pytest.mark.timeout(600)
 def test_rl2_ppo_metaworld_ml1_push():
     """Test rl2_ppo_metaworld_ml1_push.py."""
     assert subprocess.run([
