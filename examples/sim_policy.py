@@ -12,52 +12,40 @@ from garage.envs import GymEnv
 from garage.sampler.utils import rollout
 from garage.torch import set_gpu_mode
 
+import os
+import numpy as np
+import cv2
+from garage import StepType
 
-def query_yes_no(question, default='yes'):
-    """Ask a yes/no question via raw_input() and return their answer.
 
-    Args:
-        question (str): Printed to user.
-        default (str or None): Default if user just hits enter.
+def trajectory_generator(env, policy, res=(640, 480)):
 
-    Raises:
-        ValueError: If the provided default is invalid.
+    env.reset()
+    env.reset_model()
+    o = env.reset()[0]
 
-    Returns:
-        bool: True for "yes"y answers, False for "no".
+    for _ in range(env.max_path_length):
+        a = policy.get_action(o)[0]
+        timestep = env.step(a)
+        o = timestep.observation
+        done = timestep.step_type == StepType.TERMINAL
+        yield timestep.reward, done, timestep.env_info, env.sim.render(*res, mode='offscreen', camera_name='corner')[:,:,::-1]
 
-    """
-    valid = {'yes': True, 'y': True, 'ye': True, 'no': False, 'n': False}
-    if default is None:
-        prompt = ' [y/n] '
-    elif default == 'yes':
-        prompt = ' [Y/n] '
-    elif default == 'no':
-        prompt = ' [y/N] '
-    else:
-        raise ValueError("invalid default answer: '%s'" % default)
-
-    while True:
-        sys.stdout.write(question + prompt)
-        choice = input().lower()
-        if default is not None and choice == '':
-            return valid[default]
-        elif choice in valid:
-            return valid[choice]
-        else:
-            sys.stdout.write("Please respond with 'yes' or 'no' "
-                             "(or 'y' or 'n').\n")
+def writer_for(tag, fps, res):
+    if not os.path.exists('movies'):
+        os.mkdir('movies')
+    return cv2.VideoWriter(
+        f'movies/{tag}.mp4',
+        cv2.VideoWriter_fourcc('M','J','P','G'),
+        fps,
+        res
+    )
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('file', type=str, help='path to the snapshot file')
-    parser.add_argument('--max_episode_length',
-                        type=int,
-                        default=1000,
-                        help='Max length of episode')
-    parser.add_argument('--speedup', type=float, default=1, help='Speedup')
     args = parser.parse_args()
 
     # If the snapshot file use tensorflow, do:
@@ -70,16 +58,9 @@ if __name__ == '__main__':
             data = cloudpickle.load(fi)
         policy = data['algo'].policy
         env = data['env']
-        env = env.unwrapped
-        env = TimeLimit(env, args.max_episode_length)
-        env = Monitor(env, "recording", force=True, video_callable=lambda episode_id: True)
-        env = GymEnv(env)
-        env.spec.id = "pick-place-v2"
+        resolution = (640, 480)
+        writer = writer_for("pick-place-v2-add-gripper-state-object-orientation-corner-10m", env.metadata['video.frames_per_second'], resolution)
         for _ in range(10):
-            path = rollout(env,
-                           policy,
-                           max_episode_length=args.max_episode_length,
-                           animated=True,
-                           speedup=args.speedup)
-            # if not query_yes_no('Continue simulation?'):
-            #     break
+            for r, done, info, img in trajectory_generator(env, policy, resolution):
+                writer.write(img)
+        writer.release()

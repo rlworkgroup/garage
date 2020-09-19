@@ -29,7 +29,7 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
 @click.option('--gpu', type=int, default=0)
 @wrap_experiment(snapshot_mode='gap', snapshot_gap=50, name_parameters='all')
-def sac_metaworld_new_reward_function(ctxt=None, env_name=None, gpu=None, reward_scale=10, tag="hammacher_product_only", seed=1):
+def sac_metaworld_new_reward_function(ctxt=None, env_name=None, gpu=None, reward_scale=10, tag="hammacher_product_only_reward_normalization", seed=1):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -56,7 +56,7 @@ def sac_metaworld_new_reward_function(ctxt=None, env_name=None, gpu=None, reward
     # env.max_path_length = 500 # This was used apart of the winning sac run
     max_path_length = env.max_path_length
 
-    env = GymEnv(env)
+    env = GymEnv(normalize(env, normalize_reward=True))
     # max_path_length = 500
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,

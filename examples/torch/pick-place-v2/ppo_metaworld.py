@@ -25,11 +25,14 @@ from garage.tf.policies import GaussianMLPPolicy
 from garage.sampler import LocalSampler
 
 @click.command()
-@click.option('--env-name', type=str)
+@click.option('--env-name', type=str, default="pick-place-v2")
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
-@wrap_experiment(name_parameters='all', snapshot_mode='gap', snapshot_gap=50)
-def ppo_metaworld(ctxt=None, env_name=None, tag="max_path_length=500_ip_weight_10_solimp_0.99_reward_scale=10_friction=1.5", seed=1,):
-    """Train PPO with Metaworl environments.
+@click.option('--entropy', type=float, default=0.01)
+@click.option('--use_softplus_entropy', type=bool, default=False)
+@click.option('--extra_tags', type=str, default="none")
+@wrap_experiment(name_parameters='all', snapshot_mode='gap', snapshot_gap=25)
+def ppo_metaworld(ctxt=None, env_name=None, tag="add_obj_orientation", extra_tags="", entropy=0.05, stop_entropy_gradient=True, use_softplus_entropy=False, seed=1,):
+    """Train PPO with Metaworld environments.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
@@ -38,6 +41,7 @@ def ppo_metaworld(ctxt=None, env_name=None, tag="max_path_length=500_ip_weight_1
             determinism.
 
     """
+    set_seed(seed)
     special = {'push-v1' : "push", 'reach-v1' : "reach", "pick-place-v1": "pick_place"}
     not_in_mw = 'the env_name specified is not a metaworld environment'
     assert env_name in ALL_V2_ENVIRONMENTS or env_name in ALL_V1_ENVIRONMENTS, not_in_mw
@@ -53,13 +57,9 @@ def ppo_metaworld(ctxt=None, env_name=None, tag="max_path_length=500_ip_weight_1
     env._set_task_called = True
     env.reset()
     env._freeze_rand_vec = True
-    # env.max_path_length = 500 # This was used apart of the winning sac run
     max_path_length = env.max_path_length
-    env = GymEnv(env)
-    set_seed(seed)
+    env = normalize(GymEnv(env), normalize_reward=True)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        # with open('pick_place_v2_141.pkl', 'rb') as fi:
-        #     env = pickle.load(fi)
         policy = GaussianMLPPolicy(
             env_spec=env.spec,
             hidden_sizes=(64, 64),
@@ -88,14 +88,15 @@ def ppo_metaworld(ctxt=None, env_name=None, tag="max_path_length=500_ip_weight_1
                 batch_size=32,
                 max_episode_length=10,
             ),
-            stop_entropy_gradient=True,
+            stop_entropy_gradient=stop_entropy_gradient,
             entropy_method='max',
-            policy_ent_coeff=0.02,
+            policy_ent_coeff=entropy,
             center_adv=False,
+            use_softplus_entropy=use_softplus_entropy,
         )
 
-        runner.setup(algo, env,)
-        runner.train(n_epochs=int(10000000/(max_path_length*100)), batch_size=(max_path_length*100), plot=False)
+        runner.setup(algo, env, sampler_cls=LocalSampler)
+        runner.train(n_epochs=int(20000000/(max_path_length*100)), batch_size=(max_path_length*100), plot=False)
 
 
 ppo_metaworld()
