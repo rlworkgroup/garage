@@ -7,7 +7,8 @@ import tensorflow as tf
 from garage import (_Default,
                     log_performance,
                     make_optimizer,
-                    obtain_evaluation_episodes)
+                    obtain_evaluation_episodes,
+                    StepType)
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf import compile_function, get_target_ops
@@ -352,14 +353,15 @@ class DDPG(RLAlgorithm):
             float: Q value predicted by the q network.
 
         """
-        transitions = self._replay_buffer.sample_transitions(
+        timesteps = self._replay_buffer.sample_timesteps(
             self._buffer_batch_size)
 
-        observations = transitions['observations']
-        next_observations = transitions['next_observations']
-        rewards = transitions['rewards'].reshape(-1, 1)
-        actions = transitions['actions']
-        terminals = transitions['terminals'].reshape(-1, 1)
+        observations = timesteps.observations
+        rewards = timesteps.rewards.reshape(-1, 1)
+        actions = timesteps.actions
+        next_observations = timesteps.next_observations
+        terminals = np.array([[s == StepType.TERMINAL]
+                              for s in timesteps.step_types])
 
         rewards *= self._reward_scale
 

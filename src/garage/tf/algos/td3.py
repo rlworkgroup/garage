@@ -12,7 +12,8 @@ import tensorflow as tf
 from garage import (_Default,
                     log_performance,
                     make_optimizer,
-                    obtain_evaluation_episodes)
+                    obtain_evaluation_episodes,
+                    StepType)
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf import compile_function, get_target_ops
@@ -376,14 +377,15 @@ class TD3(RLAlgorithm):
             float: Q value predicted by the q network.
 
         """
-        transitions = self._replay_buffer.sample_transitions(
+        timesteps = self._replay_buffer.sample_timesteps(
             self._buffer_batch_size)
 
-        observations = transitions['observations']
-        rewards = transitions['rewards']
-        actions = transitions['actions']
-        next_observations = transitions['next_observations']
-        terminals = transitions['terminals']
+        observations = timesteps.observations
+        rewards = timesteps.rewards.reshape(-1, 1)
+        actions = timesteps.actions
+        next_observations = timesteps.next_observations
+        terminals = np.array([[s == StepType.TERMINAL]
+                              for s in timesteps.step_types])
 
         rewards *= self._reward_scale
 

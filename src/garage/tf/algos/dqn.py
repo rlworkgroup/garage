@@ -5,7 +5,10 @@ from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
-from garage import log_performance, make_optimizer, obtain_evaluation_episodes
+from garage import (log_performance,
+                    make_optimizer,
+                    obtain_evaluation_episodes,
+                    StepType)
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf import compile_function, get_target_ops
@@ -258,15 +261,15 @@ class DQN(RLAlgorithm):
             numpy.float64: Loss of policy.
 
         """
-        transitions = self._replay_buffer.sample_transitions(
+        timesteps = self._replay_buffer.sample_timesteps(
             self._buffer_batch_size)
 
-        observations = transitions['observations']
-        rewards = transitions['rewards']
-        actions = self._env_spec.action_space.unflatten_n(
-            transitions['actions'])
-        next_observations = transitions['next_observations']
-        dones = transitions['terminals']
+        observations = timesteps.observations
+        rewards = timesteps.rewards.reshape(-1, 1)
+        actions = self._env_spec.action_space.unflatten_n(timesteps.actions)
+        next_observations = timesteps.next_observations
+        dones = np.array([[s == StepType.TERMINAL]
+                          for s in timesteps.step_types])
 
         if isinstance(self._env_spec.observation_space, akro.Image):
             if len(observations.shape[1:]) < len(
