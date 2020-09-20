@@ -1,5 +1,6 @@
 """Functions exposed directly in the garage namespace."""
 from collections import defaultdict
+import time
 
 from dowel import tabular
 import numpy as np
@@ -114,6 +115,7 @@ def rollout(env,
     if animated:
         env.visualize()
     while episode_length < (max_episode_length or np.inf):
+        time.sleep(0.02)
         a, agent_info = agent.get_action(last_obs)
         if deterministic and 'mean' in agent_info:
             a = agent_info['mean']
