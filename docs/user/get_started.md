@@ -48,9 +48,9 @@ An array of algorithms are available in garage:
 +------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |        Algorithm       |                                                                         Framework(s)                                                                         |
 +------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|           CEM          |                                             `numpy <../_autoapi/garage/np/algos/index.html#garage.np.algos.CEM>`_                                            |
+|           CEM          |                                             `Numpy <../_autoapi/garage/np/algos/index.html#garage.np.algos.CEM>`_                                            |
 +------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|         CMA-ES         |                                            `numpy <../_autoapi/garage/np/algos/index.html#garage.np.algos.CMAES>`_                                           |
+|         CMA-ES         |                                            `Numpy <../_autoapi/garage/np/algos/index.html#garage.np.algos.CMAES>`_                                           |
 +------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | REINFORCE (a.k.a. VPG) |   `PyTorch <../_autoapi/garage/torch/algos/index.html#garage.torch.algos.VPG>`_, `TensorFlow <../_autoapi/garage/tf/algos/index.html#garage.tf.algos.VPG>`_  |
 +------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -157,7 +157,7 @@ In garage, experiments are run using the "experiment launcher" `wrap_experiment`
 from garage import wrap_experiment
 ```
 
-Moreover, objects, such as `LocalRunner`, `environment`, `policy` e.t.c are commonly used when constructing experiments in garage.
+Moreover, objects, such as `trainer`, `environment`, `policy` e.t.c are commonly used when constructing experiments in garage.
 
 ```py
 import gym
