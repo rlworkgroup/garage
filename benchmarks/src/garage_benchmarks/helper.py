@@ -80,12 +80,15 @@ def benchmark(exec_func=None, *, plot=True, auto=False):
                 count += 1
             _log_dir = _log_dir + '_' + str(count)
 
+        snapshot_config = {}
+
         if auto:
             _auto = auto
             auto_dir = os.path.join(_log_dir, 'auto')
             os.makedirs(auto_dir)
+            snapshot_config['snapshot_mode'] = 'none'
 
-        exec_func()
+        exec_func(snapshot_config)
 
         if plot:
             plot_dir = os.path.join(_log_dir, 'plot')
@@ -106,6 +109,7 @@ def benchmark(exec_func=None, *, plot=True, auto=False):
 
 def iterate_experiments(func,
                         env_ids,
+                        snapshot_config=None,
                         seeds=None,
                         xcolumn='TotalEnvSteps',
                         xlabel='Total Environment Steps',
@@ -115,6 +119,9 @@ def iterate_experiments(func,
 
     Args:
         env_ids (list[str]): List of environment ids.
+        snapshot_config (garage.experiment.SnapshotConfig): The experiment
+            configuration used by :class:`~Trainer` to create the
+            :class:`~Snapshotter`.
         seeds (list[int]): List of seeds.
         func (func): The experiment function.
         xcolumn (str): Which column should be the JSON x axis.
@@ -140,7 +147,9 @@ def iterate_experiments(func,
 
             tf.compat.v1.reset_default_graph()
 
-            func(dict(log_dir=sub_log_dir), env_id=env_id, seed=seed)
+            ctxt = dict(log_dir=sub_log_dir)
+            ctxt.update(snapshot_config)
+            func(ctxt, env_id=env_id, seed=seed)
 
             if _plot is not None or _auto:
                 xs, ys = _read_csv(sub_log_dir, xcolumn, ycolumn)
