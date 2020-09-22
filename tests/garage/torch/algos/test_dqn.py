@@ -14,9 +14,6 @@ from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.torch import np_to_torch
-from garage.torch.algos import DQN
-from garage.torch.policies import DiscreteQFArgmaxPolicy
-from garage.torch.q_functions import DiscreteMLPQFunction
 from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config

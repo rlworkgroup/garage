@@ -144,6 +144,10 @@ def dqn_atari(ctxt=None,
 
     qf = DiscreteCNNQFunction(
         env_spec=env.spec,
+<<<<<<< HEAD
+=======
+        minibatch_size=hyperparams['buffer_batch_size'],
+>>>>>>> Add torch DQN
         hidden_channels=hyperparams['hidden_channels'],
         kernel_sizes=hyperparams['kernel_sizes'],
         strides=hyperparams['strides'],
