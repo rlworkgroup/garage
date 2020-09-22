@@ -32,6 +32,8 @@ class DQN(RLAlgorithm):
         n_train_steps (int): Training steps.
         eval_env (Environment): Evaluation environment. If None, a copy of the
             main environment is used for evaluation.
+        double_q (bool): Whether to use Double DQN.
+            See https://arxiv.org/abs/1509.06461.
         max_episode_length_eval (int or None): Maximum length of episodes used
             for off-policy evaluation. If `None`, defaults to
             `env_spec.max_episode_length`.
@@ -67,6 +69,7 @@ class DQN(RLAlgorithm):
             replay_buffer,
             exploration_policy=None,
             eval_env=None,
+            double_q=True,
             qf_optimizer=torch.optim.Adam,
             *,  # Everything after this is numbers.
             steps_per_epoch=20,
@@ -100,6 +103,7 @@ class DQN(RLAlgorithm):
         self._steps_per_epoch = steps_per_epoch
         self._n_train_steps = n_train_steps
         self._buffer_batch_size = buffer_batch_size
+        self._double_q = double_q
         self._discount = discount
         self._reward_scale = reward_scale
         self.max_episode_length = env_spec.max_episode_length
@@ -246,10 +250,18 @@ class DQN(RLAlgorithm):
         next_inputs = next_observations
         inputs = observations
         with torch.no_grad():
-            # discrete, outputs Qs for all possible actions
-            target_qvals = self._target_qf(next_inputs)
-            best_qvals, _ = torch.max(target_qvals, 1)
-            best_qvals = best_qvals.unsqueeze(1)
+            if self._double_q:
+                # Use online qf to get optimal actions
+                selected_actions = torch.argmax(self._qf(next_inputs), axis=1)
+                # use target qf to get Q values for those actions
+                selected_actions = selected_actions.long().unsqueeze(1)
+                best_qvals = torch.gather(self._target_qf(next_inputs),
+                                          dim=1,
+                                          index=selected_actions)
+            else:
+                target_qvals = self._target_qf(next_inputs)
+                best_qvals, _ = torch.max(target_qvals, 1)
+                best_qvals = best_qvals.unsqueeze(1)
 
         rewards_clipped = rewards
         if self._clip_reward is not None:

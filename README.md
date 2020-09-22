@@ -57,7 +57,7 @@ The table below summarizes the algorithms available in garage.
 | REINFORCE (a.k.a. VPG) | PyTorch, TensorFlow |
 | DDPG                   | PyTorch, TensorFlow |
 | DQN                    | PyTorch, TensorFlow |
-| DDQN                   | TensorFlow          |
+| DDQN                   | PyTorch, TensorFlow |
 | ERWR                   | TensorFlow          |
 | NPO                    | TensorFlow          |
 | PPO                    | PyTorch, TensorFlow |
