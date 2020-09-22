@@ -18,6 +18,7 @@ and how to implement new MDPs and new algorithms.
    :maxdepth: 2
 
    user/installation
+   user/get_started
 
 .. toctree::
    :maxdepth: 2
