@@ -19,13 +19,33 @@ class FireReset(gym.Wrapper):
             'Only use fire reset wrapper for suitable environment!')
 
     def step(self, action):
-        """gym.Env step function."""
+        """gym.Env step function.
+
+        Args:
+            action (int): index of the action to take.
+
+        Returns:
+            np.ndarray: Observation conforming to observation_space
+            float: Reward for this step
+            bool: Termination signal
+            dict: Extra information from the environment.
+        """
         return self.env.step(action)
 
     def reset(self, **kwargs):
-        """gym.Env reset function."""
+        """gym.Env reset function.
+
+        Args:
+            kwargs (dict): extra arguments passed to gym.Env.reset()
+
+        Returns:
+            np.ndarray: next observation.
+        """
         self.env.reset(**kwargs)
         obs, _, done, _ = self.env.step(1)
         if done:
-            obs = self.env.reset(**kwargs)
+            self.env.reset(**kwargs)
+        obs, _, done, _ = self.env.step(2)
+        if done:
+            self.env.reset(**kwargs)
         return obs
