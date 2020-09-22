@@ -649,7 +649,7 @@ def test_to_time_step_list_batch(batch_data):
                                   [batch_data['agent_infos'][key][i]])
 
 
-def test_get_terminals(batch_data):
+def test_terminals(batch_data):
     s = TimeStepBatch(
         env_spec=batch_data['env_spec'],
         observations=batch_data['observations'],
@@ -660,8 +660,7 @@ def test_get_terminals(batch_data):
         env_infos=batch_data['env_infos'],
         agent_infos=batch_data['agent_infos'],
     )
-    terminals = s.get_terminals()
-    assert terminals.shape == s.rewards.shape
+    assert s.terminals.shape == s.rewards.shape
 
 
 def test_from_empty_time_step_list_batch(batch_data):

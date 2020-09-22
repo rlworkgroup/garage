@@ -265,7 +265,7 @@ class DQN(RLAlgorithm):
         rewards = timesteps.rewards
         actions = self._env_spec.action_space.unflatten_n(timesteps.actions)
         next_observations = timesteps.next_observations
-        dones = timesteps.get_terminals()
+        dones = timesteps.terminals
 
         if isinstance(self._env_spec.observation_space, akro.Image):
             if len(observations.shape[1:]) < len(

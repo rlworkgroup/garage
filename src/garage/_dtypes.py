@@ -940,7 +940,8 @@ class TimeStepBatch(
             })
         return samples
 
-    def get_terminals(self):
+    @property
+    def terminals(self):
         """Get an array of boolean indicating ternianal information.
 
         Returns:

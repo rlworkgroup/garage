@@ -359,7 +359,7 @@ class DDPG(RLAlgorithm):
         rewards = timesteps.rewards
         actions = timesteps.actions
         next_observations = timesteps.next_observations
-        terminals = timesteps.get_terminals()
+        terminals = timesteps.terminals
 
         rewards *= self._reward_scale
 
