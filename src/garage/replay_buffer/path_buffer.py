@@ -14,11 +14,13 @@ class PathBuffer:
 
     Args:
         capacity_in_transitions (int): Total memory allocated for the buffer.
+        env_spec (EnvSpec): Environment specification.
 
     """
 
-    def __init__(self, capacity_in_transitions):
+    def __init__(self, capacity_in_transitions, env_spec=None):
         self._capacity = capacity_in_transitions
+        self._env_spec = env_spec
         self._transitions_stored = 0
         self._first_idx_of_next_path = 0
         # Each path in the buffer has a tuple of two ranges in
@@ -27,7 +29,6 @@ class PathBuffer:
         # The "left" side of the deque contains the oldest episode.
         self._path_segments = collections.deque()
         self._buffer = {}
-        self._env_spec = None
 
     def add_episode_batch(self, episodes):
         """Add a EpisodeBatch to the buffer.
