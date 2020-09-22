@@ -14,8 +14,8 @@ class MaxAndSkip(gym.Wrapper):
     render their sprites every other game frame.
 
     Args:
-        env: The environment to be wrapped.
-        skip: The environment only returns `skip`-th frame.
+        env (gym.Env): The environment to be wrapped.
+        skip (int): The environment only returns `skip`-th frame.
 
     """
 
@@ -26,13 +26,22 @@ class MaxAndSkip(gym.Wrapper):
         self._skip = skip
 
     def step(self, action):
-        """
-        gym.Env step.
+        """Repeat action, sum reward, and max over last two observations.
 
-        Repeat action, sum reward, and max over last two observations.
+        Args:
+            action (int): action to take in the atari environment.
+
+        Returns:
+            np.ndarray: observation of shape :math:`(O*,)` representating
+                the max values over the last two oservations.
+            float: Reward for this step
+            bool: Termination signal
+            dict: Extra information from the environment.
+
         """
         total_reward = 0.0
         done = None
+
         for i in range(self._skip):
             obs, reward, done, info = self.env.step(action)
             if i == self._skip - 2:
@@ -45,6 +54,11 @@ class MaxAndSkip(gym.Wrapper):
         max_frame = self._obs_buffer.max(axis=0)
         return max_frame, total_reward, done, info
 
+    # pylint: disable=arguments-differ
     def reset(self):
-        """gym.Env reset."""
+        """gym.Env reset.
+
+        Returns:
+            np.ndarray: observaion of shape :math:`(O*,)`.
+        """
         return self.env.reset()

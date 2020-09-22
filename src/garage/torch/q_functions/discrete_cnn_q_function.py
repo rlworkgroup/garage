@@ -73,8 +73,8 @@ class DiscreteCNNQFunction(DiscreteCNNModule):
                  strides,
                  minibatch_size,
                  hidden_sizes=(32, 32),
-                 cnn_hidden_nonlinearity=torch.relu,
-                 mlp_hidden_nonlinearity=torch.relu,
+                 cnn_hidden_nonlinearity=torch.nn.ReLU,
+                 mlp_hidden_nonlinearity=torch.nn.ReLU,
                  hidden_w_init=nn.init.xavier_uniform_,
                  hidden_b_init=nn.init.zeros_,
                  paddings=0,
@@ -88,6 +88,7 @@ class DiscreteCNNQFunction(DiscreteCNNModule):
                  layer_normalization=False,
                  is_image=True):
 
+        self._env_spec = env_spec
         input_shape = (minibatch_size, ) + env_spec.observation_space.shape
         output_dim = env_spec.action_space.flat_dim
         super().__init__(input_shape=input_shape,
@@ -110,3 +111,21 @@ class DiscreteCNNQFunction(DiscreteCNNModule):
                          output_b_init=output_b_init,
                          layer_normalization=layer_normalization,
                          is_image=is_image)
+
+    # pylint: disable=arguments-differ
+    def forward(self, observations):
+        """Return Q-value(s).
+
+        Args:
+            observations (np.ndarray): observations of shape `input_shape`.
+
+        Returns:
+            torch.Tensor: Output value
+        """
+        if observations.shape != self._env_spec.observation_space.shape:
+            # avoid using observation_space.unflatten_n
+            # to support tensors on GPUs
+            obs_shape = ((len(observations), ) +
+                         self._env_spec.observation_space.shape)
+            observations = observations.reshape(obs_shape)
+        return super().forward(observations)

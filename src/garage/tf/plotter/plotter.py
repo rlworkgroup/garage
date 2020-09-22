@@ -67,8 +67,7 @@ class Plotter:
             self.rollout(self._env,
                          self._policy,
                          max_episode_length=np.inf,
-                         animated=True,
-                         speedup=5)
+                         animated=True)
 
     def _start_worker(self):
         max_length = None
@@ -106,16 +105,14 @@ class Plotter:
                         self.rollout(self._env,
                                      self._policy,
                                      max_episode_length=max_length,
-                                     animated=True,
-                                     speedup=5)
+                                     animated=True)
                         self.queue.task_done()
                     else:
                         if max_length:
                             self.rollout(self._env,
                                          self._policy,
                                          max_episode_length=max_length,
-                                         animated=True,
-                                         speedup=5)
+                                         animated=True)
         except KeyboardInterrupt:
             pass
 

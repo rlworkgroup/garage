@@ -1,5 +1,6 @@
 """Functions exposed directly in the garage namespace."""
 from collections import defaultdict
+import time
 
 from dowel import tabular
 import numpy as np
@@ -68,7 +69,7 @@ def rollout(env,
             *,
             max_episode_length=np.inf,
             animated=False,
-            speedup=1,
+            pause_per_frame=None,
             deterministic=False):
     """Sample a single episode of the agent in the environment.
 
@@ -78,8 +79,8 @@ def rollout(env,
         max_episode_length (int): If the episode reaches this many timesteps,
             it is truncated.
         animated (bool): If true, render the environment after each step.
-        speedup (float): Factor by which to decrease the wait time between
-            rendered steps. Only relevant, if animated == true.
+        pause_per_frame (float): Time to sleep between steps. Only relevant if
+            animated == true.
         deterministic (bool): If true, use the mean action returned by the
             stochastic policy instead of sampling from the returned action
             distribution.
@@ -104,7 +105,6 @@ def rollout(env,
             * dones(np.array): Array of termination signals.
 
     """
-    del speedup
     env_steps = []
     agent_infos = []
     observations = []
@@ -114,6 +114,8 @@ def rollout(env,
     if animated:
         env.visualize()
     while episode_length < (max_episode_length or np.inf):
+        if pause_per_frame is not None:
+            time.sleep(pause_per_frame)
         a, agent_info = agent.get_action(last_obs)
         if deterministic and 'mean' in agent_info:
             a = agent_info['mean']
