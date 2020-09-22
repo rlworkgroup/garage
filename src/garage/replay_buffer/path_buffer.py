@@ -142,7 +142,7 @@ class PathBuffer:
         return TimeStepBatch(env_spec=self._env_spec,
                              observations=samples['observations'],
                              actions=samples['actions'],
-                             rewards=samples['rewards'].reshape(-1),
+                             rewards=samples['rewards'],
                              next_observations=samples['next_observations'],
                              step_types=step_types,
                              env_infos={},

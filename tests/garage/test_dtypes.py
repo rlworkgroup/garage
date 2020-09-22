@@ -17,8 +17,11 @@ from garage import (EnvSpec,
 @pytest.fixture
 def eps_data():
     # spaces
-    obs_space = akro.Box(low=1, high=np.inf, shape=(4, 3, 2), dtype=np.float32)
-    act_space = akro.Discrete(2)
+    obs_space = gym.spaces.Box(low=1,
+                               high=np.inf,
+                               shape=(4, 3, 2),
+                               dtype=np.float32)
+    act_space = gym.spaces.MultiDiscrete([2, 5])
     env_spec = EnvSpec(obs_space, act_space)
 
     # generate data
@@ -26,7 +29,7 @@ def eps_data():
     n_t = lens.sum()
     obs = np.stack([obs_space.low] * n_t)
     last_obs = np.stack([obs_space.low] * len(lens))
-    act = np.stack([1] * n_t)
+    act = np.stack([[1, 3]] * n_t)
     rew = np.arange(n_t)
 
     # env_infos
@@ -363,7 +366,7 @@ def batch_data():
     obs = np.stack([obs_space.low] * batch_size)
     next_obs = np.stack([obs_space.low] * batch_size)
     act = np.stack([[1, 3]] * batch_size)
-    rew = np.arange(batch_size)
+    rew = np.arange(batch_size).reshape(-1, 1)
     step_types = np.array([StepType.FIRST, StepType.TERMINAL], dtype=StepType)
 
     # env_infos
@@ -644,6 +647,21 @@ def test_to_time_step_list_batch(batch_data):
             assert key in batch_data['agent_infos']
             assert np.array_equal(batch['agent_infos'][key],
                                   [batch_data['agent_infos'][key][i]])
+
+
+def test_get_terminals(batch_data):
+    s = TimeStepBatch(
+        env_spec=batch_data['env_spec'],
+        observations=batch_data['observations'],
+        actions=batch_data['actions'],
+        rewards=batch_data['rewards'],
+        next_observations=batch_data['next_observations'],
+        step_types=batch_data['step_types'],
+        env_infos=batch_data['env_infos'],
+        agent_infos=batch_data['agent_infos'],
+    )
+    terminals = s.get_terminals()
+    assert terminals.shape == s.rewards.shape
 
 
 def test_from_empty_time_step_list_batch(batch_data):

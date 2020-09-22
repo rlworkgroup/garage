@@ -12,8 +12,7 @@ import tensorflow as tf
 from garage import (_Default,
                     log_performance,
                     make_optimizer,
-                    obtain_evaluation_episodes,
-                    StepType)
+                    obtain_evaluation_episodes)
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf import compile_function, get_target_ops
@@ -381,11 +380,10 @@ class TD3(RLAlgorithm):
             self._buffer_batch_size)
 
         observations = timesteps.observations
-        rewards = timesteps.rewards.reshape(-1, 1)
+        rewards = timesteps.rewards
         actions = timesteps.actions
         next_observations = timesteps.next_observations
-        terminals = np.array([[s == StepType.TERMINAL]
-                              for s in timesteps.step_types])
+        terminals = timesteps.get_terminals()
 
         rewards *= self._reward_scale
 

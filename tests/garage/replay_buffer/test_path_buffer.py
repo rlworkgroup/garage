@@ -1,12 +1,57 @@
 # pylint: disable=protected-access
+import akro
 import numpy as np
 import pytest
 
-from garage import EpisodeBatch
+from garage import EnvSpec, EpisodeBatch, StepType
 from garage.replay_buffer import PathBuffer
 
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
-from tests.garage.test_dtypes import eps_data
+
+
+@pytest.fixture
+def eps_data():
+    # spaces
+    obs_space = akro.Box(low=1, high=np.inf, shape=(4, 3, 2), dtype=np.float32)
+    act_space = akro.Discrete(2)
+    env_spec = EnvSpec(obs_space, act_space)
+
+    # generate data
+    lens = np.array([10, 20, 7, 25, 25, 40, 10, 5])
+    n_t = lens.sum()
+    obs = np.stack([obs_space.low] * n_t)
+    last_obs = np.stack([obs_space.low] * len(lens))
+    act = np.stack([1] * n_t)
+    rew = np.arange(n_t)
+
+    # env_infos
+    env_infos = dict()
+    env_infos['goal'] = np.stack([[1, 1]] * n_t)
+    env_infos['foo'] = np.arange(n_t)
+
+    # agent_infos
+    agent_infos = dict()
+    agent_infos['prev_action'] = act
+    agent_infos['hidden'] = np.arange(n_t)
+
+    # step_types
+    step_types = []
+    for size in lens:
+        step_types.extend([StepType.FIRST] + [StepType.MID] * (size - 2) +
+                          [StepType.TERMINAL])
+    step_types = np.array(step_types, dtype=StepType)
+
+    return {
+        'env_spec': env_spec,
+        'observations': obs,
+        'last_observations': last_obs,
+        'actions': act,
+        'rewards': rew,
+        'env_infos': env_infos,
+        'agent_infos': agent_infos,
+        'step_types': step_types,
+        'lengths': lens
+    }
 
 
 class TestPathBuffer:
