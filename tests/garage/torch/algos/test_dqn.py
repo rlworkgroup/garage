@@ -26,7 +26,6 @@ def setup():
     steps_per_epoch = 10
     sampler_batch_size = 512
     num_timesteps = 100 * steps_per_epoch * sampler_batch_size
-
     env = GymEnv('CartPole-v0')
 
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
