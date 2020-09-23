@@ -53,10 +53,11 @@ def mtsac_metaworld_mt50(ctxt=None,
     trainer = Trainer(ctxt)
     mt50 = metaworld.MT50()
     mt50_test = metaworld.MT50()
-    train_task_sampler = MetaWorldTaskSampler(mt50,
-                                              'train',
-                                              lambda env, _: normalize(env),
-                                              add_env_onehot=True)
+    train_task_sampler = MetaWorldTaskSampler(
+        mt50,
+        'train',
+        lambda env, _: normalize(env, normalize_reward=True),
+        add_env_onehot=True)
     test_task_sampler = MetaWorldTaskSampler(mt50_test,
                                              'train',
                                              lambda env, _: normalize(env),
@@ -86,8 +87,7 @@ def mtsac_metaworld_mt50(ctxt=None,
 
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
 
-    batch_size = 100
-    # int(env.spec.max_episode_length * n_tasks)
+    batch_size = int(env.spec.max_episode_length * n_tasks)
     num_evaluation_points = 500
     epochs = timesteps // batch_size
     epoch_cycles = epochs // num_evaluation_points
@@ -95,22 +95,33 @@ def mtsac_metaworld_mt50(ctxt=None,
     mtsac = MTSAC(policy=policy,
                   qf1=qf1,
                   qf2=qf2,
-                  gradient_steps_per_itr=150,
+                  gradient_steps_per_itr=env.spec.max_episode_length,
                   eval_env=mt50_test_envs,
                   env_spec=env.spec,
                   num_tasks=50,
                   steps_per_epoch=epoch_cycles,
                   replay_buffer=replay_buffer,
-                  min_buffer_size=100,
+                  min_buffer_size=7500,
                   target_update_tau=5e-3,
                   discount=0.99,
                   buffer_batch_size=6400)
     set_gpu_mode(use_gpu, _gpu)
     mtsac.to()
-    trainer.setup(algo=mtsac,
-                  env=mt50_train_envs,
-                  sampler_cls=LocalSampler,
-                  n_workers=50)
+    trainer.setup(
+        algo=mtsac,
+        env=mt50_train_envs,
+        sampler_cls=LocalSampler,
+        # 1 sampler worker for each environment
+        n_workers=50,
+        # increasing n_envs increases the vectorization of a sampler worker
+        # which improves runtime performance, but you will need to adjust this
+        # depending on your memory constraints. For reference, each worker by
+        # default uses n_envs=8. Each environment is approximately ~50mb large
+        # so creating 50 envs with 8 copies comes out to 20gb of memory. Many
+        # users want to be able to run multiple seeds on 1 machine, so I have
+        # reduced this to n_envs = 2 for 2 copies in the meantime.
+        worker_args=dict(n_envs=2))
+
     trainer.train(n_epochs=epochs, batch_size=batch_size)
 
 
