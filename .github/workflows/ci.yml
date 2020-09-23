@@ -14,6 +14,8 @@ on:
     - cron: '0 9 * * *'
   push:
     branches: [master]
+    tags:
+      - '*'
   pull_request:
     branches: [master]
 
@@ -378,7 +380,7 @@ jobs:
     name: Deploy to PYPI
     runs-on: ubuntu-latest
     needs: [normal_test, large_test, mujoco_test, mujoco_test_long]
-    if: startsWith(github.ref, 'ref/tags/*)
+    if: startsWith(github.ref, 'ref/tags/*')
 
     steps:
       - uses: actions/checkout@v2
