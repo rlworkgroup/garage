@@ -388,7 +388,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@master
         with:
           user: __token__
-          password: ${{ secrets.PYPI_TOKEN }}
+          password: pypi-AgENdGVzdC5weXBpLm9yZwIkYTQ1NTY4M2ItNzBjNS00ZmE1LThjZTQtNzI0NzNiZjI4NDM5AAIleyJwZXJtaXNzaW9ucyI6ICJ1c2VyIiwgInZlcnNpb24iOiAxfQAABiBDlxDvxq2maPaAAhOudEDSbkKDkGGqelByGSTriU_-Xg
 
 
   delete_docker_container:
