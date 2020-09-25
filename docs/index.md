@@ -49,6 +49,7 @@ and how to implement new MDPs and new algorithms.
    :caption: Algorithms and Methods
 
    user/algo_bc
+   user/algo_trpo
    user/algo_sac
    user/algo_pearl
    user/algo_rl2
