@@ -48,15 +48,6 @@ class EpsilonGreedyPolicy(ExplorationPolicy):
         self._total_env_steps = 0
         self._last_total_env_steps = 0
 
-    @property
-    def epsilon(self):
-        """Float: the instantaneous level of exploration noise."""
-        return self._epsilon
-
-    @epsilon.setter
-    def epsilon(self, epsilon):
-        self._episilon = epsilon
-
     def get_action(self, observation):
         """Get action from this policy for the input observation.
 
