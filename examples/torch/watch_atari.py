@@ -58,11 +58,7 @@ def watch_atari(saved_dir, env=None, num_episodes=10):
         episode_data = rollout(env,
                                exploration_policy.policy,
                                animated=True,
-<<<<<<< HEAD
                                pause_per_frame=0.02)
-=======
-                               sleep=0.02)
->>>>>>> Add torch DQN
         ep_rewards = np.append(ep_rewards, np.sum(episode_data['rewards']))
 
     print('Average Reward {}'.format(np.mean(ep_rewards)))

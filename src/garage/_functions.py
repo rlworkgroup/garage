@@ -69,11 +69,7 @@ def rollout(env,
             *,
             max_episode_length=np.inf,
             animated=False,
-<<<<<<< HEAD
             pause_per_frame=None,
-=======
-            sleep=None,
->>>>>>> Add torch DQN
             deterministic=False):
     """Sample a single episode of the agent in the environment.
 
@@ -83,11 +79,7 @@ def rollout(env,
         max_episode_length (int): If the episode reaches this many timesteps,
             it is truncated.
         animated (bool): If true, render the environment after each step.
-<<<<<<< HEAD
         pause_per_frame (float): Time to sleep between steps. Only relevant if
-=======
-        sleep (float): Time to sleep between steps. Only relevant if
->>>>>>> Add torch DQN
             animated == true.
         deterministic (bool): If true, use the mean action returned by the
             stochastic policy instead of sampling from the returned action
@@ -122,13 +114,8 @@ def rollout(env,
     if animated:
         env.visualize()
     while episode_length < (max_episode_length or np.inf):
-<<<<<<< HEAD
         if pause_per_frame is not None:
             time.sleep(pause_per_frame)
-=======
-        if sleep is not None:
-            time.sleep(sleep)
->>>>>>> Add torch DQN
         a, agent_info = agent.get_action(last_obs)
         if deterministic and 'mean' in agent_info:
             a = agent_info['mean']
