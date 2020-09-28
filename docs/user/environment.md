@@ -1,6 +1,6 @@
 # Environment
 
-An environment in reinforcement learning is a task, or simulation, that an agent interacts with. Environments in garage are built on, and extends upon, Open AI's [Gym](https://gym.openai.com/) environments. One of the main differences is that garage uses [akro](https://akro.readthedocs.io/en/latest/) to describe input and output spaces, which is an extension of the gym.Space API.
+An environment in reinforcement learning is a task, or simulation, that an agent interacts with. Environments in garage are very similar to Open AI's [Gym](https://gym.openai.com/) environments. One of the main differences is that garage uses [akro](https://akro.readthedocs.io/en/latest/) to describe input and output spaces, which is an extension of the gym.Space API.
 
 
 ### How does a garage environment work?
@@ -10,7 +10,7 @@ In garage, this cycle is performed through two main functions: `reset()` -> `ste
 
 The cycle begins by calling `reset()`, which sets the environment to an initial stage. This returns initial `observations` (containing initial observations) and `episode_info` (episode-level information), which an agent can use to determine its next action.
 
-Actions determined by the agent and policy may then be passed into the `step()` function for the environment to update its state. This returns an `EnvStep`, which contains information about the step taken, such as the resulting reward and observation. This is repeatedly called until an episode, or a trial, is determined to be over.
+Actions determined by the agent and policy may then be passed into the `step()` function of the environment to update its state. This returns an `EnvStep`, which contains information about the step taken, such as the resulting reward and observation. `step()` is repeatedly called until an episode, or a trial, is determined to be over.
 
 This is an example of the cycle described above, where an environment interacts with actions provided by a policy:
 ```python
