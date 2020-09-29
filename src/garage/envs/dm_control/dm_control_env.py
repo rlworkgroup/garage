@@ -1,12 +1,13 @@
 """DM control environment."""
 import akro
 from dm_control import suite
+from dm_control import viewer
 from dm_control.rl.control import flatten_observation
 from dm_env import StepType as dm_StepType
 import numpy as np
 
 from garage import Environment, EnvSpec, EnvStep, StepType
-from garage.envs.dm_control.dm_control_viewer import DmControlViewer
+# from garage.envs.dm_control.dm_control_viewer import DmControlViewer
 
 
 def _flat_shape(observation):
@@ -180,14 +181,11 @@ class DMControlEnv(Environment):
     def visualize(self):
         """Creates a visualization of the environment."""
         if not self._viewer:
-            title = 'dm_control {}'.format(self._name)
-            self._viewer = DmControlViewer(title=title)
+            self._viewer = viewer
             self._viewer.launch(self._env)
 
     def close(self):
         """Close the environment."""
-        if self._viewer:
-            self._viewer.close()
         self._env.close()
         self._viewer = None
         self._env = None
