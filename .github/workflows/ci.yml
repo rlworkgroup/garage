@@ -406,6 +406,7 @@ jobs:
           --source
           --binary
           --out-dir dist/
+          .
       - name: Deploy to PYPI
         uses: pypa/gh-action-pypi-publish@master
         with:
