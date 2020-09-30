@@ -155,7 +155,7 @@ class GymEnv(Environment):
                              observation_space=self.observation_space,
                              max_episode_length=self._max_episode_length)
         # stores env_info keys & shapes to ensure subsequent env_infos are consistent
-        self._env_info = None 
+        self._env_info = None
 
     @property
     def action_space(self):
