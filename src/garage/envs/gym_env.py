@@ -154,7 +154,8 @@ class GymEnv(Environment):
         self._spec = EnvSpec(action_space=self.action_space,
                              observation_space=self.observation_space,
                              max_episode_length=self._max_episode_length)
-        # stores env_info keys & shapes to ensure subsequent env_infos are consistent
+        # stores env_info keys & value types to ensure subsequent env_infos
+        # are consistent
         self._env_info = None
 
     @property
@@ -222,8 +223,9 @@ class GymEnv(Environment):
             raise RuntimeError('GymEnv outputs inconsistent env_info keys.')
         else:
             info_types = {k: type(info[k]) for k in info}
-            if (self._env_info != info_types):
-                raise RuntimeError('GymEnv outputs inconsistent env_info shapes.')
+            if self._env_info != info_types:
+                raise RuntimeError(
+                    'GymEnv outputs inconsistent env_info shapes.')
 
         if self._visualize:
             self._env.render(mode='human')
