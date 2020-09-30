@@ -67,9 +67,9 @@ class HalfCheetahVelEnv(HalfCheetahEnvMetaBase):
         observation = self._get_obs()
         reward = forward_reward - ctrl_cost
         done = False
-        infos = dict(reward_forward=forward_reward,
-                     reward_ctrl=-ctrl_cost,
-                     task_vel=self._task['velocity'])
+        infos = dict(reward_forward=np.asarray([forward_reward]),
+                     reward_ctrl=np.asarray([-ctrl_cost]),
+                     task_vel=np.asarray([self._task['velocity']]))
         return observation, reward, done, infos
 
     def sample_tasks(self, num_tasks):
