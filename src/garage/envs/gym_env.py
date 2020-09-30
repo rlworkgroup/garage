@@ -192,6 +192,7 @@ class GymEnv(Environment):
         """
         first_obs = self._env.reset()
         self._step_cnt = 0
+        self._env_info = None
 
         return first_obs, dict()
 
