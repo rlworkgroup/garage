@@ -7,10 +7,6 @@ from dm_env import StepType as dm_StepType
 import numpy as np
 
 from garage import Environment, EnvSpec, EnvStep, StepType
-<<<<<<< HEAD
-=======
-# from garage.envs.dm_control.dm_control_viewer import DmControlViewer
->>>>>>> e321fb348a3f3816830d313fb9e1430d31830e6f
 
 
 def _flat_shape(observation):
