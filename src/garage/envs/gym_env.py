@@ -209,6 +209,8 @@ class GymEnv(Environment):
         Raises:
             RuntimeError: if `step()` is called after the environment has been
                 constructed and `reset()` has not been called.
+            RuntimeError: if underlying environment outputs inconsistent
+                env_info keys.
 
         """
         if self._step_cnt is None:
@@ -217,15 +219,11 @@ class GymEnv(Environment):
         observation, reward, done, info = self._env.step(action)
 
         # check that env_infos are consistent
+        print(info)
         if not self._env_info:
             self._env_info = {k: type(info[k]) for k in info}
         elif self._env_info.keys() != info.keys():
             raise RuntimeError('GymEnv outputs inconsistent env_info keys.')
-        else:
-            info_types = {k: type(info[k]) for k in info}
-            if self._env_info != info_types:
-                raise RuntimeError(
-                    'GymEnv outputs inconsistent env_info shapes.')
 
         if self._visualize:
             self._env.render(mode='human')

@@ -139,3 +139,13 @@ def test_done_resets_step_cnt():
         if es.last:
             break
     assert env._step_cnt is None
+
+def test_inconsistent_env_infos():
+    env = GymEnv('MountainCar-v0')
+    env.reset()
+    env._env_info = {'k1': 'v1', 'k2': 'v2'}
+    with pytest.raises(RuntimeError,
+                    match='GymEnv outputs inconsistent env_info keys.'):
+        env.step(env.action_space.sample())
+    # check that order of keys don't matter for equality
+    assert env._env_info.keys() == {'k2': 'v2', 'k1': 'v1'}.keys()
