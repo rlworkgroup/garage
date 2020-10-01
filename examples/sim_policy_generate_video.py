@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
 """Simulates pre-learned policy."""
 import argparse
+import os
 import sys
 
 import cloudpickle
+from gym.wrappers import Monitor, TimeLimit
+import numpy as np
 import tensorflow as tf
 
-from gym.wrappers import TimeLimit, Monitor
-from garage.envs import GymEnv
-
-from garage.sampler.utils import rollout
-from garage.torch import set_gpu_mode
-
-import os
-import numpy as np
 import cv2
 from garage import StepType
+from garage.envs import GymEnv
+from garage.sampler.utils import rollout
+from garage.torch import set_gpu_mode
 
 
 def trajectory_generator(env, policy, res=(640, 480)):
@@ -29,17 +27,16 @@ def trajectory_generator(env, policy, res=(640, 480)):
         timestep = env.step(a)
         o = timestep.observation
         done = timestep.step_type == StepType.TERMINAL
-        yield timestep.reward, done, timestep.env_info, env.sim.render(*res, mode='offscreen', camera_name='corner')[:,:,::-1]
+        yield timestep.reward, done, timestep.env_info, env.sim.render(
+            *res, mode='offscreen', camera_name='corner')[:, :, ::-1]
+
 
 def writer_for(tag, fps, res):
     if not os.path.exists('movies'):
         os.mkdir('movies')
-    return cv2.VideoWriter(
-        f'movies/{tag}.mp4',
-        cv2.VideoWriter_fourcc('M','J','P','G'),
-        fps,
-        res
-    )
+    return cv2.VideoWriter(f'movies/{tag}.mp4',
+                           cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps,
+                           res)
 
 
 if __name__ == '__main__':
@@ -59,8 +56,12 @@ if __name__ == '__main__':
         policy = data['algo'].policy
         env = data['env']
         resolution = (640, 480)
-        writer = writer_for("pick-place-v2-add-gripper-state-object-orientation-corner-10m", env.metadata['video.frames_per_second'], resolution)
+        writer = writer_for(
+            'pick-place-non-max-entroy-caging_and_gripping_10m_seed=444',
+            env.metadata['video.frames_per_second'], resolution)
         for _ in range(10):
-            for r, done, info, img in trajectory_generator(env, policy, resolution):
+            for r, done, info, img in trajectory_generator(
+                    env, policy, resolution):
+                # img = cv2.rotate(img, cv2.ROTATE_180)
                 writer.write(img)
         writer.release()

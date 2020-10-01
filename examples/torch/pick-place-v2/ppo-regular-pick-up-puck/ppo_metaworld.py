@@ -35,7 +35,7 @@ from garage.tf.policies import GaussianMLPPolicy
 def ppo_metaworld(
     ctxt=None,
     env_name=None,
-    tag='pick-up-puck-gripper-opened-or-closed',
+    tag='pick-place-cosine',
     extra_tags='',
     entropy=0.05,
     stop_entropy_gradient=True,
@@ -110,7 +110,7 @@ def ppo_metaworld(
             use_softplus_entropy=use_softplus_entropy,
         )
 
-        runner.setup(algo, env)
+        runner.setup(algo, env, sampler_cls=LocalSampler)
         runner.train(n_epochs=int(20000000 / (max_path_length * 100)),
                      batch_size=(max_path_length * 100),
                      plot=False)
