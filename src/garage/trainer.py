@@ -640,6 +640,16 @@ class Trainer:
         """
         return self._stats.total_env_steps
 
+    @total_env_steps.setter
+    def total_env_steps(self, value):
+        """Total environment steps collected.
+
+        Args:
+            int: Total environment steps collected.
+
+        """
+        self._stats.total_env_steps = value
+
 
 class NotSetupError(Exception):
     """Raise when an experiment is about to run without setup."""
