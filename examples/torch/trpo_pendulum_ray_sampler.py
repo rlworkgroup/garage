@@ -31,7 +31,7 @@ def trpo_pendulum_ray_sampler(ctxt=None, seed=1):
     """
     # Since this is an example, we are running ray in a reduced state.
     # One can comment this line out in order to run ray at full capacity
-    ray.init(memory=52428800,
+    ray.init(_memory=52428800,
              object_store_memory=78643200,
              ignore_reinit_error=True,
              log_to_driver=False,
