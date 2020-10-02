@@ -92,7 +92,7 @@ with open('VERSION') as v:
     VERSION = v.read().strip()
 
 setup(
-    name='garage',
+    name='garage_test',
     version=VERSION,
     author='Reinforcement Learning Working Group',
     description='A toolkit for reproducible reinforcement learning research',
