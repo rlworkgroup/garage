@@ -28,14 +28,14 @@ from garage.tf.policies import GaussianMLPPolicy
 @click.command()
 @click.option('--env-name', type=str, default='pick-place-v2')
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
-@click.option('--entropy', type=float, default=0.00)
+@click.option('--entropy', type=float, default=0.01)
 @click.option('--use_softplus_entropy', type=bool, default=False)
 @click.option('--extra_tags', type=str, default='none')
 @wrap_experiment(name_parameters='all', snapshot_mode='gap', snapshot_gap=25)
 def ppo_metaworld(
     ctxt=None,
     env_name=None,
-    tag='pick-up-puck-gripper-opened-or-closed',
+    tag='pick-place-caging-working',
     extra_tags='',
     entropy=0.05,
     stop_entropy_gradient=True,
@@ -103,10 +103,9 @@ def ppo_metaworld(
                 max_episode_length=10,
             ),
             stop_entropy_gradient=stop_entropy_gradient,
-            entropy_method='no_entropy',
-            policy_ent_coeff=0,
-            center_adv=True,
-            positive_adv=True,
+            entropy_method='max',
+            policy_ent_coeff=entropy,
+            center_adv=False,
             use_softplus_entropy=use_softplus_entropy,
         )
 

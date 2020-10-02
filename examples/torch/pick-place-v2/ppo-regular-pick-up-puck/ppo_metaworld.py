@@ -35,7 +35,7 @@ from garage.tf.policies import GaussianMLPPolicy
 def ppo_metaworld(
     ctxt=None,
     env_name=None,
-    tag='pick-place-cosine',
+    tag='pick-place-caging-only',
     extra_tags='',
     entropy=0.05,
     stop_entropy_gradient=True,

@@ -57,7 +57,7 @@ if __name__ == '__main__':
         env = data['env']
         resolution = (640, 480)
         writer = writer_for(
-            'pick-place-non-max-entroy-caging_and_gripping_10m_seed=444',
+            'pick-place-solved-5m',
             env.metadata['video.frames_per_second'], resolution)
         for _ in range(10):
             for r, done, info, img in trajectory_generator(
