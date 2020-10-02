@@ -61,6 +61,7 @@ class MultiprocessingSampler(Sampler):
         self._agent_version = 0
         for w in self._workers:
             w.start()
+        self.total_env_steps = 0
 
     @classmethod
     def from_worker_factory(cls, worker_factory, agents, envs):
@@ -182,7 +183,9 @@ class MultiprocessingSampler(Sampler):
                 except queue.Full:
                     pass
 
-        return TrajectoryBatch.concatenate(*batches)
+        samples = TrajectoryBatch.concatenate(*batches)
+        self.total_env_steps += sum(samples.lengths)
+        return samples
 
     def obtain_exact_trajectories(self,
                                   n_traj_per_worker,
@@ -254,7 +257,9 @@ class MultiprocessingSampler(Sampler):
         ordered_trajectories = list(
             itertools.chain(
                 *[trajectories[i] for i in range(self._factory.n_workers)]))
-        return TrajectoryBatch.concatenate(*ordered_trajectories)
+        samples = TrajectoryBatch.concatenate(*ordered_trajectories)
+        self.total_env_steps += sum(samples.lengths)
+        return samples
 
     def shutdown_worker(self):
         """Shutdown the workers."""

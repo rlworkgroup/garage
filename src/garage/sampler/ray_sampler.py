@@ -38,6 +38,7 @@ class RaySampler(Sampler):
         self._all_workers = defaultdict(None)
         self._workers_started = False
         self.start_worker()
+        self.total_env_steps = 0
 
     @classmethod
     def from_worker_factory(cls, worker_factory, agents, envs):
@@ -168,7 +169,9 @@ class RaySampler(Sampler):
                     batches.append(trajectory_batch)
                     pbar.update(num_returned_samples)
 
-        return TrajectoryBatch.concatenate(*batches)
+        samples = TrajectoryBatch.concatenate(*batches)
+        self.total_env_steps += sum(samples.lengths)
+        return samples
 
     def obtain_exact_trajectories(self,
                                   n_traj_per_worker,
@@ -246,7 +249,9 @@ class RaySampler(Sampler):
                 trajectories[i] for i in range(self._worker_factory.n_workers)
             ]))
 
-        return TrajectoryBatch.concatenate(*ordered_trajectories)
+        samples = TrajectoryBatch.concatenate(*ordered_trajectories)
+        self.total_env_steps += sum(samples.lengths)
+        return samples
 
     def shutdown_worker(self):
         """Shuts down the worker."""
