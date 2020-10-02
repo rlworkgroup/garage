@@ -3,6 +3,8 @@ import copy
 
 from garage import EpisodeBatch
 from garage.sampler.sampler import Sampler
+from garage.sampler.worker_factory import WorkerFactory
+from garage.experiment.deterministic import get_seed
 
 
 class LocalSampler(Sampler):
@@ -28,8 +30,13 @@ class LocalSampler(Sampler):
 
     """
 
-    def __init__(self, worker_factory, agents, envs):
+    def __init__(self, agents, envs, max_path_length=None,
+                 worker_factory=None):
         # pylint: disable=super-init-not-called
+        if worker_factory is None:
+            assert max_path_length is not None
+            worker_factory = WorkerFactory(seed=get_seed(),
+                                           max_path_length=max_path_length)
         self._factory = worker_factory
         self._agents = worker_factory.prepare_worker_messages(agents)
         self._envs = worker_factory.prepare_worker_messages(
@@ -64,7 +71,7 @@ class LocalSampler(Sampler):
             Sampler: An instance of `cls`.
 
         """
-        return cls(worker_factory, agents, envs)
+        return cls(agents, envs, worker_factory=worker_factory)
 
     def _update_workers(self, agent_update, env_update):
         """Apply updates to the workers.
