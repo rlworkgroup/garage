@@ -6,6 +6,8 @@ import warnings
 import akro
 import gym
 
+import numpy as np 
+
 from garage import Environment, EnvSpec, EnvStep, StepType
 
 # The gym environments using one of the packages in the following lists as
@@ -241,6 +243,9 @@ class GymEnv(Environment):
 
         if step_type in (StepType.TERMINAL, StepType.TIMEOUT):
             self._step_cnt = None
+
+        if self.spec.observation_space.flat_dim != np.prod(observation.shape):
+            raise RuntimeError('GymEnv observation shape does not conform to its observation_space')
 
         return EnvStep(env_spec=self.spec,
                        action=action,
