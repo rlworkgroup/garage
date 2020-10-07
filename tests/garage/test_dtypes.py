@@ -490,6 +490,13 @@ def test_act_box_env_spec_mismatch_batch(batch_data):
         del s
 
 
+def test_invalid_rewards_shape(batch_data):
+    with pytest.raises(ValueError, match='Rewards tensor must have shape'):
+        batch_data['rewards'] = np.squeeze(batch_data['rewards'])
+        s = TimeStepBatch(**batch_data)
+        del s
+
+
 def test_env_infos_not_ndarray_batch(batch_data):
     with pytest.raises(ValueError,
                        match='entry in env_infos must be a numpy array'):
