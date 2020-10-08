@@ -1,24 +1,21 @@
 # Probablistic Embeddings for Actor-Critic Reinforcement Learning (PEARL)
 
 ```eval_rst
-.. list-table::
-   :header-rows: 0
-   :stub-columns: 1
-   :widths: auto
-
-   * - **Paper**
-     - Efficient Off-Policy Meta-Reinforcement Learning via Probabilistic Context Variables :cite:`rakelly2019efficient`
-   * - **Framework(s)**
-     - .. figure:: ./images/pytorch.png
-        :scale: 10%
-
-        PyTorch
-   * - **API Reference**
-     - `garage.torch.algos.PEARL <../_autoapi/garage/torch/algos/index.html#garage.torch.algos.PEARL>`_
-   * - **Code**
-     - `garage/torch/algos/pearl.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/torch/algos/pearl.py>`_
-   * - **Examples**
-     - :ref:`pearl_half_cheetah_vel`, :ref:`pearl_metaworld_ml1_push`, :ref:`pearl_metaworld_ml10`, :ref:`pearl_metaworld_ml45`
++-------------------+--------------------------------------------------------------------------------------------------------------------------+
+| **Paper**         | Efficient Off-Policy Meta-Reinforcement Learning via Probabilistic Context Variables :cite:`rakelly2019efficient`        |
++-------------------+--------------------------------------------------------------------------------------------------------------------------+
+| **Framework(s)**  | .. figure:: ./images/pytorch.png                                                                                         |
+|                   |    :scale: 10%                                                                                                           |
+|                   |    :class: no-scaled-link                                                                                                |
+|                   |                                                                                                                          |
+|                   |    PyTorch                                                                                                               |
++-------------------+--------------------------------------------------------------------------------------------------------------------------+
+| **API Reference** | `garage.torch.algos.PEARL <../_autoapi/garage/torch/algos/index.html#garage.torch.algos.PEARL>`_                         |
++-------------------+--------------------------------------------------------------------------------------------------------------------------+
+| **Code**          | `garage/torch/algos/pearl.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/torch/algos/pearl.py>`_       |
++-------------------+--------------------------------------------------------------------------------------------------------------------------+
+| **Examples**      | :ref:`pearl_half_cheetah_vel`, :ref:`pearl_metaworld_ml1_push`, :ref:`pearl_metaworld_ml10`, :ref:`pearl_metaworld_ml45` |
++-------------------+--------------------------------------------------------------------------------------------------------------------------+
 ```
 
 PEARL, which stands for Probablistic Embeddings for Actor-Critic Reinforcement Learning, is an off-policy meta-RL algorithm. It is built on top of SAC using two Q-functions and a value function with an addition of an inference network that estimates the posterior `𝑞(𝑧‖𝑐)`. The policy is conditioned on the latent variable `Z` in order to adpat its behavior to specific tasks.

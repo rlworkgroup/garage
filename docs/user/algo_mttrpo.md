@@ -1,25 +1,21 @@
 # Multi-Task TRPO
 
 ```eval_rst
-.. list-table::
-   :header-rows: 0
-   :stub-columns: 1
-   :widths: auto
-
-   * - **Paper**
-     - Trust Region Policy Optimization :cite:`schulman2015trust`, Meta-World: A Benchmark and Evaluation for Multi-Task and Meta Reinforcement Learning :cite:`yu2019metaworld`
-   * - **Framework(s)**
-     - .. figure:: ./images/pytorch.png
-        :scale: 10%
-        :class: no-scaled-link
-
-        PyTorch
-   * - **API Reference**
-     - `garage.torch.algos.TRPO <../_autoapi/garage/torch/algos/index.html#garage.torch.algos.TRPO>`_
-   * - **Code**
-     - `garage/torch/algos/trpo.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/torch/algos/trpo.py>`_
-   * - **Examples**
-     - :ref:`mttrpo_metaworld_mt1_push`, :ref:`mttrpo_metaworld_mt10`, :ref:`mttrpo_metaworld_mt50`
++-------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Paper**         | Trust Region Policy Optimization :cite:`schulman2015trust`, Meta-World: A Benchmark and Evaluation for Multi-Task and Meta Reinforcement Learning :cite:`yu2019metaworld` |
++-------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Framework(s)**  | .. figure:: ./images/pytorch.png                                                                                                                                          |
+|                   |    :scale: 10%                                                                                                                                                            |
+|                   |    :class: no-scaled-link                                                                                                                                                 |
+|                   |                                                                                                                                                                           |
+|                   |    PyTorch                                                                                                                                                                |
++-------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **API Reference** | `garage.torch.algos.TRPO <../_autoapi/garage/torch/algos/index.html#garage.torch.algos.TRPO>`_                                                                            |
++-------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Code**          | `garage/torch/algos/trpo.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/torch/algos/trpo.py>`_                                                          |
++-------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Examples**      | :ref:`mttrpo_metaworld_mt1_push`, :ref:`mttrpo_metaworld_mt10`, :ref:`mttrpo_metaworld_mt50`                                                                              |
++-------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 ```
 
 Multi-Task Trust Region Policy Optimization (MT-TRPO) is a multi-task RL method
