@@ -398,6 +398,7 @@ jobs:
         with:
           user: __token__
           password: pypi-AgENdGVzdC5weXBpLm9yZwIkYzc5MGQyY2YtYTM0Zi00NWYxLWI0NGItNWJlM2U0OGVkZDFiAAIleyJwZXJtaXNzaW9ucyI6ICJ1c2VyIiwgInZlcnNpb24iOiAxfQAABiAqNew6qB86l9MTBS1gvSD-06V3URDl5XhyZ3Bmf3pgOQ
+          repository_url: https://test.pypi.org/legacy/
 
 
   delete_docker_container:
