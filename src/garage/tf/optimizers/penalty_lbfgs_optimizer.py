@@ -4,11 +4,11 @@ import numpy as np
 import scipy.optimize
 import tensorflow as tf
 
-from garage.tf.misc import tensor_utils
-from garage.tf.optimizers.utils import LazyDict
+from garage.tf import compile_function, flatten_tensor_variables
+from garage.tf.optimizers._dtypes import LazyDict
 
 
-class PenaltyLbfgsOptimizer:
+class PenaltyLBFGSOptimizer:
     """Penalized Limited-memory BFGS (L-BFGS) optimizer.
 
     Performs constrained optimization via penalized L-BFGS. The penalty term is
@@ -61,7 +61,7 @@ class PenaltyLbfgsOptimizer:
                    leq_constraint,
                    inputs,
                    constraint_name='constraint',
-                   name='PenaltyLbfgsOptimizer',
+                   name='PenaltyLBFGSOptimizer',
                    **kwargs):
         """Construct operation graph for the optimizer.
 
@@ -104,23 +104,20 @@ class PenaltyLbfgsOptimizer:
                     for idx, (grad, param) in enumerate(zip(grads, params)):
                         if grad is None:
                             grads[idx] = tf.zeros_like(param)
-                    flat_grad = tensor_utils.flatten_tensor_variables(grads)
+                    flat_grad = flatten_tensor_variables(grads)
                     return [
                         tf.cast(penalized_loss, tf.float64),
                         tf.cast(flat_grad, tf.float64),
                     ]
 
             self._opt_fun = LazyDict(
-                f_loss=lambda: tensor_utils.compile_function(
-                    inputs, loss, log_name='f_loss'),
-                f_constraint=lambda: tensor_utils.compile_function(
-                    inputs, constraint_term, log_name='f_constraint'),
-                f_penalized_loss=lambda: tensor_utils.compile_function(
+                f_loss=lambda: compile_function(inputs, loss),
+                f_constraint=lambda: compile_function(inputs, constraint_term),
+                f_penalized_loss=lambda: compile_function(
                     inputs=inputs + [penalty_var],
                     outputs=[penalized_loss, loss, constraint_term],
-                    log_name='f_penalized_loss',
                 ),
-                f_opt=lambda: tensor_utils.compile_function(
+                f_opt=lambda: compile_function(
                     inputs=inputs + [penalty_var],
                     outputs=get_opt_output(),
                 ))

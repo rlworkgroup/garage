@@ -3,10 +3,11 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalTFRunner
+from garage.experiment import deterministic
 from garage.tf.algos import PPO
 from garage.tf.baselines import ContinuousMLPBaseline
 from garage.tf.policies import GaussianLSTMPolicy
+from garage.trainer import TFTrainer
 
 hyper_params = {
     'policy_hidden_sizes': 32,
@@ -15,7 +16,6 @@ hyper_params = {
     'n_epochs': 20,
     'n_exploration_steps': 2048,
     'discount': 0.99,
-    'max_episode_length': 100,
     'gae_lambda': 0.95,
     'lr_clip_range': 0.2,
     'policy_ent_coeff': 0.02,
@@ -30,14 +30,14 @@ def continuous_mlp_baseline(ctxt, env_id, seed):
 
     Args:
         ctxt (ExperimentContext): The experiment configuration used by
-            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
+            :class:`~Trainer` to create the :class:`~Snapshotter`.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
 
     """
     deterministic.set_seed(seed)
 
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         env = normalize(GymEnv(env_id))
 
         policy = GaussianLSTMPolicy(
@@ -54,7 +54,6 @@ def continuous_mlp_baseline(ctxt, env_id, seed):
         algo = PPO(env_spec=env.spec,
                    policy=policy,
                    baseline=baseline,
-                   max_episode_length=hyper_params['max_episode_length'],
                    discount=hyper_params['discount'],
                    gae_lambda=hyper_params['gae_lambda'],
                    lr_clip_range=hyper_params['lr_clip_range'],
@@ -62,14 +61,14 @@ def continuous_mlp_baseline(ctxt, env_id, seed):
                    policy_ent_coeff=hyper_params['policy_ent_coeff'],
                    optimizer_args=dict(
                        batch_size=32,
-                       max_episode_length=10,
+                       max_optimization_epochs=10,
                        learning_rate=1e-3,
                    ),
                    center_adv=hyper_params['center_adv'],
                    stop_entropy_gradient=True)
 
-        runner.setup(algo,
-                     env,
-                     sampler_args=dict(n_envs=hyper_params['n_envs']))
-        runner.train(n_epochs=hyper_params['n_epochs'],
-                     batch_size=hyper_params['n_exploration_steps'])
+        trainer.setup(algo,
+                      env,
+                      sampler_args=dict(n_envs=hyper_params['n_envs']))
+        trainer.train(n_epochs=hyper_params['n_epochs'],
+                      batch_size=hyper_params['n_exploration_steps'])

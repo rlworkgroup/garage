@@ -7,13 +7,13 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import HERReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
+from garage.trainer import TFTrainer
 
 
 @wrap_experiment(snapshot_mode='last')
@@ -22,13 +22,13 @@ def her_ddpg_fetchreach(ctxt=None, seed=1):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
 
     """
     set_seed(seed)
-    with LocalTFRunner(snapshot_config=ctxt) as runner:
+    with TFTrainer(snapshot_config=ctxt) as trainer:
         env = GymEnv('FetchReach-v1')
 
         policy = ContinuousMLPPolicy(
@@ -65,7 +65,6 @@ def her_ddpg_fetchreach(ctxt=None, seed=1):
             replay_buffer=replay_buffer,
             target_update_tau=0.01,
             steps_per_epoch=50,
-            max_episode_length=250,
             n_train_steps=40,
             discount=0.95,
             exploration_policy=exploration_policy,
@@ -74,9 +73,9 @@ def her_ddpg_fetchreach(ctxt=None, seed=1):
             buffer_batch_size=256,
         )
 
-        runner.setup(algo=ddpg, env=env)
+        trainer.setup(algo=ddpg, env=env)
 
-        runner.train(n_epochs=50, batch_size=256)
+        trainer.train(n_epochs=50, batch_size=256)
 
 
 her_ddpg_fetchreach()

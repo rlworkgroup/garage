@@ -1,5 +1,3 @@
-# pylint is confused by pytest.mark.parametrize
-# pylint: disable=not-callable
 import math
 import pprint
 

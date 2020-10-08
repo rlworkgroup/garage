@@ -27,11 +27,10 @@ class HERReplayBuffer(PathBuffer):
     def __init__(self, replay_k, reward_fn, capacity_in_transitions, env_spec):
         self._replay_k = replay_k
         self._reward_fn = reward_fn
-        self._env_spec = env_spec
 
         if not float(replay_k).is_integer() or replay_k < 0:
             raise ValueError('replay_k must be an integer and >= 0.')
-        super().__init__(capacity_in_transitions)
+        super().__init__(capacity_in_transitions, env_spec)
 
     def _sample_her_goals(self, path, transition_idx):
         """Samples HER goals from the given path.

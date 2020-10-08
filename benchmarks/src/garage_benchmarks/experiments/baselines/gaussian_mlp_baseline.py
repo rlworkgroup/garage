@@ -3,11 +3,12 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalTFRunner
+from garage.experiment import deterministic
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.optimizers import FirstOrderOptimizer
 from garage.tf.policies import GaussianMLPPolicy
+from garage.trainer import TFTrainer
 
 
 @wrap_experiment
@@ -16,7 +17,7 @@ def gaussian_mlp_baseline(ctxt, env_id, seed):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the
+            configuration used by Trainer to create the
             snapshotter.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
@@ -24,7 +25,7 @@ def gaussian_mlp_baseline(ctxt, env_id, seed):
     """
     deterministic.set_seed(seed)
 
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         env = normalize(GymEnv(env_id))
 
         policy = GaussianMLPPolicy(
@@ -41,7 +42,7 @@ def gaussian_mlp_baseline(ctxt, env_id, seed):
             optimizer=FirstOrderOptimizer,
             optimizer_args=dict(
                 batch_size=32,
-                max_episode_length=10,
+                max_optimization_epochs=10,
                 learning_rate=1e-3,
             ),
         )
@@ -50,16 +51,15 @@ def gaussian_mlp_baseline(ctxt, env_id, seed):
             env_spec=env.spec,
             policy=policy,
             baseline=baseline,
-            max_episode_length=100,
             discount=0.99,
             gae_lambda=0.95,
             lr_clip_range=0.2,
             policy_ent_coeff=0.0,
             optimizer_args=dict(
                 batch_size=32,
-                max_episode_length=10,
+                max_optimization_epochs=10,
                 learning_rate=1e-3,
             ),
         )
-        runner.setup(algo, env, sampler_args=dict(n_envs=12))
-        runner.train(n_epochs=5, batch_size=2048)
+        trainer.setup(algo, env, sampler_args=dict(n_envs=12))
+        trainer.train(n_epochs=5, batch_size=2048)

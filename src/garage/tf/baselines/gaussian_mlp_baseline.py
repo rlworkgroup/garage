@@ -6,10 +6,10 @@ import tensorflow as tf
 from garage import make_optimizer
 from garage.experiment import deterministic
 from garage.np.baselines import Baseline
+from garage.tf import compile_function
 from garage.tf.baselines.gaussian_mlp_baseline_model import (
     GaussianMLPBaselineModel)
-from garage.tf.misc import tensor_utils
-from garage.tf.optimizers import LbfgsOptimizer, PenaltyLbfgsOptimizer
+from garage.tf.optimizers import LBFGSOptimizer, PenaltyLBFGSOptimizer
 
 
 # pylint: disable=too-many-ancestors
@@ -111,10 +111,10 @@ class GaussianMLPBaseline(GaussianMLPBaselineModel, Baseline):
             optimizer_args = dict()
         if optimizer is None:
             if use_trust_region:
-                self._optimizer = make_optimizer(PenaltyLbfgsOptimizer,
+                self._optimizer = make_optimizer(PenaltyLBFGSOptimizer,
                                                  **optimizer_args)
             else:
-                self._optimizer = make_optimizer(LbfgsOptimizer,
+                self._optimizer = make_optimizer(LBFGSOptimizer,
                                                  **optimizer_args)
         else:
             self._optimizer = make_optimizer(optimizer, **optimizer_args)
@@ -169,7 +169,7 @@ class GaussianMLPBaseline(GaussianMLPBaselineModel, Baseline):
 
         mean_kl = tf.reduce_mean(old_normalized_dist.kl_divergence(norm_dist))
         loss = -tf.reduce_mean(norm_dist.log_prob(normalized_ys_var))
-        self._f_predict = tensor_utils.compile_function([input_var], mean)
+        self._f_predict = compile_function([input_var], mean)
         optimizer_args = dict(
             loss=loss,
             target=self,

@@ -3,11 +3,12 @@ import pytest
 import torch
 
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalRunner
+from garage.experiment import deterministic, SetTaskSampler
 from garage.sampler import LocalSampler
 from garage.torch.algos import MAMLPPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config
 
@@ -32,8 +33,14 @@ class TestMAMLPPO:
 
     def setup_method(self):
         """Setup method which is called before every test."""
-        self.env = normalize(GymEnv(HalfCheetahDirEnv()),
+        self.env = normalize(GymEnv(HalfCheetahDirEnv(),
+                                    max_episode_length=100),
                              expected_action_scale=10.)
+        self.task_sampler = SetTaskSampler(
+            HalfCheetahDirEnv,
+            wrapper=lambda env, _: normalize(GymEnv(env,
+                                                    max_episode_length=100),
+                                             expected_action_scale=10.))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
             hidden_sizes=(64, 64),
@@ -52,22 +59,22 @@ class TestMAMLPPO:
         deterministic.set_seed(0)
 
         episodes_per_task = 5
-        max_episode_length = 100
+        max_episode_length = self.env.spec.max_episode_length
 
-        runner = LocalRunner(snapshot_config)
+        trainer = Trainer(snapshot_config)
         algo = MAMLPPO(env=self.env,
                        policy=self.policy,
+                       task_sampler=self.task_sampler,
                        value_function=self.value_function,
-                       max_episode_length=max_episode_length,
                        meta_batch_size=5,
                        discount=0.99,
                        gae_lambda=1.,
                        inner_lr=0.1,
                        num_grad_updates=1)
 
-        runner.setup(algo, self.env, sampler_cls=LocalSampler)
-        last_avg_ret = runner.train(n_epochs=10,
-                                    batch_size=episodes_per_task *
-                                    max_episode_length)
+        trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+        last_avg_ret = trainer.train(n_epochs=10,
+                                     batch_size=episodes_per_task *
+                                     max_episode_length)
 
         assert last_avg_ret > -5

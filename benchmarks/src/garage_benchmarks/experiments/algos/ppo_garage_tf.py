@@ -3,15 +3,15 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalTFRunner
+from garage.experiment import deterministic
 from garage.tf.algos import PPO as TF_PPO
 from garage.tf.baselines import GaussianMLPBaseline as TF_GMB
 from garage.tf.optimizers import FirstOrderOptimizer
 from garage.tf.policies import GaussianMLPPolicy as TF_GMP
+from garage.trainer import TFTrainer
 
 hyper_parameters = {
     'n_epochs': 500,
-    'max_episode_length': 100,
     'batch_size': 1024,
 }
 
@@ -22,7 +22,7 @@ def ppo_garage_tf(ctxt, env_id, seed):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the
+            configuration used by Trainer to create the
             snapshotter.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
@@ -30,7 +30,7 @@ def ppo_garage_tf(ctxt, env_id, seed):
     """
     deterministic.set_seed(seed)
 
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         env = normalize(GymEnv(env_id))
 
         policy = TF_GMP(
@@ -47,25 +47,23 @@ def ppo_garage_tf(ctxt, env_id, seed):
             optimizer=FirstOrderOptimizer,
             optimizer_args=dict(
                 batch_size=32,
-                max_episode_length=10,
+                max_optimization_epochs=10,
                 learning_rate=3e-4,
             ),
         )
 
-        algo = TF_PPO(
-            env_spec=env.spec,
-            policy=policy,
-            baseline=baseline,
-            max_episode_length=hyper_parameters['max_episode_length'],
-            discount=0.99,
-            gae_lambda=0.95,
-            center_adv=True,
-            lr_clip_range=0.2,
-            optimizer_args=dict(batch_size=32,
-                                max_episode_length=10,
-                                learning_rate=3e-4,
-                                verbose=True))
+        algo = TF_PPO(env_spec=env.spec,
+                      policy=policy,
+                      baseline=baseline,
+                      discount=0.99,
+                      gae_lambda=0.95,
+                      center_adv=True,
+                      lr_clip_range=0.2,
+                      optimizer_args=dict(batch_size=32,
+                                          max_optimization_epochs=10,
+                                          learning_rate=3e-4,
+                                          verbose=True))
 
-        runner.setup(algo, env)
-        runner.train(n_epochs=hyper_parameters['n_epochs'],
-                     batch_size=hyper_parameters['batch_size'])
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=hyper_parameters['n_epochs'],
+                      batch_size=hyper_parameters['batch_size'])

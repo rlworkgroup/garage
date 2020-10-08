@@ -5,11 +5,11 @@ import tensorflow as tf
 
 from garage import EpisodeBatch, log_performance, wrap_experiment
 from garage.envs import PointEnv
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
-from garage.misc import tensor_utils
+from garage.np import discount_cumsum
 from garage.sampler import LocalSampler
 from garage.tf.policies import GaussianMLPPolicy
+from garage.trainer import TFTrainer
 
 
 class SimpleVPG:
@@ -25,7 +25,7 @@ class SimpleVPG:
     def __init__(self, env_spec, policy):
         self.env_spec = env_spec
         self.policy = policy
-        self.max_episode_length = 200
+        self.max_episode_length = env_spec.max_episode_length
         self._discount = 0.99
         self.init_opt()
 
@@ -50,15 +50,15 @@ class SimpleVPG:
             self._train_op = tf.compat.v1.train.AdamOptimizer(1e-3).minimize(
                 loss)
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): Experiment runner.
+            trainer (Trainer): Experiment trainer.
 
         """
-        for epoch in runner.step_epochs():
-            samples = runner.obtain_samples(epoch)
+        for epoch in trainer.step_epochs():
+            samples = trainer.obtain_samples(epoch)
             log_performance(epoch,
                             EpisodeBatch.from_list(self.env_spec, samples),
                             self._discount)
@@ -78,8 +78,7 @@ class SimpleVPG:
         actions = np.concatenate([path['actions'] for path in samples])
         returns = []
         for path in samples:
-            returns.append(
-                tensor_utils.discount_cumsum(path['rewards'], self._discount))
+            returns.append(discount_cumsum(path['rewards'], self._discount))
         returns = np.concatenate(returns)
         sess = tf.compat.v1.get_default_session()
         sess.run(self._train_op,
@@ -121,16 +120,16 @@ def tutorial_vpg(ctxt=None):
 
     Args:
         ctxt (ExperimentContext): The experiment configuration used by
-            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
+            :class:`~Trainer` to create the :class:`~Snapshotter`.
 
     """
     set_seed(100)
-    with LocalTFRunner(ctxt) as runner:
-        env = PointEnv()
+    with TFTrainer(ctxt) as trainer:
+        env = PointEnv(max_episode_length=200)
         policy = GaussianMLPPolicy(env.spec)
         algo = SimpleVPG(env.spec, policy)
-        runner.setup(algo, env)
-        runner.train(n_epochs=200, batch_size=4000)
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=200, batch_size=4000)
 
 
 tutorial_vpg()

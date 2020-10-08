@@ -1,15 +1,20 @@
 """This modules creates a DDPG model in PyTorch."""
+# yapf: disable
 import copy
 
 from dowel import logger, tabular
 import numpy as np
 import torch
 
-from garage import _Default, log_performance, make_optimizer
-from garage.np import obtain_evaluation_episodes
+from garage import (_Default,
+                    log_performance,
+                    make_optimizer,
+                    obtain_evaluation_episodes)
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch import dict_np_to_torch, torch_to_np
+
+# yapf: enable
 
 
 class DDPG(RLAlgorithm):
@@ -28,18 +33,15 @@ class DDPG(RLAlgorithm):
         replay_buffer (ReplayBuffer): Replay buffer.
         steps_per_epoch (int): Number of train_once calls per epoch.
         n_train_steps (int): Training steps.
-        max_episode_length (int): Maximum episode length. The episode will
-            be truncated when the length of the episode reaches
-            max_episode_length.
-        max_episode_length_eval (int or None): Maximum length of episodes used
-            for off-policy evaluation. If `None`, defaults to
-            `max_episode_length`.
         buffer_batch_size (int): Batch size of replay buffer.
         min_buffer_size (int): The minimum buffer size for replay buffer.
         exploration_policy (garage.np.exploration_policies.ExplorationPolicy): # noqa: E501
                 Exploration strategy.
         target_update_tau (float): Interpolation parameter for doing the
             soft target update.
+        max_episode_length_eval (int or None): Maximum length of episodes used
+            for off-policy evaluation. If `None`, defaults to
+            `env_spec.max_episode_length`.
         discount(float): Discount factor for the cumulative return.
         policy_weight_decay (float): L2 weight decay factor for parameters
             of the policy network.
@@ -72,7 +74,6 @@ class DDPG(RLAlgorithm):
             qf,
             replay_buffer,
             *,  # Everything after this is numbers.
-            max_episode_length,
             steps_per_epoch=20,
             n_train_steps=50,
             max_episode_length_eval=None,
@@ -116,8 +117,11 @@ class DDPG(RLAlgorithm):
         self._buffer_batch_size = buffer_batch_size
         self._discount = discount
         self._reward_scale = reward_scale
-        self.max_episode_length = max_episode_length
-        self._max_episode_length_eval = max_episode_length_eval
+        self.max_episode_length = env_spec.max_episode_length
+        self._max_episode_length_eval = env_spec.max_episode_length
+
+        if max_episode_length_eval is not None:
+            self._max_episode_length_eval = max_episode_length_eval
 
         self.env_spec = env_spec
         self.replay_buffer = replay_buffer
@@ -136,34 +140,36 @@ class DDPG(RLAlgorithm):
         self.sampler_cls = LocalSampler
         self.worker_cls = FragmentWorker
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): Experiment runner.
+            trainer (Trainer): Experiment trainer.
 
         Returns:
             float: The average return in last epoch cycle.
 
         """
         if not self._eval_env:
-            self._eval_env = runner.get_env_copy()
+            self._eval_env = trainer.get_env_copy()
         last_returns = [float('nan')]
-        runner.enable_logging = False
+        trainer.enable_logging = False
 
-        for _ in runner.step_epochs():
+        for _ in trainer.step_epochs():
             for cycle in range(self._steps_per_epoch):
-                runner.step_path = runner.obtain_episodes(runner.step_itr)
-                self.train_once(runner.step_itr, runner.step_path)
+                trainer.step_path = trainer.obtain_episodes(trainer.step_itr)
+                if hasattr(self.exploration_policy, 'update'):
+                    self.exploration_policy.update(trainer.step_path)
+                self.train_once(trainer.step_itr, trainer.step_path)
                 if (cycle == 0 and self.replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
-                    runner.enable_logging = True
+                    trainer.enable_logging = True
                     eval_eps = obtain_evaluation_episodes(
                         self.policy, self._eval_env)
-                    last_returns = log_performance(runner.step_itr,
+                    last_returns = log_performance(trainer.step_itr,
                                                    eval_eps,
                                                    discount=self._discount)
-                runner.step_itr += 1
+                trainer.step_itr += 1
 
         return np.mean(last_returns)
 

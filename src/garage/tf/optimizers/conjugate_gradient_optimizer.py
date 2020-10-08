@@ -5,14 +5,19 @@ computes the optimal step size that will satisfy the KL divergence constraint.
 Finally, it performs a backtracking line search to optimize the objective.
 
 """
+# yapf: disable
 import abc
 
 from dowel import logger
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.misc import tensor_utils
-from garage.tf.optimizers.utils import LazyDict, sliced_fun
+from garage.tf import (compile_function,
+                       flatten_tensor_variables,
+                       new_tensor_like)
+from garage.tf.optimizers._dtypes import LazyDict
+
+# yapf: enable
 
 
 class HessianVectorProduct(abc.ABC):
@@ -68,7 +73,7 @@ class HessianVectorProduct(abc.ABC):
 
             """
             xs = tuple(self._target.flat_to_params(v))
-            ret = sliced_fun(self._hvp_fun['f_hx_plain'], self._num_slices)(
+            ret = _sliced_fn(self._hvp_fun['f_hx_plain'], self._num_slices)(
                 inputs, xs) + self._reg_coeff * v
             return ret
 
@@ -86,7 +91,7 @@ class HessianVectorProduct(abc.ABC):
         return new_dict
 
 
-class PearlmutterHvp(HessianVectorProduct):
+class PearlmutterHVP(HessianVectorProduct):
     """Computes Hessian-vector product using Pearlmutter's algorithm.
 
     `Pearlmutter, Barak A. "Fast exact multiplication by the Hessian." Neural
@@ -94,7 +99,7 @@ class PearlmutterHvp(HessianVectorProduct):
 
     """
 
-    def update_hvp(self, f, target, inputs, reg_coeff, name='PearlmutterHvp'):
+    def update_hvp(self, f, target, inputs, reg_coeff, name='PearlmutterHVP'):
         """Build the symbolic graph to compute the Hessian-vector product.
 
         Args:
@@ -117,10 +122,8 @@ class PearlmutterHvp(HessianVectorProduct):
                 if grad is None:
                     constraint_grads[idx] = tf.zeros_like(param)
 
-            xs = tuple([
-                tensor_utils.new_tensor_like(p.name.split(':')[0], p)
-                for p in params
-            ])
+            xs = tuple(
+                [new_tensor_like(p.name.split(':')[0], p) for p in params])
 
             def hx_plain():
                 """Computes product of Hessian(f) and vector v.
@@ -135,7 +138,7 @@ class PearlmutterHvp(HessianVectorProduct):
                             tf.stack([
                                 tf.reduce_sum(g * x)
                                 for g, x in zip(constraint_grads, xs)
-                            ])),
+                            ]))
                     hx_plain_splits = tf.gradients(hx_f,
                                                    params,
                                                    name='gradients_hx_plain')
@@ -144,18 +147,15 @@ class PearlmutterHvp(HessianVectorProduct):
                                                       params)):
                         if hx is None:
                             hx_plain_splits[idx] = tf.zeros_like(param)
-                    return tensor_utils.flatten_tensor_variables(
-                        hx_plain_splits)
+                    return flatten_tensor_variables(hx_plain_splits)
 
-            self._hvp_fun = LazyDict(
-                f_hx_plain=lambda: tensor_utils.compile_function(
-                    inputs=inputs + xs,
-                    outputs=hx_plain(),
-                    log_name='f_hx_plain',
-                ), )
+            self._hvp_fun = LazyDict(f_hx_plain=lambda: compile_function(
+                inputs=inputs + xs,
+                outputs=hx_plain(),
+            ), )
 
 
-class FiniteDifferenceHvp(HessianVectorProduct):
+class FiniteDifferenceHVP(HessianVectorProduct):
     """Computes Hessian-vector product using finite difference method.
 
     Args:
@@ -172,7 +172,12 @@ class FiniteDifferenceHvp(HessianVectorProduct):
         self.base_eps = base_eps
         self.symmetric = symmetric
 
-    def update_hvp(self, f, target, inputs, reg_coeff, name='FiniteDifferenceHvp'):
+    def update_hvp(self,
+                   f,
+                   target,
+                   inputs,
+                   reg_coeff,
+                   name='FiniteDifferenceHVP'):
         """Build the symbolic graph to compute the Hessian-vector product.
 
         Args:
@@ -194,7 +199,7 @@ class FiniteDifferenceHvp(HessianVectorProduct):
             for idx, (grad, param) in enumerate(zip(constraint_grads, params)):
                 if grad is None:
                     constraint_grads[idx] = tf.zeros_like(param)
-            flat_grad = tensor_utils.flatten_tensor_variables(constraint_grads)
+            flat_grad = flatten_tensor_variables(constraint_grads)
 
             def f_hx_plain(*args):
                 """Computes product of Hessian(f) and vector v.
@@ -230,10 +235,9 @@ class FiniteDifferenceHvp(HessianVectorProduct):
                     return hx
 
             self._hvp_fun = LazyDict(
-                f_grad=lambda: tensor_utils.compile_function(
+                f_grad=lambda: compile_function(
                     inputs=inputs,
                     outputs=flat_grad,
-                    log_name='f_grad',
                 ),
                 f_hx_plain=lambda: f_hx_plain,
             )
@@ -260,7 +264,7 @@ class ConjugateGradientOptimizer:
             violates the line search condition after exhausting all
             backtracking budgets.
         hvp_approach (HessianVectorProduct): A class that computes
-            Hessian-vector products.
+            Hessian-Vector products.
         num_slices (int): Hessian-vector product function's inputs will be
             divided into num_slices and then averaged together to improve
             performance.
@@ -289,18 +293,18 @@ class ConjugateGradientOptimizer:
         self._constraint_name = None
         self._accept_violation = accept_violation
         if hvp_approach is None:
-            hvp_approach = PearlmutterHvp(num_slices)
+            hvp_approach = PearlmutterHVP(num_slices)
         self._hvp_approach = hvp_approach
 
     def update_opt(
-            self,
-            loss,
-            target,
-            leq_constraint,
-            inputs,
-            extra_inputs=None,
-            name='ConjugateGradientOptimizer',
-            constraint_name='constraint',
+        self,
+        loss,
+        target,
+        leq_constraint,
+        inputs,
+        extra_inputs=None,
+        name='ConjugateGradientOptimizer',
+        constraint_name='constraint',
     ):
         """Update the optimizer.
 
@@ -325,7 +329,6 @@ class ConjugateGradientOptimizer:
 
         """
         params = target.get_params()
-        ns_vals = [loss, target, leq_constraint, inputs, extra_inputs, params]
         with tf.name_scope(name):
             inputs = tuple(inputs)
             if extra_inputs is None:
@@ -340,7 +343,7 @@ class ConjugateGradientOptimizer:
                 for idx, (grad, param) in enumerate(zip(grads, params)):
                     if grad is None:
                         grads[idx] = tf.zeros_like(param)
-                flat_grad = tensor_utils.flatten_tensor_variables(grads)
+                flat_grad = flatten_tensor_variables(grads)
 
             self._hvp_approach.update_hvp(f=constraint_term,
                                           target=target,
@@ -353,25 +356,21 @@ class ConjugateGradientOptimizer:
             self._constraint_name = constraint_name
 
             self._opt_fun = LazyDict(
-                f_loss=lambda: tensor_utils.compile_function(
+                f_loss=lambda: compile_function(
                     inputs=inputs + extra_inputs,
                     outputs=loss,
-                    log_name='f_loss',
                 ),
-                f_grad=lambda: tensor_utils.compile_function(
+                f_grad=lambda: compile_function(
                     inputs=inputs + extra_inputs,
                     outputs=flat_grad,
-                    log_name='f_grad',
                 ),
-                f_constraint=lambda: tensor_utils.compile_function(
+                f_constraint=lambda: compile_function(
                     inputs=inputs + extra_inputs,
                     outputs=constraint_term,
-                    log_name='constraint',
                 ),
-                f_loss_constraint=lambda: tensor_utils.compile_function(
+                f_loss_constraint=lambda: compile_function(
                     inputs=inputs + extra_inputs,
                     outputs=[loss, constraint_term],
-                    log_name='f_loss_constraint',
                 ),
             )
 
@@ -392,7 +391,7 @@ class ConjugateGradientOptimizer:
         inputs = tuple(inputs)
         if extra_inputs is None:
             extra_inputs = tuple()
-        return sliced_fun(self._opt_fun['f_loss'],
+        return _sliced_fn(self._opt_fun['f_loss'],
                           self._num_slices)(inputs, extra_inputs)
 
     def constraint_val(self, inputs, extra_inputs=None):
@@ -412,7 +411,7 @@ class ConjugateGradientOptimizer:
         inputs = tuple(inputs)
         if extra_inputs is None:
             extra_inputs = tuple()
-        return sliced_fun(self._opt_fun['f_constraint'],
+        return _sliced_fn(self._opt_fun['f_constraint'],
                           self._num_slices)(inputs, extra_inputs)
 
     def optimize(self,
@@ -459,17 +458,17 @@ class ConjugateGradientOptimizer:
                 (len(prev_param), len(inputs[0]), len(subsample_inputs[0])))
 
             logger.log('computing loss before')
-            loss_before = sliced_fun(self._opt_fun['f_loss'],
+            loss_before = _sliced_fn(self._opt_fun['f_loss'],
                                      self._num_slices)(inputs, extra_inputs)
 
             logger.log('computing gradient')
-            flat_g = sliced_fun(self._opt_fun['f_grad'],
+            flat_g = _sliced_fn(self._opt_fun['f_grad'],
                                 self._num_slices)(inputs, extra_inputs)
             logger.log('gradient computed')
 
             logger.log('computing descent direction')
             hx = self._hvp_approach.build_eval(subsample_inputs + extra_inputs)
-            descent_direction = cg(hx, flat_g, cg_iters=self._cg_iters)
+            descent_direction = _cg(hx, flat_g, cg_iters=self._cg_iters)
 
             initial_step_size = np.sqrt(
                 2.0 * self._max_constraint_val *
@@ -486,7 +485,7 @@ class ConjugateGradientOptimizer:
                 cur_step = ratio * flat_descent_step
                 cur_param = prev_param - cur_step
                 self._target.set_param_values(cur_param)
-                loss, constraint_val = sliced_fun(
+                loss, constraint_val = _sliced_fn(
                     self._opt_fun['f_loss_constraint'],
                     self._num_slices)(inputs, extra_inputs)
                 if (loss < loss_before
@@ -523,7 +522,7 @@ class ConjugateGradientOptimizer:
         return new_dict
 
 
-def cg(f_Ax, b, cg_iters=10, residual_tol=1e-10):
+def _cg(f_Ax, b, cg_iters=10, residual_tol=1e-10):
     """Use Conjugate Gradient iteration to solve Ax = b. Demmel p 312.
 
     Args:
@@ -555,3 +554,61 @@ def cg(f_Ax, b, cg_iters=10, residual_tol=1e-10):
         if rdotr < residual_tol:
             break
     return x
+
+
+def _sliced_fn(f, n_slices):
+    """Divide function f's inputs into several slices.
+
+    Evaluate f on those slices, and then average the result. It is useful when
+    memory is not enough to process all data at once.
+    Assume:
+    1. each of f's inputs is iterable and composed of multiple "samples"
+    2. outputs can be averaged over "samples"
+
+    Args:
+        f (Callable): Function to evaluate.
+        n_slices (int): Number of slices to evaluate over.
+
+    Returns:
+        Callable: Sliced version of f.
+
+    """
+
+    def _sliced_f(sliced_inputs, non_sliced_inputs=None):  # pylint: disable=missing-return-doc, missing-return-type-doc # noqa: E501
+        if non_sliced_inputs is None:
+            non_sliced_inputs = []
+
+        if isinstance(non_sliced_inputs, tuple):
+            non_sliced_inputs = list(non_sliced_inputs)
+
+        n_paths = len(sliced_inputs[0])
+        slice_size = max(1, n_paths // n_slices)
+        ret_vals = None
+        for start in range(0, n_paths, slice_size):
+            inputs_slice = [v[start:start + slice_size] for v in sliced_inputs]
+            slice_ret_vals = f(*(inputs_slice + non_sliced_inputs))
+
+            if not isinstance(slice_ret_vals, (tuple, list)):
+                slice_ret_vals_as_list = [slice_ret_vals]
+            else:
+                slice_ret_vals_as_list = slice_ret_vals
+
+            scaled_ret_vals = [
+                np.asarray(v) * len(inputs_slice[0])
+                for v in slice_ret_vals_as_list
+            ]
+
+            if ret_vals is None:
+                ret_vals = scaled_ret_vals
+            else:
+                ret_vals = [x + y for x, y in zip(ret_vals, scaled_ret_vals)]
+
+        ret_vals = [v / n_paths for v in ret_vals]
+        if not isinstance(slice_ret_vals, (tuple, list)):
+            ret_vals = ret_vals[0]
+        elif isinstance(slice_ret_vals, tuple):
+            ret_vals = tuple(ret_vals)
+
+        return ret_vals
+
+    return _sliced_f

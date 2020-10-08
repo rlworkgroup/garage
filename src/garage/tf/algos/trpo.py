@@ -1,7 +1,7 @@
 """Trust Region Policy Optimization."""
 from garage.tf.algos.npo import NPO
 from garage.tf.optimizers import (ConjugateGradientOptimizer,
-                                  PenaltyLbfgsOptimizer)
+                                  PenaltyLBFGSOptimizer)
 
 
 class TRPO(NPO):
@@ -17,7 +17,6 @@ class TRPO(NPO):
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_episode_length (int): Maximum length of a single episode.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -58,7 +57,6 @@ class TRPO(NPO):
                  policy,
                  baseline,
                  scope=None,
-                 max_episode_length=500,
                  discount=0.99,
                  gae_lambda=0.98,
                  center_adv=True,
@@ -79,7 +77,7 @@ class TRPO(NPO):
             if kl_constraint == 'hard':
                 optimizer = ConjugateGradientOptimizer
             elif kl_constraint == 'soft':
-                optimizer = PenaltyLbfgsOptimizer
+                optimizer = PenaltyLBFGSOptimizer
             else:
                 raise ValueError('Invalid kl_constraint')
 
@@ -90,7 +88,6 @@ class TRPO(NPO):
                          policy=policy,
                          baseline=baseline,
                          scope=scope,
-                         max_episode_length=max_episode_length,
                          discount=discount,
                          gae_lambda=gae_lambda,
                          center_adv=center_adv,

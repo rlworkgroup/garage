@@ -11,9 +11,8 @@ from garage import (_Default,
                     EpisodeBatch,
                     log_multitask_performance,
                     make_optimizer)
-from garage.misc import tensor_utils
+from garage.np import discount_cumsum
 from garage.sampler import RaySampler
-from garage.sampler.env_update import SetTaskUpdate
 from garage.torch import update_module_params
 from garage.torch.optimizers import (ConjugateGradientOptimizer,
                                      DifferentiableSGD)
@@ -29,6 +28,7 @@ class MAML:
             computing loss.
         env (Environment): An environment.
         policy (garage.torch.policies.Policy): Policy.
+        task_sampler (garage.experiment.TaskSampler): Task sampler.
         meta_optimizer (Union[torch.optim.Optimizer, tuple]):
             Type of optimizer.
             This can be an optimizer type such as `torch.optim.Adam` or a tuple
@@ -48,6 +48,7 @@ class MAML:
                  inner_algo,
                  env,
                  policy,
+                 task_sampler,
                  meta_optimizer,
                  meta_batch_size=40,
                  inner_lr=0.1,
@@ -62,6 +63,7 @@ class MAML:
         self._meta_evaluator = meta_evaluator
         self._policy = policy
         self._env = env
+        self._task_sampler = task_sampler
         self._value_function = copy.deepcopy(inner_algo._value_function)
         self._initial_vf_state = self._value_function.state_dict()
         self._num_grad_updates = num_grad_updates
@@ -74,12 +76,12 @@ class MAML:
                                               eps=_Default(1e-5))
         self._evaluate_every_n_epochs = evaluate_every_n_epochs
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samples and start training for each epoch.
 
         Args:
-            runner (LocalRunner): Gives the algorithm access to
-                :method:`~LocalRunner.step_epochs()`, which provides services
+            trainer (Trainer): Gives the algorithm access to
+                :method:`~Trainer.step_epochs()`, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -88,20 +90,20 @@ class MAML:
         """
         last_return = None
 
-        for _ in runner.step_epochs():
-            all_samples, all_params = self._obtain_samples(runner)
-            last_return = self.train_once(runner, all_samples, all_params)
-            runner.step_itr += 1
+        for _ in trainer.step_epochs():
+            all_samples, all_params = self._obtain_samples(trainer)
+            last_return = self._train_once(trainer, all_samples, all_params)
+            trainer.step_itr += 1
 
         return last_return
 
-    def train_once(self, runner, all_samples, all_params):
+    def _train_once(self, trainer, all_samples, all_params):
         """Train the algorithm once.
 
         Args:
-            runner (LocalRunner): The experiment runner.
-            all_samples (list[list[MAMLEpisodeBatch]]): A two
-                dimensional list of MAMLEpisodeBatch of size
+            trainer (Trainer): The experiment runner.
+            all_samples (list[list[_MAMLEpisodeBatch]]): A two
+                dimensional list of _MAMLEpisodeBatch of size
                 [meta_batch_size * (num_grad_updates + 1)]
             all_params (list[dict]): A list of named parameter dictionaries.
                 Each dictionary contains key value pair of names (str) and
@@ -111,7 +113,7 @@ class MAML:
             float: Average return.
 
         """
-        itr = runner.step_itr
+        itr = trainer.step_itr
         old_theta = dict(self._policy.named_parameters())
 
         kl_before = self._compute_kl_constraint(all_samples,
@@ -136,12 +138,10 @@ class MAML:
         with torch.no_grad():
             policy_entropy = self._compute_policy_entropy(
                 [task_samples[0] for task_samples in all_samples])
-            average_return = self.log_performance(itr, all_samples,
-                                                  meta_objective.item(),
-                                                  loss_after.item(),
-                                                  kl_before.item(),
-                                                  kl_after.item(),
-                                                  policy_entropy.mean().item())
+            average_return = self._log_performance(
+                itr, all_samples, meta_objective.item(), loss_after.item(),
+                kl_before.item(), kl_after.item(),
+                policy_entropy.mean().item())
 
         if self._meta_evaluator and itr % self._evaluate_every_n_epochs == 0:
             self._meta_evaluator.evaluate(self)
@@ -178,32 +178,31 @@ class MAML:
 
         return vf_loss
 
-    def _obtain_samples(self, runner):
+    def _obtain_samples(self, trainer):
         """Obtain samples for each task before and after the fast-adaptation.
 
         Args:
-            runner (LocalRunner): A local runner instance to obtain samples.
+            trainer (Trainer): A trainer instance to obtain samples.
 
         Returns:
             tuple: Tuple of (all_samples, all_params).
-                all_samples (list[MAMLEpisodeBatch]): A list of size
+                all_samples (list[_MAMLEpisodeBatch]): A list of size
                     [meta_batch_size * (num_grad_updates + 1)]
                 all_params (list[dict]): A list of named parameter
                     dictionaries.
 
         """
-        tasks = self._env.sample_tasks(self._meta_batch_size)
+        tasks = self._task_sampler.sample(self._meta_batch_size)
         all_samples = [[] for _ in range(len(tasks))]
         all_params = []
         theta = dict(self._policy.named_parameters())
 
-        for i, task in enumerate(tasks):
+        for i, env_up in enumerate(tasks):
 
             for j in range(self._num_grad_updates + 1):
-                env_up = SetTaskUpdate(None, task=task)
-                episodes = runner.obtain_samples(runner.step_itr,
-                                                 env_update=env_up)
-                batch_samples = self._process_samples(episodes)
+                paths = trainer.obtain_samples(trainer.step_itr,
+                                               env_update=env_up)
+                batch_samples = self._process_samples(paths)
                 all_samples[i].append(batch_samples)
 
                 # The last iteration does only sampling but no adapting
@@ -223,7 +222,7 @@ class MAML:
         """Performs one MAML inner step to update the policy.
 
         Args:
-            batch_samples (MAMLEpisodeBatch): Samples data for one
+            batch_samples (_MAMLEpisodeBatch): Samples data for one
                 task and one gradient step.
             set_grad (bool): if False, update policy parameters in-place.
                 Else, allow taking gradient of functions of updated parameters
@@ -255,8 +254,8 @@ class MAML:
         """Compute loss to meta-optimize.
 
         Args:
-            all_samples (list[list[MAMLEpisodeBatch]]): A two
-                dimensional list of MAMLEpisodeBatch of size
+            all_samples (list[list[_MAMLEpisodeBatch]]): A two
+                dimensional list of _MAMLEpisodeBatch of size
                 [meta_batch_size * (num_grad_updates + 1)]
             all_params (list[dict]): A list of named parameter dictionaries.
                 Each dictionary contains key value pair of names (str) and
@@ -295,8 +294,8 @@ class MAML:
         distribution and current policy distribution.
 
         Args:
-            all_samples (list[list[MAMLEpisodeBatch]]): Two
-                dimensional list of MAMLEpisodeBatch of size
+            all_samples (list[list[_MAMLEpisodeBatch]]): Two
+                dimensional list of _MAMLEpisodeBatch of size
                 [meta_batch_size * (num_grad_updates + 1)]
             all_params (list[dict]): A list of named parameter dictionaries.
                 Each dictionary contains key value pair of names (str) and
@@ -332,7 +331,7 @@ class MAML:
         """Compute policy entropy.
 
         Args:
-            task_samples (list[MAMLEpisodeBatch]): Samples data for
+            task_samples (list[_MAMLEpisodeBatch]): Samples data for
                 one task.
 
         Returns:
@@ -373,27 +372,27 @@ class MAML:
             paths (list[dict]): A list of collected paths.
 
         Returns:
-            MAMLEpisodeBatch: Processed samples data.
+            _MAMLEpisodeBatch: Processed samples data.
 
         """
         for path in paths:
-            path['returns'] = tensor_utils.discount_cumsum(
+            path['returns'] = discount_cumsum(
                 path['rewards'], self._inner_algo.discount).copy()
 
         self._train_value_function(paths)
-        obs, actions, rewards, _, valids, baselines \
-            = self._inner_algo.process_samples(paths)
-        return MAMLEpisodeBatch(paths, obs, actions, rewards, valids,
-                                baselines)
+        obs, actions, rewards, _, valids, baselines = self._inner_algo._process_samples(  # pylint: disable=protected-access # noqa: E501
+            paths)
+        return _MAMLEpisodeBatch(paths, obs, actions, rewards, valids,
+                                 baselines)
 
-    def log_performance(self, itr, all_samples, loss_before, loss_after,
-                        kl_before, kl, policy_entropy):
+    def _log_performance(self, itr, all_samples, loss_before, loss_after,
+                         kl_before, kl, policy_entropy):
         """Evaluate performance of this batch.
 
         Args:
             itr (int): Iteration number.
-            all_samples (list[list[MAMLEpisodeBatch]]): Two
-                dimensional list of MAMLEpisodeBatch of size
+            all_samples (list[list[_MAMLEpisodeBatch]]): Two
+                dimensional list of _MAMLEpisodeBatch of size
                 [meta_batch_size * (num_grad_updates + 1)]
             loss_before (float): Loss before optimization step.
             loss_after (float): Loss after optimization step.
@@ -477,14 +476,14 @@ class MAML:
         return exploration_policy
 
 
-class MAMLEpisodeBatch(
-        collections.namedtuple('MAMLEpisodeBatch', [
+class _MAMLEpisodeBatch(
+        collections.namedtuple('_MAMLEpisodeBatch', [
             'paths', 'observations', 'actions', 'rewards', 'valids',
             'baselines'
         ])):
     r"""A tuple representing a batch of whole episodes in MAML.
 
-    A :class:`MAMLEpisodeBatch` represents a batch of whole episodes
+    A :class:`_MAMLEpisodeBatch` represents a batch of whole episodes
     produced from one environment.
     +-----------------------+-------------------------------------------------+
     | Symbol                | Description                                     |

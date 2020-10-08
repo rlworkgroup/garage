@@ -2,13 +2,13 @@
 """This is an example to train Task Embedding PPO with PointEnv."""
 # pylint: disable=no-value-for-parameter
 import click
-from metaworld.benchmarks import MT10
+import metaworld
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import GymEnv, normalize
+from garage.envs import normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper, round_robin_strategy
-from garage.experiment import LocalTFRunner
+from garage.experiment import MetaWorldTaskSampler
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearMultiFeatureBaseline
 from garage.sampler import LocalSampler
@@ -16,39 +16,47 @@ from garage.tf.algos import TEPPO
 from garage.tf.algos.te import TaskEmbeddingWorker
 from garage.tf.embeddings import GaussianMLPEncoder
 from garage.tf.policies import GaussianMLPTaskEmbeddingPolicy
+from garage.trainer import TFTrainer
 
 
 @click.command()
 @click.option('--seed', default=1)
 @click.option('--n_epochs', default=600)
 @click.option('--batch_size_per_task', default=1024)
+@click.option('--n_tasks', default=10)
 @wrap_experiment
-def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task):
+def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task, n_tasks):
     """Train Task Embedding PPO with PointEnv.
 
     Args:
         ctxt (ExperimentContext): The experiment configuration used by
-            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
+            :class:`~Trainer` to create the :class:`~Snapshotter`.
         seed (int): Used to seed the random number generator to produce
             determinism.
         n_epochs (int): Total number of epochs for training.
         batch_size_per_task (int): Batch size of samples for each task.
+        n_tasks (int): Number of tasks to use. Should be a multiple of 10.
 
     """
     set_seed(seed)
-    tasks = MT10.get_train_tasks().all_task_names
-    envs = [normalize(GymEnv(MT10.from_task(task))) for task in tasks]
+    mt10 = metaworld.MT10()
+    train_task_sampler = MetaWorldTaskSampler(mt10,
+                                              'train',
+                                              lambda env, _: normalize(env),
+                                              add_env_onehot=False)
+    assert n_tasks % 10 == 0
+    assert n_tasks <= 500
+    envs = [env_up() for env_up in train_task_sampler.sample(n_tasks)]
     env = MultiEnvWrapper(envs,
                           sample_strategy=round_robin_strategy,
-                          mode='del-onehot')
+                          mode='vanilla')
 
     latent_length = 4
     inference_window = 6
-    batch_size = batch_size_per_task * len(tasks)
+    batch_size = batch_size_per_task * len(envs)
     policy_ent_coeff = 2e-2
     encoder_ent_coeff = 2e-4
     inference_ce_coeff = 5e-2
-    max_episode_length = 100
     embedding_init_std = 0.1
     embedding_max_std = 0.2
     embedding_min_std = 1e-6
@@ -56,7 +64,7 @@ def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task):
     policy_max_std = None
     policy_min_std = None
 
-    with LocalTFRunner(snapshot_config=ctxt) as runner:
+    with TFTrainer(snapshot_config=ctxt) as trainer:
 
         task_embed_spec = TEPPO.get_encoder_spec(env.task_space,
                                                  latent_dim=latent_length)
@@ -105,7 +113,6 @@ def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task):
                      policy=policy,
                      baseline=baseline,
                      inference=inference,
-                     max_episode_length=max_episode_length,
                      discount=0.99,
                      lr_clip_range=0.2,
                      policy_ent_coeff=policy_ent_coeff,
@@ -114,22 +121,22 @@ def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task):
                      use_softplus_entropy=True,
                      optimizer_args=dict(
                          batch_size=32,
-                         max_episode_length=10,
+                         max_optimization_epochs=10,
                          learning_rate=1e-3,
                      ),
                      inference_optimizer_args=dict(
                          batch_size=32,
-                         max_episode_length=10,
+                         max_optimization_epochs=10,
                      ),
                      center_adv=True,
                      stop_ce_gradient=True)
 
-        runner.setup(algo,
-                     env,
-                     sampler_cls=LocalSampler,
-                     sampler_args=None,
-                     worker_class=TaskEmbeddingWorker)
-        runner.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
+        trainer.setup(algo,
+                      env,
+                      sampler_cls=LocalSampler,
+                      sampler_args=None,
+                      worker_class=TaskEmbeddingWorker)
+        trainer.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
 
 
 te_ppo_mt10()

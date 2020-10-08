@@ -1,18 +1,23 @@
 #!/usr/bin/env python3
 """This is an example to train MAML-TRPO on ML10 environment."""
 # pylint: disable=no-value-for-parameter
+# yapf: disable
 import click
-import metaworld.benchmarks as mwb
+import metaworld
 import torch
 
 from garage import wrap_experiment
-from garage.envs import GymEnv, normalize
-from garage.experiment import LocalRunner, MetaEvaluator
+from garage.envs import MetaWorldSetTaskEnv
+from garage.experiment import (MetaEvaluator,
+                               MetaWorldTaskSampler,
+                               SetTaskSampler)
 from garage.experiment.deterministic import set_seed
-from garage.experiment.task_sampler import EnvPoolSampler
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.trainer import Trainer
+
+# yapf: enable
 
 
 @click.command()
@@ -27,7 +32,7 @@ def maml_trpo_metaworld_ml10(ctxt, seed, epochs, episodes_per_task,
 
     Args:
         ctxt (ExperimentContext): The experiment configuration used by
-            :class:`~LocalRunner: to create the :class:`~Snapshotter:.
+            :class:`~Trainer: to create the :class:`~Snapshotter:.
         seed (int): Used to seed the random number generator to produce
             determinism.
         epochs (int): Number of training epochs.
@@ -37,8 +42,11 @@ def maml_trpo_metaworld_ml10(ctxt, seed, epochs, episodes_per_task,
 
     """
     set_seed(seed)
-    env = normalize(GymEnv(mwb.ML10.get_train_tasks()),
-                    expected_action_scale=10.)
+    ml10 = metaworld.ML10()
+    tasks = MetaWorldTaskSampler(ml10, 'train')
+    env = tasks.sample(10)[0]()
+    test_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
+                                  env=MetaWorldSetTaskEnv(ml10, 'test'))
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
@@ -52,24 +60,13 @@ def maml_trpo_metaworld_ml10(ctxt, seed, epochs, episodes_per_task,
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
-    max_episode_length = 100
+    meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler)
 
-    test_task_names = mwb.ML10.get_test_tasks().all_task_names
-    test_tasks = [
-        normalize(GymEnv(mwb.ML10.from_task(task)), expected_action_scale=10.)
-        for task in test_task_names
-    ]
-    test_sampler = EnvPoolSampler(test_tasks)
-
-    meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
-                                   max_episode_length=max_episode_length,
-                                   n_test_tasks=len(test_task_names))
-
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
     algo = MAMLTRPO(env=env,
                     policy=policy,
+                    task_sampler=tasks,
                     value_function=value_function,
-                    max_episode_length=max_episode_length,
                     meta_batch_size=meta_batch_size,
                     discount=0.99,
                     gae_lambda=1.,
@@ -77,9 +74,9 @@ def maml_trpo_metaworld_ml10(ctxt, seed, epochs, episodes_per_task,
                     num_grad_updates=1,
                     meta_evaluator=meta_evaluator)
 
-    runner.setup(algo, env)
-    runner.train(n_epochs=epochs,
-                 batch_size=episodes_per_task * max_episode_length)
+    trainer.setup(algo, env, n_workers=meta_batch_size)
+    trainer.train(n_epochs=epochs,
+                  batch_size=episodes_per_task * env.spec.max_episode_length)
 
 
 maml_trpo_metaworld_ml10()

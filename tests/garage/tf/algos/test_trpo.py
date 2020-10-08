@@ -8,16 +8,17 @@ import tensorflow as tf
 
 # yapf: disable
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalTFRunner, snapshotter
+from garage.experiment import deterministic, snapshotter
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
 from garage.tf.baselines import GaussianCNNBaseline, GaussianMLPBaseline
-from garage.tf.optimizers import FiniteDifferenceHvp
+from garage.tf.optimizers import FiniteDifferenceHVP
 from garage.tf.policies import (CategoricalCNNPolicy,
                                 CategoricalGRUPolicy,
                                 CategoricalLSTMPolicy,
                                 GaussianMLPPolicy)
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -28,7 +29,8 @@ class TestTRPO(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = normalize(GymEnv('InvertedDoublePendulum-v2'))
+        self.env = normalize(
+            GymEnv('InvertedDoublePendulum-v2', max_episode_length=100))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
             hidden_sizes=(64, 64),
@@ -43,16 +45,15 @@ class TestTRPO(TfGraphTestCase):
     @pytest.mark.mujoco_long
     def test_trpo_pendulum(self):
         """Test TRPO with Pendulum environment."""
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             algo = TRPO(env_spec=self.env.spec,
                         policy=self.policy,
                         baseline=self.baseline,
-                        max_episode_length=100,
                         discount=0.99,
                         gae_lambda=0.98,
                         policy_ent_coeff=0.0)
-            runner.setup(algo, self.env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
+            trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
     @pytest.mark.mujoco
@@ -63,7 +64,6 @@ class TestTRPO(TfGraphTestCase):
                 env_spec=self.env.spec,
                 policy=self.policy,
                 baseline=self.baseline,
-                max_episode_length=100,
                 discount=0.99,
                 gae_lambda=0.98,
                 policy_ent_coeff=0.0,
@@ -73,23 +73,22 @@ class TestTRPO(TfGraphTestCase):
     @pytest.mark.mujoco_long
     def test_trpo_soft_kl_constraint(self):
         """Test TRPO with unkown KL constraints."""
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             algo = TRPO(env_spec=self.env.spec,
                         policy=self.policy,
                         baseline=self.baseline,
-                        max_episode_length=100,
                         discount=0.99,
                         gae_lambda=0.98,
                         policy_ent_coeff=0.0,
                         kl_constraint='soft')
-            runner.setup(algo, self.env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
+            trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 45
 
     @pytest.mark.mujoco_long
     def test_trpo_lstm_cartpole(self):
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = normalize(GymEnv('CartPole-v1'))
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
+            env = normalize(GymEnv('CartPole-v1', max_episode_length=100))
 
             policy = CategoricalLSTMPolicy(name='policy', env_spec=env.spec)
 
@@ -98,15 +97,14 @@ class TestTRPO(TfGraphTestCase):
             algo = TRPO(env_spec=env.spec,
                         policy=policy,
                         baseline=baseline,
-                        max_episode_length=100,
                         discount=0.99,
                         max_kl_step=0.01,
-                        optimizer_args=dict(hvp_approach=FiniteDifferenceHvp(
+                        optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
                             base_eps=1e-5)))
 
             snapshotter.snapshot_dir = './'
-            runner.setup(algo, env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
+            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 60
 
             env.close()
@@ -114,8 +112,8 @@ class TestTRPO(TfGraphTestCase):
     @pytest.mark.mujoco_long
     def test_trpo_gru_cartpole(self):
         deterministic.set_seed(2)
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = normalize(GymEnv('CartPole-v1'))
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
+            env = normalize(GymEnv('CartPole-v1', max_episode_length=100))
 
             policy = CategoricalGRUPolicy(name='policy', env_spec=env.spec)
 
@@ -124,14 +122,13 @@ class TestTRPO(TfGraphTestCase):
             algo = TRPO(env_spec=env.spec,
                         policy=policy,
                         baseline=baseline,
-                        max_episode_length=100,
                         discount=0.99,
                         max_kl_step=0.01,
-                        optimizer_args=dict(hvp_approach=FiniteDifferenceHvp(
+                        optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
                             base_eps=1e-5)))
 
-            runner.setup(algo, env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
+            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
             env.close()
@@ -145,8 +142,8 @@ class TestTRPOCNNCubeCrash(TfGraphTestCase):
 
     @pytest.mark.large
     def test_trpo_cnn_cubecrash(self):
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = normalize(GymEnv('CubeCrash-v0'))
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
+            env = normalize(GymEnv('CubeCrash-v0', max_episode_length=100))
 
             policy = CategoricalCNNPolicy(env_spec=env.spec,
                                           filters=((32, (8, 8)), (64, (4, 4))),
@@ -165,14 +162,13 @@ class TestTRPOCNNCubeCrash(TfGraphTestCase):
             algo = TRPO(env_spec=env.spec,
                         policy=policy,
                         baseline=baseline,
-                        max_episode_length=100,
                         discount=0.99,
                         gae_lambda=0.98,
                         max_kl_step=0.01,
                         policy_ent_coeff=0.0)
 
-            runner.setup(algo, env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
+            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > -1.5
 
             env.close()

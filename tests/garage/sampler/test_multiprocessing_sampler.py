@@ -61,13 +61,13 @@ def test_update_envs_env_update():
                              for _ in range(max_episode_length)
                          ])
     tasks = SetTaskSampler(PointEnv)
-    n_workers = 8
+    n_workers = 4
     workers = WorkerFactory(seed=100,
                             max_episode_length=max_episode_length,
                             n_workers=n_workers)
     sampler = MultiprocessingSampler.from_worker_factory(workers, policy, env)
     episodes = sampler.obtain_samples(0,
-                                      161,
+                                      500,
                                       np.asarray(policy.get_param_values()),
                                       env_update=tasks.sample(n_workers))
     mean_rewards = []
@@ -182,7 +182,7 @@ def test_pickle():
                              for _ in range(max_episode_length)
                          ])
     tasks = SetTaskSampler(PointEnv)
-    n_workers = 8
+    n_workers = 4
     workers = WorkerFactory(seed=100,
                             max_episode_length=max_episode_length,
                             n_workers=n_workers)
@@ -191,7 +191,7 @@ def test_pickle():
     sampler.shutdown_worker()
     sampler2 = pickle.loads(sampler_pickled)
     episodes = sampler2.obtain_samples(0,
-                                       161,
+                                       500,
                                        np.asarray(policy.get_param_values()),
                                        env_update=tasks.sample(n_workers))
     mean_rewards = []

@@ -8,7 +8,7 @@ from threading import Thread
 
 import numpy as np
 
-from garage.sampler.utils import rollout
+from garage import rollout
 
 __all__ = ['Plotter']
 

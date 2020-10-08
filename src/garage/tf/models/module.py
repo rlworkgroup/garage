@@ -3,7 +3,7 @@ import abc
 
 import tensorflow as tf
 
-from garage.misc.tensor_utils import flatten_tensors, unflatten_tensors
+from garage.np import flatten_tensors, unflatten_tensors
 
 
 class Module(abc.ABC):

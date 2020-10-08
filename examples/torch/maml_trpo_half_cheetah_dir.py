@@ -7,12 +7,13 @@ import torch
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.envs.mujoco import HalfCheetahDirEnv
-from garage.experiment import LocalRunner, MetaEvaluator
+from garage.experiment import MetaEvaluator
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.trainer import Trainer
 
 
 @click.command()
@@ -27,7 +28,7 @@ def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
 
     Args:
         ctxt (ExperimentContext): The experiment configuration used by
-            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
+            :class:`~Trainer` to create the :class:`~Snapshotter`.
         seed (int): Used to seed the random number generator to produce
             determinism.
         epochs (int): Number of training epochs.
@@ -37,7 +38,10 @@ def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
 
     """
     set_seed(seed)
-    env = normalize(GymEnv(HalfCheetahDirEnv()), expected_action_scale=10.)
+    max_episode_length = 100
+    env = normalize(GymEnv(HalfCheetahDirEnv(),
+                           max_episode_length=max_episode_length),
+                    expected_action_scale=10.)
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
@@ -51,21 +55,21 @@ def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
-    max_episode_length = 100
-
-    task_sampler = SetTaskSampler(lambda: normalize(
-        GymEnv(HalfCheetahDirEnv()), expected_action_scale=10.))
+    task_sampler = SetTaskSampler(
+        HalfCheetahDirEnv,
+        wrapper=lambda env, _: normalize(GymEnv(
+            env, max_episode_length=max_episode_length),
+                                         expected_action_scale=10.))
 
     meta_evaluator = MetaEvaluator(test_task_sampler=task_sampler,
-                                   max_episode_length=max_episode_length,
                                    n_test_tasks=1,
                                    n_test_episodes=10)
 
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
     algo = MAMLTRPO(env=env,
                     policy=policy,
+                    task_sampler=task_sampler,
                     value_function=value_function,
-                    max_episode_length=max_episode_length,
                     meta_batch_size=meta_batch_size,
                     discount=0.99,
                     gae_lambda=1.,
@@ -73,9 +77,9 @@ def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
                     num_grad_updates=1,
                     meta_evaluator=meta_evaluator)
 
-    runner.setup(algo, env)
-    runner.train(n_epochs=epochs,
-                 batch_size=episodes_per_task * max_episode_length)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=epochs,
+                  batch_size=episodes_per_task * env.spec.max_episode_length)
 
 
 maml_trpo_half_cheetah_dir()

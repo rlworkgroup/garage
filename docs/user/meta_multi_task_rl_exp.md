@@ -5,7 +5,7 @@ This guide will walk you through how to run meta-/ multi-task RL experiments in 
 Similar to running all other experiments in garage, running meta-/ multi-task RL experiments generally involves steps such as:
 
 - Defining the experiement with the `wrap_experiment` decorator
-- Constructing a `LocalRunner`
+- Constructing a `Trainer`
 - Constructing an environment
 - Constructing policy/ algorithm object(s)
 
@@ -21,13 +21,13 @@ Also, it's worth noting that [MetaWorld](https://github.com/rlworkgroup/metaworl
 The garage repository contains several meta-RL experiment examples. We will take a look at `te_ppo_metaworld_ml1_push.py` as below:
 
 ```py
-from metaworld.benchmarks import ML1
+import metaworld
 import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper
-from garage.experiment import LocalTFRunner
+from garage.experiment import TFTrainer
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearMultiFeatureBaseline
 from garage.sampler import LocalSampler
@@ -42,7 +42,7 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
         n_epochs (int): Total number of epochs for training.
@@ -50,8 +50,16 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
 
     """
     set_seed(seed)
-    envs = [normalize(GymEnv(ML1.get_train_tasks('push-v1')))]
-    env = MultiEnvWrapper(envs, mode='del-onehot')
+    n_tasks = 50
+    mt1 = metaworld.MT1('push-v1')
+    task_sampler = MetaWorldTaskSampler(mt1,
+                                        'train',
+                                        lambda env, _: normalize(env),
+                                        add_env_onehot=False)
+    envs = [env_up() for env_up in task_sampler.sample(n_tasks)]
+    env = MultiEnvWrapper(envs,
+                          sample_strategy=round_robin_strategy,
+                          mode='vanilla')
 
     latent_length = 2
     inference_window = 6
@@ -67,7 +75,7 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
     policy_max_std = None
     policy_min_std = None
 
-    with LocalTFRunner(snapshot_config=ctxt) as runner:
+    with TFTrainer(snapshot_config=ctxt) as trainer:
 
         task_embed_spec = TEPPO.get_encoder_spec(env.task_space,
                                                  latent_dim=latent_length)
@@ -135,12 +143,12 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
                      center_adv=True,
                      stop_ce_gradient=True)
 
-        runner.setup(algo,
+        trainer.setup(algo,
                      env,
                      sampler_cls=LocalSampler,
                      sampler_args=None,
                      worker_class=TaskEmbeddingWorker)
-        runner.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
+        trainer.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
 
 
 te_ppo_ml1_push()
@@ -157,10 +165,12 @@ In this example, we assume one-hot task id is appened to observation and to excl
 When performing a multi-task RL experiment, we can use multi-task learning environment such as `MT50`, `MT10` etc. We will take a look at `te_ppo_metaworld_mt50.py` as below:
 
 ```py
+import metaworld
+
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper, round_robin_strategy
-from garage.experiment import LocalTFRunner
+from garage.experiment import TFTrainer
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearMultiFeatureBaseline
 from garage.sampler import LocalSampler
@@ -170,28 +180,35 @@ from garage.tf.embeddings import GaussianMLPEncoder
 from garage.tf.policies import GaussianMLPTaskEmbeddingPolicy
 
 @wrap_experiment
-def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task):
+def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task, n_tasks):
     """Train Task Embedding PPO with PointEnv.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
         n_epochs (int): Total number of epochs for training.
         batch_size_per_task (int): Batch size of samples for each task.
+        n_tasks (int): Number of tasks to use. Should be a multiple of 50.
 
     """
     set_seed(seed)
-    tasks = MT50.get_train_tasks().all_task_names
-    envs = [GymEnv(normalize(MT50.from_task(task))) for task in tasks]
+    mt50 = metaworld.MT50()
+    task_sampler = MetaWorldTaskSampler(mt50,
+                                        'train',
+                                        lambda env, _: normalize(env),
+                                        add_env_onehot=False)
+    assert n_tasks % 50 == 0
+    assert n_tasks <= 2500
+    envs = [env_up() for env_up in task_sampler.sample(n_tasks)]
     env = MultiEnvWrapper(envs,
                           sample_strategy=round_robin_strategy,
-                          mode='del-onehot')
+                          mode='vanilla')
 
     latent_length = 6
     inference_window = 6
-    batch_size = batch_size_per_task * len(tasks)
+    batch_size = batch_size_per_task * n_tasks
     policy_ent_coeff = 2e-2
     encoder_ent_coeff = 2e-4
     inference_ce_coeff = 5e-2
@@ -203,7 +220,7 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task):
     policy_max_std = None
     policy_min_std = None
 
-    with LocalTFRunner(snapshot_config=ctxt) as runner:
+    with TFTrainer(snapshot_config=ctxt) as trainer:
 
         task_embed_spec = TEPPO.get_encoder_spec(env.task_space,
                                                  latent_dim=latent_length)
@@ -261,22 +278,22 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task):
                      use_softplus_entropy=True,
                      optimizer_args=dict(
                          batch_size=32,
-                         max_epochs=10,
+                         max_optimization_epochs=10,
                          learning_rate=1e-3,
                      ),
                      inference_optimizer_args=dict(
                          batch_size=32,
-                         max_epochs=10,
+                         max_optimization_epochs=10,
                      ),
                      center_adv=True,
                      stop_ce_gradient=True)
 
-        runner.setup(algo,
+        trainer.setup(algo,
                      env,
                      sampler_cls=LocalSampler,
                      sampler_args=None,
                      worker_class=TaskEmbeddingWorker)
-        runner.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
+        trainer.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
 
 
 te_ppo_mt50()

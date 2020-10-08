@@ -3,11 +3,12 @@ import torch
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalRunner
+from garage.experiment import deterministic
 from garage.torch.algos import VPG as PyTorch_VPG
 from garage.torch.optimizers import OptimizerWrapper
 from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
 from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.trainer import Trainer
 
 hyper_parameters = {
     'hidden_sizes': [64, 64],
@@ -15,7 +16,6 @@ hyper_parameters = {
     'learning_rate': 1e-2,
     'discount': 0.99,
     'n_epochs': 250,
-    'max_episode_length': 100,
     'batch_size': 2048,
 }
 
@@ -26,7 +26,7 @@ def vpg_garage_pytorch(ctxt, env_id, seed):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the
+            configuration used by Trainer to create the
             snapshotter.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
@@ -34,7 +34,7 @@ def vpg_garage_pytorch(ctxt, env_id, seed):
     """
     deterministic.set_seed(seed)
 
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
 
     env = normalize(GymEnv(env_id))
 
@@ -57,16 +57,14 @@ def vpg_garage_pytorch(ctxt, env_id, seed):
                                     max_optimization_epochs=10,
                                     minibatch_size=64)
 
-    algo = PyTorch_VPG(
-        env_spec=env.spec,
-        policy=policy,
-        value_function=value_function,
-        policy_optimizer=policy_optimizer,
-        vf_optimizer=vf_optimizer,
-        max_episode_length=hyper_parameters['max_episode_length'],
-        discount=hyper_parameters['discount'],
-        center_adv=hyper_parameters['center_adv'])
+    algo = PyTorch_VPG(env_spec=env.spec,
+                       policy=policy,
+                       value_function=value_function,
+                       policy_optimizer=policy_optimizer,
+                       vf_optimizer=vf_optimizer,
+                       discount=hyper_parameters['discount'],
+                       center_adv=hyper_parameters['center_adv'])
 
-    runner.setup(algo, env)
-    runner.train(n_epochs=hyper_parameters['n_epochs'],
-                 batch_size=hyper_parameters['batch_size'])
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=hyper_parameters['n_epochs'],
+                  batch_size=hyper_parameters['batch_size'])

@@ -8,8 +8,8 @@ import torch
 import torch.nn.functional as F
 
 from garage import EpisodeBatch, log_performance
-from garage.misc import tensor_utils as tu
-from garage.np.algos.rl_algorithm import RLAlgorithm
+from garage.np import discount_cumsum
+from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
 from garage.torch import compute_advantages, filter_valids, pad_to_last
 from garage.torch.optimizers import OptimizerWrapper
@@ -29,7 +29,6 @@ class VPG(RLAlgorithm):
             for policy.
         vf_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer for
             value function.
-        max_episode_length (int): Maximum length of a single episode.
         num_train_per_epoch (int): Number of train_once calls per epoch.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
@@ -61,7 +60,6 @@ class VPG(RLAlgorithm):
         value_function,
         policy_optimizer=None,
         vf_optimizer=None,
-        max_episode_length=500,
         num_train_per_epoch=1,
         discount=0.99,
         gae_lambda=1,
@@ -72,9 +70,9 @@ class VPG(RLAlgorithm):
         stop_entropy_gradient=False,
         entropy_method='no_entropy',
     ):
-        self.discount = discount
+        self._discount = discount
         self.policy = policy
-        self.max_episode_length = max_episode_length
+        self.max_episode_length = env_spec.max_episode_length
 
         self._value_function = value_function
         self._gae_lambda = gae_lambda
@@ -125,7 +123,16 @@ class VPG(RLAlgorithm):
                 raise ValueError('policy_ent_coeff should be zero '
                                  'when there is no entropy method')
 
-    def train_once(self, itr, paths):
+    @property
+    def discount(self):
+        """Discount factor used by the algorithm.
+
+        Returns:
+            float: discount factor.
+        """
+        return self._discount
+
+    def _train_once(self, itr, paths):
         """Train the algorithm once.
 
         Args:
@@ -137,7 +144,7 @@ class VPG(RLAlgorithm):
 
         """
         obs, actions, rewards, returns, valids, baselines = \
-            self.process_samples(paths)
+            self._process_samples(paths)
 
         if self._maximum_entropy:
             policy_entropies = self._compute_policy_entropy(obs)
@@ -187,15 +194,15 @@ class VPG(RLAlgorithm):
         undiscounted_returns = log_performance(itr,
                                                EpisodeBatch.from_list(
                                                    self._env_spec, paths),
-                                               discount=self.discount)
+                                               discount=self._discount)
         return np.mean(undiscounted_returns)
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): Gives the algorithm the access to
-                :method:`~LocalRunner.step_epochs()`, which provides services
+            trainer (Trainer): Gives the algorithm the access to
+                :method:`~Trainer.step_epochs()`, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -204,12 +211,12 @@ class VPG(RLAlgorithm):
         """
         last_return = None
 
-        for _ in runner.step_epochs():
+        for _ in trainer.step_epochs():
             for _ in range(self._n_samples):
-                runner.step_path = runner.obtain_samples(runner.step_itr)
-                last_return = self.train_once(runner.step_itr,
-                                              runner.step_path)
-                runner.step_itr += 1
+                trainer.step_path = trainer.obtain_samples(trainer.step_itr)
+                last_return = self._train_once(trainer.step_itr,
+                                               trainer.step_path)
+                trainer.step_itr += 1
 
         return last_return
 
@@ -349,7 +356,7 @@ class VPG(RLAlgorithm):
                 baselines with shape :math:`(N \dot [T], )`.
 
         """
-        advantages = compute_advantages(self.discount, self._gae_lambda,
+        advantages = compute_advantages(self._discount, self._gae_lambda,
                                         self.max_episode_length, baselines,
                                         rewards)
         advantage_flat = torch.cat(filter_valids(advantages, valids))
@@ -440,7 +447,7 @@ class VPG(RLAlgorithm):
 
         return log_likelihoods * advantages
 
-    def process_samples(self, paths):
+    def _process_samples(self, paths):
         r"""Process sample data based on the collected paths.
 
         Notes: P is the maximum episode length (self.max_episode_length)
@@ -475,8 +482,7 @@ class VPG(RLAlgorithm):
             for path in paths
         ])
         returns = torch.stack([
-            pad_to_last(tu.discount_cumsum(path['rewards'],
-                                           self.discount).copy(),
+            pad_to_last(discount_cumsum(path['rewards'], self.discount).copy(),
                         total_length=self.max_episode_length) for path in paths
         ])
         with torch.no_grad():

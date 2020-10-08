@@ -5,7 +5,6 @@ import click
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.envs.mujoco import HalfCheetahVelEnv
-from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.sampler import LocalSampler
@@ -16,12 +15,13 @@ from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import (ContextConditionedPolicy,
                                    TanhGaussianMLPPolicy)
 from garage.torch.q_functions import ContinuousMLPQFunction
+from garage.trainer import Trainer
 
 
 @click.command()
 @click.option('--num_epochs', default=500)
 @click.option('--num_train_tasks', default=100)
-@click.option('--num_test_tasks', default=30)
+@click.option('--num_test_tasks', default=100)
 @click.option('--encoder_hidden_size', default=200)
 @click.option('--net_size', default=300)
 @click.option('--num_steps_per_epoch', default=2000)
@@ -37,7 +37,7 @@ def pearl_half_cheetah_vel(ctxt=None,
                            seed=1,
                            num_epochs=500,
                            num_train_tasks=100,
-                           num_test_tasks=30,
+                           num_test_tasks=100,
                            latent_size=5,
                            encoder_hidden_size=200,
                            net_size=300,
@@ -57,12 +57,12 @@ def pearl_half_cheetah_vel(ctxt=None,
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
         num_epochs (int): Number of training epochs.
         num_train_tasks (int): Number of tasks for training.
-        num_test_tasks (int): Number of tasks for testing.
+        num_test_tasks (int): Number of tasks to use for testing.
         latent_size (int): Size of latent context vector.
         encoder_hidden_size (int): Output dimension of dense layer of the
             context encoder.
@@ -93,13 +93,17 @@ def pearl_half_cheetah_vel(ctxt=None,
     encoder_hidden_sizes = (encoder_hidden_size, encoder_hidden_size,
                             encoder_hidden_size)
     # create multi-task environment and sample tasks
-    env_sampler = SetTaskSampler(lambda: normalize(GymEnv(HalfCheetahVelEnv())
-                                                   ))
+    env_sampler = SetTaskSampler(
+        HalfCheetahVelEnv,
+        wrapper=lambda env, _: normalize(
+            GymEnv(env, max_episode_length=max_episode_length)))
     env = env_sampler.sample(num_train_tasks)
-    test_env_sampler = SetTaskSampler(lambda: normalize(
-        GymEnv(HalfCheetahVelEnv())))
+    test_env_sampler = SetTaskSampler(
+        HalfCheetahVelEnv,
+        wrapper=lambda env, _: normalize(
+            GymEnv(env, max_episode_length=max_episode_length)))
 
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
 
     # instantiate networks
     augmented_env = PEARL.augment_env_spec(env[0](), latent_size)
@@ -134,7 +138,6 @@ def pearl_half_cheetah_vel(ctxt=None,
         batch_size=batch_size,
         embedding_batch_size=embedding_batch_size,
         embedding_mini_batch_size=embedding_mini_batch_size,
-        max_episode_length=max_episode_length,
         reward_scale=reward_scale,
     )
 
@@ -142,14 +145,14 @@ def pearl_half_cheetah_vel(ctxt=None,
     if use_gpu:
         pearl.to()
 
-    runner.setup(algo=pearl,
-                 env=env[0](),
-                 sampler_cls=LocalSampler,
-                 sampler_args=dict(max_episode_length=max_episode_length),
-                 n_workers=1,
-                 worker_class=PEARLWorker)
+    trainer.setup(algo=pearl,
+                  env=env[0](),
+                  sampler_cls=LocalSampler,
+                  sampler_args=dict(max_episode_length=max_episode_length),
+                  n_workers=1,
+                  worker_class=PEARLWorker)
 
-    runner.train(n_epochs=num_epochs, batch_size=batch_size)
+    trainer.train(n_epochs=num_epochs, batch_size=batch_size)
 
 
 pearl_half_cheetah_vel()

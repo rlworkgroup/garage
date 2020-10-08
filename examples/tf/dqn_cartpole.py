@@ -5,13 +5,13 @@ Here it creates a gym environment CartPole, and trains a DQN with 50k steps.
 """
 from garage import wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DQN
-from garage.tf.policies import DiscreteQfDerivedPolicy
+from garage.tf.policies import DiscreteQFArgmaxPolicy
 from garage.tf.q_functions import DiscreteMLPQFunction
+from garage.trainer import TFTrainer
 
 
 @wrap_experiment
@@ -20,13 +20,13 @@ def dqn_cartpole(ctxt=None, seed=1):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
 
     """
     set_seed(seed)
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         n_epochs = 10
         steps_per_epoch = 10
         sampler_batch_size = 500
@@ -34,7 +34,7 @@ def dqn_cartpole(ctxt=None, seed=1):
         env = GymEnv('CartPole-v0')
         replay_buffer = PathBuffer(capacity_in_transitions=int(1e4))
         qf = DiscreteMLPQFunction(env_spec=env.spec, hidden_sizes=(64, 64))
-        policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
+        policy = DiscreteQFArgmaxPolicy(env_spec=env.spec, qf=qf)
         exploration_policy = EpsilonGreedyPolicy(env_spec=env.spec,
                                                  policy=policy,
                                                  total_timesteps=num_timesteps,
@@ -45,7 +45,6 @@ def dqn_cartpole(ctxt=None, seed=1):
                    policy=policy,
                    qf=qf,
                    exploration_policy=exploration_policy,
-                   max_episode_length=100,
                    replay_buffer=replay_buffer,
                    steps_per_epoch=steps_per_epoch,
                    qf_lr=1e-4,
@@ -56,8 +55,8 @@ def dqn_cartpole(ctxt=None, seed=1):
                    target_network_update_freq=1,
                    buffer_batch_size=32)
 
-        runner.setup(algo, env)
-        runner.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
 
 
 dqn_cartpole()

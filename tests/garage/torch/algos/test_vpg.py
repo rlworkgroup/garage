@@ -3,11 +3,12 @@ import pytest
 import torch
 
 from garage.envs import GymEnv
-from garage.experiment import deterministic, LocalRunner
+from garage.experiment import deterministic
 from garage.sampler import LocalSampler
 from garage.torch.algos import VPG
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config
 
@@ -39,8 +40,8 @@ class TestVPG:
 
     def setup_method(self):
         """Setup method which is called before every test."""
-        self._env = GymEnv('InvertedDoublePendulum-v2')
-        self._runner = LocalRunner(snapshot_config)
+        self._env = GymEnv('InvertedDoublePendulum-v2', max_episode_length=100)
+        self._trainer = Trainer(snapshot_config)
 
         self._policy = GaussianMLPPolicy(env_spec=self._env.spec,
                                          hidden_sizes=[64, 64],
@@ -51,7 +52,6 @@ class TestVPG:
             'policy': self._policy,
             'value_function':
             GaussianMLPValueFunction(env_spec=self._env.spec),
-            'max_episode_length': 100,
             'discount': 0.99,
         }
 
@@ -66,8 +66,8 @@ class TestVPG:
         self._params['use_softplus_entropy'] = True
 
         algo = VPG(**self._params)
-        self._runner.setup(algo, self._env, sampler_cls=LocalSampler)
-        last_avg_ret = self._runner.train(n_epochs=10, batch_size=100)
+        self._trainer.setup(algo, self._env, sampler_cls=LocalSampler)
+        last_avg_ret = self._trainer.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 0
 
     @pytest.mark.mujoco
@@ -78,8 +78,8 @@ class TestVPG:
         self._params['entropy_method'] = 'max'
 
         algo = VPG(**self._params)
-        self._runner.setup(algo, self._env, sampler_cls=LocalSampler)
-        last_avg_ret = self._runner.train(n_epochs=10, batch_size=100)
+        self._trainer.setup(algo, self._env, sampler_cls=LocalSampler)
+        last_avg_ret = self._trainer.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 0
 
     @pytest.mark.mujoco
@@ -88,8 +88,8 @@ class TestVPG:
         self._params['entropy_method'] = 'regularized'
 
         algo = VPG(**self._params)
-        self._runner.setup(algo, self._env, sampler_cls=LocalSampler)
-        last_avg_ret = self._runner.train(n_epochs=10, batch_size=100)
+        self._trainer.setup(algo, self._env, sampler_cls=LocalSampler)
+        last_avg_ret = self._trainer.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 0
 
     @pytest.mark.mujoco

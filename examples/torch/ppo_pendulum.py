@@ -7,11 +7,11 @@ import torch
 
 from garage import wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.torch.algos import PPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.trainer import Trainer
 
 
 @wrap_experiment
@@ -20,7 +20,7 @@ def ppo_pendulum(ctxt=None, seed=1):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
 
@@ -28,7 +28,7 @@ def ppo_pendulum(ctxt=None, seed=1):
     set_seed(seed)
     env = GymEnv('InvertedDoublePendulum-v2')
 
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
 
     policy = GaussianMLPPolicy(env.spec,
                                hidden_sizes=[64, 64],
@@ -43,12 +43,11 @@ def ppo_pendulum(ctxt=None, seed=1):
     algo = PPO(env_spec=env.spec,
                policy=policy,
                value_function=value_function,
-               max_episode_length=100,
                discount=0.99,
                center_adv=False)
 
-    runner.setup(algo, env)
-    runner.train(n_epochs=100, batch_size=10000)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=100, batch_size=10000)
 
 
 ppo_pendulum(seed=1)

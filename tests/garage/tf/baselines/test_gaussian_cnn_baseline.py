@@ -9,7 +9,7 @@ import tensorflow as tf
 from garage import EnvSpec
 from garage.envs import GymEnv
 from garage.tf.baselines import GaussianCNNBaseline
-from garage.tf.optimizers import LbfgsOptimizer
+from garage.tf.optimizers import LBFGSOptimizer
 
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
@@ -189,7 +189,7 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
 
     @mock.patch('tests.garage.tf.baselines.'
                 'test_gaussian_cnn_baseline.'
-                'LbfgsOptimizer')
+                'LBFGSOptimizer')
     def test_optimizer_args(self, mock_lbfgs):
         lbfgs_args = dict(max_opt_itr=25)
         gcr = GaussianCNNBaseline(env_spec=test_env_spec,
@@ -197,7 +197,7 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
                                   strides=(1, 1),
                                   padding='SAME',
                                   hidden_sizes=(32, ),
-                                  optimizer=LbfgsOptimizer,
+                                  optimizer=LBFGSOptimizer,
                                   optimizer_args=lbfgs_args,
                                   use_trust_region=True)
 

@@ -4,59 +4,72 @@
 https://arxiv.org/pdf/1910.10897.pdf
 """
 import click
-import metaworld.benchmarks as mwb
+import metaworld
 import numpy as np
 from torch import nn
 from torch.nn import functional as F
 
 from garage import wrap_experiment
-from garage.envs import GymEnv, MultiEnvWrapper, normalize
-from garage.envs.multi_env_wrapper import round_robin_strategy
-from garage.experiment import deterministic, LocalRunner
+from garage.envs import normalize
+from garage.experiment import deterministic
+from garage.experiment.task_sampler import MetaWorldTaskSampler
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.torch import set_gpu_mode
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
+from garage.trainer import Trainer
 
 
 @click.command()
 @click.option('--seed', 'seed', type=int, default=1)
 @click.option('--use_gpu', 'use_gpu', type=bool, default=False)
 @click.option('--gpu', '_gpu', type=int, default=0)
+@click.option('--n_tasks', default=50)
+@click.option('--timesteps', default=100000000)
 @wrap_experiment(snapshot_mode='none')
-def mtsac_metaworld_mt50(ctxt=None, seed=1, use_gpu=False, _gpu=0):
+def mtsac_metaworld_mt50(ctxt=None,
+                         *,
+                         seed,
+                         use_gpu,
+                         _gpu,
+                         n_tasks,
+                         timesteps):
     """Train MTSAC with MT50 environment.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
         use_gpu (bool): Used to enable ussage of GPU in training.
         _gpu (int): The ID of the gpu (used on multi-gpu machines).
+        n_tasks (int): Number of tasks to use. Should be a multiple of 50.
+        timesteps (int): Number of timesteps to run.
 
     """
     deterministic.set_seed(seed)
-    runner = LocalRunner(ctxt)
-    task_names = mwb.MT50.get_train_tasks().all_task_names
-    train_envs = []
-    test_envs = []
-    for task_name in task_names:
-        train_env = normalize(GymEnv(mwb.MT50.from_task(task_name)),
-                              normalize_reward=True)
-        test_env = normalize(GymEnv(mwb.MT50.from_task(task_name)))
-        train_envs.append(train_env)
-        test_envs.append(test_env)
-    mt50_train_envs = MultiEnvWrapper(train_envs,
-                                      sample_strategy=round_robin_strategy,
-                                      mode='vanilla')
-    mt50_test_envs = MultiEnvWrapper(test_envs,
-                                     sample_strategy=round_robin_strategy,
-                                     mode='vanilla')
+    trainer = Trainer(ctxt)
+    mt50 = metaworld.MT50()
+    mt50_test = metaworld.MT50()
+    train_task_sampler = MetaWorldTaskSampler(
+        mt50,
+        'train',
+        lambda env, _: normalize(env, normalize_reward=True),
+        add_env_onehot=True)
+    test_task_sampler = MetaWorldTaskSampler(mt50_test,
+                                             'train',
+                                             lambda env, _: normalize(env),
+                                             add_env_onehot=True)
+    assert n_tasks % 50 == 0
+    assert n_tasks <= 2500
+    mt50_train_envs = train_task_sampler.sample(n_tasks)
+    env = mt50_train_envs[0]()
+    mt50_test_envs = [env_up() for env_up in test_task_sampler.sample(n_tasks)]
+
     policy = TanhGaussianMLPPolicy(
-        env_spec=mt50_train_envs.spec,
+        env_spec=env.spec,
         hidden_sizes=[400, 400, 400],
         hidden_nonlinearity=nn.ReLU,
         output_nonlinearity=None,
@@ -64,18 +77,17 @@ def mtsac_metaworld_mt50(ctxt=None, seed=1, use_gpu=False, _gpu=0):
         max_std=np.exp(2.),
     )
 
-    qf1 = ContinuousMLPQFunction(env_spec=mt50_train_envs.spec,
+    qf1 = ContinuousMLPQFunction(env_spec=env.spec,
                                  hidden_sizes=[400, 400, 400],
                                  hidden_nonlinearity=F.relu)
 
-    qf2 = ContinuousMLPQFunction(env_spec=mt50_train_envs.spec,
+    qf2 = ContinuousMLPQFunction(env_spec=env.spec,
                                  hidden_sizes=[400, 400, 400],
                                  hidden_nonlinearity=F.relu)
 
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
 
-    timesteps = 100000000
-    batch_size = int(150 * mt50_train_envs.num_tasks)
+    batch_size = int(env.spec.max_episode_length * n_tasks)
     num_evaluation_points = 500
     epochs = timesteps // batch_size
     epoch_cycles = epochs // num_evaluation_points
@@ -83,11 +95,10 @@ def mtsac_metaworld_mt50(ctxt=None, seed=1, use_gpu=False, _gpu=0):
     mtsac = MTSAC(policy=policy,
                   qf1=qf1,
                   qf2=qf2,
-                  gradient_steps_per_itr=150,
-                  max_episode_length=150,
+                  gradient_steps_per_itr=env.spec.max_episode_length,
                   eval_env=mt50_test_envs,
-                  env_spec=mt50_train_envs.spec,
-                  num_tasks=10,
+                  env_spec=env.spec,
+                  num_tasks=50,
                   steps_per_epoch=epoch_cycles,
                   replay_buffer=replay_buffer,
                   min_buffer_size=7500,
@@ -96,8 +107,23 @@ def mtsac_metaworld_mt50(ctxt=None, seed=1, use_gpu=False, _gpu=0):
                   buffer_batch_size=6400)
     set_gpu_mode(use_gpu, _gpu)
     mtsac.to()
-    runner.setup(algo=mtsac, env=mt50_train_envs, sampler_cls=LocalSampler)
-    runner.train(n_epochs=epochs, batch_size=batch_size)
+    trainer.setup(
+        algo=mtsac,
+        env=mt50_train_envs,
+        sampler_cls=LocalSampler,
+        # 1 sampler worker for each environment
+        n_workers=50,
+        # increasing n_envs increases the vectorization of a sampler worker
+        # which improves runtime performance, but you will need to adjust this
+        # depending on your memory constraints. For reference, each worker by
+        # default uses n_envs=8. Each environment is approximately ~50mb large
+        # so creating 50 envs with 8 copies comes out to 20gb of memory. Many
+        # users want to be able to run multiple seeds on 1 machine, so I have
+        # reduced this to n_envs = 2 for 2 copies in the meantime.
+        worker_args=dict(n_envs=2))
+
+    trainer.train(n_epochs=epochs, batch_size=batch_size)
 
 
+# pylint: disable=missing-kwoa
 mtsac_metaworld_mt50()

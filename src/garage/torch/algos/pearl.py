@@ -42,7 +42,7 @@ class PEARL(MetaRLAlgorithm):
         qf (torch.nn.Module): Q-function.
         vf (torch.nn.Module): Value function.
         num_train_tasks (int): Number of tasks for training.
-        num_test_tasks (int): Number of tasks for testing.
+        num_test_tasks (int or None): Number of tasks for testing.
         latent_dim (int): Size of latent context vector.
         encoder_hidden_sizes (list[int]): Output dimension of dense layer(s) of
             the context encoder.
@@ -81,7 +81,6 @@ class PEARL(MetaRLAlgorithm):
         embedding_mini_batch_size (int): Number of transitions in mini context
             batch; should be same as embedding_batch_size for non-recurrent
             encoder.
-        max_episode_length (int): Maximum episode length.
         discount (float): RL discount factor.
         replay_buffer_size (int): Maximum samples in replay buffer.
         reward_scale (int): Reward scale.
@@ -91,52 +90,52 @@ class PEARL(MetaRLAlgorithm):
     """
 
     # pylint: disable=too-many-statements
-    def __init__(self,
-                 env,
-                 inner_policy,
-                 qf,
-                 vf,
-                 num_train_tasks,
-                 num_test_tasks,
-                 latent_dim,
-                 encoder_hidden_sizes,
-                 test_env_sampler,
-                 policy_class=ContextConditionedPolicy,
-                 encoder_class=MLPEncoder,
-                 policy_lr=3E-4,
-                 qf_lr=3E-4,
-                 vf_lr=3E-4,
-                 context_lr=3E-4,
-                 policy_mean_reg_coeff=1E-3,
-                 policy_std_reg_coeff=1E-3,
-                 policy_pre_activation_coeff=0.,
-                 soft_target_tau=0.005,
-                 kl_lambda=.1,
-                 optimizer_class=torch.optim.Adam,
-                 use_information_bottleneck=True,
-                 use_next_obs_in_context=False,
-                 meta_batch_size=64,
-                 num_steps_per_epoch=1000,
-                 num_initial_steps=100,
-                 num_tasks_sample=100,
-                 num_steps_prior=100,
-                 num_steps_posterior=0,
-                 num_extra_rl_steps_posterior=100,
-                 batch_size=1024,
-                 embedding_batch_size=1024,
-                 embedding_mini_batch_size=1024,
-                 max_episode_length=1000,
-                 discount=0.99,
-                 replay_buffer_size=1000000,
-                 reward_scale=1,
-                 update_post_train=1):
+    def __init__(
+            self,
+            env,
+            inner_policy,
+            qf,
+            vf,
+            *,  # Mostly numbers after here.
+            num_train_tasks,
+            num_test_tasks=None,
+            latent_dim,
+            encoder_hidden_sizes,
+            test_env_sampler,
+            policy_class=ContextConditionedPolicy,
+            encoder_class=MLPEncoder,
+            policy_lr=3E-4,
+            qf_lr=3E-4,
+            vf_lr=3E-4,
+            context_lr=3E-4,
+            policy_mean_reg_coeff=1E-3,
+            policy_std_reg_coeff=1E-3,
+            policy_pre_activation_coeff=0.,
+            soft_target_tau=0.005,
+            kl_lambda=.1,
+            optimizer_class=torch.optim.Adam,
+            use_information_bottleneck=True,
+            use_next_obs_in_context=False,
+            meta_batch_size=64,
+            num_steps_per_epoch=1000,
+            num_initial_steps=100,
+            num_tasks_sample=100,
+            num_steps_prior=100,
+            num_steps_posterior=0,
+            num_extra_rl_steps_posterior=100,
+            batch_size=1024,
+            embedding_batch_size=1024,
+            embedding_mini_batch_size=1024,
+            discount=0.99,
+            replay_buffer_size=1000000,
+            reward_scale=1,
+            update_post_train=1):
 
         self._env = env
         self._qf1 = qf
         self._qf2 = copy.deepcopy(qf)
         self._vf = vf
         self._num_train_tasks = num_train_tasks
-        self._num_test_tasks = num_test_tasks
         self._latent_dim = latent_dim
 
         self._policy_mean_reg_coeff = policy_mean_reg_coeff
@@ -157,23 +156,30 @@ class PEARL(MetaRLAlgorithm):
         self._batch_size = batch_size
         self._embedding_batch_size = embedding_batch_size
         self._embedding_mini_batch_size = embedding_mini_batch_size
-        self.max_episode_length = max_episode_length
         self._discount = discount
         self._replay_buffer_size = replay_buffer_size
         self._reward_scale = reward_scale
         self._update_post_train = update_post_train
         self._task_idx = None
+        self._single_env = env[0]()
+        self.max_episode_length = self._single_env.spec.max_episode_length
 
         self._is_resuming = False
 
+        if num_test_tasks is None:
+            num_test_tasks = test_env_sampler.n_tasks
+        if num_test_tasks is None:
+            raise ValueError('num_test_tasks must be provided if '
+                             'test_env_sampler.n_tasks is None')
+
         worker_args = dict(deterministic=True, accum_context=True)
         self._evaluator = MetaEvaluator(test_task_sampler=test_env_sampler,
-                                        max_episode_length=max_episode_length,
                                         worker_class=PEARLWorker,
                                         worker_args=worker_args,
                                         n_test_tasks=num_test_tasks)
 
-        encoder_spec = self.get_env_spec(env[0](), latent_dim, 'encoder')
+        encoder_spec = self.get_env_spec(self._single_env, latent_dim,
+                                         'encoder')
         encoder_in_dim = int(np.prod(encoder_spec.input_space.shape))
         encoder_out_dim = int(np.prod(encoder_spec.output_space.shape))
         context_encoder = encoder_class(input_dim=encoder_in_dim,
@@ -253,23 +259,23 @@ class PEARL(MetaRLAlgorithm):
         }
         self._is_resuming = True
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samples, train, and evaluate for each epoch.
 
         Args:
-            runner (LocalRunner): Gives the algorithm the access to
-                :method:`LocalRunner..step_epochs()`, which provides services
+            trainer (Trainer): Gives the algorithm the access to
+                :method:`Trainer..step_epochs()`, which provides services
                 such as snapshotting and sampler control.
 
         """
-        for _ in runner.step_epochs():
-            epoch = runner.step_itr / self._num_steps_per_epoch
+        for _ in trainer.step_epochs():
+            epoch = trainer.step_itr / self._num_steps_per_epoch
 
             # obtain initial set of samples from all train tasks
             if epoch == 0 or self._is_resuming:
                 for idx in range(self._num_train_tasks):
                     self._task_idx = idx
-                    self._obtain_samples(runner, epoch,
+                    self._obtain_samples(trainer, epoch,
                                          self._num_initial_steps, np.inf)
                     self._is_resuming = False
 
@@ -280,16 +286,16 @@ class PEARL(MetaRLAlgorithm):
                 self._context_replay_buffers[idx].clear()
                 # obtain samples with z ~ prior
                 if self._num_steps_prior > 0:
-                    self._obtain_samples(runner, epoch, self._num_steps_prior,
+                    self._obtain_samples(trainer, epoch, self._num_steps_prior,
                                          np.inf)
                 # obtain samples with z ~ posterior
                 if self._num_steps_posterior > 0:
-                    self._obtain_samples(runner, epoch,
+                    self._obtain_samples(trainer, epoch,
                                          self._num_steps_posterior,
                                          self._update_post_train)
                 # obtain extras samples for RL training but not encoder
                 if self._num_extra_rl_steps_posterior > 0:
-                    self._obtain_samples(runner,
+                    self._obtain_samples(trainer,
                                          epoch,
                                          self._num_extra_rl_steps_posterior,
                                          self._update_post_train,
@@ -298,7 +304,7 @@ class PEARL(MetaRLAlgorithm):
             logger.log('Training...')
             # sample train tasks and optimize networks
             self._train_once()
-            runner.step_itr += 1
+            trainer.step_itr += 1
 
             logger.log('Evaluating...')
             # evaluate
@@ -397,7 +403,7 @@ class PEARL(MetaRLAlgorithm):
         self._policy_optimizer.step()
 
     def _obtain_samples(self,
-                        runner,
+                        trainer,
                         itr,
                         num_samples,
                         update_posterior_rate,
@@ -405,7 +411,7 @@ class PEARL(MetaRLAlgorithm):
         """Obtain samples.
 
         Args:
-            runner (LocalRunner): LocalRunner.
+            trainer (Trainer): Trainer.
             itr (int): Index of iteration (epoch).
             num_samples (int): Number of samples to obtain.
             update_posterior_rate (int): How often (in episodes) to infer
@@ -424,9 +430,9 @@ class PEARL(MetaRLAlgorithm):
             num_samples_per_batch = num_samples
 
         while total_samples < num_samples:
-            paths = runner.obtain_samples(itr, num_samples_per_batch,
-                                          self._policy,
-                                          self._env[self._task_idx])
+            paths = trainer.obtain_samples(itr, num_samples_per_batch,
+                                           self._policy,
+                                           self._env[self._task_idx])
             total_samples += sum([len(path['rewards']) for path in paths])
 
             for path in paths:
@@ -762,6 +768,4 @@ class PEARLWorker(DefaultWorker):
         self.start_episode()
         while not self.step_episode():
             pass
-        self._agent_infos['context'] = [self.agent.z.detach().cpu().numpy()
-                                        ] * self._max_episode_length
         return self.collect_episode()

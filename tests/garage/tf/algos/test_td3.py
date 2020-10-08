@@ -4,13 +4,13 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.np.exploration_policies import AddGaussianNoise
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.tf.algos import TD3
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -21,18 +21,25 @@ class TestTD3(TfGraphTestCase):
     @pytest.mark.mujoco_long
     def test_td3_pendulum(self):
         """Test TD3 with Pendulum environment."""
-        with LocalTFRunner(snapshot_config) as runner:
-            env = GymEnv('InvertedDoublePendulum-v2')
+        with TFTrainer(snapshot_config) as trainer:
+            n_epochs = 10
+            steps_per_epoch = 20
+            sampler_batch_size = 250
+            num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
+
+            env = GymEnv('InvertedDoublePendulum-v2', max_episode_length=100)
 
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[400, 300],
                                          hidden_nonlinearity=tf.nn.relu,
                                          output_nonlinearity=tf.nn.tanh)
 
-            exploration_policy = AddGaussianNoise(env.spec,
-                                                  policy,
-                                                  max_sigma=0.1,
-                                                  min_sigma=0.1)
+            exploration_policy = AddGaussianNoise(
+                env.spec,
+                policy,
+                total_timesteps=num_timesteps,
+                max_sigma=0.1,
+                min_sigma=0.1)
 
             qf = ContinuousMLPQFunction(name='ContinuousMLPQFunction',
                                         env_spec=env.spec,
@@ -55,8 +62,7 @@ class TestTD3(TfGraphTestCase):
                        qf=qf,
                        qf2=qf2,
                        replay_buffer=replay_buffer,
-                       max_episode_length=100,
-                       steps_per_epoch=20,
+                       steps_per_epoch=steps_per_epoch,
                        target_update_tau=0.005,
                        n_train_steps=50,
                        discount=0.99,
@@ -68,6 +74,7 @@ class TestTD3(TfGraphTestCase):
                        policy_optimizer=tf.compat.v1.train.AdamOptimizer,
                        qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
-            runner.setup(algo, env, sampler_cls=LocalSampler)
-            last_avg_ret = runner.train(n_epochs=10, batch_size=250)
+            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            last_avg_ret = trainer.train(n_epochs=n_epochs,
+                                         batch_size=sampler_batch_size)
             assert last_avg_ret > 200

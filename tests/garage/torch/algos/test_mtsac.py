@@ -6,13 +6,14 @@ from torch.nn import functional as F
 
 from garage.envs import GymEnv, MultiEnvWrapper
 from garage.envs.multi_env_wrapper import round_robin_strategy
-from garage.experiment import deterministic, LocalRunner
+from garage.experiment import deterministic
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.torch import global_device, set_gpu_mode
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config
 
@@ -25,7 +26,7 @@ def test_mtsac_get_log_alpha(monkeypatch):
 
     """
     env_names = ['CartPole-v0', 'CartPole-v1']
-    task_envs = [GymEnv(name) for name in env_names]
+    task_envs = [GymEnv(name, max_episode_length=100) for name in env_names]
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
     deterministic.set_seed(0)
     policy = TanhGaussianMLPPolicy(
@@ -52,8 +53,7 @@ def test_mtsac_get_log_alpha(monkeypatch):
                   qf1=qf1,
                   qf2=qf2,
                   gradient_steps_per_itr=150,
-                  max_episode_length=150,
-                  eval_env=env,
+                  eval_env=[env],
                   env_spec=env.spec,
                   num_tasks=num_tasks,
                   steps_per_epoch=5,
@@ -74,15 +74,69 @@ def test_mtsac_get_log_alpha(monkeypatch):
 
 
 @pytest.mark.mujoco
+def test_mtsac_get_log_alpha_incorrect_num_tasks(monkeypatch):
+    """Check that if the num_tasks passed does not match the number of tasks
+
+    in the environment, then the algorithm should raise an exception.
+
+    MTSAC uses disentangled alphas, meaning that
+
+    """
+    env_names = ['CartPole-v0', 'CartPole-v1']
+    task_envs = [GymEnv(name, max_episode_length=150) for name in env_names]
+    env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
+    deterministic.set_seed(0)
+    policy = TanhGaussianMLPPolicy(
+        env_spec=env.spec,
+        hidden_sizes=[1, 1],
+        hidden_nonlinearity=torch.nn.ReLU,
+        output_nonlinearity=None,
+        min_std=np.exp(-20.),
+        max_std=np.exp(2.),
+    )
+
+    qf1 = ContinuousMLPQFunction(env_spec=env.spec,
+                                 hidden_sizes=[1, 1],
+                                 hidden_nonlinearity=F.relu)
+
+    qf2 = ContinuousMLPQFunction(env_spec=env.spec,
+                                 hidden_sizes=[1, 1],
+                                 hidden_nonlinearity=F.relu)
+    replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
+
+    buffer_batch_size = 2
+    mtsac = MTSAC(policy=policy,
+                  qf1=qf1,
+                  qf2=qf2,
+                  gradient_steps_per_itr=150,
+                  eval_env=[env],
+                  env_spec=env.spec,
+                  num_tasks=4,
+                  steps_per_epoch=5,
+                  replay_buffer=replay_buffer,
+                  min_buffer_size=1e3,
+                  target_update_tau=5e-3,
+                  discount=0.99,
+                  buffer_batch_size=buffer_batch_size)
+    monkeypatch.setattr(mtsac, '_log_alpha', torch.Tensor([1., 2.]))
+    error_string = ('The number of tasks in the environment does '
+                    'not match self._num_tasks. Are you sure that you passed '
+                    'The correct number of tasks?')
+    obs = torch.Tensor([env.reset()[0]] * buffer_batch_size)
+    with pytest.raises(ValueError, match=error_string):
+        mtsac._get_log_alpha(dict(observation=obs))
+
+
+@pytest.mark.mujoco
 def test_mtsac_inverted_double_pendulum():
     """Performance regression test of MTSAC on 2 InvDoublePendulum envs."""
     env_names = ['InvertedDoublePendulum-v2', 'InvertedDoublePendulum-v2']
-    task_envs = [GymEnv(name) for name in env_names]
+    task_envs = [GymEnv(name, max_episode_length=100) for name in env_names]
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
     test_envs = MultiEnvWrapper(task_envs,
                                 sample_strategy=round_robin_strategy)
     deterministic.set_seed(0)
-    runner = LocalRunner(snapshot_config=snapshot_config)
+    trainer = Trainer(snapshot_config=snapshot_config)
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=[32, 32],
@@ -106,8 +160,7 @@ def test_mtsac_inverted_double_pendulum():
                   qf1=qf1,
                   qf2=qf2,
                   gradient_steps_per_itr=100,
-                  max_episode_length=100,
-                  eval_env=test_envs,
+                  eval_env=[test_envs],
                   env_spec=env.spec,
                   num_tasks=num_tasks,
                   steps_per_epoch=5,
@@ -116,8 +169,8 @@ def test_mtsac_inverted_double_pendulum():
                   target_update_tau=5e-3,
                   discount=0.99,
                   buffer_batch_size=buffer_batch_size)
-    runner.setup(mtsac, env, sampler_cls=LocalSampler)
-    ret = runner.train(n_epochs=8, batch_size=128, plot=False)
+    trainer.setup(mtsac, env, sampler_cls=LocalSampler)
+    ret = trainer.train(n_epochs=8, batch_size=128, plot=False)
     assert ret > 0
 
 
@@ -129,7 +182,7 @@ def test_to():
 
     """
     env_names = ['CartPole-v0', 'CartPole-v1']
-    task_envs = [GymEnv(name) for name in env_names]
+    task_envs = [GymEnv(name, max_episode_length=100) for name in env_names]
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
     deterministic.set_seed(0)
     policy = TanhGaussianMLPPolicy(
@@ -156,8 +209,7 @@ def test_to():
                   qf1=qf1,
                   qf2=qf2,
                   gradient_steps_per_itr=150,
-                  max_episode_length=150,
-                  eval_env=env,
+                  eval_env=[env],
                   env_spec=env.spec,
                   num_tasks=num_tasks,
                   steps_per_epoch=5,
@@ -185,12 +237,12 @@ def test_to():
 def test_fixed_alpha():
     """Test if using fixed_alpha ensures that alpha is non differentiable."""
     env_names = ['InvertedDoublePendulum-v2', 'InvertedDoublePendulum-v2']
-    task_envs = [GymEnv(name) for name in env_names]
+    task_envs = [GymEnv(name, max_episode_length=100) for name in env_names]
     env = MultiEnvWrapper(task_envs, sample_strategy=round_robin_strategy)
     test_envs = MultiEnvWrapper(task_envs,
                                 sample_strategy=round_robin_strategy)
     deterministic.set_seed(0)
-    runner = LocalRunner(snapshot_config=snapshot_config)
+    trainer = Trainer(snapshot_config=snapshot_config)
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=[32, 32],
@@ -214,8 +266,7 @@ def test_fixed_alpha():
                   qf1=qf1,
                   qf2=qf2,
                   gradient_steps_per_itr=100,
-                  max_episode_length=100,
-                  eval_env=test_envs,
+                  eval_env=[test_envs],
                   env_spec=env.spec,
                   num_tasks=num_tasks,
                   steps_per_epoch=1,
@@ -232,8 +283,8 @@ def test_fixed_alpha():
     mtsac.to()
     assert torch.allclose(torch.Tensor([0.5] * num_tasks),
                           mtsac._log_alpha.to('cpu'))
-    runner.setup(mtsac, env, sampler_cls=LocalSampler)
-    runner.train(n_epochs=1, batch_size=128, plot=False)
+    trainer.setup(mtsac, env, sampler_cls=LocalSampler)
+    trainer.train(n_epochs=1, batch_size=128, plot=False)
     assert torch.allclose(torch.Tensor([0.5] * num_tasks),
                           mtsac._log_alpha.to('cpu'))
     assert not mtsac._use_automatic_entropy_tuning

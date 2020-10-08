@@ -15,11 +15,11 @@ class MAMLTRPO(MAML):
         env (Environment): A multi-task environment.
         policy (garage.torch.policies.Policy): Policy.
         value_function (garage.np.baselines.Baseline): The value function.
+        task_sampler (garage.experiment.TaskSampler): Task sampler.
         inner_lr (float): Adaptation learning rate.
         outer_lr (float): Meta policy learning rate.
         max_kl_step (float): The maximum KL divergence between old and new
             policies.
-        max_episode_length (int): Maximum length of a single episode.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -52,10 +52,10 @@ class MAMLTRPO(MAML):
                  env,
                  policy,
                  value_function,
+                 task_sampler,
                  inner_lr=_Default(1e-2),
                  outer_lr=1e-3,
                  max_kl_step=0.01,
-                 max_episode_length=500,
                  discount=0.99,
                  gae_lambda=1,
                  center_adv=True,
@@ -79,7 +79,6 @@ class MAMLTRPO(MAML):
                          value_function,
                          policy_optimizer=policy_optimizer,
                          vf_optimizer=vf_optimizer,
-                         max_episode_length=max_episode_length,
                          num_train_per_epoch=1,
                          discount=discount,
                          gae_lambda=gae_lambda,
@@ -96,6 +95,7 @@ class MAMLTRPO(MAML):
         super().__init__(inner_algo=inner_algo,
                          env=env,
                          policy=policy,
+                         task_sampler=task_sampler,
                          meta_optimizer=meta_optimizer,
                          meta_batch_size=meta_batch_size,
                          inner_lr=inner_lr,

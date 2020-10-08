@@ -8,11 +8,11 @@ snapshot, as well as how to evaluate that policy in an environment.
 Please refer to [this page](save_load_resume_exp.md) for information on how to save
 an experiment snapshot. The snapshot contains data such as:
 
-- The runner's `setup_args` and `train_args`
+- The trainer's `setup_args` and `train_args`
   - Random seed
   - Batch size
   - Number of epochs
-  - And [more](https://github.com/rlworkgroup/garage/blob/175ac4c90a408e2314d91cdbe95e419b183e0684/src/garage/experiment/local_runner.py#L393)
+  - And [more](https://github.com/rlworkgroup/garage/blob/175ac4c90a408e2314d91cdbe95e419b183e0684/src/garage/trainer.py#L393)
 - The experiment's `stats`
 - The environment
 - The algorithm **(which includes the policy we want to evaluate)**
@@ -78,7 +78,7 @@ policy = data['algo'].policy
 env = data['env']
 
 # See what the trained policy can accomplish
-from garage.sampler.utils import rollout
+from garage import rollout
 path = rollout(env, policy, animated=True)
 print(path)
 ```

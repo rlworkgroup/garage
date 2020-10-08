@@ -13,7 +13,7 @@
         :scale: 10%
 
         PyTorch
-   * - **API Reference**
+   * - **API Reference**metaworld_ml1_push
      - `garage.torch.algos.BC <../_autoapi/garage/torch/algos/index.html#garage.torch.algos.BC>`_
    * - **Code**
      - `garage/torch/algos/bc.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/torch/algos/bc.py>`_
@@ -37,6 +37,8 @@ batch_size = 1000
 ### bc_point
 
 ```eval_rst
+.. figure:: ./images/pytorch.png
+        :scale: 10%
 .. literalinclude:: ../../examples/torch/bc_point.py
 ```
 
@@ -47,6 +49,8 @@ batch_size = 1000
 ![BC Mean Loss](images/bc_meanLoss.png) ![BC Mean Loss](images/bc_stdLoss.png)
 
 ```eval_rst
+.. figure:: ./images/pytorch.png
+        :scale: 10%
 .. literalinclude:: ../../examples/torch/bc_point_deterministic_policy.py
 ```
 
@@ -60,4 +64,4 @@ batch_size = 1000
 
 ----
 
-*This page was authored by Iris Liu ([@irisliucy](https://github.com/irisliucy) with contributions from Ryan Julian ([@ryanjulian](https://github.com/ryanjulian).*
+*This page was authored by Iris Liu ([@irisliucy](https://github.com/irisliucy)) with contributions from Ryan Julian ([@ryanjulian](https://github.com/ryanjulian)).*

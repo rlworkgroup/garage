@@ -41,6 +41,9 @@ class HalfCheetahDirEnv(HalfCheetahEnvMetaBase):
         Args:
             action (np.ndarray): The action to take in the environment.
 
+        Raises:
+            ValueError: If the current direction is not 1.0 or -1.0.
+
         Returns:
             tuple:
                 * observation (np.ndarray): The observation of the environment.
@@ -67,9 +70,16 @@ class HalfCheetahDirEnv(HalfCheetahEnvMetaBase):
         observation = self._get_obs()
         reward = forward_reward - ctrl_cost
         done = False
+        if self._task['direction'] == 1.:
+            task_name = 'fowrad'
+        elif self._task['direction'] == -1.:
+            task_name = 'backward'
+        else:
+            raise ValueError('task direction should be 1. or -1.')
         infos = dict(reward_forward=forward_reward,
                      reward_ctrl=-ctrl_cost,
-                     task_dir=self._task['direction'])
+                     task_dir=self._task['direction'],
+                     task_name=task_name)
         return observation, reward, done, infos
 
     def sample_tasks(self, num_tasks):

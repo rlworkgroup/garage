@@ -1,14 +1,16 @@
 """Deep Q-Learning Network algorithm."""
+# yapf: disable
 import akro
 from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
-from garage import _Default, log_performance, make_optimizer
-from garage.np import obtain_evaluation_episodes
+from garage import log_performance, make_optimizer, obtain_evaluation_episodes
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, LocalSampler
-from garage.tf.misc import tensor_utils
+from garage.tf import compile_function, get_target_ops
+
+# yapf: enable
 
 
 class DQN(RLAlgorithm):
@@ -22,21 +24,19 @@ class DQN(RLAlgorithm):
 
     Args:
         env_spec (EnvSpec): Environment specification.
-        policy (garage.tf.policies.Policy): Policy.
+        policy (Policy): Policy.
         qf (object): The q value network.
         replay_buffer (ReplayBuffer): Replay buffer.
         exploration_policy (ExplorationPolicy): Exploration strategy.
         steps_per_epoch (int): Number of train_once calls per epoch.
         min_buffer_size (int): The minimum buffer size for replay buffer.
         buffer_batch_size (int): Batch size for replay buffer.
-        n_train_steps (int): Training steps.
-        max_episode_length (int): Maximum episode length. The episode will
-            be truncated when length of episode reaches max_episode_length.
         max_episode_length_eval (int or None): Maximum length of episodes used
             for off-policy evaluation. If None, defaults to
-            `max_episode_length`.
+            `env_spec.max_episode_length`.
+        n_train_steps (int): Training steps.
         qf_lr (float): Learning rate for Q-Function.
-        qf_optimizer (tf.Optimizer): Optimizer for Q-Function.
+        qf_optimizer (tf.compat.v1.train.Optimizer): Optimizer for Q-Function.
         discount (float): Discount factor for rewards.
         target_network_update_freq (int): Frequency of updating target
             network.
@@ -59,10 +59,9 @@ class DQN(RLAlgorithm):
                  steps_per_epoch=20,
                  min_buffer_size=int(1e4),
                  buffer_batch_size=64,
-                 n_train_steps=50,
-                 max_episode_length=None,
                  max_episode_length_eval=None,
-                 qf_lr=_Default(0.001),
+                 n_train_steps=50,
+                 qf_lr=0.001,
                  qf_optimizer=tf.compat.v1.train.AdamOptimizer,
                  discount=1.0,
                  target_network_update_freq=5,
@@ -87,27 +86,31 @@ class DQN(RLAlgorithm):
         self._buffer_batch_size = buffer_batch_size
         self._discount = discount
         self._reward_scale = reward_scale
-        self.max_episode_length = max_episode_length
-        self._max_episode_length_eval = max_episode_length_eval
+        self.max_episode_length = env_spec.max_episode_length
+        self._max_episode_length_eval = env_spec.max_episode_length
+
+        if max_episode_length_eval is not None:
+            self._max_episode_length_eval = max_episode_length_eval
+
         self._eval_env = None
 
-        self.env_spec = env_spec
-        self.replay_buffer = replay_buffer
+        self._env_spec = env_spec
+        self._replay_buffer = replay_buffer
         self.policy = policy
         self.exploration_policy = exploration_policy
 
         self.sampler_cls = LocalSampler
         self.worker_cls = FragmentWorker
 
-        self.init_opt()
+        self._init_opt()
 
-    def init_opt(self):
+    def _init_opt(self):
         """Initialize the networks and Ops.
 
         Assume discrete space for dqn, so action dimension
         will always be action_space.n
         """
-        action_dim = self.env_spec.action_space.n
+        action_dim = self._env_spec.action_space.n
 
         # build q networks
         with tf.name_scope(self._name):
@@ -120,12 +123,12 @@ class DQN(RLAlgorithm):
             done_t_ph = tf.compat.v1.placeholder(tf.float32, None, name='done')
 
             with tf.name_scope('update_ops'):
-                target_update_op = tensor_utils.get_target_ops(
+                target_update_op = get_target_ops(
                     self._qf.get_global_vars(),
                     self._target_qf.get_global_vars())
 
-            self._qf_update_ops = tensor_utils.compile_function(
-                inputs=[], outputs=target_update_op)
+            self._qf_update_ops = compile_function(inputs=[],
+                                                   outputs=target_update_op)
 
             with tf.name_scope('td_error'):
                 # Q-value of the selected action
@@ -181,18 +184,17 @@ class DQN(RLAlgorithm):
                     optimize_loss = qf_optimizer.minimize(
                         loss, var_list=self._qf.get_trainable_vars())
 
-            self._train_qf = tensor_utils.compile_function(
-                inputs=[
-                    self._qf.input, action_t_ph, reward_t_ph, done_t_ph,
-                    self._target_qf.input
-                ],
-                outputs=[loss, optimize_loss])
+            self._train_qf = compile_function(inputs=[
+                self._qf.input, action_t_ph, reward_t_ph, done_t_ph,
+                self._target_qf.input
+            ],
+                                              outputs=[loss, optimize_loss])
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): Experiment runner, which provides services
+            trainer (Trainer): Experiment trainer, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -200,31 +202,33 @@ class DQN(RLAlgorithm):
 
         """
         if not self._eval_env:
-            self._eval_env = runner.get_env_copy()
+            self._eval_env = trainer.get_env_copy()
         last_returns = [float('nan')]
-        runner.enable_logging = False
+        trainer.enable_logging = False
 
         qf_losses = []
-        for _ in runner.step_epochs():
+        for _ in trainer.step_epochs():
             for cycle in range(self._steps_per_epoch):
-                runner.step_path = runner.obtain_episodes(runner.step_itr)
+                trainer.step_path = trainer.obtain_episodes(trainer.step_itr)
+                if hasattr(self.exploration_policy, 'update'):
+                    self.exploration_policy.update(trainer.step_path)
                 qf_losses.extend(
-                    self.train_once(runner.step_itr, runner.step_path))
-                if (cycle == 0 and self.replay_buffer.n_transitions_stored >=
+                    self._train_once(trainer.step_itr, trainer.step_path))
+                if (cycle == 0 and self._replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
-                    runner.enable_logging = True
+                    trainer.enable_logging = True
                     eval_episodes = obtain_evaluation_episodes(
                         self.policy, self._eval_env)
-                    last_returns = log_performance(runner.step_itr,
+                    last_returns = log_performance(trainer.step_itr,
                                                    eval_episodes,
                                                    discount=self._discount)
-                runner.step_itr += 1
+                trainer.step_itr += 1
             tabular.record('DQN/QFLossMean', np.mean(qf_losses))
             tabular.record('DQN/QFLossStd', np.std(qf_losses))
 
         return np.mean(last_returns)
 
-    def train_once(self, itr, episodes):
+    def _train_once(self, itr, episodes):
         """Perform one step of policy optimization given one batch of samples.
 
         Args:
@@ -235,41 +239,40 @@ class DQN(RLAlgorithm):
             list[float]: Q function losses
 
         """
-        self.replay_buffer.add_episode_batch(episodes)
+        self._replay_buffer.add_episode_batch(episodes)
         qf_losses = []
         for _ in range(self._n_train_steps):
-            if (self.replay_buffer.n_transitions_stored >=
+            if (self._replay_buffer.n_transitions_stored >=
                     self._min_buffer_size):
-                qf_losses.append(self.optimize_policy())
+                qf_losses.append(self._optimize_policy())
 
-        if self.replay_buffer.n_transitions_stored >= self._min_buffer_size:
+        if self._replay_buffer.n_transitions_stored >= self._min_buffer_size:
             if itr % self._target_network_update_freq == 0:
                 self._qf_update_ops()
         return qf_losses
 
-    def optimize_policy(self):
+    def _optimize_policy(self):
         """Optimize network using experiences from replay buffer.
 
         Returns:
             numpy.float64: Loss of policy.
 
         """
-        transitions = self.replay_buffer.sample_transitions(
+        timesteps = self._replay_buffer.sample_timesteps(
             self._buffer_batch_size)
 
-        observations = transitions['observations']
-        rewards = transitions['rewards']
-        actions = self.env_spec.action_space.unflatten_n(
-            transitions['actions'])
-        next_observations = transitions['next_observations']
-        dones = transitions['terminals']
+        observations = timesteps.observations
+        rewards = timesteps.rewards
+        actions = self._env_spec.action_space.unflatten_n(timesteps.actions)
+        next_observations = timesteps.next_observations
+        dones = timesteps.terminals
 
-        if isinstance(self.env_spec.observation_space, akro.Image):
+        if isinstance(self._env_spec.observation_space, akro.Image):
             if len(observations.shape[1:]) < len(
-                    self.env_spec.observation_space.shape):
-                observations = self.env_spec.observation_space.unflatten_n(
+                    self._env_spec.observation_space.shape):
+                observations = self._env_spec.observation_space.unflatten_n(
                     observations)
-                next_observations = self.env_spec.observation_space.\
+                next_observations = self._env_spec.observation_space.\
                     unflatten_n(next_observations)
 
         loss, _ = self._train_qf(observations, actions, rewards, dones,
@@ -297,4 +300,4 @@ class DQN(RLAlgorithm):
 
         """
         self.__dict__ = state
-        self.init_opt()
+        self._init_opt()

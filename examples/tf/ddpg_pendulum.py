@@ -12,13 +12,13 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DDPG
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
+from garage.trainer import TFTrainer
 
 
 @wrap_experiment
@@ -27,13 +27,13 @@ def ddpg_pendulum(ctxt=None, seed=1):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
 
     """
     set_seed(seed)
-    with LocalTFRunner(snapshot_config=ctxt) as runner:
+    with TFTrainer(snapshot_config=ctxt) as trainer:
         env = GymEnv('InvertedDoublePendulum-v2')
 
         policy = ContinuousMLPPolicy(env_spec=env.spec,
@@ -57,7 +57,6 @@ def ddpg_pendulum(ctxt=None, seed=1):
                     qf_lr=1e-3,
                     qf=qf,
                     replay_buffer=replay_buffer,
-                    max_episode_length=100,
                     steps_per_epoch=20,
                     target_update_tau=1e-2,
                     n_train_steps=50,
@@ -67,9 +66,9 @@ def ddpg_pendulum(ctxt=None, seed=1):
                     policy_optimizer=tf.compat.v1.train.AdamOptimizer,
                     qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
-        runner.setup(algo=ddpg, env=env)
+        trainer.setup(algo=ddpg, env=env)
 
-        runner.train(n_epochs=500, batch_size=100)
+        trainer.train(n_epochs=500, batch_size=100)
 
 
 ddpg_pendulum(seed=1)

@@ -3,11 +3,12 @@ import pytest
 import torch
 
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalRunner
+from garage.experiment import deterministic
 from garage.sampler import LocalSampler
 from garage.torch.algos import PPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config
 
@@ -17,7 +18,8 @@ class TestPPO:
 
     def setup_method(self):
         """Setup method which is called before every test."""
-        self.env = normalize(GymEnv('InvertedDoublePendulum-v2'))
+        self.env = normalize(
+            GymEnv('InvertedDoublePendulum-v2', max_episode_length=100))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
             hidden_sizes=(64, 64),
@@ -35,15 +37,14 @@ class TestPPO:
         """Test PPO with Pendulum environment."""
         deterministic.set_seed(0)
 
-        runner = LocalRunner(snapshot_config)
+        trainer = Trainer(snapshot_config)
         algo = PPO(env_spec=self.env.spec,
                    policy=self.policy,
                    value_function=self.value_function,
-                   max_episode_length=100,
                    discount=0.99,
                    gae_lambda=0.97,
                    lr_clip_range=2e-1)
 
-        runner.setup(algo, self.env, sampler_cls=LocalSampler)
-        last_avg_ret = runner.train(n_epochs=10, batch_size=100)
+        trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+        last_avg_ret = trainer.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 0

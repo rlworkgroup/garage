@@ -6,13 +6,13 @@ import tensorflow as tf
 from garage import InOutSpec
 from garage.envs import MultiEnvWrapper, PointEnv
 from garage.envs.multi_env_wrapper import round_robin_strategy
-from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearMultiFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TEPPO
 from garage.tf.algos.te import TaskEmbeddingWorker
 from garage.tf.embeddings import GaussianMLPEncoder
 from garage.tf.policies import GaussianMLPTaskEmbeddingPolicy
+from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -56,7 +56,6 @@ class TestTE(TfGraphTestCase):
         self.policy_ent_coeff = 2e-2
         self.encoder_ent_coeff = 2.2e-3
         self.inference_ce_coeff = 5e-2
-        self.max_episode_length = 100
         embedding_init_std = 1.0
         embedding_max_std = 2.0
         embedding_min_std = 0.38
@@ -69,12 +68,13 @@ class TestTE(TfGraphTestCase):
         task_kwargs = [tasks[t]['kwargs'] for t in task_names]
 
         task_envs = [
-            PointEnv(*t_args, **t_kwargs)
+            PointEnv(*t_args, **t_kwargs, max_episode_length=100)
             for t_args, t_kwargs in zip(task_args, task_kwargs)
         ]
         self.env = env = MultiEnvWrapper(task_envs,
                                          round_robin_strategy,
                                          mode='vanilla')
+        self.max_episode_length = self.env.spec.max_episode_length
 
         latent_lb = np.zeros(latent_length, )
         latent_ub = np.ones(latent_length, )
@@ -126,9 +126,10 @@ class TestTE(TfGraphTestCase):
             env_spec=env.spec, features=['observations', 'tasks', 'latents'])
 
     def test_te_worker(self):
-        worker = TaskEmbeddingWorker(seed=1,
-                                     max_episode_length=100,
-                                     worker_number=1)
+        worker = TaskEmbeddingWorker(
+            seed=1,
+            max_episode_length=self.max_episode_length,
+            worker_number=1)
         worker.update_env(self.env)
         worker.update_agent(self.policy)
         worker.start_episode()
@@ -141,12 +142,11 @@ class TestTE(TfGraphTestCase):
         assert episodes.agent_infos['latent'][0].shape == (1, )
 
     def test_te_ppo(self):
-        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+        with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             algo = TEPPO(env_spec=self.env.spec,
                          policy=self.policy,
                          baseline=self.baseline,
                          inference=self.inference,
-                         max_episode_length=self.max_episode_length,
                          discount=0.99,
                          lr_clip_range=0.2,
                          policy_ent_coeff=self.policy_ent_coeff,
@@ -155,18 +155,18 @@ class TestTE(TfGraphTestCase):
                          use_softplus_entropy=True,
                          optimizer_args=dict(
                              batch_size=32,
-                             max_episode_length=10,
+                             max_optimization_epochs=10,
                          ),
                          inference_optimizer_args=dict(
                              batch_size=32,
-                             max_episode_length=10,
+                             max_optimization_epochs=10,
                          ),
                          center_adv=True,
                          stop_ce_gradient=True)
 
-            runner.setup(algo,
-                         self.env,
-                         sampler_cls=LocalSampler,
-                         sampler_args=None,
-                         worker_class=TaskEmbeddingWorker)
-            runner.train(n_epochs=1, batch_size=self.batch_size, plot=False)
+            trainer.setup(algo,
+                          self.env,
+                          sampler_cls=LocalSampler,
+                          sampler_args=None,
+                          worker_class=TaskEmbeddingWorker)
+            trainer.train(n_epochs=1, batch_size=self.batch_size, plot=False)

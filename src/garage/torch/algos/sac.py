@@ -1,4 +1,5 @@
 """This modules creates a sac model in PyTorch."""
+# yapf: disable
 from collections import deque
 import copy
 
@@ -7,11 +8,12 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from garage import log_performance, StepType
-from garage.np import obtain_evaluation_episodes
+from garage import log_performance, obtain_evaluation_episodes, StepType
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, RaySampler
 from garage.torch import dict_np_to_torch, global_device
+
+# yapf: enable
 
 
 class SAC(RLAlgorithm):
@@ -43,12 +45,10 @@ class SAC(RLAlgorithm):
             collected by the sampler.
         env_spec (EnvSpec): The env_spec attribute of the environment that the
             agent is being trained in.
-        max_episode_length (int): Maximum length of an episode.
         max_episode_length_eval (int or None): Maximum length of episodes used
             for off-policy evaluation. If None, defaults to
-            `max_episode_length`.
+            `env_spec.max_episode_length`.
         gradient_steps_per_itr (int): Number of optimization steps that should
-        max_episode_length(int): Max episode length of the environment.
         gradient_steps_per_itr(int): Number of optimization steps that should
             occur before the training step is over and a new batch of
             transitions is collected by the sampler.
@@ -81,35 +81,36 @@ class SAC(RLAlgorithm):
             for computing eval stats at the end of every epoch.
         eval_env (Environment): environment used for collecting evaluation
             episodes. If None, a copy of the train env is used.
+        use_deterministic_evaluation (bool): True if the trained policy
+            should be evaluated deterministically.
 
     """
 
     def __init__(
-        self,
-        env_spec,
-        policy,
-        qf1,
-        qf2,
-        replay_buffer,
-        *,  # Everything after this is numbers.
-        max_episode_length,
-        max_episode_length_eval=None,
-        gradient_steps_per_itr,
-        fixed_alpha=None,
-        target_entropy=None,
-        initial_log_entropy=0.,
-        discount=0.99,
-        buffer_batch_size=64,
-        min_buffer_size=int(1e4),
-        target_update_tau=5e-3,
-        policy_lr=3e-4,
-        qf_lr=3e-4,
-        reward_scale=1.0,
-        optimizer=torch.optim.Adam,
-        steps_per_epoch=1,
-        num_evaluation_episodes=10,
-        eval_env=None,
-    ):
+            self,
+            env_spec,
+            policy,
+            qf1,
+            qf2,
+            replay_buffer,
+            *,  # Everything after this is numbers.
+            max_episode_length_eval=None,
+            gradient_steps_per_itr,
+            fixed_alpha=None,
+            target_entropy=None,
+            initial_log_entropy=0.,
+            discount=0.99,
+            buffer_batch_size=64,
+            min_buffer_size=int(1e4),
+            target_update_tau=5e-3,
+            policy_lr=3e-4,
+            qf_lr=3e-4,
+            reward_scale=1.0,
+            optimizer=torch.optim.Adam,
+            steps_per_epoch=1,
+            num_evaluation_episodes=10,
+            eval_env=None,
+            use_deterministic_evaluation=True):
 
         self._qf1 = qf1
         self._qf2 = qf2
@@ -128,9 +129,12 @@ class SAC(RLAlgorithm):
         self._buffer_batch_size = buffer_batch_size
         self._discount = discount
         self._reward_scale = reward_scale
-        self.max_episode_length = max_episode_length
-        self._max_episode_length_eval = (max_episode_length_eval
-                                         or max_episode_length)
+        self.max_episode_length = env_spec.max_episode_length
+        self._max_episode_length_eval = env_spec.max_episode_length
+
+        if max_episode_length_eval is not None:
+            self._max_episode_length_eval = max_episode_length_eval
+        self._use_deterministic_evaluation = use_deterministic_evaluation
 
         self.policy = policy
         self.env_spec = env_spec
@@ -166,12 +170,12 @@ class SAC(RLAlgorithm):
             self._log_alpha = torch.Tensor([self._fixed_alpha]).log()
         self.episode_rewards = deque(maxlen=30)
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): Gives the algorithm the access to
-                :method:`~LocalRunner.step_epochs()`, which provides services
+            trainer (Trainer): Gives the algorithm the access to
+                :method:`~Trainer.step_epochs()`, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -179,19 +183,19 @@ class SAC(RLAlgorithm):
 
         """
         if not self._eval_env:
-            self._eval_env = runner.get_env_copy()
+            self._eval_env = trainer.get_env_copy()
         last_return = None
-        for _ in runner.step_epochs():
+        for _ in trainer.step_epochs():
             for _ in range(self._steps_per_epoch):
                 if not (self.replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
                     batch_size = int(self._min_buffer_size)
                 else:
                     batch_size = None
-                runner.step_path = runner.obtain_samples(
-                    runner.step_itr, batch_size)
+                trainer.step_path = trainer.obtain_samples(
+                    trainer.step_itr, batch_size)
                 path_returns = []
-                for path in runner.step_path:
+                for path in trainer.step_path:
                     self.replay_buffer.add_path(
                         dict(observation=path['observations'],
                              action=path['actions'],
@@ -202,14 +206,14 @@ class SAC(RLAlgorithm):
                                  for step_type in path['step_types']
                              ]).reshape(-1, 1)))
                     path_returns.append(sum(path['rewards']))
-                assert len(path_returns) is len(runner.step_path)
+                assert len(path_returns) == len(trainer.step_path)
                 self.episode_rewards.append(np.mean(path_returns))
                 for _ in range(self._gradient_steps):
                     policy_loss, qf1_loss, qf2_loss = self.train_once()
-            last_return = self._evaluate_policy(runner.step_itr)
+            last_return = self._evaluate_policy(trainer.step_itr)
             self._log_statistics(policy_loss, qf1_loss, qf2_loss)
-            tabular.record('TotalEnvSteps', runner.total_env_steps)
-            runner.step_itr += 1
+            tabular.record('TotalEnvSteps', trainer.total_env_steps)
+            trainer.step_itr += 1
 
         return np.mean(last_return)
 
@@ -462,7 +466,11 @@ class SAC(RLAlgorithm):
 
         """
         eval_episodes = obtain_evaluation_episodes(
-            self.policy, self._eval_env, num_eps=self._num_evaluation_episodes)
+            self.policy,
+            self._eval_env,
+            self._max_episode_length_eval,
+            num_eps=self._num_evaluation_episodes,
+            deterministic=self._use_deterministic_evaluation)
         last_return = log_performance(epoch,
                                       eval_episodes,
                                       discount=self._discount)

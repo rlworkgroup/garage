@@ -13,11 +13,11 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.policies import GaussianMLPPolicy
+from garage.trainer import TFTrainer
 
 
 @wrap_experiment
@@ -26,13 +26,13 @@ def ppo_pendulum(ctxt=None, seed=1):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
 
     """
     set_seed(seed)
-    with LocalTFRunner(snapshot_config=ctxt) as runner:
+    with TFTrainer(snapshot_config=ctxt) as trainer:
         env = normalize(GymEnv('InvertedDoublePendulum-v2'))
 
         policy = GaussianMLPPolicy(
@@ -55,13 +55,12 @@ def ppo_pendulum(ctxt=None, seed=1):
             env_spec=env.spec,
             policy=policy,
             baseline=baseline,
-            max_episode_length=100,
             discount=0.99,
             gae_lambda=0.95,
             lr_clip_range=0.2,
             optimizer_args=dict(
                 batch_size=32,
-                max_episode_length=10,
+                max_optimization_epochs=10,
             ),
             stop_entropy_gradient=True,
             entropy_method='max',
@@ -69,9 +68,9 @@ def ppo_pendulum(ctxt=None, seed=1):
             center_adv=False,
         )
 
-        runner.setup(algo, env)
+        trainer.setup(algo, env)
 
-        runner.train(n_epochs=120, batch_size=2048, plot=False)
+        trainer.train(n_epochs=120, batch_size=2048, plot=False)
 
 
 ppo_pendulum(seed=1)

@@ -9,12 +9,12 @@ import ray
 
 from garage import wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import RaySampler
 from garage.tf.algos import TRPO
 from garage.tf.policies import GaussianMLPPolicy
+from garage.trainer import TFTrainer
 
 
 @wrap_experiment
@@ -23,7 +23,7 @@ def trpo_swimmer_ray_sampler(ctxt=None, seed=1):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
 
@@ -31,11 +31,12 @@ def trpo_swimmer_ray_sampler(ctxt=None, seed=1):
     """
     # Since this is an example, we are running ray in a reduced state.
     # One can comment this line out in order to run ray at full capacity
-    ray.init(memory=52428800,
+    ray.init(_memory=52428800,
              object_store_memory=78643200,
              ignore_reinit_error=True,
-             log_to_driver=False)
-    with LocalTFRunner(snapshot_config=ctxt) as runner:
+             log_to_driver=False,
+             include_dashboard=False)
+    with TFTrainer(snapshot_config=ctxt) as trainer:
         set_seed(seed)
         env = GymEnv('Swimmer-v2')
 
@@ -46,15 +47,14 @@ def trpo_swimmer_ray_sampler(ctxt=None, seed=1):
         algo = TRPO(env_spec=env.spec,
                     policy=policy,
                     baseline=baseline,
-                    max_episode_length=500,
                     discount=0.99,
                     max_kl_step=0.01)
 
-        runner.setup(algo,
-                     env,
-                     sampler_cls=RaySampler,
-                     sampler_args={'seed': seed})
-        runner.train(n_epochs=40, batch_size=4000)
+        trainer.setup(algo,
+                      env,
+                      sampler_cls=RaySampler,
+                      sampler_args={'seed': seed})
+        trainer.train(n_epochs=40, batch_size=4000)
 
 
 trpo_swimmer_ray_sampler(seed=100)

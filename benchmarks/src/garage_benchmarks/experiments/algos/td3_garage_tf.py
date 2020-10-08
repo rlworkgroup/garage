@@ -3,12 +3,13 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import deterministic, LocalTFRunner
+from garage.experiment import deterministic
 from garage.np.exploration_policies import AddGaussianNoise
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import TD3
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
+from garage.trainer import TFTrainer
 
 hyper_parameters = {
     'policy_lr': 1e-3,
@@ -17,7 +18,6 @@ hyper_parameters = {
     'qf_hidden_sizes': [400, 300],
     'n_epochs': 8,
     'steps_per_epoch': 20,
-    'max_episode_length': 100,
     'n_exploration_steps': 250,
     'n_train_steps': 1,
     'discount': 0.99,
@@ -35,14 +35,18 @@ def td3_garage_tf(ctxt, env_id, seed):
 
     Args:
         ctxt (ExperimentContext): The experiment configuration used by
-            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
+            :class:`~Trainer` to create the :class:`~Snapshotter`.
         env_id (str): Environment id of the task.
         seed (int): Random positive integer for the trial.
 
     """
     deterministic.set_seed(seed)
 
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
+        num_timesteps = (hyper_parameters['n_epochs'] *
+                         hyper_parameters['steps_per_epoch'] *
+                         hyper_parameters['n_exploration_steps'])
+
         env = normalize(GymEnv(env_id))
 
         policy = ContinuousMLPPolicy(
@@ -54,6 +58,7 @@ def td3_garage_tf(ctxt, env_id, seed):
         exploration_policy = AddGaussianNoise(
             env.spec,
             policy,
+            total_timesteps=num_timesteps,
             max_sigma=hyper_parameters['sigma'],
             min_sigma=hyper_parameters['sigma'])
 
@@ -78,7 +83,6 @@ def td3_garage_tf(ctxt, env_id, seed):
                   policy=policy,
                   qf=qf,
                   qf2=qf2,
-                  max_episode_length=hyper_parameters['max_episode_length'],
                   replay_buffer=replay_buffer,
                   steps_per_epoch=hyper_parameters['steps_per_epoch'],
                   policy_lr=hyper_parameters['policy_lr'],
@@ -92,6 +96,6 @@ def td3_garage_tf(ctxt, env_id, seed):
                   policy_optimizer=tf.compat.v1.train.AdamOptimizer,
                   qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
-        runner.setup(td3, env)
-        runner.train(n_epochs=hyper_parameters['n_epochs'],
-                     batch_size=hyper_parameters['n_exploration_steps'])
+        trainer.setup(td3, env)
+        trainer.train(n_epochs=hyper_parameters['n_epochs'],
+                      batch_size=hyper_parameters['n_exploration_steps'])

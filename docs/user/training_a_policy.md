@@ -15,15 +15,15 @@ def my_first_experiment():
     ...
 ```
 
-### Construct a LocalRunner
+### Construct a Trainer
 
-Within the experiment, we need a `LocalRunner` to set up important state (such
-as a TensorFlow Session) for training a policy. To construct a `LocalRunner`, an
+Within the experiment, we need a `Trainer` to set up important state (such
+as a TensorFlow Session) for training a policy. To construct a `Trainer`, an
 experiment context called `ctxt` is needed. This is used to create the
 snapshotter, and we can set it `None` here to make it simple.
 
 Garage supports both PyTorch and TensorFlow. If you use TensorFlow, you should
-use `LocalTFRunner`.
+use `TFTrainer`.
 
 Besides, in order to produce determinism, you can set a seed for the random
 number generator.
@@ -33,10 +33,10 @@ number generator.
 def my_first_experiment(ctxt=None, seed=1):
     set_seed(seed)
     # PyTorch
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
     ...
     # TensorFlow
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         ...
 ```
 
@@ -69,19 +69,18 @@ baseline = LinearFeatureBaseline(env_spec=env.spec)
 algo = TRPO(env_spec=env.spec,
             policy=policy,
             baseline=baseline,
-            max_episode_length=100,
             discount=0.99,
             max_kl_step=0.01)
 ```
 
-### Tell `LocalRunner` How to Train the Policy
+### Tell `Trainer` How to Train the Policy
 
-The final step is calling `runner.setup` and `runner.train` to co-ordinate
+The final step is calling `trainer.setup` and `trainer.train` to co-ordinate
 training the policy.
 
 ```py
-runner.setup(algo, env)
-runner.train(n_epochs=100, batch_size=4000)
+trainer.setup(algo, env)
+trainer.train(n_epochs=100, batch_size=4000)
 ```
 
 ## Run the Experiment
@@ -108,11 +107,11 @@ which is also pasted below:
 ```py
 from garage import wrap_experiment
 from garage.envs import GymEnv
-from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.policies import CategoricalMLPPolicy
+from garage.trainer import TFTrainer
 
 
 @wrap_experiment
@@ -121,13 +120,13 @@ def trpo_cartpole(ctxt=None, seed=1):
 
     Args:
         ctxt (gExperimentContext): The experiment configuration used by
-            LocalRunner to create the snapshotter.
+            Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
 
     """
     set_seed(seed)
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         env = GymEnv('CartPole-v1')
 
         policy = CategoricalMLPPolicy(name='policy',
@@ -139,12 +138,11 @@ def trpo_cartpole(ctxt=None, seed=1):
         algo = TRPO(env_spec=env.spec,
                     policy=policy,
                     baseline=baseline,
-                    max_episode_length=100,
                     discount=0.99,
                     max_kl_step=0.01)
 
-        runner.setup(algo, env)
-        runner.train(n_epochs=100, batch_size=4000)
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=100, batch_size=4000)
 
 
 trpo_cartpole()

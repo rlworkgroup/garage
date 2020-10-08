@@ -403,7 +403,7 @@ class Wrapper(Environment):
 
     @property
     def spec(self):
-        """EnvSpec: The envionrment specification."""
+        """EnvSpec: The environment specification."""
         return self._env.spec
 
     @property
@@ -458,3 +458,8 @@ class Wrapper(Environment):
     def close(self):
         """Close the wrapped env."""
         self._env.close()
+
+    @property
+    def unwrapped(self):
+        """garage.Environment: The inner environment."""
+        return getattr(self._env, 'unwrapped', self._env)

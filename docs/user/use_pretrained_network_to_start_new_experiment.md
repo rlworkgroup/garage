@@ -32,13 +32,13 @@ env = snapshot['env']  # We assume env is the same
 
 # Setup new experiment
 from garage import wrap_experiment
-from garage.experiment import LocalRunner
 from garage.torch.algos import BC
 from garage.torch.policies import GaussianMLPPolicy
+from garage.trainer import Trainer
 
 @wrap_experiment
 def bc_with_pretrained_expert(ctxt=None):
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
     policy = GaussianMLPPolicy(env.spec, [8, 8])
     batch_size = 1000
     algo = BC(env.spec,
@@ -48,8 +48,8 @@ def bc_with_pretrained_expert(ctxt=None):
               max_path_length=200,
               policy_lr=1e-2,
               loss='log_prob')
-    runner.setup(algo, env)
-    runner.train(100, batch_size=batch_size)
+    trainer.setup(algo, env)
+    trainer.train(100, batch_size=batch_size)
 
 
 bc_with_pretrained_expert()
@@ -83,13 +83,13 @@ from garage.envs.wrappers import MaxAndSkip
 from garage.envs.wrappers import Noop
 from garage.envs.wrappers import Resize
 from garage.envs.wrappers import StackFrames
-from garage.experiment import LocalTFRunner, Snapshotter  # Add this import!
+from garage.experiment import Snapshotter  # Add this import!
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DQN
-from garage.tf.policies import DiscreteQfDerivedPolicy
-
+from garage.tf.policies import DiscreteQFArgmaxPolicy
+from garage.trainer import TFTrainer
 
 @click.command()
 @click.option('--buffer_size', type=int, default=int(5e4))
@@ -99,7 +99,7 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
     """Train DQN on PongNoFrameskip-v4 environment.
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
         buffer_size (int): Number of timesteps to store in replay buffer.
@@ -108,7 +108,7 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
             the memory required to store a single path.
     """
     set_seed(seed)
-    with LocalTFRunner(ctxt) as runner:
+    with TFTrainer(ctxt) as trainer:
         n_epochs = 100
         steps_per_epoch = 20
         sampler_batch_size = 500
@@ -135,7 +135,7 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
         qf = snapshot['algo']._qf
         # MARK: end modifications to existing example
 
-        policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
+        policy = DiscreteQFArgmaxPolicy(env_spec=env.spec, qf=qf)
         exploration_policy = EpsilonGreedyPolicy(env_spec=env.spec,
                                                  policy=policy,
                                                  total_timesteps=num_timesteps,
@@ -158,8 +158,8 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
                    target_network_update_freq=2,
                    buffer_batch_size=32)
 
-        runner.setup(algo, env)
-        runner.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
 
 
 dqn_pong()

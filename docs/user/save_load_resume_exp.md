@@ -5,51 +5,51 @@ regarding saving, loading and resuming of Garage experiments.
 
 **Contents**:
 
-- [LocalRunner & LocalTFRunner for Garage experiment](#localrunner-localtfrunner-for-garage-experiment)
+- [Trainer & TFTrainer for Garage experiment](#Trainer-TFTrainer-for-garage-experiment)
 - [Saving & Training Models in an experiment](#saving-training-models-in-an-experiment)
 - [Loading Models & Resuming an experiment](#loading-models-resuming-an-experiment)
 
 ```python
 import garage
-from garage.experiment import LocalRunner, LocalTFRunner
+from garage.experiment import Trainer, TFTrainer
 from garage.experiment.deterministic import set_seed
 ```
 
-## LocalRunner & LocalTFRunner for Garage experiment
+## Trainer & TFTrainer for Garage experiment
 
-`LocalRunner` class in Garage provides users with a range
+`Trainer` class in Garage provides users with a range
 of utilities to set up environment and train an algorithm
 for an experiment.
 
 ```Python
-runner = LocalRunner()
+trainer = Trainer()
 ```
 
-`LocalTFRunner` inherits `LocalRunner` class and provides
+`TFTrainer` inherits `Trainer` class and provides
 a default TensorFlow session using Python context.
 
 ```Python
-with LocalTFRunner(snapshot_config=ctxt) as runner:
+with TFTrainer(snapshot_config=ctxt) as trainer:
     ...
 ```
 
 To perform the save, load and resume operations of
-an experiment, `Local_runner` provides four core functions:
+an experiment, `Local_trainer` provides four core functions:
 
-- `LocalRunner.save`: To save snapshot of a specific epoch.
+- `Trainer.save`: To save snapshot of a specific epoch.
     This function uses [cloudpickle](https://github.com/cloudpipe/cloudpickle)
     utility for serialization. All kind of Model, tensors and dictionaries
     objects related to the experiment setup and training statistics
     within the epoch with saved using this function.
-- `LocalRunner.setup`: To setup `LocalRunner` instance for
+- `Trainer.setup`: To setup `Trainer` instance for
     algorithm and environment in an experiment.
-- `LocalRunner.train`: To train an algorithm given the training
+- `Trainer.train`: To train an algorithm given the training
     parameters.`
-- `LocalRunner.restore`: To restore an experiment from snapsnot.
+- `Trainer.restore`: To restore an experiment from snapsnot.
     This function uses cloudpickle's unplicking utilities to deserialize
     pickled object files and re-setup the environment and retrieve model
     data of a specified epoch.
-- `LocalRunner.resume`: To train an algorithm from a restored
+- `Trainer.resume`: To train an algorithm from a restored
     experiment. This function provides the same interface as train().
 
 ## Saving & Training Models in an experiment
@@ -57,21 +57,21 @@ an experiment, `Local_runner` provides four core functions:
 In general, saving and training models in an experiment includes
  the following steps:
 
-- Initialize the `LocalRunner`/ `LocalTFRunner` instance
+- Initialize the `Trainer`/ `TFTrainer` instance
 - Define the environment and algorithms for an experiment
-- Setup the runner for algorithm and environment with `LocalRunner.setup`.
-- Run the training step with `LocalRunner.train`
+- Setup the trainer for algorithm and environment with `Trainer.setup`.
+- Run the training step with `Trainer.train`
 
 ```Python
-runner = LocalRunner()
+trainer = Trainer()
 env = Env(...)
 policy = Policy(...)
 algo = Algo(
         env=env,
         policy=policy,
         ...)
-runner.setup(algo, env)
-runner.train(n_epochs=100, batch_size=4000)
+trainer.setup(algo, env)
+trainer.train(n_epochs=100, batch_size=4000)
 ```
 
 ## Loading Models & Resuming an experiment
@@ -79,21 +79,21 @@ runner.train(n_epochs=100, batch_size=4000)
 In general, loading models and resuming an experiment includes
  the following steps:
 
-- Initialize the `LocalRunner`/ `LocalTFRunner` instance
-- Restore the algorithm and experiment setup with `LocalRunner.restore`
+- Initialize the `Trainer`/ `TFTrainer` instance
+- Restore the algorithm and experiment setup with `Trainer.restore`
 - Define for the parameters we want to update during training
-- Run the training step with `LocalRunner.resume`
+- Run the training step with `Trainer.resume`
 
 ```Python
 # to resume immediately.
-runner = LocalRunner()
-runner.restore(resume_from_dir)
-runner.resume()
+trainer = Trainer()
+trainer.restore(resume_from_dir)
+trainer.resume()
 
 # to resume with modified training arguments.
-runner = LocalRunner()
-runner.restore(resume_from_dir)
-runner.resume(n_epochs=20)
+trainer = Trainer()
+trainer.restore(resume_from_dir)
+trainer.resume(n_epochs=20)
 ```
 
 ### Example on loading TRPO model & finetuning
@@ -109,14 +109,14 @@ First, we specify the directory of snapshot object. By default,
 snapshot_dir = 'mysnapshot/'  # specify the path
 ```
 
-Next, we can load the pre-trained model with `runner.restore()`
+Next, we can load the pre-trained model with `trainer.restore()`
 by passing the directory path as an argument.
 
 For fine-tunning, we can update the parameters i.e.
 `n_epochs`, `batch_size` for training.
 
 Last but not least, we start the training by
-`runner.resume()` with defined parameters as arguments.
+`trainer.resume()` with defined parameters as arguments.
 
 ```python
 
@@ -125,9 +125,9 @@ def pre_trained_trpo_cartpole(ctxt=None,
     snapshot_dir='data/local/experiment/trpo_gym_tf_cartpole',
     seed=1):
     set_seed(seed)
-    with LocalTFRunner(snapshot_config=ctxt) as runner:
-        runner.restore(snapshot_dir)
-        runner.resume(n_epochs=30, batch_size=8000)
+    with TFTrainer(snapshot_config=ctxt) as trainer:
+        trainer.restore(snapshot_dir)
+        trainer.resume(n_epochs=30, batch_size=8000)
 
 ```
 

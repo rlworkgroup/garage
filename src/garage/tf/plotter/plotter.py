@@ -9,7 +9,7 @@ from threading import Thread
 import numpy as np
 import tensorflow as tf
 
-from garage.sampler.utils import rollout as default_rollout
+from garage import rollout as default_rollout
 
 __all__ = ['Plotter']
 
@@ -27,14 +27,14 @@ Message = namedtuple('Message', ['op', 'args', 'kwargs'])
 class Plotter:
     """Visualizes episodes of the policy as it trains.
 
-    Usually, this class is used by sending plot=True to LocalRunner.train().
+    Usually, this class is used by sending plot=True to Trainer.train().
 
     Args:
-        env (gym.Env): Environment from which to visualize episodes. This will
-        be used without copying in the current process but in a separate
-        thread, so it should be given a unique copy (in particular, do not pass
-        the training environment here, then try to pickle it, or you will
-        occasionally get crashes).
+        env (garage.Environment): Environment from which to visualize episodes.
+            This will be used without copying in the current process but in a
+            separate thread, so it should be given a unique copy (in
+            particular, do not pass the training environment here, then try to
+            pickle it, or you will occasionally get crashes).
         policy (garage.tf.Policy): Policy used to visualize episodes.
         sess (tf.Session): The TensorFlow session to use.
         graph (tf.Graph): The TensorFlow graph to use.

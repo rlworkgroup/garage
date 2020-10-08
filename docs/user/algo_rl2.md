@@ -1,0 +1,73 @@
+<!-- markdownlint-disable no-inline-html -->
+# RL<sup>2</sup>
+
+```eval_rst
+.. list-table::
+   :header-rows: 0
+   :stub-columns: 1
+   :widths: auto
+
+   * - **Paper**
+     - RL\ :sup:`2` : Fast Reinforcement Learning via Slow Reinforcement
+       Learning :cite:`duan2016rl`
+   * - **Framework(s)**
+     - .. figure:: ./images/tensorflow.png
+        :scale: 20%
+
+        TensorFlow
+   * - **API Reference**
+     - `garage.tf.algos.RL2 <../_autoapi/garage/tf/algos/index.html#garage.tf.algos.RL2>`_
+   * - **Code**
+     - `garage/tf/algos/rl2.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/tf/algos/rl2.py>`_
+```
+
+When sampling for RL<sup>2</sup>, there are more than one environments to be
+sampled from. In the original implementation, within each trial, all episodes
+sampled will be concatenated into one single episode, and fed to the
+inner algorithm. Thus, returns and advantages are calculated across the
+episode.
+
+## RL<sup>2</sup>PPO
+
+Proximal Policy Optimization specific for RL<sup>2</sup>. Below are some
+examples of running RL<sup>2</sup> in different environments.
+
+### RL<sup>2</sup>PPO HalfCheetah
+
+```eval_rst
+.. literalinclude:: ../../examples/tf/rl2_ppo_halfcheetah.py
+```
+
+### RL<sup>2</sup>PPO MetaWorld Meta-Learning 10
+
+```eval_rst
+.. literalinclude:: ../../examples/tf/rl2_ppo_metaworld_ml10.py
+```
+
+### RL<sup>2</sup>PPO MetaWorld Meta-Learning 10 with meta-test
+
+```eval_rst
+.. literalinclude:: ../../examples/tf/rl2_ppo_metaworld_ml10_meta_test.py
+```
+
+## RL<sup>2</sup>TRPO
+
+Trust Region Policy Optimization specific for RL<sup>2</sup>.
+
+## RL<sup>2</sup>TRPO HalfCheetah
+
+```eval_rst
+.. literalinclude:: ../../examples/tf/rl2_trpo_halfcheetah.py
+```
+
+## References
+
+```eval_rst
+.. bibliography:: references.bib
+   :style: unsrt
+   :filter: docname in docnames
+```
+
+----
+
+*This page was authored by Ruofu Wang ([@yeukfu](https://github.com/yeukfu)).*

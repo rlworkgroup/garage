@@ -14,7 +14,6 @@ REQUIRED = [
     'cloudpickle==1.3',
     'cma==2.7.0',
     'dowel==0.0.3',
-    f'gym[atari,box2d,classic_control]=={GYM_VERSION}',
     'numpy>=1.14.5',
     'psutil',
     'python-dateutil',
@@ -24,15 +23,19 @@ REQUIRED = [
     'setproctitle>=1.0',
     'tensorflow>=1.14',
     'tensorflow-probability>=0.11.0',
-    'torch>=1.0.0,!=1.5.0,<1.6.0',
-    'torchvision>=0.2.1,<0.7.0',
+    'torch>=1.0.0,!=1.5.0',
+    'torchvision>=0.2.1',
 ]
 
 # Dependencies for optional features
 EXTRAS = {}
 
+EXTRAS['gym'] = [
+    f'gym[atari,box2d,classic_control]=={GYM_VERSION}',
+]
+
 EXTRAS['mujoco'] = [
-    'mujoco-py<2.1,>=2.0',
+    'mujoco-py>=2.0,<=2.0.2.8',
     f'gym[all]=={GYM_VERSION}',
 ]
 
@@ -54,7 +57,7 @@ EXTRAS['dev'] = [
     'flake8',
     'flake8-docstrings>=1.5.0',
     'flake8-import-order',
-    f'metaworld @ https://{GARAGE_GH_TOKEN}@api.github.com/repos/rlworkgroup/metaworld/tarball/861ae8d8c4bef80a7ed86f47f47acaa494d4ab77',  # noqa: E501
+    f'metaworld @ https://{GARAGE_GH_TOKEN}@api.github.com/repos/rlworkgroup/metaworld/tarball/0875192baaa91c43523708f55866d98eaf3facaf',  # noqa: E501
     'isort>=4.3.21,<5.0.0',
     'pep8-naming==0.7.0',
     'pre-commit',

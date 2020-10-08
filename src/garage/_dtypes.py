@@ -5,7 +5,7 @@ import enum
 import akro
 import numpy as np
 
-from garage.misc import tensor_utils
+from garage.np import concat_tensor_dict_list, slice_nested_dict
 
 # pylint: disable=too-many-lines
 
@@ -286,18 +286,16 @@ class EpisodeBatch(
         start = 0
         for i, length in enumerate(self.lengths):
             stop = start + length
-            eps = EpisodeBatch(env_spec=self.env_spec,
-                               observations=self.observations[start:stop],
-                               last_observations=np.asarray(
-                                   [self.last_observations[i]]),
-                               actions=self.actions[start:stop],
-                               rewards=self.rewards[start:stop],
-                               env_infos=tensor_utils.slice_nested_dict(
-                                   self.env_infos, start, stop),
-                               agent_infos=tensor_utils.slice_nested_dict(
-                                   self.agent_infos, start, stop),
-                               step_types=self.step_types[start:stop],
-                               lengths=np.asarray([length]))
+            eps = EpisodeBatch(
+                env_spec=self.env_spec,
+                observations=self.observations[start:stop],
+                last_observations=np.asarray([self.last_observations[i]]),
+                actions=self.actions[start:stop],
+                rewards=self.rewards[start:stop],
+                env_infos=slice_nested_dict(self.env_infos, start, stop),
+                agent_infos=slice_nested_dict(self.agent_infos, start, stop),
+                step_types=self.step_types[start:stop],
+                lengths=np.asarray([length]))
             episodes.append(eps)
             start = stop
         return episodes
@@ -407,7 +405,7 @@ class EpisodeBatch(
                 last_observations = np.asarray(
                     [p['observations'][-1] for p in paths])
 
-        stacked_paths = tensor_utils.concat_tensor_dict_list(paths)
+        stacked_paths = concat_tensor_dict_list(paths)
 
         # Temporary solution. This logic is not needed if algorithms process
         # step_types instead of dones directly.
@@ -657,8 +655,7 @@ class TimeStepBatch(
         actions (numpy.ndarray): Non-flattened array of actions. Should
             have shape (batch_size, S^*) (the unflattened action space of the
             current environment).
-        rewards (numpy.ndarray): Array of rewards of shape (batch_size,) (1D
-            array of length batch_size).
+        rewards (numpy.ndarray): Array of rewards of shape (batch_size, 1).
         next_observation (numpy.ndarray): Non-flattened array of next
             observations. Has shape (batch_size, S^*). next_observations[i] was
             observed by the agent after taking actions[i].
@@ -761,6 +758,12 @@ class TimeStepBatch(
                 'Expected batch dimension of actions to be length {}, but got '
                 'length {} instead.'.format(inferred_batch_size,
                                             actions.shape[0]))
+
+        # rewards
+        if rewards.shape != (inferred_batch_size, 1):
+            raise ValueError(
+                'Rewards tensor must have shape {}, but got shape {} '
+                'instead.'.format((inferred_batch_size, 1), rewards.shape))
 
         # step_types
         if step_types.shape[0] != inferred_batch_size:
@@ -937,6 +940,17 @@ class TimeStepBatch(
             })
         return samples
 
+    @property
+    def terminals(self):
+        """Get an array of boolean indicating ternianal information.
+
+        Returns:
+            numpy.ndarray: An array of boolean of shape (batch_size, 1)
+                indicating whether the `StepType is `TERMINAL
+
+        """
+        return np.array([[s == StepType.TERMINAL] for s in self.step_types])
+
     @classmethod
     def from_time_step_list(cls, env_spec, ts_samples):
         """Create a :class:`~TimeStepBatch` from a list of time step dictionaries.
@@ -1012,7 +1026,7 @@ class TimeStepBatch(
         return cls(env_spec=batch.env_spec,
                    observations=batch.observations,
                    actions=batch.actions,
-                   rewards=batch.rewards,
+                   rewards=batch.rewards.reshape(-1, 1),
                    next_observations=next_observations,
                    env_infos=batch.env_infos,
                    agent_infos=batch.agent_infos,

@@ -16,7 +16,9 @@ from garage import (EnvSpec,
                     log_multitask_performance,
                     StepType,
                     Wrapper)
-from garage.misc import tensor_utils as np_tensor_utils
+from garage.np import (concat_tensor_dict_list,
+                       discount_cumsum,
+                       stack_and_pad_tensor_dict_list)
 from garage.np.algos import MetaRLAlgorithm
 from garage.sampler import DefaultWorker
 from garage.tf.algos._rl2npo import RL2NPO
@@ -298,9 +300,9 @@ class RL2(MetaRLAlgorithm, abc.ABC):
     garage/tf/algos/rl2ppo.py and garage/tf/algos/rl2trpo.py.
 
     Args:
-        rl2_max_episode_length (int): Maximum length for episodess with
-            respect to RL^2. Note that it is different from the maximum episode
-            length for the inner algorithm.
+        env_spec (EnvSpec): Environment specification.
+        episodes_per_trial (int): Used to calculate the max episode length for
+            the inner algorithm.
         meta_batch_size (int): Meta batch size.
         task_sampler (TaskSampler): Task sampler.
         meta_evaluator (MetaEvaluator): Evaluator for meta-RL algorithms.
@@ -310,11 +312,15 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
     """
 
-    def __init__(self, rl2_max_episode_length, meta_batch_size, task_sampler,
-                 meta_evaluator, n_epochs_per_eval, **inner_algo_args):
-        self._inner_algo = RL2NPO(**inner_algo_args)
-        self._rl2_max_episode_length = rl2_max_episode_length
-        self.env_spec = self._inner_algo._env_spec
+    def __init__(self, env_spec, episodes_per_trial, meta_batch_size,
+                 task_sampler, meta_evaluator, n_epochs_per_eval,
+                 **inner_algo_args):
+        self._env_spec = env_spec
+        _inner_env_spec = EnvSpec(
+            env_spec.observation_space, env_spec.action_space,
+            episodes_per_trial * env_spec.max_episode_length)
+        self._inner_algo = RL2NPO(env_spec=_inner_env_spec, **inner_algo_args)
+        self._rl2_max_episode_length = self._env_spec.max_episode_length
         self._n_epochs_per_eval = n_epochs_per_eval
         self._policy = self._inner_algo.policy
         self._discount = self._inner_algo._discount
@@ -322,11 +328,11 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         self._task_sampler = task_sampler
         self._meta_evaluator = meta_evaluator
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): Experiment runner, which provides services
+            trainer (Trainer): Experiment trainer, which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -335,15 +341,16 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         """
         last_return = None
 
-        for _ in runner.step_epochs():
-            if runner.step_itr % self._n_epochs_per_eval == 0:
+        for _ in trainer.step_epochs():
+            if trainer.step_itr % self._n_epochs_per_eval == 0:
                 if self._meta_evaluator is not None:
                     self._meta_evaluator.evaluate(self)
-            runner.step_episode = runner.obtain_samples(
-                runner.step_itr,
+            trainer.step_episode = trainer.obtain_samples(
+                trainer.step_itr,
                 env_update=self._task_sampler.sample(self._meta_batch_size))
-            last_return = self.train_once(runner.step_itr, runner.step_episode)
-            runner.step_itr += 1
+            last_return = self.train_once(trainer.step_itr,
+                                          trainer.step_episode)
+            trainer.step_itr += 1
 
         return last_return
 
@@ -430,8 +437,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
         paths_by_task = collections.defaultdict(list)
         for path in paths:
-            path['returns'] = np_tensor_utils.discount_cumsum(
-                path['rewards'], self._discount)
+            path['returns'] = discount_cumsum(path['rewards'], self._discount)
             path['lengths'] = [len(path['rewards'])]
             if 'batch_idx' in path:
                 paths_by_task[path['batch_idx']].append(path)
@@ -451,9 +457,8 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         # stack and pad to max path length of the concatenated
         # path, which will be fed to inner algo
         # i.e. max_episode_length * episode_per_task
-        concatenated_paths_stacked = (
-            np_tensor_utils.stack_and_pad_tensor_dict_list(
-                concatenated_paths, self._inner_algo.max_episode_length))
+        concatenated_paths_stacked = (stack_and_pad_tensor_dict_list(
+            concatenated_paths, self._inner_algo.max_episode_length))
 
         name_map = None
         if hasattr(self._task_sampler, '_envs') and hasattr(
@@ -465,7 +470,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
         undiscounted_returns = log_multitask_performance(
             itr,
-            EpisodeBatch.from_list(self.env_spec, paths),
+            EpisodeBatch.from_list(self._env_spec, paths),
             self._inner_algo._discount,
             name_map=name_map)
 
@@ -496,7 +501,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         """
         observations = np.concatenate([path['observations'] for path in paths])
         actions = np.concatenate([
-            self.env_spec.action_space.flatten_n(path['actions'])
+            self._env_spec.action_space.flatten_n(path['actions'])
             for path in paths
         ])
         valids = np.concatenate(
@@ -504,7 +509,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         baselines = np.concatenate(
             [np.zeros_like(path['rewards']) for path in paths])
 
-        concatenated_path = np_tensor_utils.concat_tensor_dict_list(paths)
+        concatenated_path = concat_tensor_dict_list(paths)
         concatenated_path['observations'] = observations
         concatenated_path['actions'] = actions
         concatenated_path['valids'] = valids

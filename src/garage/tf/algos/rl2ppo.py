@@ -9,19 +9,17 @@ class RL2PPO(RL2):
     See https://arxiv.org/abs/1707.06347 for algorithm reference.
 
     Args:
-        rl2_max_episode_length (int): Maximum length for episodes with
-            respect to RL^2. Notice that it is different from the maximum
-            episode length for the inner algorithm.
         meta_batch_size (int): Meta batch size.
         task_sampler (TaskSampler): Task sampler.
         env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.StochasticPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
+        episodes_per_trial (int): Used to calculate the max episode length for
+            the inner algorithm.
         scope (str): Scope for identifying the algorithm.
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_episode_length (int): Maximum length of a single episode.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -59,14 +57,13 @@ class RL2PPO(RL2):
     """
 
     def __init__(self,
-                 rl2_max_episode_length,
                  meta_batch_size,
                  task_sampler,
                  env_spec,
                  policy,
                  baseline,
+                 episodes_per_trial,
                  scope=None,
-                 max_episode_length=500,
                  discount=0.99,
                  gae_lambda=1,
                  center_adv=True,
@@ -85,14 +82,13 @@ class RL2PPO(RL2):
                  name='PPO'):
         if optimizer_args is None:
             optimizer_args = dict()
-        super().__init__(rl2_max_episode_length=rl2_max_episode_length,
-                         meta_batch_size=meta_batch_size,
+        super().__init__(meta_batch_size=meta_batch_size,
                          task_sampler=task_sampler,
                          env_spec=env_spec,
                          policy=policy,
                          baseline=baseline,
+                         episodes_per_trial=episodes_per_trial,
                          scope=scope,
-                         max_episode_length=max_episode_length,
                          discount=discount,
                          gae_lambda=gae_lambda,
                          center_adv=center_adv,

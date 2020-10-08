@@ -5,11 +5,11 @@ import torch
 
 from garage import EpisodeBatch, log_performance, wrap_experiment
 from garage.envs import PointEnv
-from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
-from garage.misc import tensor_utils
+from garage.np import discount_cumsum
 from garage.sampler import LocalSampler
 from garage.torch.policies import GaussianMLPPolicy
+from garage.trainer import Trainer
 
 
 # pylint: disable=too-few-public-methods
@@ -26,19 +26,20 @@ class SimpleVPG:
     def __init__(self, env_spec, policy):
         self.env_spec = env_spec
         self.policy = policy
-        self.max_episode_length = 200
+        self.max_episode_length = env_spec.max_episode_length
+
         self._discount = 0.99
         self._policy_opt = torch.optim.Adam(self.policy.parameters(), lr=1e-3)
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): Experiment runner.
+            trainer (Trainer): Experiment trainer.
 
         """
-        for epoch in runner.step_epochs():
-            samples = runner.obtain_samples(epoch)
+        for epoch in trainer.step_epochs():
+            samples = trainer.obtain_samples(epoch)
             log_performance(epoch,
                             EpisodeBatch.from_list(self.env_spec, samples),
                             self._discount)
@@ -57,8 +58,7 @@ class SimpleVPG:
         losses = []
         self._policy_opt.zero_grad()
         for path in samples:
-            returns_numpy = tensor_utils.discount_cumsum(
-                path['rewards'], self._discount)
+            returns_numpy = discount_cumsum(path['rewards'], self._discount)
             returns = torch.Tensor(returns_numpy.copy())
             obs = torch.Tensor(path['observations'])
             actions = torch.Tensor(path['actions'])
@@ -77,16 +77,16 @@ def tutorial_vpg(ctxt=None):
 
     Args:
         ctxt (ExperimentContext): The experiment configuration used by
-            :class:`~LocalRunner` to create the :class:`~Snapshotter`.
+            :class:`~Trainer` to create the :class:`~Snapshotter`.
 
     """
     set_seed(100)
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
     env = PointEnv()
     policy = GaussianMLPPolicy(env.spec)
     algo = SimpleVPG(env.spec, policy)
-    runner.setup(algo, env)
-    runner.train(n_epochs=200, batch_size=4000)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=200, batch_size=4000)
 
 
 tutorial_vpg()

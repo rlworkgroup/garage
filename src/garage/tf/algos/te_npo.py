@@ -9,24 +9,24 @@ import tensorflow as tf
 
 from garage import EpisodeBatch, InOutSpec, log_performance
 from garage.experiment import deterministic
-from garage.misc import tensor_utils as np_tensor_utils
+from garage.np import explained_variance_1d, rrse, sliding_window
 from garage.np.algos import RLAlgorithm
 from garage.sampler import LocalSampler
-from garage.tf import paths_to_tensors
+from garage.tf import (center_advs,
+                       compile_function,
+                       compute_advantages,
+                       concat_tensor_list,
+                       discounted_returns,
+                       flatten_inputs,
+                       graph_inputs,
+                       pad_tensor,
+                       pad_tensor_dict,
+                       pad_tensor_n,
+                       paths_to_tensors,
+                       positive_advs,
+                       stack_tensor_dict_list)
 from garage.tf.embeddings import StochasticEncoder
-from garage.tf.misc.tensor_utils import (center_advs,
-                                         compile_function,
-                                         compute_advantages,
-                                         concat_tensor_list,
-                                         discounted_returns,
-                                         flatten_inputs,
-                                         graph_inputs,
-                                         pad_tensor,
-                                         pad_tensor_dict,
-                                         pad_tensor_n,
-                                         positive_advs,
-                                         stack_tensor_dict_list)
-from garage.tf.optimizers import LbfgsOptimizer
+from garage.tf.optimizers import LBFGSOptimizer
 from garage.tf.policies import TaskEmbeddingPolicy
 
 # yapf: enable
@@ -46,7 +46,6 @@ class TENPO(RLAlgorithm):
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
             and policies.
-        max_episode_length (int): Maximum length of a single episode.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -90,7 +89,6 @@ class TENPO(RLAlgorithm):
                  policy,
                  baseline,
                  scope=None,
-                 max_episode_length=500,
                  discount=0.99,
                  gae_lambda=1,
                  center_adv=True,
@@ -114,8 +112,8 @@ class TENPO(RLAlgorithm):
         assert isinstance(inference, StochasticEncoder)
 
         self.policy = policy
-        self.scope = scope
-        self.max_episode_length = max_episode_length
+        self._scope = scope
+        self.max_episode_length = env_spec.max_episode_length
 
         self._env_spec = env_spec
         self._baseline = baseline
@@ -130,10 +128,10 @@ class TENPO(RLAlgorithm):
         self._use_softplus_entropy = use_softplus_entropy
         self._stop_ce_gradient = stop_ce_gradient
 
-        optimizer = optimizer or LbfgsOptimizer
+        optimizer = optimizer or LBFGSOptimizer
         optimizer_args = optimizer_args or dict()
 
-        inference_opt = inference_optimizer or LbfgsOptimizer
+        inference_opt = inference_optimizer or LBFGSOptimizer
         inference_opt_args = inference_optimizer_args or dict()
 
         with self._name_scope:
@@ -165,9 +163,9 @@ class TENPO(RLAlgorithm):
 
         self.sampler_cls = LocalSampler
 
-        self.init_opt()
+        self._init_opt()
 
-    def init_opt(self):
+    def _init_opt(self):
         """Initialize optimizater.
 
         Raises:
@@ -197,12 +195,12 @@ class TENPO(RLAlgorithm):
                                             inputs=flatten_inputs(
                                                 self._inference_opt_inputs))
 
-    def train(self, runner):
+    def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
-            runner (LocalRunner): LocalRunner is passed to give algorithm
-                the access to runner.step_epochs(), which provides services
+            trainer (Trainer): Trainer is passed to give algorithm
+                the access to trainer.step_epochs(), which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -211,14 +209,14 @@ class TENPO(RLAlgorithm):
         """
         last_return = None
 
-        for _ in runner.step_epochs():
-            runner.step_path = runner.obtain_samples(runner.step_itr)
-            last_return = self.train_once(runner.step_itr, runner.step_path)
-            runner.step_itr += 1
+        for _ in trainer.step_epochs():
+            trainer.step_path = trainer.obtain_samples(trainer.step_itr)
+            last_return = self._train_once(trainer.step_itr, trainer.step_path)
+            trainer.step_itr += 1
 
         return last_return
 
-    def train_once(self, itr, paths):
+    def _train_once(self, itr, paths):
         """Perform one step of policy optimization given one batch of samples.
 
         Args:
@@ -234,15 +232,16 @@ class TENPO(RLAlgorithm):
                                                    self._env_spec, paths),
                                                discount=self._discount)
 
-        samples_data = self.paths_to_tensors(paths)
+        samples_data = self._paths_to_tensors(paths)
 
         samples_data['average_return'] = np.mean(undiscounted_returns)
 
         logger.log('Optimizing policy...')
-        self.optimize_policy(itr, samples_data)
+        self._optimize_policy(itr, samples_data)
+
         return samples_data['average_return']
 
-    def optimize_policy(self, itr, samples_data):
+    def _optimize_policy(self, itr, samples_data):
         """Optimize policy.
 
         Args:
@@ -261,8 +260,8 @@ class TENPO(RLAlgorithm):
         self._train_inference_network(inference_opt_input_values)
 
         paths = samples_data['paths']
-        self.evaluate(policy_opt_input_values, samples_data)
-        self.visualize_distribution()
+        self._evaluate(policy_opt_input_values, samples_data)
+        self._visualize_distribution()
 
         logger.log('Fitting baseline...')
         self._baseline.fit(paths)
@@ -272,7 +271,7 @@ class TENPO(RLAlgorithm):
             self.policy.encoder.model.parameters)
         self._old_inference.model.parameters = self._inference.model.parameters
 
-    def paths_to_tensors(self, paths):
+    def _paths_to_tensors(self, paths):
         # pylint: disable=too-many-statements
         """Return processed sample data based on the collected paths.
 
@@ -336,7 +335,7 @@ class TENPO(RLAlgorithm):
             obs_flat = self._env_spec.observation_space.flatten_n(obs)
             steps = obs_flat
             window = self._inference.spec.input_space.shape[0]
-            traj = np_tensor_utils.sliding_window(steps, window, smear=True)
+            traj = sliding_window(steps, window, smear=True)
             traj_flat = self._inference.spec.input_space.flatten_n(traj)
             path['trajectories'] = traj_flat
 
@@ -668,22 +667,16 @@ class TENPO(RLAlgorithm):
                 policy_entropy = tf.stop_gradient(policy_entropy)
 
         # Diagnostic functions
-        self._f_task_entropies = compile_function(flatten_inputs(
-            self._policy_opt_inputs),
-                                                  encoder_all_task_entropies,
-                                                  log_name='f_task_entropies')
-        self._f_encoder_entropy = compile_function(
+        self._f_task_entropies = compile_function(
             flatten_inputs(self._policy_opt_inputs),
-            encoder_entropy,
-            log_name='f_encoder_entropy')
+            encoder_all_task_entropies)
+        self._f_encoder_entropy = compile_function(
+            flatten_inputs(self._policy_opt_inputs), encoder_entropy)
         self._f_inference_ce = compile_function(
             flatten_inputs(self._policy_opt_inputs),
-            tf.reduce_mean(inference_ce * i.valid_var),
-            log_name='f_inference_ce')
-        self._f_policy_entropy = compile_function(flatten_inputs(
-            self._policy_opt_inputs),
-                                                  policy_entropy,
-                                                  log_name='f_policy_entropy')
+            tf.reduce_mean(inference_ce * i.valid_var))
+        self._f_policy_entropy = compile_function(
+            flatten_inputs(self._policy_opt_inputs), policy_entropy)
 
         return encoder_entropy, inference_ce, policy_entropy
 
@@ -702,10 +695,8 @@ class TENPO(RLAlgorithm):
             mean_kl = tf.reduce_mean(kl)
 
             # Diagnostic function
-            self._f_encoder_kl = compile_function(flatten_inputs(
-                self._policy_opt_inputs),
-                                                  mean_kl,
-                                                  log_name='f_encoder_kl')
+            self._f_encoder_kl = compile_function(
+                flatten_inputs(self._policy_opt_inputs), mean_kl)
 
             return mean_kl
 
@@ -809,7 +800,7 @@ class TENPO(RLAlgorithm):
 
         return flatten_inputs(inference_opt_input_values)
 
-    def evaluate(self, policy_opt_input_values, samples_data):
+    def _evaluate(self, policy_opt_input_values, samples_data):
         """Evaluate rewards and everything else.
 
         Args:
@@ -863,8 +854,7 @@ class TENPO(RLAlgorithm):
         tabular.record('{}/EntReturns'.format(self.policy.name), d_returns)
 
         # Calculate explained variance
-        ev = np_tensor_utils.explained_variance_1d(np.concatenate(baselines),
-                                                   aug_returns)
+        ev = explained_variance_1d(np.concatenate(baselines), aug_returns)
         tabular.record('{}/ExplainedVariance'.format(self._baseline.name), ev)
 
         inference_rmse = (samples_data['trajectory_infos']['mean'] -
@@ -872,8 +862,8 @@ class TENPO(RLAlgorithm):
         inference_rmse = np.sqrt(inference_rmse.mean())
         tabular.record('Inference/RMSE', inference_rmse)
 
-        inference_rrse = np_tensor_utils.rrse(
-            samples_data['latents'], samples_data['trajectory_infos']['mean'])
+        inference_rrse = rrse(samples_data['latents'],
+                              samples_data['trajectory_infos']['mean'])
         tabular.record('Inference/RRSE', inference_rrse)
 
         embed_ent = self._f_encoder_entropy(*policy_opt_input_values)
@@ -903,7 +893,7 @@ class TENPO(RLAlgorithm):
 
         return samples_data
 
-    def visualize_distribution(self):
+    def _visualize_distribution(self):
         """Visualize encoder distribution."""
         num_tasks = self.policy.task_space.flat_dim
         all_tasks = np.eye(num_tasks, num_tasks)
@@ -1075,4 +1065,4 @@ class TENPO(RLAlgorithm):
         """
         self.__dict__ = state
         self._name_scope = tf.name_scope(self._name)
-        self.init_opt()
+        self._init_opt()

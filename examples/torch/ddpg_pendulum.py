@@ -10,13 +10,13 @@ from torch.nn import functional as F
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
 from garage.torch.algos import DDPG
 from garage.torch.policies import DeterministicMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
+from garage.trainer import Trainer
 
 
 @wrap_experiment(snapshot_mode='last')
@@ -25,14 +25,14 @@ def ddpg_pendulum(ctxt=None, seed=1, lr=1e-4):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
         lr (float): Learning rate for policy optimization.
 
     """
     set_seed(seed)
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
     env = normalize(GymEnv('InvertedDoublePendulum-v2'))
 
     policy = DeterministicMLPPolicy(env_spec=env.spec,
@@ -54,7 +54,6 @@ def ddpg_pendulum(ctxt=None, seed=1, lr=1e-4):
                 policy=policy,
                 qf=qf,
                 replay_buffer=replay_buffer,
-                max_episode_length=100,
                 steps_per_epoch=20,
                 n_train_steps=50,
                 min_buffer_size=int(1e4),
@@ -64,9 +63,9 @@ def ddpg_pendulum(ctxt=None, seed=1, lr=1e-4):
                 policy_optimizer=policy_optimizer,
                 qf_optimizer=torch.optim.Adam)
 
-    runner.setup(algo=ddpg, env=env)
+    trainer.setup(algo=ddpg, env=env)
 
-    runner.train(n_epochs=500, batch_size=100)
+    trainer.train(n_epochs=500, batch_size=100)
 
 
 ddpg_pendulum()

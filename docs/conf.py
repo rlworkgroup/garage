@@ -50,18 +50,11 @@ github_doc_root = f'https://github.com/rlworkgroup/garage/tree/{version_}/docs/'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'autoapi.extension',
-    'sphinx.ext.autosectionlabel',
-    'sphinx.ext.doctest',
-    'sphinx.ext.inheritance_diagram',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
-    'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
-    'sphinxcontrib.bibtex',
-    'recommonmark',
+    'autoapi.extension', 'sphinx.ext.autosectionlabel', 'sphinx.ext.doctest',
+    'sphinx.ext.inheritance_diagram', 'sphinx.ext.intersphinx',
+    'sphinx.ext.todo', 'sphinx.ext.coverage', 'sphinx.ext.mathjax',
+    'sphinx.ext.viewcode', 'sphinx.ext.napoleon', 'sphinxcontrib.bibtex',
+    'recommonmark'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

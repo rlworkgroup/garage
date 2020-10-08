@@ -26,7 +26,6 @@ class CMAES(RLAlgorithm):
             Advantage Estimation).
         n_samples (int): Number of policies sampled in one epoch.
         discount (float): Environment reward discount.
-        max_episode_length (int): Maximum length of a single episode.
         sigma0 (float): Initial std for param distribution.
 
     """
@@ -37,10 +36,9 @@ class CMAES(RLAlgorithm):
                  baseline,
                  n_samples,
                  discount=0.99,
-                 max_episode_length=500,
                  sigma0=1.):
         self.policy = policy
-        self.max_episode_length = max_episode_length
+        self.max_episode_length = env_spec.max_episode_length
         self.sampler_cls = RaySampler
 
         self._env_spec = env_spec
@@ -64,12 +62,12 @@ class CMAES(RLAlgorithm):
         """
         return self._es.ask()
 
-    def train(self, runner):
+    def train(self, trainer):
         """Initialize variables and start training.
 
         Args:
-            runner (LocalRunner): LocalRunner is passed to give algorithm
-                the access to runner.step_epochs(), which provides services
+            trainer (Trainer): Trainer is passed to give algorithm
+                the access to trainer.step_epochs(), which provides services
                 such as snapshotting and sampler control.
 
         Returns:
@@ -87,12 +85,12 @@ class CMAES(RLAlgorithm):
         # start actual training
         last_return = None
 
-        for _ in runner.step_epochs():
+        for _ in trainer.step_epochs():
             for _ in range(self._n_samples):
-                runner.step_path = runner.obtain_samples(runner.step_itr)
-                last_return = self.train_once(runner.step_itr,
-                                              runner.step_path)
-                runner.step_itr += 1
+                trainer.step_path = trainer.obtain_samples(trainer.step_itr)
+                last_return = self.train_once(trainer.step_itr,
+                                              trainer.step_path)
+                trainer.step_itr += 1
 
         return last_return
 
