@@ -21,7 +21,7 @@ from garage.trainer import Trainer
 @click.command()
 @click.option('--num_epochs', default=500)
 @click.option('--num_train_tasks', default=100)
-@click.option('--num_test_tasks', default=30)
+@click.option('--num_test_tasks', default=100)
 @click.option('--encoder_hidden_size', default=200)
 @click.option('--net_size', default=300)
 @click.option('--num_steps_per_epoch', default=2000)
@@ -37,7 +37,7 @@ def pearl_half_cheetah_vel(ctxt=None,
                            seed=1,
                            num_epochs=500,
                            num_train_tasks=100,
-                           num_test_tasks=30,
+                           num_test_tasks=100,
                            latent_size=5,
                            encoder_hidden_size=200,
                            net_size=300,
@@ -62,7 +62,7 @@ def pearl_half_cheetah_vel(ctxt=None,
             determinism.
         num_epochs (int): Number of training epochs.
         num_train_tasks (int): Number of tasks for training.
-        num_test_tasks (int): Number of tasks for testing.
+        num_test_tasks (int): Number of tasks to use for testing.
         latent_size (int): Size of latent context vector.
         encoder_hidden_size (int): Output dimension of dense layer of the
             context encoder.
@@ -93,11 +93,15 @@ def pearl_half_cheetah_vel(ctxt=None,
     encoder_hidden_sizes = (encoder_hidden_size, encoder_hidden_size,
                             encoder_hidden_size)
     # create multi-task environment and sample tasks
-    env_sampler = SetTaskSampler(lambda: normalize(GymEnv(HalfCheetahVelEnv())
-                                                   ))
+    env_sampler = SetTaskSampler(
+        HalfCheetahVelEnv,
+        wrapper=lambda env, _: normalize(
+            GymEnv(env, max_episode_length=max_episode_length)))
     env = env_sampler.sample(num_train_tasks)
-    test_env_sampler = SetTaskSampler(lambda: normalize(
-        GymEnv(HalfCheetahVelEnv())))
+    test_env_sampler = SetTaskSampler(
+        HalfCheetahVelEnv,
+        wrapper=lambda env, _: normalize(
+            GymEnv(env, max_episode_length=max_episode_length)))
 
     trainer = Trainer(ctxt)
 
@@ -134,7 +138,6 @@ def pearl_half_cheetah_vel(ctxt=None,
         batch_size=batch_size,
         embedding_batch_size=embedding_batch_size,
         embedding_mini_batch_size=embedding_mini_batch_size,
-        max_episode_length=max_episode_length,
         reward_scale=reward_scale,
     )
 

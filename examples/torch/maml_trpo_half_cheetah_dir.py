@@ -38,7 +38,9 @@ def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
 
     """
     set_seed(seed)
-    env = normalize(GymEnv(HalfCheetahDirEnv(), max_episode_length=100),
+    max_episode_length = 100
+    env = normalize(GymEnv(HalfCheetahDirEnv(),
+                           max_episode_length=max_episode_length),
                     expected_action_scale=10.)
 
     policy = GaussianMLPPolicy(
@@ -53,18 +55,20 @@ def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
-    task_sampler = SetTaskSampler(lambda: normalize(
-        GymEnv(HalfCheetahDirEnv()), expected_action_scale=10.))
+    task_sampler = SetTaskSampler(
+        HalfCheetahDirEnv,
+        wrapper=lambda env, _: normalize(GymEnv(
+            env, max_episode_length=max_episode_length),
+                                         expected_action_scale=10.))
 
-    meta_evaluator = MetaEvaluator(
-        test_task_sampler=task_sampler,
-        max_episode_length=env.spec.max_episode_length,
-        n_test_tasks=1,
-        n_test_episodes=10)
+    meta_evaluator = MetaEvaluator(test_task_sampler=task_sampler,
+                                   n_test_tasks=1,
+                                   n_test_episodes=10)
 
     trainer = Trainer(ctxt)
     algo = MAMLTRPO(env=env,
                     policy=policy,
+                    task_sampler=task_sampler,
                     value_function=value_function,
                     meta_batch_size=meta_batch_size,
                     discount=0.99,

@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from garage.envs import GymEnv
 from garage.envs.wrappers import AtariEnv
-from garage.tf.policies import DiscreteQfDerivedPolicy
+from garage.tf.policies import DiscreteQFArgmaxPolicy
 from garage.tf.q_functions import DiscreteCNNQFunction
 
 # yapf: disable
@@ -24,12 +24,12 @@ class TestQfDerivedPolicy(TfGraphTestCase):
         super().setup_method()
         self.env = GymEnv(DummyDiscreteEnv())
         self.qf = SimpleQFunction(self.env.spec)
-        self.policy = DiscreteQfDerivedPolicy(env_spec=self.env.spec,
-                                              qf=self.qf)
+        self.policy = DiscreteQFArgmaxPolicy(env_spec=self.env.spec,
+                                             qf=self.qf)
         self.sess.run(tf.compat.v1.global_variables_initializer())
         self.env.reset()
 
-    def test_discrete_qf_derived_policy(self):
+    def test_discrete_qf_argmax_policy(self):
         obs = self.env.step(1).observation
         action, _ = self.policy.get_action(obs)
         assert self.env.action_space.contains(action)
@@ -62,14 +62,14 @@ class TestQfDerivedPolicy(TfGraphTestCase):
         with pytest.raises(ValueError):
             qf = SimpleQFunction(env.spec,
                                  name='does_not_support_dict_obs_space')
-            DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
+            DiscreteQFArgmaxPolicy(env_spec=env.spec, qf=qf)
 
     def test_invalid_action_spaces(self):
         """Test that policy raises error if passed a dict obs space."""
         env = GymEnv(DummyDictEnv(act_space_type='box'))
         with pytest.raises(ValueError):
             qf = SimpleQFunction(env.spec)
-            DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
+            DiscreteQFArgmaxPolicy(env_spec=env.spec, qf=qf)
 
 
 class TestQfDerivedPolicyImageObs(TfGraphTestCase):
@@ -82,8 +82,8 @@ class TestQfDerivedPolicyImageObs(TfGraphTestCase):
                                        filters=((1, (1, 1)), ),
                                        strides=(1, ),
                                        dueling=False)
-        self.policy = DiscreteQfDerivedPolicy(env_spec=self.env.spec,
-                                              qf=self.qf)
+        self.policy = DiscreteQFArgmaxPolicy(env_spec=self.env.spec,
+                                             qf=self.qf)
         self.sess.run(tf.compat.v1.global_variables_initializer())
         self.env.reset()
 

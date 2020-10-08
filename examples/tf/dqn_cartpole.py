@@ -9,7 +9,7 @@ from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DQN
-from garage.tf.policies import DiscreteQfDerivedPolicy
+from garage.tf.policies import DiscreteQFArgmaxPolicy
 from garage.tf.q_functions import DiscreteMLPQFunction
 from garage.trainer import TFTrainer
 
@@ -34,7 +34,7 @@ def dqn_cartpole(ctxt=None, seed=1):
         env = GymEnv('CartPole-v0')
         replay_buffer = PathBuffer(capacity_in_transitions=int(1e4))
         qf = DiscreteMLPQFunction(env_spec=env.spec, hidden_sizes=(64, 64))
-        policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
+        policy = DiscreteQFArgmaxPolicy(env_spec=env.spec, qf=qf)
         exploration_policy = EpsilonGreedyPolicy(env_spec=env.spec,
                                                  policy=policy,
                                                  total_timesteps=num_timesteps,

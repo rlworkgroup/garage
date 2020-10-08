@@ -40,13 +40,14 @@ def rl2_ppo_halfcheetah_meta_test(ctxt, seed, meta_batch_size, n_epochs,
     set_seed(seed)
     with TFTrainer(snapshot_config=ctxt) as trainer:
         max_episode_length = 150
-        inner_max_episode_length = max_episode_length * episode_per_task
-        tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
-            GymEnv(HalfCheetahVelEnv())))
+        tasks = task_sampler.SetTaskSampler(
+            HalfCheetahVelEnv,
+            wrapper=lambda env, _: RL2Env(
+                GymEnv(env, max_episode_length=max_episode_length)))
 
         env_spec = RL2Env(
             GymEnv(HalfCheetahVelEnv(),
-                   max_episode_length=inner_max_episode_length)).spec
+                   max_episode_length=max_episode_length)).spec
         policy = GaussianGRUPolicy(name='policy',
                                    hidden_dim=64,
                                    env_spec=env_spec,
@@ -57,7 +58,6 @@ def rl2_ppo_halfcheetah_meta_test(ctxt, seed, meta_batch_size, n_epochs,
         meta_evaluator = MetaEvaluator(test_task_sampler=tasks,
                                        n_exploration_eps=10,
                                        n_test_episodes=10,
-                                       max_episode_length=max_episode_length,
                                        n_test_tasks=5)
 
         algo = RL2PPO(meta_batch_size=meta_batch_size,

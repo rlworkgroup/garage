@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """PEARL ML1 example."""
 import click
-import metaworld.benchmarks as mwb
+import metaworld
 
 from garage import wrap_experiment
-from garage.envs import GymEnv, normalize
+from garage.envs import MetaWorldSetTaskEnv, normalize
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.sampler import LocalSampler
@@ -21,7 +21,6 @@ from garage.trainer import Trainer
 @click.command()
 @click.option('--num_epochs', default=1000)
 @click.option('--num_train_tasks', default=50)
-@click.option('--num_test_tasks', default=10)
 @click.option('--encoder_hidden_size', default=200)
 @click.option('--net_size', default=300)
 @click.option('--num_steps_per_epoch', default=4000)
@@ -31,13 +30,11 @@ from garage.trainer import Trainer
 @click.option('--batch_size', default=256)
 @click.option('--embedding_batch_size', default=64)
 @click.option('--embedding_mini_batch_size', default=64)
-@click.option('--max_episode_length', default=150)
 @wrap_experiment
 def pearl_metaworld_ml1_push(ctxt=None,
                              seed=1,
                              num_epochs=1000,
                              num_train_tasks=50,
-                             num_test_tasks=10,
                              latent_size=7,
                              encoder_hidden_size=200,
                              net_size=300,
@@ -50,7 +47,6 @@ def pearl_metaworld_ml1_push(ctxt=None,
                              batch_size=256,
                              embedding_batch_size=64,
                              embedding_mini_batch_size=64,
-                             max_episode_length=150,
                              reward_scale=10.,
                              use_gpu=False):
     """Train PEARL with ML1 environments.
@@ -62,7 +58,6 @@ def pearl_metaworld_ml1_push(ctxt=None,
             determinism.
         num_epochs (int): Number of training epochs.
         num_train_tasks (int): Number of tasks for training.
-        num_test_tasks (int): Number of tasks for testing.
         latent_size (int): Size of latent context vector.
         encoder_hidden_size (int): Output dimension of dense layer of the
             context encoder.
@@ -84,7 +79,6 @@ def pearl_metaworld_ml1_push(ctxt=None,
         embedding_mini_batch_size (int): Number of transitions in mini context
             batch; should be same as embedding_batch_size for non-recurrent
             encoder.
-        max_episode_length (int): Maximum episode length.
         reward_scale (int): Reward scale.
         use_gpu (bool): Whether or not to use GPU for training.
 
@@ -93,12 +87,16 @@ def pearl_metaworld_ml1_push(ctxt=None,
     encoder_hidden_sizes = (encoder_hidden_size, encoder_hidden_size,
                             encoder_hidden_size)
     # create multi-task environment and sample tasks
-    env_sampler = SetTaskSampler(lambda: normalize(
-        GymEnv(mwb.ML1.get_train_tasks('push-v1'))))
+    ml1 = metaworld.ML1('push-v1')
+    train_env = MetaWorldSetTaskEnv(ml1, 'train')
+    env_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
+                                 env=train_env,
+                                 wrapper=lambda env, _: normalize(env))
     env = env_sampler.sample(num_train_tasks)
-
-    test_env_sampler = SetTaskSampler(lambda: normalize(
-        GymEnv(mwb.ML1.get_test_tasks('push-v1'))))
+    test_env = MetaWorldSetTaskEnv(ml1, 'test')
+    test_env_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
+                                      env=test_env,
+                                      wrapper=lambda env, _: normalize(env))
 
     trainer = Trainer(ctxt)
 
@@ -122,7 +120,6 @@ def pearl_metaworld_ml1_push(ctxt=None,
         qf=qf,
         vf=vf,
         num_train_tasks=num_train_tasks,
-        num_test_tasks=num_test_tasks,
         latent_dim=latent_size,
         encoder_hidden_sizes=encoder_hidden_sizes,
         test_env_sampler=test_env_sampler,
@@ -135,7 +132,6 @@ def pearl_metaworld_ml1_push(ctxt=None,
         batch_size=batch_size,
         embedding_batch_size=embedding_batch_size,
         embedding_mini_batch_size=embedding_mini_batch_size,
-        max_episode_length=max_episode_length,
         reward_scale=reward_scale,
     )
 
@@ -146,7 +142,6 @@ def pearl_metaworld_ml1_push(ctxt=None,
     trainer.setup(algo=pearl,
                   env=env[0](),
                   sampler_cls=LocalSampler,
-                  sampler_args=dict(max_episode_length=max_episode_length),
                   n_workers=1,
                   worker_class=PEARLWorker)
 

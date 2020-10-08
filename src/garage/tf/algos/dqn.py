@@ -210,6 +210,8 @@ class DQN(RLAlgorithm):
         for _ in trainer.step_epochs():
             for cycle in range(self._steps_per_epoch):
                 trainer.step_path = trainer.obtain_episodes(trainer.step_itr)
+                if hasattr(self.exploration_policy, 'update'):
+                    self.exploration_policy.update(trainer.step_path)
                 qf_losses.extend(
                     self._train_once(trainer.step_itr, trainer.step_path))
                 if (cycle == 0 and self._replay_buffer.n_transitions_stored >=
@@ -256,15 +258,14 @@ class DQN(RLAlgorithm):
             numpy.float64: Loss of policy.
 
         """
-        transitions = self._replay_buffer.sample_transitions(
+        timesteps = self._replay_buffer.sample_timesteps(
             self._buffer_batch_size)
 
-        observations = transitions['observations']
-        rewards = transitions['rewards']
-        actions = self._env_spec.action_space.unflatten_n(
-            transitions['actions'])
-        next_observations = transitions['next_observations']
-        dones = transitions['terminals']
+        observations = timesteps.observations
+        rewards = timesteps.rewards
+        actions = self._env_spec.action_space.unflatten_n(timesteps.actions)
+        next_observations = timesteps.next_observations
+        dones = timesteps.terminals
 
         if isinstance(self._env_spec.observation_space, akro.Image):
             if len(observations.shape[1:]) < len(

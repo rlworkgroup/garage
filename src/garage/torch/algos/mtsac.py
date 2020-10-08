@@ -202,11 +202,11 @@ class MTSAC(SAC):
 
         """
         eval_eps = []
-        for _ in range(self._num_tasks):
+        for eval_env in self._eval_env:
             eval_eps.append(
                 obtain_evaluation_episodes(
                     self.policy,
-                    self._eval_env,
+                    eval_env,
                     self._max_episode_length_eval,
                     num_eps=self._num_evaluation_episodes,
                     deterministic=self._use_deterministic_evaluation))

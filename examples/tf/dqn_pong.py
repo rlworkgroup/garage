@@ -20,7 +20,7 @@ from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DQN
-from garage.tf.policies import DiscreteQfDerivedPolicy
+from garage.tf.policies import DiscreteQFArgmaxPolicy
 from garage.tf.q_functions import DiscreteCNNQFunction
 from garage.trainer import TFTrainer
 
@@ -75,7 +75,7 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
                                   strides=(4, 2, 1),
                                   dueling=False)  # yapf: disable
 
-        policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
+        policy = DiscreteQFArgmaxPolicy(env_spec=env.spec, qf=qf)
         exploration_policy = EpsilonGreedyPolicy(env_spec=env.spec,
                                                  policy=policy,
                                                  total_timesteps=num_timesteps,

@@ -22,6 +22,11 @@ class TestTD3(TfGraphTestCase):
     def test_td3_pendulum(self):
         """Test TD3 with Pendulum environment."""
         with TFTrainer(snapshot_config) as trainer:
+            n_epochs = 10
+            steps_per_epoch = 20
+            sampler_batch_size = 250
+            num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
+
             env = GymEnv('InvertedDoublePendulum-v2', max_episode_length=100)
 
             policy = ContinuousMLPPolicy(env_spec=env.spec,
@@ -29,10 +34,12 @@ class TestTD3(TfGraphTestCase):
                                          hidden_nonlinearity=tf.nn.relu,
                                          output_nonlinearity=tf.nn.tanh)
 
-            exploration_policy = AddGaussianNoise(env.spec,
-                                                  policy,
-                                                  max_sigma=0.1,
-                                                  min_sigma=0.1)
+            exploration_policy = AddGaussianNoise(
+                env.spec,
+                policy,
+                total_timesteps=num_timesteps,
+                max_sigma=0.1,
+                min_sigma=0.1)
 
             qf = ContinuousMLPQFunction(name='ContinuousMLPQFunction',
                                         env_spec=env.spec,
@@ -55,7 +62,7 @@ class TestTD3(TfGraphTestCase):
                        qf=qf,
                        qf2=qf2,
                        replay_buffer=replay_buffer,
-                       steps_per_epoch=20,
+                       steps_per_epoch=steps_per_epoch,
                        target_update_tau=0.005,
                        n_train_steps=50,
                        discount=0.99,
@@ -68,5 +75,6 @@ class TestTD3(TfGraphTestCase):
                        qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
             trainer.setup(algo, env, sampler_cls=LocalSampler)
-            last_avg_ret = trainer.train(n_epochs=10, batch_size=250)
+            last_avg_ret = trainer.train(n_epochs=n_epochs,
+                                         batch_size=sampler_batch_size)
             assert last_avg_ret > 200
