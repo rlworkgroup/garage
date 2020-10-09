@@ -72,9 +72,7 @@ backend = "server"
 host = "http://<Prefect server ip>"
 
     [server.ui]
-    # currently broken: https://github.com/PrefectHQ/prefect/issues/3254
-    # for now, you can set this using the Prefect UI mentioned later
-    graphql_url = "http://<Prefect server ip>/graphql"
+    apollo_url = "http://<Prefect server ip>/graphql"
 ```
 
 #### prefect server
@@ -190,7 +188,7 @@ tasks can declare they require exclusively. A task's resource claims decrement
 available resources on the worker process, and the worker process will not
 schedule any task which would allow its resource counters to go negative.
 
-**IMPORTANT:** Resource declarations apply PER PROCESS regardless of invocation
+**IMPORTANT:** Resource declarations apply PER PROCESS regardless of invocation.
 That means the following two invocations are equivalent for resource purposes.
 
 One worker, two processes:
