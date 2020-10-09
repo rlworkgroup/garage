@@ -219,7 +219,6 @@ class GymEnv(Environment):
         observation, reward, done, info = self._env.step(action)
 
         # check that env_infos are consistent
-        print(info)
         if not self._env_info:
             self._env_info = {k: type(info[k]) for k in info}
         elif self._env_info.keys() != info.keys():
