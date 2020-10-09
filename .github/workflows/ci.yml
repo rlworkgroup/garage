@@ -390,6 +390,8 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: 3.7
+      - name: Update Version
+        run: echo ${GITHUB_REF##*/} > VERSION
       - name: Setup Distribution
         run: >-
           python setup.py sdist
