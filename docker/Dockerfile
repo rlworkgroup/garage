@@ -30,9 +30,11 @@ RUN \
     libopenmpi-dev \
     # virtualenv
     libbz2-dev \
+    libffi-dev \
     libreadline-dev \
     libssl-dev \
     libsqlite3-dev \
+    swig \
     # ruby
     ruby-full && \
   apt-get clean && \
@@ -66,8 +68,8 @@ ENV PATH_NO_VENV $PATH
 WORKDIR $HOME
 
 RUN curl https://pyenv.run | bash && \
-  pyenv install 3.6.10 && \
-  pyenv global 3.6.10 && \
+  pyenv install 3.8.6 && \
+  pyenv global 3.8.6 && \
   pip install virtualenv && \
   rm -r $HOME/.cache/pip
 
