@@ -1,4 +1,4 @@
-"""Discrete CNN Module."""
+"""Discrete Dueling CNN Module."""
 import torch
 from torch import nn
 
@@ -7,11 +7,12 @@ from garage.torch.modules import CNNModule, MLPModule
 
 # pytorch v1.6 issue, see https://github.com/pytorch/pytorch/issues/42305
 # pylint: disable=abstract-method
-class DiscreteCNNModule(nn.Module):
-    """Discrete CNN Module.
+class DiscreteDuelingCNNModule(nn.Module):
+    """Discrete Dueling CNN Module.
 
     A CNN followed by one or more fully connected layers with a set number
-    of discrete outputs.
+    of discrete outputs for each of the advantage and value parts of
+    the dueling network.
 
     Args:
         input_shape (tuple[int]): Shape of the input. Based on 'NCHW' data
@@ -110,22 +111,31 @@ class DiscreteCNNModule(nn.Module):
             cnn_out = cnn_module(input_var)
         flat_dim = torch.flatten(cnn_out, start_dim=1).shape[1]
 
-        mlp_module = MLPModule(flat_dim,
-                               output_dim,
-                               hidden_sizes,
-                               hidden_nonlinearity=mlp_hidden_nonlinearity,
-                               hidden_w_init=hidden_w_init,
-                               hidden_b_init=hidden_b_init,
-                               output_nonlinearity=output_nonlinearity,
-                               output_w_init=output_w_init,
-                               output_b_init=output_b_init,
-                               layer_normalization=layer_normalization)
-
+        self._val = MLPModule(flat_dim,
+                              1,
+                              hidden_sizes,
+                              hidden_nonlinearity=mlp_hidden_nonlinearity,
+                              hidden_w_init=hidden_w_init,
+                              hidden_b_init=hidden_b_init,
+                              output_nonlinearity=output_nonlinearity,
+                              output_w_init=output_w_init,
+                              output_b_init=output_b_init,
+                              layer_normalization=layer_normalization)
+        self._act = MLPModule(flat_dim,
+                              output_dim,
+                              hidden_sizes,
+                              hidden_nonlinearity=mlp_hidden_nonlinearity,
+                              hidden_w_init=hidden_w_init,
+                              hidden_b_init=hidden_b_init,
+                              output_nonlinearity=output_nonlinearity,
+                              output_w_init=output_w_init,
+                              output_b_init=output_b_init,
+                              layer_normalization=layer_normalization)
         if mlp_hidden_nonlinearity is None:
-            self._module = nn.Sequential(cnn_module, nn.Flatten(), mlp_module)
+            self._module = nn.Sequential(cnn_module, nn.Flatten())
         else:
             self._module = nn.Sequential(cnn_module, mlp_hidden_nonlinearity(),
-                                         nn.Flatten(), mlp_module)
+                                         nn.Flatten())
 
     def forward(self, inputs):
         """Forward method.
@@ -138,4 +148,8 @@ class DiscreteCNNModule(nn.Module):
             torch.Tensor: Output tensor of shape :math:`(N, output_dim)`.
 
         """
-        return self._module(inputs)
+        out = self._module(inputs)
+        val = self._val(out)
+        act = self._act(out)
+        act = act - act.mean(1).unsqueeze(1)
+        return val + act

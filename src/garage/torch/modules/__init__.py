@@ -12,12 +12,15 @@ from garage.torch.modules.mlp_module import MLPModule
 from garage.torch.modules.multi_headed_mlp_module import MultiHeadedMLPModule
 # DiscreteCNNModule must go after MLPModule
 from garage.torch.modules.discrete_cnn_module import DiscreteCNNModule
+from garage.torch.modules.discrete_dueling_cnn_module import (
+    DiscreteDuelingCNNModule)
 # yapf: enable
 
 __all__ = [
     'CategoricalCNNModule',
     'CNNModule',
     'DiscreteCNNModule',
+    'DiscreteDuelingCNNModule',
     'MLPModule',
     'MultiHeadedMLPModule',
     'GaussianMLPModule',
