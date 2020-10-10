@@ -41,6 +41,8 @@ hyperparams = dict(n_epochs=500,
                    target_update_freq=2,
                    buffer_batch_size=32,
                    max_epsilon=1.0,
+                   double=True,
+                   dueling=True,
                    min_epsilon=0.01,
                    decay_ratio=0.1,
                    buffer_size=int(1e4),
@@ -104,7 +106,7 @@ def main(env=None,
 
 
 # pylint: disable=unused-argument
-@wrap_experiment(snapshot_mode='gap_overwrite', snapshot_gap=30)
+@wrap_experiment(snapshot_mode='gap_overwrite', snapshot_gap=50)
 def dqn_atari(ctxt=None,
               env=None,
               seed=24,
@@ -162,6 +164,7 @@ def dqn_atari(ctxt=None,
         hidden_channels=hyperparams['hidden_channels'],
         kernel_sizes=hyperparams['kernel_sizes'],
         strides=hyperparams['strides'],
+        dueling=hyperparams['dueling'],
         hidden_w_init=(
             lambda x: torch.nn.init.orthogonal_(x, gain=np.sqrt(2))),
         hidden_sizes=hyperparams['hidden_sizes'],
@@ -183,6 +186,7 @@ def dqn_atari(ctxt=None,
                replay_buffer=replay_buffer,
                steps_per_epoch=steps_per_epoch,
                qf_lr=hyperparams['lr'],
+               double_q=hyperparams['double'],
                clip_gradient=hyperparams['clip_gradient'],
                discount=hyperparams['discount'],
                min_buffer_size=hyperparams['min_buffer_size'],

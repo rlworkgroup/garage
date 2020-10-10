@@ -31,6 +31,8 @@ class DiscreteCNNModule(nn.Module):
         hidden_sizes (list[int]): Output dimension of dense layer(s) for
             the MLP for mean. For example, (32, 32) means the MLP consists
             of two hidden layers, each with 32 hidden units.
+        dueling (bool): Whether to use a dueling architecture for the
+            fully-connected layer.
         mlp_hidden_nonlinearity (callable): Activation function for
             intermediate dense layer(s) in the MLP. It should return
             a torch.Tensor. Set it to None to maintain a linear activation.
@@ -73,6 +75,7 @@ class DiscreteCNNModule(nn.Module):
                  hidden_channels,
                  strides,
                  hidden_sizes=(32, 32),
+                 dueling=False,
                  cnn_hidden_nonlinearity=nn.ReLU,
                  mlp_hidden_nonlinearity=nn.ReLU,
                  hidden_w_init=nn.init.xavier_uniform_,
@@ -89,6 +92,8 @@ class DiscreteCNNModule(nn.Module):
                  is_image=True):
 
         super().__init__()
+
+        self._dueling = dueling
 
         input_var = torch.zeros(input_shape)
         cnn_module = CNNModule(input_var=input_var,
@@ -109,22 +114,54 @@ class DiscreteCNNModule(nn.Module):
         with torch.no_grad():
             cnn_out = cnn_module(input_var)
         flat_dim = torch.flatten(cnn_out, start_dim=1).shape[1]
-        mlp_module = MLPModule(flat_dim,
-                               output_dim,
-                               hidden_sizes,
-                               hidden_nonlinearity=mlp_hidden_nonlinearity,
-                               hidden_w_init=hidden_w_init,
-                               hidden_b_init=hidden_b_init,
-                               output_nonlinearity=output_nonlinearity,
-                               output_w_init=output_w_init,
-                               output_b_init=output_b_init,
-                               layer_normalization=layer_normalization)
 
-        if mlp_hidden_nonlinearity is None:
-            self._module = nn.Sequential(cnn_module, nn.Flatten(), mlp_module)
+        if dueling:
+            self._val = MLPModule(flat_dim,
+                                  1,
+                                  hidden_sizes,
+                                  hidden_nonlinearity=mlp_hidden_nonlinearity,
+                                  hidden_w_init=hidden_w_init,
+                                  hidden_b_init=hidden_b_init,
+                                  output_nonlinearity=output_nonlinearity,
+                                  output_w_init=output_w_init,
+                                  output_b_init=output_b_init,
+                                  layer_normalization=layer_normalization)
+            self._act = MLPModule(flat_dim,
+                                  output_dim,
+                                  hidden_sizes,
+                                  hidden_nonlinearity=mlp_hidden_nonlinearity,
+                                  hidden_w_init=hidden_w_init,
+                                  hidden_b_init=hidden_b_init,
+                                  output_nonlinearity=output_nonlinearity,
+                                  output_w_init=output_w_init,
+                                  output_b_init=output_b_init,
+                                  layer_normalization=layer_normalization)
+            if mlp_hidden_nonlinearity is None:
+                self._module = nn.Sequential(cnn_module, nn.Flatten())
+            else:
+                self._module = nn.Sequential(cnn_module,
+                                             mlp_hidden_nonlinearity(),
+                                             nn.Flatten())
+
         else:
-            self._module = nn.Sequential(cnn_module, mlp_hidden_nonlinearity(),
-                                         nn.Flatten(), mlp_module)
+            mlp_module = MLPModule(flat_dim,
+                                   output_dim,
+                                   hidden_sizes,
+                                   hidden_nonlinearity=mlp_hidden_nonlinearity,
+                                   hidden_w_init=hidden_w_init,
+                                   hidden_b_init=hidden_b_init,
+                                   output_nonlinearity=output_nonlinearity,
+                                   output_w_init=output_w_init,
+                                   output_b_init=output_b_init,
+                                   layer_normalization=layer_normalization)
+
+            if mlp_hidden_nonlinearity is None:
+                self._module = nn.Sequential(cnn_module, nn.Flatten(),
+                                             mlp_module)
+            else:
+                self._module = nn.Sequential(cnn_module,
+                                             mlp_hidden_nonlinearity(),
+                                             nn.Flatten(), mlp_module)
 
     def forward(self, inputs):
         """Forward method.
@@ -137,4 +174,11 @@ class DiscreteCNNModule(nn.Module):
             torch.Tensor: Output tensor of shape :math:`(N, output_dim)`.
 
         """
+        if self._dueling:
+            out = self._module(inputs)
+            val = self._val(out)
+            act = self._act(out)
+            act = act - act.mean(1).unsqueeze(1)
+            return val + act
+
         return self._module(inputs)
