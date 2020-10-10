@@ -28,6 +28,8 @@ class DiscreteCNNQFunction(DiscreteCNNModule):
             The filter for the first conv layer outputs 3 channels
             and the second one outputs 32 channels.
         minibatch_size (int): Size of the optimization minibatch.
+        dueling (bool): Whether to use a dueling architecture for the
+            fully-connected layer.
         hidden_sizes (list[int]): Output dimension of dense layer(s) for
             the MLP for mean. For example, (32, 32) means the MLP consists
             of two hidden layers, each with 32 hidden units.
@@ -72,6 +74,7 @@ class DiscreteCNNQFunction(DiscreteCNNModule):
                  hidden_channels,
                  strides,
                  minibatch_size,
+                 dueling=False,
                  hidden_sizes=(32, 32),
                  cnn_hidden_nonlinearity=torch.nn.ReLU,
                  mlp_hidden_nonlinearity=torch.nn.ReLU,
@@ -96,6 +99,7 @@ class DiscreteCNNQFunction(DiscreteCNNModule):
                          kernel_sizes=kernel_sizes,
                          strides=strides,
                          hidden_sizes=hidden_sizes,
+                         dueling=dueling,
                          hidden_channels=hidden_channels,
                          cnn_hidden_nonlinearity=cnn_hidden_nonlinearity,
                          mlp_hidden_nonlinearity=mlp_hidden_nonlinearity,
