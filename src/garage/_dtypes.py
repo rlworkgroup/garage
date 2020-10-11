@@ -446,6 +446,124 @@ class EpisodeBatch(
                 for eps in self.split()
             ]))
 
+    @property
+    def padded_observations(self):
+        """Padded observations.
+
+        Returns:
+            np.ndarray: Padded observations with shape of
+                :math:`(N, max_episode_length, O^*)`.
+
+        """
+        return self.pad_to_last(self.observations)
+
+    @property
+    def padded_actions(self):
+        """Padded actions.
+
+        Returns:
+            np.ndarray: Padded actions with shape of
+                :math:`(N, max_episode_length, A^*)`.
+
+        """
+        return self.pad_to_last(self.actions)
+
+    @property
+    def observations_list(self):
+        """Split observations into a list.
+
+        Returns:
+            list[np.ndarray]: Splitted list.
+
+        """
+        start = 0
+        obs_list = []
+        for length in self.lengths:
+            stop = start + length
+            obs_list.append(self.observations[start:stop])
+            start = stop
+        return obs_list
+
+    @property
+    def actions_list(self):
+        """Split actions into a list.
+
+        Returns:
+            list[np.ndarray]: Splitted list.
+
+        """
+        start = 0
+        acts_list = []
+        for length in self.lengths:
+            stop = start + length
+            acts_list.append(self.actions[start:stop])
+            start = stop
+        return acts_list
+
+    @property
+    def padded_rewards(self):
+        """Padded rewards.
+
+        Returns:
+            np.ndarray: Padded rewards with shape of
+                :math:`(N, max_episode_length)`.
+
+        """
+        return self.pad_to_last(self.rewards)
+
+    @property
+    def valids(self):
+        """An array indicating valid steps in a padded tensor.
+
+        Returns:
+            np.ndarray: the shape is :math:`(N, max_episode_length)`.
+
+        """
+        valids = []
+        for length in self.lengths:
+            ones = np.ones(length)
+            zeros = np.zeros(self.env_spec.max_episode_length - length)
+            valids.append(np.concatenate((ones, zeros)))
+        return np.asarray(valids)
+
+    @property
+    def padded_agent_infos(self):
+        """Padded agent infos.
+
+        Returns:
+            dict[str, np.ndarray]: Padded agent infos. Each value should have
+                shape with :math:`(N, max_episode_length)` or
+                :math:`(N, max_episode_length, S^*)`.
+
+        """
+        info_keys = self.agent_infos.keys()
+        agent_infos = {k: [] for k in info_keys}
+        for key in info_keys:
+            agent_infos[key] = self.pad_to_last(self.agent_infos[key])
+        return agent_infos
+
+    def pad_to_last(self, input_array):
+        """Pad tensors with zeros.
+
+        Args:
+            input_array (np.ndarray): Tensors to be padded.
+
+        Return:
+            numpy.ndarray: Padded tensor with shape of
+                :math:`(N, max_episode_length)` or
+                :math:`(N, max_episode_length, S^*)`.
+
+        """
+        start = 0
+        padded_array = []
+        for length in self.lengths:
+            stop = start + length
+            pad_witdh = np.zeros((len(input_array.shape), 2), dtype=np.int32)
+            pad_witdh[0][1] = self.env_spec.max_episode_length - length
+            padded_array.append(np.pad(input_array[start:stop], pad_witdh))
+            start = stop
+        return np.asarray(padded_array)
+
 
 class StepType(enum.IntEnum):
     """Defines the status of a :class:`~TimeStep` within a sequence.

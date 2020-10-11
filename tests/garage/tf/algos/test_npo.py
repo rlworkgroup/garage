@@ -19,8 +19,7 @@ class TestNPO(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = normalize(
-            GymEnv('InvertedDoublePendulum-v2', max_episode_length=100))
+        self.env = normalize(GymEnv('InvertedDoublePendulum-v2'))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
             hidden_sizes=(64, 64),

@@ -29,8 +29,7 @@ class TestTRPO(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = normalize(
-            GymEnv('InvertedDoublePendulum-v2', max_episode_length=100))
+        self.env = normalize(GymEnv('InvertedDoublePendulum-v2'))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
             hidden_sizes=(64, 64),
@@ -88,7 +87,7 @@ class TestTRPO(TfGraphTestCase):
     @pytest.mark.mujoco_long
     def test_trpo_lstm_cartpole(self):
         with TFTrainer(snapshot_config, sess=self.sess) as trainer:
-            env = normalize(GymEnv('CartPole-v1', max_episode_length=100))
+            env = normalize(GymEnv('CartPole-v1'))
 
             policy = CategoricalLSTMPolicy(name='policy', env_spec=env.spec)
 
@@ -113,7 +112,7 @@ class TestTRPO(TfGraphTestCase):
     def test_trpo_gru_cartpole(self):
         deterministic.set_seed(2)
         with TFTrainer(snapshot_config, sess=self.sess) as trainer:
-            env = normalize(GymEnv('CartPole-v1', max_episode_length=100))
+            env = normalize(GymEnv('CartPole-v1'))
 
             policy = CategoricalGRUPolicy(name='policy', env_spec=env.spec)
 
@@ -143,7 +142,7 @@ class TestTRPOCNNCubeCrash(TfGraphTestCase):
     @pytest.mark.large
     def test_trpo_cnn_cubecrash(self):
         with TFTrainer(snapshot_config, sess=self.sess) as trainer:
-            env = normalize(GymEnv('CubeCrash-v0', max_episode_length=100))
+            env = normalize(GymEnv('CubeCrash-v0'))
 
             policy = CategoricalCNNPolicy(env_spec=env.spec,
                                           filters=((32, (8, 8)), (64, (4, 4))),
