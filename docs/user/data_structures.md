@@ -23,7 +23,7 @@ See its API reference [here](<../_autoapi/garage/index.html#garage.TimeStepBatch
 
 
 ### EpisodeBatch
-An `EpisodeBatch` is a data type used for on-policy algorithms. It represents a batch of whole episodes, produced when one or more agents interacts with one or more environments. Along with the data stored in its attributes, it comes with methods that concatenate, split, and create EpisodeBatches from a list of episodes.
+An `EpisodeBatch` is a data type used for on-policy algorithms. It represents a batch of whole episodes, produced when one or more agents interacts with one or more environments. Along with the data stored in its attributes, it comes with methods that concatenate, split, and create EpisodeBatches from a list of episodes. 
 
 Below is an example that demonstrates several functions of EpisodeBatch:
 ```python
