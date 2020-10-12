@@ -1,4 +1,5 @@
 import math
+import pickle
 
 import gym
 import pytest
@@ -139,3 +140,10 @@ def test_done_resets_step_cnt():
         if es.last:
             break
     assert env._step_cnt is None
+
+
+def test_is_pickleable():
+    env = GymEnv('MountainCar-v0', max_episode_length=50)
+    h = pickle.dumps(env)
+    env_pickled = pickle.loads(h)
+    assert env.spec == env_pickled.spec
