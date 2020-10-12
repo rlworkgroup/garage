@@ -3,7 +3,7 @@ import collections
 
 import numpy as np
 
-from garage import StepType
+from garage import StepType, TimeStepBatch
 
 
 class PathBuffer:
@@ -14,11 +14,13 @@ class PathBuffer:
 
     Args:
         capacity_in_transitions (int): Total memory allocated for the buffer.
+        env_spec (EnvSpec): Environment specification.
 
     """
 
-    def __init__(self, capacity_in_transitions):
+    def __init__(self, capacity_in_transitions, env_spec=None):
         self._capacity = capacity_in_transitions
+        self._env_spec = env_spec
         self._transitions_stored = 0
         self._first_idx_of_next_path = 0
         # Each path in the buffer has a tuple of two ranges in
@@ -35,6 +37,8 @@ class PathBuffer:
             episodes (EpisodeBatch): Episodes to add.
 
         """
+        if self._env_spec is None:
+            self._env_spec = episodes.env_spec
         env_spec = episodes.env_spec
         obs_space = env_spec.observation_space
         for eps in episodes.split():
@@ -119,6 +123,31 @@ class PathBuffer:
         """
         idx = np.random.randint(self._transitions_stored, size=batch_size)
         return {key: buf_arr[idx] for key, buf_arr in self._buffer.items()}
+
+    def sample_timesteps(self, batch_size):
+        """Sample a batch of timesteps from the buffer.
+
+        Args:
+            batch_size (int): Number of timesteps to sample.
+
+        Returns:
+            TimeStepBatch: The batch of timesteps.
+
+        """
+        samples = self.sample_transitions(batch_size)
+        step_types = np.array([
+            StepType.TERMINAL if terminal else StepType.MID
+            for terminal in samples['terminals'].reshape(-1)
+        ],
+                              dtype=StepType)
+        return TimeStepBatch(env_spec=self._env_spec,
+                             observations=samples['observations'],
+                             actions=samples['actions'],
+                             rewards=samples['rewards'],
+                             next_observations=samples['next_observations'],
+                             step_types=step_types,
+                             env_infos={},
+                             agent_infos={})
 
     def _next_path_segments(self, n_indices):
         """Compute where the next path should be stored.

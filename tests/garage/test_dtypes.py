@@ -366,7 +366,7 @@ def batch_data():
     obs = np.stack([obs_space.low] * batch_size)
     next_obs = np.stack([obs_space.low] * batch_size)
     act = np.stack([[1, 3]] * batch_size)
-    rew = np.arange(batch_size)
+    rew = np.arange(batch_size).reshape(-1, 1)
     step_types = np.array([StepType.FIRST, StepType.TERMINAL], dtype=StepType)
 
     # env_infos
@@ -486,6 +486,13 @@ def test_act_box_env_spec_mismatch_batch(batch_data):
                                                        high=np.inf,
                                                        shape=(4, 3, 2),
                                                        dtype=np.float32)
+        s = TimeStepBatch(**batch_data)
+        del s
+
+
+def test_invalid_rewards_shape(batch_data):
+    with pytest.raises(ValueError, match='Rewards tensor must have shape'):
+        batch_data['rewards'] = np.squeeze(batch_data['rewards'])
         s = TimeStepBatch(**batch_data)
         del s
 
@@ -647,6 +654,20 @@ def test_to_time_step_list_batch(batch_data):
             assert key in batch_data['agent_infos']
             assert np.array_equal(batch['agent_infos'][key],
                                   [batch_data['agent_infos'][key][i]])
+
+
+def test_terminals(batch_data):
+    s = TimeStepBatch(
+        env_spec=batch_data['env_spec'],
+        observations=batch_data['observations'],
+        actions=batch_data['actions'],
+        rewards=batch_data['rewards'],
+        next_observations=batch_data['next_observations'],
+        step_types=batch_data['step_types'],
+        env_infos=batch_data['env_infos'],
+        agent_infos=batch_data['agent_infos'],
+    )
+    assert s.terminals.shape == s.rewards.shape
 
 
 def test_from_empty_time_step_list_batch(batch_data):

@@ -1,4 +1,5 @@
 import math
+import pickle
 
 import gym
 import pytest
@@ -140,7 +141,7 @@ def test_done_resets_step_cnt():
             break
     assert env._step_cnt is None
 
-
+    
 def test_inconsistent_env_infos():
     env = GymEnv('MountainCar-v0')
     env.reset()
@@ -150,3 +151,10 @@ def test_inconsistent_env_infos():
         env.step(env.action_space.sample())
     # check that order of keys don't matter for equality
     assert env._env_info.keys() == {'k2': 'v2', 'k1': 'v1'}.keys()
+
+    
+def test_is_pickleable():
+    env = GymEnv('MountainCar-v0', max_episode_length=50)
+    h = pickle.dumps(env)
+    env_pickled = pickle.loads(h)
+    assert env.spec == env_pickled.spec

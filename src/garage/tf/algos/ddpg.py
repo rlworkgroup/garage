@@ -352,14 +352,14 @@ class DDPG(RLAlgorithm):
             float: Q value predicted by the q network.
 
         """
-        transitions = self._replay_buffer.sample_transitions(
+        timesteps = self._replay_buffer.sample_timesteps(
             self._buffer_batch_size)
 
-        observations = transitions['observations']
-        next_observations = transitions['next_observations']
-        rewards = transitions['rewards'].reshape(-1, 1)
-        actions = transitions['actions']
-        terminals = transitions['terminals'].reshape(-1, 1)
+        observations = timesteps.observations
+        rewards = timesteps.rewards
+        actions = timesteps.actions
+        next_observations = timesteps.next_observations
+        terminals = timesteps.terminals
 
         rewards *= self._reward_scale
 

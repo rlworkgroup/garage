@@ -1,32 +1,23 @@
 # Twin Delayed Deep Deterministic (TD3)
 
 ```eval_rst
-.. list-table::
-   :header-rows: 0
-   :stub-columns: 1
-   :widths: auto
-
-   * - **Paper**
-     - Addressing Function Approximation Error in Actor-Critic Methods :cite:`Fujimoto2018AddressingFA`
-   * - **Framework(s)**
-     - .. figure:: ./images/pytorch.png
-        :scale: 10%
-        :class: no-scaled-link
-
-        PyTorch
-       .. figure:: ./images/tf.png
-        :scale: 20%
-        :class: no-scaled-link
-
-        Tensorflow
-   * - **API Reference**
-     - `garage.tf.algos.TD3 <https://garage.readthedocs.io/en/latest/_autoapi/garage/tf/algos/index.html#garage.tf.algos.TD3>`_
-   * - **Code**
-     - `garage/tf/algos/td3.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/tf/algos/td3.py>`_
-   * - **Examples**
-     - :ref:`td3_pendulum_tf`
-   * - **Benchmarks**
-     - :ref:`td3_garage_tf`
++-------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Paper**         | Addressing Function Approximation Error in Actor-Critic Methods :cite:`Fujimoto2018AddressingFA`                                                                                                                                      |
++-------------------+--------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| **Framework(s)**  | .. figure:: ./images/tf.png                                                                                              | .. figure:: ./images/pytorch.png                                                                           |
+|                   |    :scale: 20%                                                                                                           |    :scale: 10%                                                                                             |
+|                   |    :class: no-scaled-link                                                                                                |    :class: no-scaled-link                                                                                  |
+|                   |                                                                                                                          |                                                                                                            |
+|                   |    TensorFlow                                                                                                            |    PyTorch                                                                                                 |
++-------------------+--------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| **API Reference** | `garage.tf.algos.TD3 <https://garage.readthedocs.io/en/latest/_autoapi/garage/tf/algos/index.html#garage.tf.algos.TD3>`_ |                                                                                                            |
++-------------------+--------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| **Code**          | `garage/tf/algos/td3.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/tf/algos/td3.py>`_                 |                                                                                                            |
++-------------------+--------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| **Examples**      | :ref:`td3_pendulum_tf`                                                                                                   |                                                                                                            |
++-------------------+--------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| **Benchmarks**    | :ref:`td3_garage_tf`                                                                                                     |                                                                                                            |
++-------------------+--------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
 ```
 
 Twin Delayed Deep Deterministic (TD3) is an alogrithm motivated by Double Q-learning and built by taking the minimum value between two critic networks to prevent the overestimation of the value function. Garage's implementation is based on the paper's approach, which includes clipped Double Q-learning, delayed update of target and policy networks as well as target policy smoothing.
