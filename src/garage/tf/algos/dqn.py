@@ -258,15 +258,14 @@ class DQN(RLAlgorithm):
             numpy.float64: Loss of policy.
 
         """
-        transitions = self._replay_buffer.sample_transitions(
+        timesteps = self._replay_buffer.sample_timesteps(
             self._buffer_batch_size)
 
-        observations = transitions['observations']
-        rewards = transitions['rewards']
-        actions = self._env_spec.action_space.unflatten_n(
-            transitions['actions'])
-        next_observations = transitions['next_observations']
-        dones = transitions['terminals']
+        observations = timesteps.observations
+        rewards = timesteps.rewards
+        actions = self._env_spec.action_space.unflatten_n(timesteps.actions)
+        next_observations = timesteps.next_observations
+        dones = timesteps.terminals
 
         if isinstance(self._env_spec.observation_space, akro.Image):
             if len(observations.shape[1:]) < len(

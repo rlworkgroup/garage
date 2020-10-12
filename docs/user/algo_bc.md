@@ -1,24 +1,21 @@
 # Behavioral Cloning
 
 ```eval_rst
-.. list-table::
-   :header-rows: 0
-   :stub-columns: 1
-   :widths: auto
-
-   * - **Paper**
-     - Model-Free Imitation Learning with Policy Optimization :cite:`ho2016model`
-   * - **Framework(s)**
-     - .. figure:: ./images/pytorch.png
-        :scale: 10%
-
-        PyTorch
-   * - **API Reference**metaworld_ml1_push
-     - `garage.torch.algos.BC <../_autoapi/garage/torch/algos/index.html#garage.torch.algos.BC>`_
-   * - **Code**
-     - `garage/torch/algos/bc.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/torch/algos/bc.py>`_
-   * - **Examples**
-     - :ref:`bc_point`, :ref:`bc_point_deterministic_policy`
++-------------------+--------------------------------------------------------------------------------------------------------------+
+| **Paper**         | Model-Free Imitation Learning with Policy Optimization :cite:`ho2016model`                                   |
++-------------------+--------------------------------------------------------------------------------------------------------------+
+| **Framework(s)**  | .. figure:: ./images/pytorch.png                                                                             |
+|                   |    :scale: 10%                                                                                               |
+|                   |    :class: no-scaled-link                                                                                    |
+|                   |                                                                                                              |
+|                   |    PyTorch                                                                                                   |
++-------------------+--------------------------------------------------------------------------------------------------------------+
+| **API Reference** | `garage.torch.algos.BC <../_autoapi/garage/torch/algos/index.html#garage.torch.algos.BC>`_                   |
++-------------------+--------------------------------------------------------------------------------------------------------------+
+| **Code**          | `garage/torch/algos/bc.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/torch/algos/bc.py>`_ |
++-------------------+--------------------------------------------------------------------------------------------------------------+
+| **Examples**      | :ref:`bc_point`, :ref:`bc_point_deterministic_policy`                                                        |
++-------------------+--------------------------------------------------------------------------------------------------------------+
 ```
 
 Behavioral cloning is a simple immitation learning algorithm which maxmizes the likelhood of an expert demonstration's actions under the apprentice policy using direct policy optimization. Garage's implementation may use either a policy or dataset as the expert.
