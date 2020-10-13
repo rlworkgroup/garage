@@ -297,7 +297,7 @@ jobs:
     name: Verify Conda Environment Installation
     runs-on: ubuntu-latest
     needs: build_docker_container
-    if: github.event_name == 'schedule'
+#    if: github.event_name == 'schedule'
 
     steps:
       - uses: actions/checkout@v2
@@ -340,7 +340,7 @@ jobs:
     name: Verify Pipenv Environment Installation
     runs-on: ubuntu-latest
     needs: build_docker_container
-    if: github.event_name == 'schedule'
+#    if: github.event_name == 'schedule'
 
     steps:
       - uses: actions/checkout@v2
@@ -367,7 +367,7 @@ jobs:
           touch \${MJKEY_PATH} && \
           pip3 install --upgrade pip setuptools && \
           pip3 install pipenv && \
-          pipenv --python=3.6 && \
+          pipenv --python=3.8 && \
           pipenv install dist/garage.tar.gz[all,dev] && \
           pipenv graph && \
           # pylint will verify all imports work
