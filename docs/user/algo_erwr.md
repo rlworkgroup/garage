@@ -7,12 +7,12 @@
 |                   | Policy Search for Motor Primitives in Robotics :cite:`2009koberpolicy`                                                                                                     |
 +-------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Framework(s)**  | .. figure:: ./images/tf.png                                                                                                                                                |
-|                   |    :scale: 10%                                                                                                                                                             |
+|                   |    :scale: 20%                                                                                                                                                             |
 |                   |    :class: no-scaled-link                                                                                                                                                  |
 |                   |                                                                                                                                                                            |
 |                   |    Tensorflow                                                                                                                                                              |
 +-------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| **API Reference** | `garage.tf.algos.ERWR <../_autoapi/garage/torch/algos/index.html#garage.tf.algos.erwr>`_                                                                                   |
+| **API Reference** | `garage.tf.algos.ERWR <../_autoapi/garage/tf/algos/index.html#garage.tf.algos.ERWR>`_                                                                                      |
 +-------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Code**          | `garage/tf/algos/erwr.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/tf/algos/erwr.py>`_                                                                 |
 +-------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -20,7 +20,7 @@
 +-------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 ```
 
-Episodic Reward Weighted Regression (ERWR) is an extension of the original RWR algorithm, which uses a linear policy to solve the immediate rewards learning problem. The extension implemented here applies RWR to episodic reinforcement learning. To read more about both algorithms see the cited papers or the summary provided in this [this](https://spiral.imperial.ac.uk:8443/bitstream/10044/1/12051/7/fnt_corrected_2014-8-22.pdf) text.
+Episodic Reward Weighted Regression (ERWR) is an extension of the original RWR algorithm, which uses a linear policy to solve the immediate rewards learning problem. The extension implemented here applies RWR to episodic reinforcement learning. To read more about both algorithms see the cited papers or the summary provided in [this](https://spiral.imperial.ac.uk:8443/bitstream/10044/1/12051/7/fnt_corrected_2014-8-22.pdf) text.
 
 ## Default Parameters
 
