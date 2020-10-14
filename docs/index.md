@@ -57,7 +57,8 @@ and how to implement new MDPs and new algorithms.
    user/algo_mtppo
    user/algo_vpg
    user/algo_td3
-
+   user/algo_teppo
+   
 .. toctree::
    :maxdepth: 2
    :caption: Reference Guide
