@@ -16,9 +16,7 @@ from garage import (EnvSpec,
                     log_multitask_performance,
                     StepType,
                     Wrapper)
-from garage.np import (concat_tensor_dict_list,
-                       discount_cumsum,
-                       stack_and_pad_tensor_dict_list)
+from garage.np import concat_tensor_dict_list, discount_cumsum
 from garage.np.algos import MetaRLAlgorithm
 from garage.sampler import DefaultWorker
 from garage.tf.algos._rl2npo import RL2NPO
@@ -365,10 +363,10 @@ class RL2(MetaRLAlgorithm, abc.ABC):
             numpy.float64: Average return.
 
         """
-        paths = self._process_samples(itr, paths)
+        episodes, average_return = self._process_samples(itr, paths)
         logger.log('Optimizing policy...')
-        self._inner_algo.optimize_policy(paths)
-        return paths['average_return']
+        self._inner_algo.optimize_policy(episodes)
+        return average_return
 
     def get_exploration_policy(self):
         """Return a policy used before adaptation to a specific task.
@@ -418,16 +416,9 @@ class RL2(MetaRLAlgorithm, abc.ABC):
                 the policy.
 
         Returns:
-            dict: Processed sample data, with key
-                * observations: (numpy.ndarray)
-                * actions: (numpy.ndarray)
-                * rewards: (numpy.ndarray)
-                * returns: (numpy.ndarray)
-                * valids: (numpy.ndarray)
-                * agent_infos: (dict)
-                * env_infos: (dict)
-                * paths: (list[dict])
-                * average_return: (numpy.float64)
+            EpisodeBatch: Processed batch of episodes for feeding the inner
+                algorithm.
+            numpy.float64: The average return.
 
         Raises:
             ValueError: If 'batch_idx' is not found.
@@ -454,12 +445,6 @@ class RL2(MetaRLAlgorithm, abc.ABC):
             concatenated_path = self._concatenate_paths(_paths)
             concatenated_paths.append(concatenated_path)
 
-        # stack and pad to max path length of the concatenated
-        # path, which will be fed to inner algo
-        # i.e. max_episode_length * episode_per_task
-        concatenated_paths_stacked = (stack_and_pad_tensor_dict_list(
-            concatenated_paths, self._inner_algo.max_episode_length))
-
         name_map = None
         if hasattr(self._task_sampler, '_envs') and hasattr(
                 self._task_sampler._envs[0]._env, 'all_task_names'):
@@ -474,11 +459,10 @@ class RL2(MetaRLAlgorithm, abc.ABC):
             self._inner_algo._discount,
             name_map=name_map)
 
-        concatenated_paths_stacked['paths'] = concatenated_paths
-        concatenated_paths_stacked['average_return'] = np.mean(
-            undiscounted_returns)
+        average_return = np.mean(undiscounted_returns)
+        episodes = EpisodeBatch.from_list(self._env_spec, concatenated_paths)
 
-        return concatenated_paths_stacked
+        return episodes, average_return
 
     def _concatenate_paths(self, paths):
         """Concatenate paths.

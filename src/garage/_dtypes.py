@@ -522,7 +522,8 @@ class EpisodeBatch(
         valids = []
         for length in self.lengths:
             ones = np.ones(length)
-            zeros = np.zeros(self.env_spec.max_episode_length - length)
+            n_zeros = max(self.env_spec.max_episode_length - length, 0)
+            zeros = np.zeros(n_zeros)
             valids.append(np.concatenate((ones, zeros)))
         return np.asarray(valids)
 
@@ -559,7 +560,7 @@ class EpisodeBatch(
         for length in self.lengths:
             stop = start + length
             pad_witdh = np.zeros((len(input_array.shape), 2), dtype=np.int32)
-            pad_witdh[0][1] = self.env_spec.max_episode_length - length
+            pad_witdh[0][1] = max(self.env_spec.max_episode_length - length, 0)
             padded_array.append(np.pad(input_array[start:stop], pad_witdh))
             start = stop
         return np.asarray(padded_array)
