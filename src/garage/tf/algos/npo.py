@@ -11,12 +11,8 @@ from garage import log_performance, make_optimizer
 from garage.np import explained_variance_1d
 from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
-from garage.tf import (center_advs,
-                       compile_function,
-                       compute_advantages,
-                       discounted_returns,
-                       flatten_inputs,
-                       graph_inputs,
+from garage.tf import (center_advs, compile_function, compute_advantages,
+                       discounted_returns, flatten_inputs, graph_inputs,
                        positive_advs)
 from garage.tf.optimizers import LBFGSOptimizer
 

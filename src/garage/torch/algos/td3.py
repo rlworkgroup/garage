@@ -59,6 +59,9 @@ class TD3(RLAlgorithm):
         steps_per_epoch (int): Number of train_once calls per epoch.
         grad_steps_per_env_step (int): Number of gradient steps taken per
             environment step sampled.
+        max_episode_length_eval (int or None): Maximum length of episodes used
+            for off-policy evaluation. If None, defaults to
+            `env_spec.max_episode_length`.
         num_evaluation_episodes (int): The number of evaluation
             trajectories used for computing eval stats at the end of every
             epoch.
@@ -66,40 +69,44 @@ class TD3(RLAlgorithm):
              selecting actions according to policy.
         update_after (int): The number of steps to perform before policy
             is updated.
+        use_deterministic_evaluation (bool): True if the trained policy
+            should be evaluated deterministically.
 
     """
 
     def __init__(
-        self,
-        env_spec,
-        policy,
-        qf1,
-        qf2,
-        replay_buffer,
-        grad_steps_per_env_step,
-        exploration_policy,
-        uniform_random_policy=None,
-        max_action=None,
-        target_update_tau=0.005,
-        discount=0.99,
-        reward_scaling=1.,
-        update_actor_interval=2,
-        buffer_batch_size=64,
-        replay_buffer_size=1e6,
-        min_buffer_size=1e4,
-        exploration_noise=0.1,
-        policy_noise=0.2,
-        policy_noise_clip=0.5,
-        clip_return=np.inf,
-        policy_lr=_Default(1e-4),
-        qf_lr=_Default(1e-3),
-        policy_optimizer=torch.optim.Adam,
-        qf_optimizer=torch.optim.Adam,
-        num_evaluation_episodes=10,
-        steps_per_epoch=20,
-        start_steps=10000,
-        update_after=1000,
-    ):
+            self,
+            env_spec,
+            policy,
+            qf1,
+            qf2,
+            replay_buffer,
+            *,  # Everything after this is numbers.
+            max_episode_length_eval=None,
+            grad_steps_per_env_step,
+            exploration_policy,
+            uniform_random_policy=None,
+            max_action=None,
+            target_update_tau=0.005,
+            discount=0.99,
+            reward_scaling=1.,
+            update_actor_interval=2,
+            buffer_batch_size=64,
+            replay_buffer_size=1e6,
+            min_buffer_size=1e4,
+            exploration_noise=0.1,
+            policy_noise=0.2,
+            policy_noise_clip=0.5,
+            clip_return=np.inf,
+            policy_lr=_Default(1e-4),
+            qf_lr=_Default(1e-3),
+            policy_optimizer=torch.optim.Adam,
+            qf_optimizer=torch.optim.Adam,
+            num_evaluation_episodes=10,
+            steps_per_epoch=20,
+            start_steps=10000,
+            update_after=1000,
+            use_deterministic_evaluation=False):
 
         self._env_spec = env_spec
         action_bound = self._env_spec.action_space.high[0]
@@ -122,6 +129,11 @@ class TD3(RLAlgorithm):
         self._update_after = update_after
         self._num_evaluation_episodes = num_evaluation_episodes
         self.max_episode_length = env_spec.max_episode_length
+        self._max_episode_length_eval = env_spec.max_episode_length
+
+        if max_episode_length_eval is not None:
+            self._max_episode_length_eval = max_episode_length_eval
+        self._use_deterministic_evaluation = use_deterministic_evaluation
 
         self._episode_policy_losses = []
         self._episode_qf_losses = []
@@ -337,8 +349,9 @@ class TD3(RLAlgorithm):
         return obtain_evaluation_episodes(
             self.exploration_policy,
             self._eval_env,
+            self._max_episode_length_eval,
             num_eps=self._num_evaluation_episodes,
-            deterministic=False)
+            deterministic=self._use_deterministic_evaluation)
 
     def _update_network_parameters(self):
         """Update parameters in actor network and critic networks."""
