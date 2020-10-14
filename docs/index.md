@@ -60,6 +60,7 @@ and how to implement new MDPs and new algorithms.
    user/algo_vpg
    user/algo_td3
    user/algo_ddpg
+   user/algo_tnpg
 
 .. toctree::
    :maxdepth: 2
