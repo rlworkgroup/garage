@@ -53,6 +53,7 @@ and how to implement new MDPs and new algorithms.
    user/algo_trpo
    user/algo_mttrpo
    user/algo_sac
+   user/algo_mtsac
    user/algo_pearl
    user/algo_rl2
    user/algo_ppo
