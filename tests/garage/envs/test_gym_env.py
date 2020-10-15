@@ -141,7 +141,7 @@ def test_done_resets_step_cnt():
             break
     assert env._step_cnt is None
 
-   
+
 def test_inconsistent_env_infos():
     env = GymEnv('MountainCar-v0')
     env.reset()
