@@ -1,26 +1,23 @@
 # Soft Actor-Critic
 
 ```eval_rst
-.. list-table::
-   :header-rows: 0
-   :stub-columns: 1
-   :widths: auto
-
-   * - **Action Space**
-     - Continuous
-   * - **Paper**
-     - Soft Actor-Critic Algorithms and Applications :cite:`haarnoja2018soft`
-   * - **Framework(s)**
-     - .. figure:: ./images/pytorch.png
-        :scale: 10%
-
-        PyTorch
-   * - **API Reference**
-     - `garage.torch.algos.SAC <../_autoapi/garage/torch/algos/index.html#garage.torch.algos.SAC>`_
-   * - **Code**
-     - `garage/torch/algos/sac.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/torch/algos/sac.py>`_
-   * - **Examples**
-     - `examples <algo_sac.html#examples>`_
++-------------------+----------------------------------------------------------------------------------------------------------------+
+| **Action Space**  | Continuous                                                                                                     |
++-------------------+----------------------------------------------------------------------------------------------------------------+
+| **Paper**         | Soft Actor-Critic Algorithms and Applications :cite:`haarnoja2018soft`                                         |
++-------------------+----------------------------------------------------------------------------------------------------------------+
+| **Framework(s)**  | .. figure:: ./images/pytorch.png                                                                               |
+|                   |    :scale: 10%                                                                                                 |
+|                   |    :class: no-scaled-link                                                                                      |
+|                   |                                                                                                                |
+|                   |    PyTorch                                                                                                     |
++-------------------+----------------------------------------------------------------------------------------------------------------+
+| **API Reference** | `garage.torch.algos.SAC <../_autoapi/garage/torch/algos/index.html#garage.torch.algos.SAC>`_                   |
++-------------------+----------------------------------------------------------------------------------------------------------------+
+| **Code**          | `garage/torch/algos/sac.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/torch/algos/sac.py>`_ |
++-------------------+----------------------------------------------------------------------------------------------------------------+
+| **Examples**      | `examples <algo_sac.html#examples>`_                                                                           |
++-------------------+----------------------------------------------------------------------------------------------------------------+
 ```
 
 Soft Actor-Critic (SAC) is an algorithm which optimizes a stochastic policy in

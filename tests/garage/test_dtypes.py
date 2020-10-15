@@ -22,7 +22,7 @@ def eps_data():
                                shape=(4, 3, 2),
                                dtype=np.float32)
     act_space = gym.spaces.MultiDiscrete([2, 5])
-    env_spec = EnvSpec(obs_space, act_space)
+    env_spec = EnvSpec(obs_space, act_space, max_episode_length=100)
 
     # generate data
     lens = np.array([10, 20, 7, 25, 25, 40, 10, 5])
@@ -217,6 +217,58 @@ def test_to_epsectory_list(eps_data):
         assert (s['step_types'] == eps_data['step_types'][start:stop]).all()
         start = stop
     assert start == len(eps_data['rewards'])
+
+
+def test_episodes_padding_tensors(eps_data):
+    t = EpisodeBatch(**eps_data)
+    N = len(t.lengths)
+    max_ep_l = t.env_spec.max_episode_length
+
+    observations = t.padded_observations
+    actions = t.padded_actions
+    rewards = t.padded_rewards
+    valids = t.valids
+    agent_infos = t.padded_agent_infos
+
+    assert observations.shape == (N, max_ep_l, *t.observations[0].shape)
+    assert actions.shape == (N, max_ep_l, *t.actions[0].shape)
+    assert rewards.shape == (N, max_ep_l)
+    assert valids.shape == (N, max_ep_l)
+    assert agent_infos.keys() == t.agent_infos.keys()
+    for key in agent_infos.keys():
+        assert agent_infos[key].shape == (N, max_ep_l,
+                                          *t.agent_infos[key][0].shape)
+
+    start = 0
+    for i, length in enumerate(t.lengths):
+        stop = start + length
+        assert (observations[i][:length] == t.observations[start:stop]).all()
+        assert np.count_nonzero(observations[i][length:]) == 0
+        assert (actions[i][:length] == t.actions[start:stop]).all()
+        assert np.count_nonzero(actions[i][length:]) == 0
+        assert (rewards[i][:length] == t.rewards[start:stop]).all()
+        assert np.count_nonzero(rewards[i][length:]) == 0
+        assert (valids[i][:length] == np.ones((length, ))).all()
+        assert np.count_nonzero(valids[i][length:]) == 0
+        for key in agent_infos.keys():
+            assert (agent_infos[key][i][:length] == t.agent_infos[key]
+                    [start:stop]).all()
+            assert np.count_nonzero(agent_infos[key][i][length:]) == 0
+        start = stop
+
+
+def test_episodes_to_acts_obs_list(eps_data):
+    t = EpisodeBatch(**eps_data)
+    acts_list = t.actions_list
+    obs_list = t.observations_list
+    start = 0
+    assert len(acts_list) == len(t.lengths)
+    assert len(obs_list) == len(t.lengths)
+    for i, length in enumerate(t.lengths):
+        stop = start + length
+        assert (acts_list[i] == t.actions[start:stop]).all()
+        assert (obs_list[i] == t.observations[start:stop]).all()
+        start = stop
 
 
 def test_get_step_type():
