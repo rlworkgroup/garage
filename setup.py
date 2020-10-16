@@ -66,6 +66,7 @@ EXTRAS['dev'] = [
     'pylint>=2.5.3',
     'pytest>=4.5.0',  # Required for strict-markers
     'pytest-cov',
+    'pytest-rerunfailures',
     'pytest-timeout',
     'pytest-xdist',
     'recommonmark',
