@@ -11,7 +11,7 @@ REQUIRED = [
     # Please keep alphabetized
     'akro',
     'click>=2.0',
-    'cloudpickle==1.3',
+    'cloudpickle',
     'cma==2.7.0',
     'dowel==0.0.3',
     'numpy>=1.14.5',
