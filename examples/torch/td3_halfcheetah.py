@@ -16,7 +16,7 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 from garage.trainer import Trainer
 
 
-@wrap_experiment(snapshot_mode='None')
+@wrap_experiment(snapshot_mode='none')
 def td3_half_cheetah(ctxt=None, seed=1):
     """Train TD3 with InvertedDoublePendulum-v2 environment.
 

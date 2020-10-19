@@ -2,8 +2,7 @@
 # yapf: disable
 from garage_benchmarks.experiments.algos import (ddpg_garage_tf,
                                                  ppo_garage_pytorch,
-                                                 ppo_garage_tf,
-                                                 td3_garage_tf,
+                                                 ppo_garage_tf, td3_garage_tf,
                                                  trpo_garage_pytorch,
                                                  trpo_garage_tf,
                                                  vpg_garage_pytorch,

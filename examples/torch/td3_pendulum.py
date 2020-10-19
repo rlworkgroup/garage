@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """An example to train TD3 algorithm on InvertedDoublePendulum PyTorch."""
-import gym
 import torch
 from torch.nn import functional as F
 
@@ -17,7 +16,7 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 from garage.trainer import Trainer
 
 
-@wrap_experiment(snapshot_mode='last')
+@wrap_experiment(snapshot_mode='none')
 def td3_pendulum(ctxt=None, seed=1):
     """Train TD3 with InvertedDoublePendulum-v2 environment.
 
@@ -35,7 +34,7 @@ def td3_pendulum(ctxt=None, seed=1):
     num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
 
     trainer = Trainer(ctxt)
-    env = GymEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+    env = normalize(GymEnv('InvertedDoublePendulum-v2'))
 
     policy = DeterministicMLPPolicy(env_spec=env.spec,
                                     hidden_sizes=[256, 256],
