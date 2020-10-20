@@ -12,13 +12,14 @@ DATA_PATH ?= $(shell pwd)/data
 # MJKEY_PATH.
 MJKEY_PATH ?= ${HOME}/.mujoco/mjkey.txt
 
+export DOCKER_BUILDKIT=1
 
 build-test: TAG ?= rlworkgroup/garage-test
 build-test: assert-docker-version docker/Dockerfile
 	docker build \
 		-f docker/Dockerfile \
 		--cache-from rlworkgroup/garage-test:latest \
-		--cache-from rlworkgroup/garage-headless:latest \
+		--cache-from rlworkgroup/garage:latest \
 		--target garage-test-18.04 \
 		-t ${TAG} \
 		${BUILD_ARGS} \
@@ -156,24 +157,26 @@ build-ci: assert-docker-version docker/Dockerfile
 		-t ${TAG} \
 		${BUILD_ARGS} .
 
-build-headless: TAG ?= rlworkgroup/garage-headless:latest
-build-headless: assert-docker-version docker/Dockerfile
+build-dev: TAG ?= rlworkgroup/garage-dev:latest
+build-dev: assert-docker-version docker/Dockerfile
 	docker build \
 		-f docker/Dockerfile \
-		--cache-from rlworkgroup/garage-headless:latest \
-		--target garage-dev-18.04 \
+		--cache-from rlworkgroup/garage-dev:latest \
+		--cache-from rlworkgroup/garage:latest \
+		--target garage-dev \
 		--build-arg user="$(USER)" \
 		--build-arg uid="$(shell id -u)" \
 		-t ${TAG} \
 		${BUILD_ARGS} .
 
-build-nvidia: TAG ?= rlworkgroup/garage-nvidia:latest
-build-nvidia: PARENT_IMAGE ?= nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04
-build-nvidia: assert-docker-version docker/Dockerfile
+build-nvidia-dev: TAG ?= rlworkgroup/garage-dev-nvidia:latest
+build-nvidia-dev: PARENT_IMAGE ?= nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04
+build-nvidia-dev: assert-docker-version docker/Dockerfile
 	docker build \
 		-f docker/Dockerfile \
+		--cache-from rlworkgroup/garage-dev-nvidia:latest \
 		--cache-from rlworkgroup/garage-nvidia:latest \
-		--target garage-nvidia-18.04 \
+		--target garage-dev-nvidia \
 		-t ${TAG} \
 		--build-arg user="$(USER)" \
 		--build-arg uid="$(shell id -u)" \
@@ -196,10 +199,10 @@ run-ci:
 		${RUN_ARGS} \
 		${TAG} ${RUN_CMD}
 
-run-headless: ## Run the Docker container for headless machines
-run-headless: CONTAINER_NAME ?= ''
-run-headless: user ?= $$USER
-run-headless: ensure-data-path-exists build-headless
+run-dev: ## Run the Docker container for headless machines
+run-dev: CONTAINER_NAME ?= ''
+run-dev: user ?= $$USER
+run-dev: ensure-data-path-exists build-dev
 	docker run \
 		-it \
 		--rm \
@@ -207,14 +210,14 @@ run-headless: ensure-data-path-exists build-headless
 		-e MJKEY="$$(cat $(MJKEY_PATH))" \
 		--name $(CONTAINER_NAME) \
 		${RUN_ARGS} \
-		rlworkgroup/garage-headless ${RUN_CMD}
+		rlworkgroup/garage-dev ${RUN_CMD}
 
-run-nvidia: ## Run the Docker container for machines with NVIDIA GPUs
-run-nvidia: ## Requires https://github.com/NVIDIA/nvidia-container-runtime and NVIDIA driver 440+
-run-nvidia: CONTAINER_NAME ?= ''
-run-nvidia: user ?= $$USER
-run-nvidia: GPUS ?= "all"
-run-nvidia: ensure-data-path-exists build-nvidia
+run-dev-nvidia: ## Run the Docker container for machines with NVIDIA GPUs
+run-dev-nvidia: ## Requires https://github.com/NVIDIA/nvidia-container-runtime and NVIDIA driver 440+
+run-dev-nvidia: CONTAINER_NAME ?= ''
+run-dev-nvidia: user ?= $$USER
+run-dev-nvidia: GPUS ?= "all"
+run-dev-nvidia: ensure-data-path-exists build-nvidia-dev
 	xhost +local:docker
 	docker run \
 		-it \
@@ -227,25 +230,23 @@ run-nvidia: ensure-data-path-exists build-nvidia
 		-e MJKEY="$$(cat $(MJKEY_PATH))" \
 		--name $(CONTAINER_NAME) \
 		${RUN_ARGS} \
-		rlworkgroup/garage-nvidia ${RUN_CMD}
+		rlworkgroup/garage-dev-nvidia ${RUN_CMD}
 
-run-nvidia-headless: ## Run the Docker container for machines with NVIDIA GPUs
-run-nvidia-headless: ## Requires https://github.com/NVIDIA/nvidia-container-runtime and NVIDIA driver 440+
-run-nvidia-headless: CONTAINER_NAME ?= ''
-run-nvidia-headless: user ?= $$USER
-run-nvidia-headless: GPUS ?= "all"
-run-nvidia-headless: ensure-data-path-exists build-nvidia
+run-dev-nvidia-headless: ## Run the Docker container for machines with NVIDIA GPUs in headless mode
+run-dev-nvidia-headless: ## Requires https://github.com/NVIDIA/nvidia-container-runtime and NVIDIA driver 440+
+run-dev-nvidia-headless: CONTAINER_NAME ?= ''
+run-dev-nvidia-headless: user ?= $$USER
+run-dev-nvidia-headless: GPUS ?= "all"
+run-dev-nvidia-headless: ensure-data-path-exists build-nvidia-dev
 	docker run \
 		-it \
 		--rm \
 		--gpus $(GPUS) \
 		-v $(DATA_PATH)/$(CONTAINER_NAME):/home/$(user)/code/garage/data \
-		-e DISPLAY=$(DISPLAY) \
-		-e QT_X11_NO_MITSHM=1 \
 		-e MJKEY="$$(cat $(MJKEY_PATH))" \
 		--name $(CONTAINER_NAME) \
 		${RUN_ARGS} \
-		rlworkgroup/garage-nvidia ${RUN_CMD}
+		rlworkgroup/garage-dev-nvidia ${RUN_CMD}
 
 # Checks that we are in a docker container
 assert-docker:
