@@ -5,6 +5,7 @@ import warnings
 
 import akro
 import gym
+import numpy as np
 
 from garage import Environment, EnvSpec, EnvStep, StepType
 
@@ -241,6 +242,14 @@ class GymEnv(Environment):
 
         if step_type in (StepType.TERMINAL, StepType.TIMEOUT):
             self._step_cnt = None
+
+        if not self.spec.observation_space.contains(observation):
+            # Discrete actions can be either in the space normally, or one-hot
+            # encoded.
+            if self.spec.observation_space.flat_dim != np.prod(
+                    observation.shape):
+                raise RuntimeError('GymEnv observation shape does not '
+                                   'conform to its observation_space')
 
         return EnvStep(env_spec=self.spec,
                        action=action,
