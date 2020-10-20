@@ -1,7 +1,7 @@
 ARG PARENT_IMAGE=ubuntu:18.04
 
 # Garage base target ###########################################################
-FROM $PARENT_IMAGE AS garage-18.04
+FROM $PARENT_IMAGE AS garage-base
 
 # http://bugs.python.org/issue19846
 # > At the moment, setting "LANG=C" on a Linux system *fundamentally breaks Python 3*, and that's not OK.
@@ -66,8 +66,8 @@ ENV PATH_NO_VENV $PATH
 WORKDIR $HOME
 
 RUN curl https://pyenv.run | bash && \
-  pyenv install 3.6.10 && \
-  pyenv global 3.6.10 && \
+  pyenv install 3.6.12 && \
+  pyenv global 3.6.12 && \
   pip install virtualenv && \
   rm -r $HOME/.cache/pip
 
@@ -106,11 +106,7 @@ RUN pip install --upgrade pip setuptools wheel && \
 ENV MJKEY_PATH $HOME/.mujoco/mjkey.txt
 RUN touch $MJKEY_PATH
 
-COPY --chown=$user:$user docker/entrypoint-runtime.sh $HOME/code/garage/docker/entrypoint-runtime.sh
-ENTRYPOINT ["code/garage/docker/entrypoint-runtime.sh"]
-
-# Headless machine with xvfb, i.e. so rendering works ##########################
-FROM garage-18.04 AS garage-headless-18.04
+# xvfb, so that rendering works
 USER root
 RUN \
   apt-get -y -q update && \
@@ -132,10 +128,24 @@ USER $user
 COPY --chown=$user:$user docker/entrypoint-headless.sh $HOME/code/garage/docker/entrypoint-headless.sh
 ENTRYPOINT ["code/garage/docker/entrypoint-headless.sh"]
 
+# Garage target for latest release from pypi ###################################
+FROM garage-base AS garage
+
+RUN pip install --upgrade pip setuptools wheel && \
+  pip install garage[all] && \
+  rm -r $HOME/.cache/pip
+
+COPY --chown=$user:$user ./examples $HOME/examples
+
+# Nvidia target ################################################################
+FROM garage AS garage-nvidia
+COPY --chown=$user:$user docker/entrypoint-runtime.sh $HOME/code/garage/docker/entrypoint-runtime.sh
+ENTRYPOINT ["code/garage/docker/entrypoint-runtime.sh"]
+
 
 # Special setup for garage developers, which installs garage from source #######
 # Assumes $PWD is the garage repository.
-FROM garage-headless-18.04 AS garage-dev-18.04
+FROM garage-base AS garage-dev
 
 # apt dependencies
 USER root
@@ -197,10 +207,10 @@ RUN cd benchmarks && python setup.py sdist && \
 
 ENTRYPOINT ["docker/entrypoint-headless.sh"]
 
-# Nvidia target ################################################################
-FROM garage-dev-18.04 AS garage-nvidia-18.04
+# Nvidia Dev target ############################################################
+FROM garage-dev AS garage-dev-nvidia
 ENTRYPOINT ["docker/entrypoint-runtime.sh"]
 
 # Test target ##################################################################
-FROM garage-dev-18.04 AS garage-test-18.04
+FROM garage-dev AS garage-test
 CMD nice -n 11 pytest -v -n auto -m 'not huge and not flaky' --durations=20
