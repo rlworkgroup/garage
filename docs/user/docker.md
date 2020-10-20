@@ -1,116 +1,123 @@
 # Run garage with Docker
 
-Currently there are two types of garage images:
+Currently there are two types of garage images available on Docker Hub:
 
-- headless: garage without environment visualization.
-- nvidia: garage with environment visualization using an NVIDIA graphics
-    card.
+- `garage`: garage without environment visualization.
+- `garage-nvidia`: garage with environment visualization capability using an
+ NVIDIA graphics card.
 
-## Headless image
+If you want to compile a new image using the the source, proceed to the document
+[Building garage docker image from source](docker_dev.md) instead.
+
+# `garage` image
 
 ### Prerequisites
 
-Be aware of the following prerequisites to build the image.
+Be aware of the following prerequisites to run the image.
 
 - Install [Docker CE](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce)
-  version 19.03 or higher. Tested on version 19.03.12.
+  version 19.03 or higher. Tested on version 19.03.
 
 Tested on Ubuntu 16.04, 18.04 & 20.04.
 
-### Run a pre-compiled image
+### Running the `garage` docker image
 
-If you already have a source copy of garage, proceed to subsection [Build and
- run the headless image](#build-and-run-the-headless-image), otherwise, keep
-reading.
+The garage container comes bundled with the examples available in the garage
+repo. To run an example launcher in the container, execute:
 
-To run an example launcher in the container, execute:
-
-```
-docker run -it --rm rlworkgroup/garage-headless python examples/tf/trpo_cartpole.py
+```bash
+docker run -it --rm rlworkgroup/garage python examples/tf/trpo_cartpole.py
 ```
 
-This will run the latest image available. To use a stable release such as
-v2020.06, use `rlworkgroup/garage-headless:2020.06`.
+To get a list of all the examples, you can run:
+
+```bash
+docker run -it --rm rlworkgroup/garage ls -R examples
+```
+
+This will run the latest image available on Docker Hub, which coincides with
+the latest stable release of garage. To use a specific release such as
+v2020.06, use `rlworkgroup/garage:2020.06`.
+
+The container runs with the user `garage-user` with the current working
+directory as `/home/garage-user`.
+
+To save the generated experiment data in a directory on your computer, you can
+specify the path to that directory using the argument `-v` with the `docker run`
+command. `-v` accepts an argument of the type `<absolute path of folder on
+host machine>:<absolute path of folder inside container>`. Since the working
+directory in the container is `/home/garage-user` by default, the results are
+written to `/home/garage-user/data`.
+
+For example, if the path of the directory on your computer where you want
+the results to be stored is `/home/user/data`, make sure the directory exists.
+
+Additionally, if you are on linux, make sure that this directory is writeable by
+the container user `garage-user` by either making it accessible by running:
+
+```bash
+setfacl -m u:999:rwx /home/user/data
+```
+
+or making it writable to all other users by running:
+
+```bash
+chmod 777 /home/user/data
+```
+
+or giving ownership of the directory to `garage-user` through:
+
+```bash
+chown -R 999:docker /home/user/data
+```
+
+Then, if the path of the directory on your computer is `/home/user/data`,
+execute:
+
+```bash
+docker run \
+  -it \
+  --rm \
+  -v /home/user/data:/home/garage-user/data \
+  rlworkgroup/garage \
+  python examples/tf/trpo_cartpole.py
+```
+
+Similarly, if you want to run your own code inside the docker container, you can
+mount the directory containing your files as a volume, by using the `-v` option
+with `docker run`. If your code is in a file called `launcher.py` in the
+directory, say, `/home/user/my_garage_experiment_dir`, then you can mount it at
+`/home/garage-user/my_experiment_dir` in the container as follows:
+
+```bash
+docker run \
+  -it \
+  --rm \
+  -v /home/user/my_garage_experiment_dir:/home/garage-user/my_experiment_dir \
+  -v /home/user/my_garage_experiment_dir/data:/home/garage-user/data \
+  rlworkgroup/garage \
+  python my_experiment/launcher123.py
+```
 
 To run environments using MuJoCo, pass the contents of the MuJoCo key in a
 variable named MJKEY in the same docker-run command using `cat`. For example,
 if your key is at `~/.mujoco/mjkey.txt`, execute:
 
-```
+```bash
 docker run \
   -it \
   --rm \
   -e MJKEY="$(cat ~/.mujoco/mjkey.txt)" \
-  rlworkgroup/garage-headless python examples/tf/trpo_swimmer.py
+  # ... other arguments here
+  rlworkgroup/garage \
+  python examples/tf/trpo_swimmer.py
 ```
 
-To save the experiment data generated in the container, you need to specify a
-path where the files will be saved inside your host computer with the argument
-`-v` in the docker-run command. For example, if the path you want to use is
-at `/home/tmp/data`, execute:
-
-```
-docker run \
-  -it \
-  --rm \
-  -v /home/tmp/data:/home/garage-user/code/garage/data \
-  rlworkgroup/garage-headless python examples/tf/trpo_cartpole.py
-```
-
-This binds a volume between your host path and the path in garage at
-`/home/garage-user/code/garage/data`.
-
-``` note:: Make sure the directory at the host path exists and is writable by
- the current user, otherwise docker will create it with user as root, but the
- garage container won't be able to write to it.
-```
-
-### Build and run the headless image
-
-To build and run the headless image, first clone the garage repository,
-move to the root folder of your local repository and then execute;
-
-```
-make run-headless RUN_CMD="python examples/tf/trpo_cartpole.py"
-```
-
-Where RUN_CMD specifies the executable to run in the container.
-
-The previous command adds a volume from the `data` folder inside your cloned
-garage repository to the `data` folder in the garage container, so any
-experiment results ran in the container will be saved in the `data` folder
-inside your cloned repository.
-
-By default, docker generates random names for containers. If you want to specify
-a name for the container, you can do so with the variable `CONTAINER_NAME`. As a
-side effect, this will output the results in `data/$CONTAINER_NAME` directory
-instead of the `data` directory.
-
-```
-make run-headless RUN_CMD="..." CONTAINER_NAME="my_container_123"
-```
-
-This will output results in `data/my_container_123` directory.
-
-If you need to use MuJoCo, you need to place your key at `~/.mujoco/mjkey.txt`
-or specify the corresponding path through the MJKEY_PATH variable:
-
-```
-make run-headless RUN_CMD="..." MJKEY_PATH="/home/user/mjkey.txt"
-```
-
-If you require to pass additional arguments to docker build and run commands,
-you can use the variables BUILD_ARGS and RUN_ARGS, for example:
-
-```
-make run-headless BUILD_ARGS="--build-arg MY_VAR=123" RUN_ARGS="-e MY_VAR=123"
-```
-
-## NVIDIA image
+## `garage-nvidia` image
 
 The garage NVIDIA images come with CUDA 10.2 and cuDNN (required for tensorflow).
 
-### Prerequisites for NVIDIA image
+### Prerequisites for `garage-nvidia` image
 
 Additional to the prerequisites for the headless image, make sure to have:
 
@@ -122,61 +129,80 @@ Additional to the prerequisites for the headless image, make sure to have:
 
 Tested on Ubuntu 18.04 & 20.04.
 
-### Run a pre-compiled garage-nvidia image
+### Running the `garage-nvidia` image
 
-The same commands for the headless image mentioned above apply for the nvidia
-image, except that the image name is defined by `rlworkgroup/garage-nvidia`.
+The same commands for the garage image mentioned above apply for the nvidia
+image, except that the image name is `rlworkgroup/garage-nvidia`.
 
 For example, to execute a launcher file:
 
 ```
-docker run -it --rm rlworkgroup/garage-nvidia python examples/tf/trpo_cartpole.py
+docker run \
+  -it \
+  --rm \
+  # ...
+  rlworkgroup/garage-nvidia \
+  python examples/tf/trpo_cartpole.py
 ```
 
-### Build and run the NVIDIA image
+### Enabling environment visualization
 
-The same rules for the headless image apply here, except that the target name
-is:
+Allow the docker container to access the X server on your machine by running:
 
-```
-make run-nvidia
+```bash
+xhost +local:docker
 ```
 
-This make command builds the NVIDIA image and runs it in a non-headless mode.
-It will not work on headless machines. You can run the NVIDIA in a headless
-state using the following target:
+and while running the docker container, add the following arguments to
+`docker run`:
 
+```bash
+-v /tmp/.X11-unix:/tmp/.X11-unix
+-e DISPLAY=$DISPLAY
+-e QT_X11_NO_MITSHM=1
 ```
-make run-nvidia-headless
+
+For example:
+
+```bash
+docker run \
+  -it \
+  --rm \
+  -e MJKEY="$(cat ~/.mujoco/mjkey.txt)" \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -e DISPLAY=$DISPLAY \
+  -e QT_X11_NO_MITSHM=1 \
+  rlworkgroup/garage \
+  python examples/tf/trpo_swimmer.py
 ```
+
 
 ### Expose GPUs for use
 
-By default, garage-nvidia uses all of your gpus. If you want to customize which
-GPUs are used and/or want to set the GPU capabilities exposed, as described in
-official docker documentation
+By default, `garage-nvidia` uses all of your gpus. If you want to customize
+which GPUs are used and/or want to set the GPU capabilities exposed, as
+described in official docker documentation
 [here](https://docs.docker.com/config/containers/resource_constraints/#gpu),
-you can pass the desired values to --gpus option using the variable GPUS. For
-example:
+you can pass the desired values to `--gpus` option as follows:
 
 ```
-make run-nvidia GPUS="device=0,2"
+docker run \
+  -it \
+  --rm \
+  --gpus "device=0,2" \
+  # ...
+  rlworkgroup/garage-nvidia \
+  python examples/tf/trpo_cartpole.py
 ```
 
 ### Using a different driver version
 
-The garage-nvidia docker image uses `nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04`
+The `garage-nvidia` docker image uses `nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04`
 as the parent image which requires NVIDIA driver version 440.33+. If you need
 to use garage with a different driver version, you might be able to build the
-garage-nvidia image from scratch using a different parent image using the
-variable `PARENT_IMAGE`.
-
-```
-make run-nvidia PARENT_IMAGE="nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04"
-```
-
-You can find the required parent images at [NVIDIA CUDA's DockerHub](https://hub.docker.com/r/nvidia/cuda/tags)
+garage-nvidia image using a different parent image by following the guide at
+[Building garage docker image from source](docker_dev.md)
 
 ----
 
-This page was authored by Angel Ivan Gonzalez ([@gonzaiva](https://github.com/gonzaiva)), with contributions from Gitanshu Sardana ([@gitanshu](https://github.com/gitanshu>)).
+This page was authored by Gitanshu Sardana ([@gitanshu](https://github.com/gitanshu>)).
