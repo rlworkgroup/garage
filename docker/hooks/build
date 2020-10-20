@@ -9,18 +9,18 @@ echo DOCKERFILE_PATH="$DOCKERFILE_PATH"
 echo DOCKER_REPO="$DOCKER_REPO"
 echo IMAGE_NAME="$IMAGE_NAME"
 
-if [[ "$DOCKER_REPO" = *"rlworkgroup/garage-headless" ]]; then
-  echo "Building target garage-dev-18.04"
+if [[ "$DOCKER_REPO" = *"rlworkgroup/garage" ]]; then
+  echo "Building target garage"
   docker build \
 		-f "../$DOCKERFILE_PATH" \
-		--target garage-dev-18.04 \
+		--target garage \
 		-t "$IMAGE_NAME" \
 		..
 elif [[ "$DOCKER_REPO" = *"rlworkgroup/garage-nvidia" ]]; then
-  echo "Building target garage-nvidia-18.04"
+  echo "Building target garage-nvidia"
   docker build \
 		-f "../$DOCKERFILE_PATH" \
-		--target garage-nvidia-18.04 \
+		--target garage-nvidia \
 		-t "$IMAGE_NAME" \
 		--build-arg PARENT_IMAGE="nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04" \
 		..
