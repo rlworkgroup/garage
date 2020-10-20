@@ -20,12 +20,12 @@ build-test: assert-docker-version docker/Dockerfile
 		-f docker/Dockerfile \
 		--cache-from rlworkgroup/garage-test:latest \
 		--cache-from rlworkgroup/garage:latest \
-		--target garage-test-18.04 \
+		--target garage-test \
 		-t ${TAG} \
 		${BUILD_ARGS} \
 		.
 
-test:  ## Run the garage-test-18.04 docker target
+test:  ## Run the garage-test docker target that runs all tests except huge and flaky
 test: RUN_ARGS = --memory 7500m --memory-swap 7500m
 test: TAG ?= rlworkgroup/garage-test
 test: CONTAINER_NAME ?= ''
@@ -153,7 +153,7 @@ build-ci: assert-docker-version docker/Dockerfile
 	docker build \
 		--cache-from rlworkgroup/garage-ci:latest \
 		-f docker/Dockerfile \
-		--target garage-dev-18.04 \
+		--target garage-dev \
 		-t ${TAG} \
 		${BUILD_ARGS} .
 
