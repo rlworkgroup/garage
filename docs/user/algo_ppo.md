@@ -35,13 +35,13 @@ regularization adds the mean entropy to the surrogate objective. See
 
 Garage has implementations of PPO with PyTorch and TensorFlow.
 
-## PyTorch
+### PyTorch
 
 ```eval_rst
 .. literalinclude:: ../../examples/torch/ppo_pendulum.py
 ```
 
-## TensorFlow
+### TensorFlow
 
 ```eval_rst
 .. literalinclude:: ../../examples/tf/ppo_pendulum.py
