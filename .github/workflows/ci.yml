@@ -39,7 +39,7 @@ jobs:
         run: |
           docker build . \
             -f docker/Dockerfile \
-            --target garage-dev-18.04 \
+            --target garage-dev \
             -t "${DOCKER_TAG}" \
             --build-arg GARAGE_GH_TOKEN \
             --cache-from="docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
