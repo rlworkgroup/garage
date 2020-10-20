@@ -1,3 +1,6 @@
+sphinx-autoapi
+sphinxcontrib-bibtex
+
 akro
 click
 cloudpickle
@@ -5,6 +8,7 @@ cma==2.7.0
 dm_env
 dowel==0.0.3
 gym[atari, box2d, classic_control]==0.17.2
+matplotlib
 psutil
 pyprind
 python-dateutil
@@ -13,11 +17,3 @@ scipy
 setproctitle
 tensorflow
 tensorflow-probability
-
-# dev dependencies
-matplotlib
-recommonmark
-sphinx
-sphinx-autoapi>=1.4.0
-sphinx_rtd_theme
-sphinxcontrib-bibtex
