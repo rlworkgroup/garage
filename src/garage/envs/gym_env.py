@@ -218,12 +218,6 @@ class GymEnv(Environment):
 
         observation, reward, done, info = self._env.step(action)
 
-        # check that env_infos are consistent
-        if not self._env_info:
-            self._env_info = {k: type(info[k]) for k in info}
-        elif self._env_info.keys() != info.keys():
-            raise RuntimeError('GymEnv outputs inconsistent env_info keys.')
-
         if self._visualize:
             self._env.render(mode='human')
 
@@ -253,6 +247,12 @@ class GymEnv(Environment):
 
         if step_type in (StepType.TERMINAL, StepType.TIMEOUT):
             self._step_cnt = None
+
+        # check that env_infos are consistent
+        if not self._env_info:
+            self._env_info = {k: type(info[k]) for k in info}
+        elif self._env_info.keys() != info.keys():
+            raise RuntimeError('GymEnv outputs inconsistent env_info keys.')
 
         return EnvStep(env_spec=self.spec,
                        action=action,
