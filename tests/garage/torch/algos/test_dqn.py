@@ -14,6 +14,9 @@ from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.torch import np_to_torch
+from garage.torch.algos import DQN
+from garage.torch.policies import DiscreteQFArgmaxPolicy
+from garage.torch.q_functions import DiscreteMLPQFunction
 from garage.trainer import Trainer
 
 from tests.fixtures import snapshot_config
@@ -26,6 +29,7 @@ def setup():
     steps_per_epoch = 10
     sampler_batch_size = 512
     num_timesteps = 100 * steps_per_epoch * sampler_batch_size
+
     env = GymEnv('CartPole-v0')
 
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))

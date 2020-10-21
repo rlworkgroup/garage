@@ -29,6 +29,13 @@ class DiscreteCNNQFunction(DiscreteCNNModule):
             and the second one outputs 32 channels.
         dueling (bool): Whether to use a dueling architecture for the
             fully-connected layer.
+        noisy (bool): Whether to use parameter noise for the fully-connected
+            layers. If True, hidden_w_init, hidden_b_init, output_w_init, and
+            output_b_init are ignored.
+        noisy_sigma (float): Level of scaling to apply to the parameter noise.
+            This is ignored if noisy is set to False.
+        std_noise (float): Standard deviation of the gaussian parameters noise.
+            This is ignored if noisy is set to False.
         hidden_sizes (list[int]): Output dimension of dense layer(s) for
             the MLP for mean. For example, (32, 32) means the MLP consists
             of two hidden layers, each with 32 hidden units.
@@ -73,6 +80,9 @@ class DiscreteCNNQFunction(DiscreteCNNModule):
                  hidden_channels,
                  strides,
                  dueling=False,
+                 noisy=False,
+                 noisy_sigma=0.5,
+                 std_noise=1.,
                  hidden_sizes=(32, 32),
                  cnn_hidden_nonlinearity=torch.nn.ReLU,
                  mlp_hidden_nonlinearity=torch.nn.ReLU,
@@ -98,6 +108,9 @@ class DiscreteCNNQFunction(DiscreteCNNModule):
                          strides=strides,
                          hidden_sizes=hidden_sizes,
                          dueling=dueling,
+                         noisy=noisy,
+                         noisy_sigma=noisy_sigma,
+                         std_noise=std_noise,
                          hidden_channels=hidden_channels,
                          cnn_hidden_nonlinearity=cnn_hidden_nonlinearity,
                          mlp_hidden_nonlinearity=mlp_hidden_nonlinearity,
