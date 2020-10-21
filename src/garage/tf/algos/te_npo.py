@@ -245,39 +245,41 @@ class TENPO(RLAlgorithm):
         baselines = episodes.pad_to_last(np.concatenate(baselines))
 
         # Process trajectories
-        trajs, traj_infos = self._process_trajectories(episodes)
+        embed_eps, embed_ep_infos = self._process_episodes(episodes)
 
         average_return = np.mean(undiscounted_returns)
 
         logger.log('Optimizing policy...')
-        self._optimize_policy(itr, episodes, baselines, trajs, traj_infos)
+        self._optimize_policy(itr, episodes, baselines, embed_eps,
+                              embed_ep_infos)
 
         return average_return
 
-    def _optimize_policy(self, itr, episodes, baselines, trajs, traj_infos):
+    def _optimize_policy(self, itr, episodes, baselines, embed_eps,
+                         embed_ep_infos):
         """Optimize policy.
 
         Args:
             itr (int): Iteration number.
             episodes (EpisodeBatch): Batch of episodes.
             baselines (np.ndarray): Baseline predictions.
-            trajs (np.ndarray): Embedding trajectories.
-            traj_infos (dict): Embedding distribution information.
+            embed_eps (np.ndarray): Embedding episodes.
+            embed_ep_infos (dict): Embedding distribution information.
 
         """
         del itr
 
         policy_opt_input_values = self._policy_opt_input_values(
-            episodes, baselines, trajs)
+            episodes, baselines, embed_eps)
         inference_opt_input_values = self._inference_opt_input_values(
-            episodes, trajs, traj_infos)
+            episodes, embed_eps, embed_ep_infos)
 
         self._train_policy_and_encoder_networks(policy_opt_input_values)
         self._train_inference_network(inference_opt_input_values)
 
         # paths = samples_data['paths']
         fit_paths = self._evaluate(policy_opt_input_values, episodes,
-                                   baselines, traj_infos)
+                                   baselines, embed_ep_infos)
         self._visualize_distribution()
 
         logger.log('Fitting baseline...')
@@ -288,7 +290,7 @@ class TENPO(RLAlgorithm):
             self.policy.encoder.model.parameters)
         self._old_inference.model.parameters = self._inference.model.parameters
 
-    def _process_trajectories(self, episodes):
+    def _process_episodes(self, episodes):
         # pylint: disable=too-many-statements
         """Return processed sample data based on the collected paths.
 
@@ -296,8 +298,11 @@ class TENPO(RLAlgorithm):
             episodes (EpisodeBatch): Batch of episodes.
 
         Returns:
-            np.ndarray: Embedding trajectories.
+            np.ndarray: Embedding episodes.
             dict: Embedding distribution information.
+                * mean (list[numpy.ndarray]): Means of the distribution.
+                * log_std (list[numpy.ndarray]): Log standard deviations of the
+                    distribution.
 
         """
         max_episode_length = self.max_episode_length
@@ -701,13 +706,13 @@ class TENPO(RLAlgorithm):
 
             return infer_loss, infer_kl
 
-    def _policy_opt_input_values(self, episodes, baselines, trajectories):
+    def _policy_opt_input_values(self, episodes, baselines, embed_eps):
         """Map episode samples to the policy optimizer inputs.
 
         Args:
             episodes (EpisodeBatch): Batch of episodes.
             baselines (np.ndarray): Baseline predictions.
-            trajectories (np.ndarray): Embedding trajectories.
+            embed_eps (np.ndarray): Embedding episodes.
 
         Returns:
             list(np.ndarray): Flatten policy optimization input values.
@@ -735,7 +740,7 @@ class TENPO(RLAlgorithm):
             action_var=actions,
             reward_var=episodes.padded_rewards,
             baseline_var=baselines,
-            trajectory_var=trajectories,
+            trajectory_var=embed_eps,
             task_var=tasks,
             latent_var=latents,
             valid_var=episodes.valids,
@@ -745,13 +750,13 @@ class TENPO(RLAlgorithm):
 
         return flatten_inputs(policy_opt_input_values)
 
-    def _inference_opt_input_values(self, episodes, trajs, traj_infos):
+    def _inference_opt_input_values(self, episodes, embed_eps, embed_ep_infos):
         """Map episode samples to the inference optimizer inputs.
 
         Args:
             episodes (EpisodeBatch): Batch of episodes.
-            trajs (np.ndarray): Embedding trajectories.
-            traj_infos (dict): Embedding distribution information.
+            embed_eps (np.ndarray): Embedding episodes.
+            embed_ep_infos (dict): Embedding distribution information.
 
         Returns:
             list(np.ndarray): Flatten inference optimization input values.
@@ -760,12 +765,12 @@ class TENPO(RLAlgorithm):
         latents = episodes.pad_to_last(episodes.agent_infos['latent'])
 
         infer_state_info_list = [
-            traj_infos[k] for k in self._inference.state_info_keys
+            embed_ep_infos[k] for k in self._inference.state_info_keys
         ]
         # pylint: disable=unexpected-keyword-arg
         inference_opt_input_values = self._inference_opt_inputs._replace(
             latent_var=latents,
-            trajectory_var=trajs,
+            trajectory_var=embed_eps,
             valid_var=episodes.valids,
             infer_state_info_vars_list=infer_state_info_list,
         )
@@ -773,7 +778,7 @@ class TENPO(RLAlgorithm):
         return flatten_inputs(inference_opt_input_values)
 
     def _evaluate(self, policy_opt_input_values, episodes, baselines,
-                  traj_infos):
+                  embed_ep_infos):
         """Evaluate rewards and everything else.
 
         Args:
@@ -781,7 +786,7 @@ class TENPO(RLAlgorithm):
                 policy optimization input values.
             episodes (EpisodeBatch): Batch of episodes.
             baselines (np.ndarray): Baseline predictions.
-            traj_infos (dict): Embedding distribution information.
+            embed_ep_infos (dict): Embedding distribution information.
 
         Returns:
             dict: Paths for fitting the baseline.
@@ -846,11 +851,11 @@ class TENPO(RLAlgorithm):
         ev = explained_variance_1d(np.concatenate(baselines_list), aug_returns)
         tabular.record('{}/ExplainedVariance'.format(self._baseline.name), ev)
 
-        inference_rmse = (traj_infos['mean'] - latents)**2.
+        inference_rmse = (embed_ep_infos['mean'] - latents)**2.
         inference_rmse = np.sqrt(inference_rmse.mean())
         tabular.record('Inference/RMSE', inference_rmse)
 
-        inference_rrse = rrse(latents, traj_infos['mean'])
+        inference_rrse = rrse(latents, embed_ep_infos['mean'])
         tabular.record('Inference/RRSE', inference_rrse)
 
         embed_ent = self._f_encoder_entropy(*policy_opt_input_values)
