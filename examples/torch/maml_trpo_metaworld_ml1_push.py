@@ -61,7 +61,9 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
-    meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler)
+    meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
+                                   n_test_tasks=1,
+                                   n_exploration_eps=rollouts_per_task)
 
     trainer = Trainer(ctxt)
     algo = MAMLTRPO(env=env,
