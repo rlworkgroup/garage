@@ -13,6 +13,7 @@ from garage._functions import (_Default,
                                obtain_evaluation_episodes,
                                rollout)
 from garage.experiment.experiment import wrap_experiment
+from garage.trainer import TFTrainer, Trainer
 
 # yapf: enable
 
@@ -33,4 +34,6 @@ __all__ = [
     'Wrapper',
     'rollout',
     'obtain_evaluation_episodes',
+    'Trainer',
+    'TFTrainer',
 ]
