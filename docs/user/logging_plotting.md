@@ -10,7 +10,7 @@ for logging. The `logger` supports many outputs, including
 - Csv output
 - TensorBoard output
 
-In garage's experiment, the `logger` will output to all these four.
+In garage's experiment, the `logger` will output to all of these.
 
 Here is an example of logging in garage.
 
@@ -52,7 +52,7 @@ AverageReturn  2
 -------------  -
 ```
 
-To look output with TensorBoard, you can refer this [page](monitor_experiments_with_tensorboard).
+To look at outputs with TensorBoard, you can refer to this [page](monitor_experiments_with_tensorboard).
 
 To set a customized log directory, just pass a `log_dir` argument to the
 experiment.
