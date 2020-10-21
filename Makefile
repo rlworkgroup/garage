@@ -57,9 +57,20 @@ ci-job-normal: assert-docker
 		exit 1; \
 	done
 
+# Need to be able to access $!, a special bash variable
+define LARGE_TEST
+  pytest --cov=garage --cov-report=xml --reruns 1 -m 'large and not flaky' --durations=20 &
+  PYTEST_PID=$$!
+  while ps -p $$PYTEST_PID > /dev/null ; do
+    echo 'Still running'
+    sleep 60
+  done
+endef
+export LARGE_TEST
+
 ci-job-large: assert-docker
 	[ ! -f $(MJKEY_PATH) ] || mv $(MJKEY_PATH) $(MJKEY_PATH).bak
-	pytest --cov=garage --cov-report=xml --reruns 1 -m 'large and not flaky' --durations=20
+	bash -c "$$LARGE_TEST"
 	for i in {1..5}; do \
 		bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
 			|| echo 'Retrying...' && sleep 30 && continue; \
