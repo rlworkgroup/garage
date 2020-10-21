@@ -309,7 +309,7 @@ def test_maml_trpo_metaworld_ml1_push():
     """Test maml_trpo_ml1_push.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/maml_trpo_metaworld_ml1_push.py',
-        '--epochs', '1', '--meta_batch_size', '1'
+        '--epochs', '1', '--meta_batch_size', '1', '--rollouts_per_task', '1'
     ],
                           check=False).returncode == 0
 
