@@ -45,6 +45,8 @@ LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'torch/mttrpo_metaworld_mt1_push.py',
     EXAMPLES_ROOT_DIR / 'torch/mttrpo_metaworld_mt10.py',
     EXAMPLES_ROOT_DIR / 'torch/mttrpo_metaworld_mt50.py',
+    EXAMPLES_ROOT_DIR / 'torch/td3_halfcheetah.py',
+    EXAMPLES_ROOT_DIR / 'torch/td3_pendulum.py',
     EXAMPLES_ROOT_DIR / 'tf/te_ppo_point.py',
     EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_mt1_push.py',
     EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_mt10.py',

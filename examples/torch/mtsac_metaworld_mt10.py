@@ -43,8 +43,8 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed, _gpu, n_tasks, timesteps):
     """
     deterministic.set_seed(seed)
     trainer = Trainer(ctxt)
-    mt10 = metaworld.MT10()
-    mt10_test = metaworld.MT10()
+    mt10 = metaworld.MT10()  # pylint: disable=no-member
+    mt10_test = metaworld.MT10()  # pylint: disable=no-member
 
     # pylint: disable=missing-return-doc, missing-return-type-doc
     def wrap(env, _):
