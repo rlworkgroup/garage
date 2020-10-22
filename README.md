@@ -62,7 +62,7 @@ The table below summarizes the algorithms available in garage.
 | NPO                    | TensorFlow          |
 | PPO                    | PyTorch, TensorFlow |
 | REPS                   | TensorFlow          |
-| TD3                    | Pytorch, TensorFlow |
+| TD3                    | PyTorch, TensorFlow |
 | TNPG                   | TensorFlow          |
 | TRPO                   | PyTorch, TensorFlow |
 | MAML                   | PyTorch             |
