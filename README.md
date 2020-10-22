@@ -56,7 +56,7 @@ The table below summarizes the algorithms available in garage.
 | CMA-ES                 | numpy               |
 | REINFORCE (a.k.a. VPG) | PyTorch, TensorFlow |
 | DDPG                   | PyTorch, TensorFlow |
-| DQN                    | Pytorch, TensorFlow |
+| DQN                    | PyTorch, TensorFlow |
 | DDQN                   | TensorFlow          |
 | ERWR                   | TensorFlow          |
 | NPO                    | TensorFlow          |
