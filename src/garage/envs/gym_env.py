@@ -155,6 +155,9 @@ class GymEnv(Environment):
         self._spec = EnvSpec(action_space=self.action_space,
                              observation_space=self.observation_space,
                              max_episode_length=self._max_episode_length)
+        # stores env_info keys & value types to ensure subsequent env_infos
+        # are consistent
+        self._env_info = None
 
     @property
     def action_space(self):
@@ -191,6 +194,7 @@ class GymEnv(Environment):
         """
         first_obs = self._env.reset()
         self._step_cnt = 0
+        self._env_info = None
 
         return first_obs, dict()
 
@@ -206,6 +210,8 @@ class GymEnv(Environment):
         Raises:
             RuntimeError: if `step()` is called after the environment has been
                 constructed and `reset()` has not been called.
+            RuntimeError: if underlying environment outputs inconsistent
+                env_info keys.
 
         """
         if self._step_cnt is None:
@@ -243,6 +249,11 @@ class GymEnv(Environment):
         if step_type in (StepType.TERMINAL, StepType.TIMEOUT):
             self._step_cnt = None
 
+        # check that env_infos are consistent
+        if not self._env_info:
+            self._env_info = {k: type(info[k]) for k in info}
+        elif self._env_info.keys() != info.keys():
+            raise RuntimeError('GymEnv outputs inconsistent env_info keys.')
         if not self.spec.observation_space.contains(observation):
             # Discrete actions can be either in the space normally, or one-hot
             # encoded.
