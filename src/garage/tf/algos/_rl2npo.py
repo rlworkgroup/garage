@@ -2,7 +2,7 @@
 from dowel import logger, tabular
 import numpy as np
 
-from garage.np import explained_variance_1d, pad_tensor_n
+from garage.np import explained_variance_1d
 from garage.tf.algos import NPO
 
 
@@ -58,18 +58,21 @@ class RL2NPO(NPO):
 
     """
 
-    def optimize_policy(self, samples_data):
+    def optimize_policy(self, episodes):
         """Optimize policy.
 
         Args:
-            samples_data (dict): Processed sample data.
-                See garage.tf.paths_to_tensors() for details.
+            episodes (EpisodeBatch): Batch of episodes.
 
         """
-        self._fit_baseline_with_data(samples_data)
-        samples_data['baselines'] = self._get_baseline_prediction(samples_data)
+        # Baseline predictions with all zeros for feeding inputs of Tensorflow
+        baselines = np.zeros_like(episodes.padded_rewards)
 
-        policy_opt_input_values = self._policy_opt_input_values(samples_data)
+        returns = self._fit_baseline_with_data(episodes, baselines)
+        baselines = self._get_baseline_prediction(episodes)
+
+        policy_opt_input_values = self._policy_opt_input_values(
+            episodes, baselines)
         # Train policy network
         logger.log('Computing loss before')
         loss_before = self._optimizer.loss(policy_opt_input_values)
@@ -91,24 +94,23 @@ class RL2NPO(NPO):
         pol_ent = self._f_policy_entropy(*policy_opt_input_values)
         tabular.record('{}/Entropy'.format(self.policy.name), np.mean(pol_ent))
 
-        ev = explained_variance_1d(samples_data['baselines'],
-                                   samples_data['returns'],
-                                   samples_data['valids'])
+        ev = explained_variance_1d(baselines, returns, episodes.valids)
         tabular.record('{}/ExplainedVariance'.format(self._baseline.name), ev)
         self._old_policy.parameters = self.policy.parameters
 
-    def _get_baseline_prediction(self, samples_data):
+    def _get_baseline_prediction(self, episodes):
         """Get baseline prediction.
 
         Args:
-            samples_data (dict): Processed sample data.
-                See garage.tf.paths_to_tensors() for details.
+            episodes (EpisodeBatch): Batch of episodes.
 
         Returns:
             np.ndarray: Baseline prediction, with shape
                 :math:`(N, max_episode_length * episode_per_task)`.
 
         """
-        paths = samples_data['paths']
-        baselines = [self._baseline.predict(path) for path in paths]
-        return pad_tensor_n(baselines, self.max_episode_length)
+        obs = [
+            self._baseline.predict({'observations': obs})
+            for obs in episodes.observations_list
+        ]
+        return episodes.pad_to_last(np.concatenate(obs))

@@ -51,7 +51,7 @@ class LinearFeatureBaseline(Baseline):
 
         """
         obs = np.clip(path['observations'], self.lower_bound, self.upper_bound)
-        length = len(path['rewards'])
+        length = len(path['observations'])
         al = np.arange(length).reshape(-1, 1) / 100.0
         return np.concatenate(
             [obs, obs**2, al, al**2, al**3,
@@ -89,5 +89,5 @@ class LinearFeatureBaseline(Baseline):
 
         """
         if self._coeffs is None:
-            return np.zeros(len(paths['rewards']))
+            return np.zeros(len(paths['observations']))
         return self._features(paths).dot(self._coeffs)

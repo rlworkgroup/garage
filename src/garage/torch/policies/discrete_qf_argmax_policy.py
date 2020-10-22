@@ -5,6 +5,7 @@ This policy chooses the action that yields to the largest Q-value.
 import numpy as np
 import torch
 
+from garage.torch import np_to_torch
 from garage.torch.policies.policy import Policy
 
 
@@ -65,4 +66,4 @@ class DiscreteQFArgmaxPolicy(Policy):
             dict: Empty since this policy does not produce a distribution.
         """
         with torch.no_grad():
-            return self(torch.Tensor(observations)).numpy(), dict()
+            return self(np_to_torch(observations)).cpu().numpy(), dict()

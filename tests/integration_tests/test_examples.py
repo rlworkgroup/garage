@@ -8,6 +8,7 @@ import pytest
 EXAMPLES_ROOT_DIR = pathlib.Path('examples/')
 NON_ALGO_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'torch/resume_training.py',
+    EXAMPLES_ROOT_DIR / 'torch/watch_atari.py',
     EXAMPLES_ROOT_DIR / 'tf/resume_training.py',
     EXAMPLES_ROOT_DIR / 'sim_policy.py',
     EXAMPLES_ROOT_DIR / 'step_env.py',
@@ -20,6 +21,8 @@ LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'tf/dqn_pong.py',
     EXAMPLES_ROOT_DIR / 'tf/her_ddpg_fetchreach.py',
     EXAMPLES_ROOT_DIR / 'tf/trpo_cubecrash.py',
+    EXAMPLES_ROOT_DIR / 'torch/dqn_cartpole.py',
+    EXAMPLES_ROOT_DIR / 'torch/dqn_atari.py',
     EXAMPLES_ROOT_DIR / 'torch/maml_ppo_half_cheetah_dir.py',
     EXAMPLES_ROOT_DIR / 'torch/maml_trpo_half_cheetah_dir.py',
     EXAMPLES_ROOT_DIR / 'torch/maml_vpg_half_cheetah_dir.py',
@@ -94,6 +97,24 @@ def test_dqn_pong():
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'tf/dqn_pong.py', '--buffer_size', '5',
         '--max_episode_length', '5'
+    ],
+                          check=False,
+                          env=env).returncode == 0
+
+
+@pytest.mark.no_cover
+@pytest.mark.timeout(200)
+def test_dqn_atari():
+    """Test torch/dqn_atari.py with reduced replay buffer size.
+
+    This is to reduced memory consumption.
+
+    """
+    env = os.environ.copy()
+    env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/dqn_atari.py', 'Pong', '--buffer_size', '1',
+        '--max_episode_length', '1'
     ],
                           check=False,
                           env=env).returncode == 0
@@ -309,7 +330,7 @@ def test_maml_trpo_metaworld_ml1_push():
     """Test maml_trpo_ml1_push.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/maml_trpo_metaworld_ml1_push.py',
-        '--epochs', '1', '--meta_batch_size', '1'
+        '--epochs', '1', '--meta_batch_size', '1', '--rollouts_per_task', '1'
     ],
                           check=False).returncode == 0
 

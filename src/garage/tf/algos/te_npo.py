@@ -7,9 +7,12 @@ import numpy as np
 import scipy.stats
 import tensorflow as tf
 
-from garage import EpisodeBatch, InOutSpec, log_performance
+from garage import InOutSpec, log_performance
 from garage.experiment import deterministic
-from garage.np import explained_variance_1d, rrse, sliding_window
+from garage.np import (discount_cumsum,
+                       explained_variance_1d,
+                       rrse,
+                       sliding_window)
 from garage.np.algos import RLAlgorithm
 from garage.sampler import LocalSampler
 from garage.tf import (center_advs,
@@ -19,10 +22,7 @@ from garage.tf import (center_advs,
                        discounted_returns,
                        flatten_inputs,
                        graph_inputs,
-                       pad_tensor,
                        pad_tensor_dict,
-                       pad_tensor_n,
-                       paths_to_tensors,
                        positive_advs,
                        stack_tensor_dict_list)
 from garage.tf.embeddings import StochasticEncoder
@@ -210,118 +210,107 @@ class TENPO(RLAlgorithm):
         last_return = None
 
         for _ in trainer.step_epochs():
-            trainer.step_path = trainer.obtain_samples(trainer.step_itr)
+            trainer.step_path = trainer.obtain_episodes(trainer.step_itr)
             last_return = self._train_once(trainer.step_itr, trainer.step_path)
             trainer.step_itr += 1
 
         return last_return
 
-    def _train_once(self, itr, paths):
+    def _train_once(self, itr, episodes):
         """Perform one step of policy optimization given one batch of samples.
 
         Args:
             itr (int): Iteration number.
-            paths (list[dict]): A list of collected paths.
+            episodes (EpisodeBatch): Batch of episodes.
 
         Returns:
             numpy.float64: Average return.
 
         """
         undiscounted_returns = log_performance(itr,
-                                               EpisodeBatch.from_list(
-                                                   self._env_spec, paths),
+                                               episodes,
                                                discount=self._discount)
 
-        samples_data = self._paths_to_tensors(paths)
+        # Calculate baseline predictions
+        baselines = []
+        start = 0
+        for length in episodes.lengths:
+            stop = start + length
+            baseline = self._baseline.predict(
+                dict(observations=episodes.observations[start:stop],
+                     tasks=episodes.env_infos['task_onehot'][start:stop],
+                     latents=episodes.agent_infos['latent'][start:stop]))
+            baselines.append(baseline)
+            start = stop
+        baselines = episodes.pad_to_last(np.concatenate(baselines))
 
-        samples_data['average_return'] = np.mean(undiscounted_returns)
+        # Process trajectories
+        embed_eps, embed_ep_infos = self._process_episodes(episodes)
+
+        average_return = np.mean(undiscounted_returns)
 
         logger.log('Optimizing policy...')
-        self._optimize_policy(itr, samples_data)
+        self._optimize_policy(itr, episodes, baselines, embed_eps,
+                              embed_ep_infos)
 
-        return samples_data['average_return']
+        return average_return
 
-    def _optimize_policy(self, itr, samples_data):
+    def _optimize_policy(self, itr, episodes, baselines, embed_eps,
+                         embed_ep_infos):
         """Optimize policy.
 
         Args:
             itr (int): Iteration number.
-            samples_data (dict): Processed sample data.
-                See process_samples() for details.
+            episodes (EpisodeBatch): Batch of episodes.
+            baselines (np.ndarray): Baseline predictions.
+            embed_eps (np.ndarray): Embedding episodes.
+            embed_ep_infos (dict): Embedding distribution information.
 
         """
         del itr
 
-        policy_opt_input_values = self._policy_opt_input_values(samples_data)
+        policy_opt_input_values = self._policy_opt_input_values(
+            episodes, baselines, embed_eps)
         inference_opt_input_values = self._inference_opt_input_values(
-            samples_data)
+            episodes, embed_eps, embed_ep_infos)
 
         self._train_policy_and_encoder_networks(policy_opt_input_values)
         self._train_inference_network(inference_opt_input_values)
 
-        paths = samples_data['paths']
-        self._evaluate(policy_opt_input_values, samples_data)
+        # paths = samples_data['paths']
+        fit_paths = self._evaluate(policy_opt_input_values, episodes,
+                                   baselines, embed_ep_infos)
         self._visualize_distribution()
 
         logger.log('Fitting baseline...')
-        self._baseline.fit(paths)
+        self._baseline.fit(fit_paths)
 
         self._old_policy.parameters = self.policy.parameters
         self._old_policy.encoder.model.parameters = (
             self.policy.encoder.model.parameters)
         self._old_inference.model.parameters = self._inference.model.parameters
 
-    def _paths_to_tensors(self, paths):
+    def _process_episodes(self, episodes):
         # pylint: disable=too-many-statements
         """Return processed sample data based on the collected paths.
 
         Args:
-            paths (list[dict]): A list of collected paths.
+            episodes (EpisodeBatch): Batch of episodes.
 
         Returns:
-            dict: Processed sample data, with key
-                * observations: (numpy.ndarray)
-                * tasks: (numpy.ndarray)
-                * actions: (numpy.ndarray)
-                * trjectories: (numpy.ndarray)
-                * rewards: (numpy.ndarray)
-                * baselines: (numpy.ndarray)
-                * returns: (numpy.ndarray)
-                * valids: (numpy.ndarray)
-                * agent_infos: (dict)
-                * letent_infos: (dict)
-                * env_infos: (dict)
-                * trjectory_infos: (dict)
-                * paths: (list[dict])
+            np.ndarray: Embedding episodes.
+            dict: Embedding distribution information.
+                * mean (list[numpy.ndarray]): Means of the distribution.
+                * log_std (list[numpy.ndarray]): Log standard deviations of the
+                    distribution.
 
         """
         max_episode_length = self.max_episode_length
 
-        def _extract_latent_infos(infos):
-            """Extract and pack latent infos from dict.
+        trajectories = []
+        trajectory_infos = []
 
-            Args:
-                infos (dict): A dict that contains latent infos with key
-                    prefixed by 'latent_'.
-
-            Returns:
-                dict: A dict of latent infos.
-
-            """
-            latent_infos = dict()
-            for k, v in infos.items():
-                if k.startswith('latent_'):
-                    latent_infos[k[7:]] = v
-            return latent_infos
-
-        for path in paths:
-            path['actions'] = (self._env_spec.action_space.flatten_n(
-                path['actions']))
-            path['tasks'] = self.policy.task_space.flatten_n(
-                path['env_infos']['task_onehot'])
-            path['latents'] = path['agent_infos']['latent']
-            path['latent_infos'] = _extract_latent_infos(path['agent_infos'])
-
+        for obs in episodes.padded_observations:
             # - Calculate a forward-looking sliding window.
             # - If step_space has shape (n, d), then trajs will have shape
             #   (n, window, d)
@@ -331,45 +320,21 @@ class TENPO(RLAlgorithm):
             # - Only observation is used for a single step.
             #   Alternatively, stacked [observation, action] can be used for
             #   in harder tasks.
-            obs = pad_tensor(path['observations'], max_episode_length)
             obs_flat = self._env_spec.observation_space.flatten_n(obs)
             steps = obs_flat
             window = self._inference.spec.input_space.shape[0]
             traj = sliding_window(steps, window, smear=True)
             traj_flat = self._inference.spec.input_space.flatten_n(traj)
-            path['trajectories'] = traj_flat
+            trajectories.append(traj_flat)
 
             _, traj_info = self._inference.get_latents(traj_flat)
-            path['trajectory_infos'] = traj_info
+            trajectory_infos.append(traj_info)
 
-        all_path_baselines = [self._baseline.predict(path) for path in paths]
-
-        tasks = [path['tasks'] for path in paths]
-        tasks = pad_tensor_n(tasks, max_episode_length)
-
-        trajectories = np.stack([path['trajectories'] for path in paths])
-
-        latents = [path['latents'] for path in paths]
-        latents = pad_tensor_n(latents, max_episode_length)
-
-        latent_infos = [path['latent_infos'] for path in paths]
-        latent_infos = stack_tensor_dict_list(
-            [pad_tensor_dict(p, max_episode_length) for p in latent_infos])
-
-        trajectory_infos = [path['trajectory_infos'] for path in paths]
+        trajectories = np.stack(trajectories)
         trajectory_infos = stack_tensor_dict_list(
             [pad_tensor_dict(p, max_episode_length) for p in trajectory_infos])
 
-        samples_data = paths_to_tensors(paths, max_episode_length,
-                                        all_path_baselines, self._discount,
-                                        self._gae_lambda)
-        samples_data['tasks'] = tasks
-        samples_data['latents'] = latents
-        samples_data['latent_infos'] = latent_infos
-        samples_data['trajectories'] = trajectories
-        samples_data['trajectory_infos'] = trajectory_infos
-
-        return samples_data
+        return trajectories, trajectory_infos
 
     def _build_inputs(self):
         """Build input variables.
@@ -741,129 +706,156 @@ class TENPO(RLAlgorithm):
 
             return infer_loss, infer_kl
 
-    def _policy_opt_input_values(self, samples_data):
+    def _policy_opt_input_values(self, episodes, baselines, embed_eps):
         """Map episode samples to the policy optimizer inputs.
 
         Args:
-            samples_data (dict): Processed sample data.
-                See process_samples() for details.
+            episodes (EpisodeBatch): Batch of episodes.
+            baselines (np.ndarray): Baseline predictions.
+            embed_eps (np.ndarray): Embedding episodes.
 
         Returns:
             list(np.ndarray): Flatten policy optimization input values.
 
         """
+        actions = [
+            self._env_spec.action_space.flatten_n(act)
+            for act in episodes.actions_list
+        ]
+        actions = episodes.pad_to_last(np.concatenate(actions))
+        tasks = episodes.pad_to_last(episodes.env_infos['task_onehot'])
+        latents = episodes.pad_to_last(episodes.agent_infos['latent'])
+
+        agent_infos = episodes.padded_agent_infos
         policy_state_info_list = [
-            samples_data['agent_infos'][k] for k in self.policy.state_info_keys
+            agent_infos[k] for k in self.policy.state_info_keys
         ]
         embed_state_info_list = [
-            samples_data['latent_infos'][k]
+            agent_infos['latent_' + k]
             for k in self.policy.encoder.state_info_keys
         ]
         # pylint: disable=unexpected-keyword-arg
         policy_opt_input_values = self._policy_opt_inputs._replace(
-            obs_var=samples_data['observations'],
-            action_var=samples_data['actions'],
-            reward_var=samples_data['rewards'],
-            baseline_var=samples_data['baselines'],
-            trajectory_var=samples_data['trajectories'],
-            task_var=samples_data['tasks'],
-            latent_var=samples_data['latents'],
-            valid_var=samples_data['valids'],
+            obs_var=episodes.padded_observations,
+            action_var=actions,
+            reward_var=episodes.padded_rewards,
+            baseline_var=baselines,
+            trajectory_var=embed_eps,
+            task_var=tasks,
+            latent_var=latents,
+            valid_var=episodes.valids,
             policy_state_info_vars_list=policy_state_info_list,
             embed_state_info_vars_list=embed_state_info_list,
         )
 
         return flatten_inputs(policy_opt_input_values)
 
-    def _inference_opt_input_values(self, samples_data):
+    def _inference_opt_input_values(self, episodes, embed_eps, embed_ep_infos):
         """Map episode samples to the inference optimizer inputs.
 
         Args:
-            samples_data (dict): Processed sample data.
-                See process_samples() for details.
+            episodes (EpisodeBatch): Batch of episodes.
+            embed_eps (np.ndarray): Embedding episodes.
+            embed_ep_infos (dict): Embedding distribution information.
 
         Returns:
             list(np.ndarray): Flatten inference optimization input values.
 
         """
+        latents = episodes.pad_to_last(episodes.agent_infos['latent'])
+
         infer_state_info_list = [
-            samples_data['trajectory_infos'][k]
-            for k in self._inference.state_info_keys
+            embed_ep_infos[k] for k in self._inference.state_info_keys
         ]
         # pylint: disable=unexpected-keyword-arg
         inference_opt_input_values = self._inference_opt_inputs._replace(
-            latent_var=samples_data['latents'],
-            trajectory_var=samples_data['trajectories'],
-            valid_var=samples_data['valids'],
+            latent_var=latents,
+            trajectory_var=embed_eps,
+            valid_var=episodes.valids,
             infer_state_info_vars_list=infer_state_info_list,
         )
 
         return flatten_inputs(inference_opt_input_values)
 
-    def _evaluate(self, policy_opt_input_values, samples_data):
+    def _evaluate(self, policy_opt_input_values, episodes, baselines,
+                  embed_ep_infos):
         """Evaluate rewards and everything else.
 
         Args:
             policy_opt_input_values (list[np.ndarray]): Flattened
                 policy optimization input values.
-            samples_data (dict): Processed sample data.
-                See process_samples() for details.
+            episodes (EpisodeBatch): Batch of episodes.
+            baselines (np.ndarray): Baseline predictions.
+            embed_ep_infos (dict): Embedding distribution information.
 
         Returns:
-            dict: Processed sample data.
+            dict: Paths for fitting the baseline.
 
         """
         # pylint: disable=too-many-statements
+        fit_paths = []
+        valids = episodes.valids
+        observations = episodes.padded_observations
+        tasks = episodes.pad_to_last(episodes.env_infos['task_onehot'])
+        latents = episodes.pad_to_last(episodes.agent_infos['latent'])
+        baselines_list = []
+        for baseline, valid in zip(baselines, valids):
+            baselines_list.append(baseline[valid.astype(np.bool)])
+
         # Augment reward from baselines
         rewards_tensor = self._f_rewards(*policy_opt_input_values)
         returns_tensor = self._f_returns(*policy_opt_input_values)
         returns_tensor = np.squeeze(returns_tensor, -1)
 
-        paths = samples_data['paths']
-        valids = samples_data['valids']
-        baselines = [path['baselines'] for path in paths]
-        env_rewards = [path['rewards'] for path in paths]
-        env_rewards = concat_tensor_list(env_rewards.copy())
-        env_returns = [path['returns'] for path in paths]
-        env_returns = concat_tensor_list(env_returns.copy())
-        env_average_discounted_return = (np.mean(
-            [path['returns'][0] for path in paths]))
+        env_rewards = episodes.rewards
+        env_returns = [
+            discount_cumsum(rwd, self._discount)
+            for rwd in episodes.padded_rewards
+        ]
+        env_average_discounted_return = np.mean(
+            [ret[0] for ret in env_returns])
 
-        # Recompute parts of samples_data
+        # Recompute returns and prepare paths for fitting the baseline
         aug_rewards = []
         aug_returns = []
-        for rew, ret, val, path in zip(rewards_tensor, returns_tensor, valids,
-                                       paths):
-            path['rewards'] = rew[val.astype(np.bool)]
-            path['returns'] = ret[val.astype(np.bool)]
-            aug_rewards.append(path['rewards'])
-            aug_returns.append(path['returns'])
+        for rew, ret, val, task, latent, obs in zip(rewards_tensor,
+                                                    returns_tensor, valids,
+                                                    tasks, latents,
+                                                    observations):
+            returns = ret[val.astype(np.bool)]
+            task = task[val.astype(np.bool)]
+            latent = latent[val.astype(np.bool)]
+            obs = obs[val.astype(np.bool)]
+
+            aug_rewards.append(rew[val.astype(np.bool)])
+            aug_returns.append(returns)
+            fit_paths.append(
+                dict(observations=obs,
+                     tasks=task,
+                     latents=latent,
+                     returns=returns))
         aug_rewards = concat_tensor_list(aug_rewards)
         aug_returns = concat_tensor_list(aug_returns)
-        samples_data['rewards'] = aug_rewards
-        samples_data['returns'] = aug_returns
 
         # Calculate effect of the entropy terms
         d_rewards = np.mean(aug_rewards - env_rewards)
         tabular.record('{}/EntRewards'.format(self.policy.name), d_rewards)
 
         aug_average_discounted_return = (np.mean(
-            [path['returns'][0] for path in paths]))
+            [ret[0] for ret in returns_tensor]))
         d_returns = np.mean(aug_average_discounted_return -
                             env_average_discounted_return)
         tabular.record('{}/EntReturns'.format(self.policy.name), d_returns)
 
         # Calculate explained variance
-        ev = explained_variance_1d(np.concatenate(baselines), aug_returns)
+        ev = explained_variance_1d(np.concatenate(baselines_list), aug_returns)
         tabular.record('{}/ExplainedVariance'.format(self._baseline.name), ev)
 
-        inference_rmse = (samples_data['trajectory_infos']['mean'] -
-                          samples_data['latents'])**2.
+        inference_rmse = (embed_ep_infos['mean'] - latents)**2.
         inference_rmse = np.sqrt(inference_rmse.mean())
         tabular.record('Inference/RMSE', inference_rmse)
 
-        inference_rrse = rrse(samples_data['latents'],
-                              samples_data['trajectory_infos']['mean'])
+        inference_rrse = rrse(latents, embed_ep_infos['mean'])
         tabular.record('Inference/RRSE', inference_rrse)
 
         embed_ent = self._f_encoder_entropy(*policy_opt_input_values)
@@ -874,13 +866,13 @@ class TENPO(RLAlgorithm):
         tabular.record('Inference/CrossEntropy', infer_ce)
 
         pol_ent = self._f_policy_entropy(*policy_opt_input_values)
-        pol_ent = np.sum(pol_ent) / np.sum(samples_data['valids'])
+        pol_ent = np.sum(pol_ent) / np.sum(episodes.lengths)
         tabular.record('{}/Entropy'.format(self.policy.name), pol_ent)
 
         task_ents = self._f_task_entropies(*policy_opt_input_values)
-        tasks = samples_data['tasks'][:, 0, :]
+        tasks = tasks[:, 0, :]
         _, task_indices = np.nonzero(tasks)
-        path_lengths = np.sum(samples_data['valids'], axis=1)
+        path_lengths = np.sum(valids, axis=1)
         for t in range(self.policy.task_space.flat_dim):
             lengths = path_lengths[task_indices == t]
             completed = lengths < self.max_episode_length
@@ -891,7 +883,7 @@ class TENPO(RLAlgorithm):
                            pct_completed)
             tabular.record('Tasks/Entropy/t={}'.format(t), task_ents[t])
 
-        return samples_data
+        return fit_paths
 
     def _visualize_distribution(self):
         """Visualize encoder distribution."""
