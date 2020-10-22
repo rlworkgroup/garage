@@ -17,16 +17,17 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.experiment import LocalTFRunner
+from garage.trainer import TFTrainer
 from garage.experiment.deterministic import set_seed
 from garage.sampler import LocalSampler
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.policies import GaussianMLPPolicy
+from garage.tf.optimizers import FirstOrderOptimizer
 
 
 @click.command()
-@click.option('--env-name', type=str, default='peg-insert-side-v2')
+@click.option('--env-name', type=str, default='pick-place-v2')
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
 @click.option('--entropy', type=float, default=0.01)
 @click.option('--use_softplus_entropy', type=bool, default=False)
@@ -35,7 +36,7 @@ from garage.tf.policies import GaussianMLPPolicy
 def ppo_metaworld(
     ctxt=None,
     env_name=None,
-    tag='pick-place-gripping_extra_ip_+1',
+    tag='pick-place-gripping_extra_ip_+1_success_reward_after_refactor',
     extra_tags='',
     entropy=0.01,
     stop_entropy_gradient=True,
@@ -72,8 +73,8 @@ def ppo_metaworld(
     env.reset()
     env._freeze_rand_vec = True
     max_path_length = env.max_path_length
-    env = normalize(GymEnv(env), normalize_reward=True)
-    with LocalTFRunner(snapshot_config=ctxt) as runner:
+    env = normalize(GymEnv(env, max_episode_length=max_path_length), normalize_reward=True)
+    with TFTrainer(snapshot_config=ctxt) as trainer:
         policy = GaussianMLPPolicy(
             env_spec=env.spec,
             hidden_sizes=(128, 128),
@@ -94,13 +95,13 @@ def ppo_metaworld(
             env_spec=env.spec,
             policy=policy,
             baseline=baseline,
-            max_episode_length=max_path_length,
             discount=0.99,
             gae_lambda=0.95,
             lr_clip_range=0.2,
+            optimizer=FirstOrderOptimizer,
             optimizer_args=dict(
-                batch_size=32,
-                max_episode_length=10,
+                learning_rate=5e-4,
+                max_optimization_epochs=64,
             ),
             stop_entropy_gradient=stop_entropy_gradient,
             entropy_method='max',
@@ -109,8 +110,8 @@ def ppo_metaworld(
             use_softplus_entropy=use_softplus_entropy,
         )
 
-        runner.setup(algo, env)
-        runner.train(n_epochs=int(20000000 / (max_path_length * 100)),
+        trainer.setup(algo, env)
+        trainer.train(n_epochs=int(20000000 / (max_path_length * 100)),
                      batch_size=(max_path_length * 100),
                      plot=False)
 

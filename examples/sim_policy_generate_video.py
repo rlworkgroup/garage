@@ -12,7 +12,7 @@ import tensorflow as tf
 import cv2
 from garage import StepType
 from garage.envs import GymEnv
-from garage.sampler.utils import rollout
+from garage import rollout
 from garage.torch import set_gpu_mode
 
 
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         env = data['env']
         resolution = (640, 480)
         writer = writer_for(
-            'ppo_pickplace_hard_if_grip_6_5m_seed=477.mov',
+            'ppo_pickplace_hard_if_grip+1_6.5m_seed=799.mov',
             env.metadata['video.frames_per_second'], resolution)
         for _ in range(5):
             for r, done, info, img in trajectory_generator(

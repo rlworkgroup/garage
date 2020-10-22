@@ -6,7 +6,7 @@ import sys
 import cloudpickle
 import tensorflow as tf
 
-from garage.sampler.utils import rollout
+from garage import rollout
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -65,10 +65,10 @@ if __name__ == '__main__':
                            max_episode_length=args.max_episode_length,
                            animated=False,
                            speedup=args.speedup)
-            rewards.append(path['env_infos']['obj_to_target'])
+            rewards.append(path['env_infos']['unscaled_reward'])
 
     rewards = np.array(rewards)
-    plot(rewards, "SAC-pick-place-v2-1_4m_timesteps")
+    plot(rewards, "PPO-pick-place-v2-16m_timesteps")
 
             
 

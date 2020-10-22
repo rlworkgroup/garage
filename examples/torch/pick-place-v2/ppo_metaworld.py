@@ -26,7 +26,7 @@ from garage.tf.policies import GaussianMLPPolicy
 
 
 @click.command()
-@click.option('--env-name', type=str, default='peg-insert-side-v')
+@click.option('--env-name', type=str, default='peg-insert-side-v2')
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
 @click.option('--entropy', type=float, default=0.01)
 @click.option('--use_softplus_entropy', type=bool, default=False)
