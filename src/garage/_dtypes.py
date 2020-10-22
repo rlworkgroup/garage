@@ -655,8 +655,7 @@ class TimeStepBatch(
         actions (numpy.ndarray): Non-flattened array of actions. Should
             have shape (batch_size, S^*) (the unflattened action space of the
             current environment).
-        rewards (numpy.ndarray): Array of rewards of shape (batch_size,) (1D
-            array of length batch_size).
+        rewards (numpy.ndarray): Array of rewards of shape (batch_size, 1).
         next_observation (numpy.ndarray): Non-flattened array of next
             observations. Has shape (batch_size, S^*). next_observations[i] was
             observed by the agent after taking actions[i].
@@ -759,6 +758,12 @@ class TimeStepBatch(
                 'Expected batch dimension of actions to be length {}, but got '
                 'length {} instead.'.format(inferred_batch_size,
                                             actions.shape[0]))
+
+        # rewards
+        if rewards.shape != (inferred_batch_size, 1):
+            raise ValueError(
+                'Rewards tensor must have shape {}, but got shape {} '
+                'instead.'.format((inferred_batch_size, 1), rewards.shape))
 
         # step_types
         if step_types.shape[0] != inferred_batch_size:
@@ -935,6 +940,17 @@ class TimeStepBatch(
             })
         return samples
 
+    @property
+    def terminals(self):
+        """Get an array of boolean indicating ternianal information.
+
+        Returns:
+            numpy.ndarray: An array of boolean of shape (batch_size, 1)
+                indicating whether the `StepType is `TERMINAL
+
+        """
+        return np.array([[s == StepType.TERMINAL] for s in self.step_types])
+
     @classmethod
     def from_time_step_list(cls, env_spec, ts_samples):
         """Create a :class:`~TimeStepBatch` from a list of time step dictionaries.
@@ -1010,7 +1026,7 @@ class TimeStepBatch(
         return cls(env_spec=batch.env_spec,
                    observations=batch.observations,
                    actions=batch.actions,
-                   rewards=batch.rewards,
+                   rewards=batch.rewards.reshape(-1, 1),
                    next_observations=next_observations,
                    env_infos=batch.env_infos,
                    agent_infos=batch.agent_infos,

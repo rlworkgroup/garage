@@ -356,7 +356,8 @@ class GymEnv(Environment):
             state (dict): Unpickled state of this object.
 
         """
-        self.__init__(state['_env'])
+        self.__init__(state['_env'],
+                      max_episode_length=state['_max_episode_length'])
 
     def __getattr__(self, name):
         """Handle function calls wrapped environment.
