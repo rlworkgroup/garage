@@ -7,7 +7,7 @@ Currently there are two types of garage images available on Docker Hub:
  NVIDIA graphics card.
 
 If you want to compile a new image using the the source, proceed to the document
-[Building garage docker image from source](docker_dev.md) instead.
+[Building garage Docker image from source](docker_dev.md) instead.
 
 # `garage` image
 
@@ -18,9 +18,9 @@ Be aware of the following prerequisites to run the image.
 - Install [Docker CE](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce)
   version 19.03 or higher. Tested on version 19.03.
 
-Tested on Ubuntu 16.04, 18.04 & 20.04.
+Tested on Ubuntu 16.04, 18.04 and 20.04.
 
-### Running the `garage` docker image
+### Running the `garage` Docker image
 
 The garage container comes bundled with the examples available in the garage
 repo. To run an example launcher in the container, execute:
@@ -83,7 +83,7 @@ docker run \
   python examples/tf/trpo_cartpole.py
 ```
 
-Similarly, if you want to run your own code inside the docker container, you can
+Similarly, if you want to run your own code inside the Docker container, you can
 mount the directory containing your files as a volume, by using the `-v` option
 with `docker run`. If your code is in a file called `launcher.py` in the
 directory, say, `/home/user/my_garage_experiment_dir`, then you can mount it at
@@ -115,7 +115,8 @@ docker run \
 
 ## `garage-nvidia` image
 
-The garage NVIDIA images come with CUDA 10.2 and cuDNN (required for tensorflow).
+The garage NVIDIA images come with CUDA 10.2 and cuDNN 7.6 (required for
+TensorFlow).
 
 ### Prerequisites for `garage-nvidia` image
 
@@ -127,7 +128,7 @@ Additional to the prerequisites for the headless image, make sure to have:
    version](#using-a-different-driver-version)
 - [Install nvidia-container-runtime](https://github.com/NVIDIA/nvidia-container-runtime#installation)
 
-Tested on Ubuntu 18.04 & 20.04.
+Tested on Ubuntu 18.04 and 20.04.
 
 ### Running the `garage-nvidia` image
 
@@ -147,13 +148,13 @@ docker run \
 
 ### Enabling environment visualization
 
-Allow the docker container to access the X server on your machine by running:
+Allow the Docker container to access the X server on your machine by running:
 
 ```bash
 xhost +local:docker
 ```
 
-and while running the docker container, add the following arguments to
+and while running the Docker container, add the following arguments to
 `docker run`:
 
 ```bash
@@ -181,7 +182,7 @@ docker run \
 
 By default, `garage-nvidia` uses all of your gpus. If you want to customize
 which GPUs are used and/or want to set the GPU capabilities exposed, as
-described in official docker documentation
+described in official Docker documentation
 [here](https://docs.docker.com/config/containers/resource_constraints/#gpu),
 you can pass the desired values to `--gpus` option as follows:
 
@@ -197,12 +198,14 @@ docker run \
 
 ### Using a different driver version
 
-The `garage-nvidia` docker image uses `nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04`
+The `garage-nvidia` Docker image uses `nvidia/cuda:10.2-cudnn7-runtime
+-ubuntu18.04`
 as the parent image which requires NVIDIA driver version 440.33+. If you need
 to use garage with a different driver version, you might be able to build the
 garage-nvidia image using a different parent image by following the guide at
-[Building garage docker image from source](docker_dev.md)
+[Building garage Docker image from source](docker_dev.md)
 
 ----
 
-This page was authored by Gitanshu Sardana ([@gitanshu](https://github.com/gitanshu>)).
+**This page was authored by Gitanshu Sardana ([@gitanshu](https://github.com
+/gitanshu>)).**

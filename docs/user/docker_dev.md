@@ -1,16 +1,16 @@
-# Build garage docker image from source
+# Build garage Docker image from source
 
-Garage source comes with a Makefile that contains recipes for building
-different garage docker images.
+Garage source comes with a Makefile that contains recipes for building and
+running different Docker configurations for garage
 
-Garage uses multi-stage docker builds with the Docker BuildKit backend. The
+Garage uses multi-stage Docker builds with the Docker BuildKit backend. The
 BuildKit backend is opt-in and needs to be enabled by setting environment
 variable `DOCKER_BUILDKIT=1` in your shell. The Makefile takes care of that
 for you.
 
-The important docker related `make` targets are:
+The important Docker related `make` targets are:
 
-- `run-dev`: builds and runs the docker image with your copy of garage source
+- `run-dev`: builds and runs the Docker image with your copy of garage source
  installed. This builds the `garage-dev` target in Dockerfile and the
  resulting image is tagged as `rlworkgroup/garage-dev`
 - `run-dev-nvidia`: same as `run-dev` with CUDA 10.2 and cuDNN for taking
@@ -46,12 +46,12 @@ The previous command adds a volume from the `data` folder inside your cloned
 garage repository to the `data` folder in the garage container, so any
 experiment results ran in the container will be saved in the `data` folder
 inside your cloned repository. The Makefile uses the same username and uid as
-your current local account to create the default user in the docker images.
-This keeps things simple by allowing the docker user to write to the data
+your current local account to create the default user in the Docker images.
+This keeps things simple by allowing the Docker user to write to the data
 directory without giving explicit permission.
 
 
-By default, docker generates random names for containers. If you want to specify
+By default, Docker generates random names for containers. If you want to specify
 a name for the container, you can do so with the variable `CONTAINER_NAME`. As a
 side effect, this will output the results in `data/$CONTAINER_NAME` directory
 instead of the `data` directory.
@@ -109,18 +109,18 @@ make run-dev-nvidia-headless ...
 
 By default, `garage-nvidia` uses all of your gpus. If you want to customize
 which GPUs are used and/or want to set the GPU capabilities exposed, as
-described in official docker documentation
+described in official Docker documentation
 [here](https://docs.docker.com/config/containers/resource_constraints/#gpu),
 you can pass the desired values to `--gpus` option using the variable GPUS. For
 example:
 
 ```
-make run-nvidia GPUS="device=0,2"
+make run-nvidia GPUS="device=0,2" ...
 ```
 
 ### Using a different NVIDIA driver version
 
-The garage-nvidia docker image uses `nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04`
+The `garage-nvidia` Docker image uses `nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04`
 as the parent image which requires NVIDIA driver version 440.33+. If you need
 to use garage with a different driver version, you might be able to build the
 `garage-nvidia` image from scratch using a different parent image using the
@@ -134,4 +134,6 @@ You can find the required parent images at [NVIDIA CUDA's DockerHub](https://hub
 
 ----
 
-This page was authored by Angel Ivan Gonzalez ([@gonzaiva](https://github.com/gonzaiva)), with contributions from Gitanshu Sardana ([@gitanshu](https://github.com/gitanshu>)).
+**This page was authored by Gitanshu Sardana ([@gitanshu](https://github.com
+/gitanshu>)), with contributions from Angel Ivan Gonzalez ([@gonzaiva](https://github
+.com/gonzaiva))**
