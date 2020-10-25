@@ -27,7 +27,7 @@ from garage.tf.optimizers import FirstOrderOptimizer
 
 
 @click.command()
-@click.option('--env-name', type=str, default='reach-v2')
+@click.option('--env-name', type=str, default='shelf-place-v2')
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
 @click.option('--entropy', type=float, default=0.01)
 @click.option('--use_softplus_entropy', type=bool, default=False)
@@ -36,7 +36,7 @@ from garage.tf.optimizers import FirstOrderOptimizer
 def ppo_metaworld(
     ctxt=None,
     env_name=None,
-    tag='reach-v2-with-new-tolerance-style-reward',
+    tag='exp1 -- shelf-v2',
     extra_tags='',
     entropy=0.01,
     stop_entropy_gradient=True,
