@@ -190,6 +190,8 @@ class GaussianMLPBaseline(GaussianMLPBaselineModel, Baseline):
 
         """
         xs = np.concatenate([p['observations'] for p in paths])
+        if not isinstance(xs, np.ndarray) or len(xs.shape) > 2:
+            xs = self._env_spec.observation_space.flatten_n(xs)
         ys = np.concatenate([p['returns'] for p in paths])
         ys = ys.reshape((-1, 1))
 
@@ -236,7 +238,10 @@ class GaussianMLPBaseline(GaussianMLPBaselineModel, Baseline):
             numpy.ndarray: Predicted value.
 
         """
-        return self._f_predict(paths['observations']).flatten()
+        xs = paths['observations']
+        if not isinstance(xs, np.ndarray) or len(xs.shape) > 2:
+            xs = self._env_spec.observation_space.flatten_n(xs)
+        return self._f_predict(xs).flatten()
 
     def clone_model(self, name):
         """Return a clone of the GaussianMLPBaselineModel.

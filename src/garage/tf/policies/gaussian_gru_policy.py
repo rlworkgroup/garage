@@ -257,7 +257,8 @@ class GaussianGRUPolicy(GaussianGRUModel, Policy):
                 self._state_include_action is True.
 
         """
-        if not isinstance(observations[0], np.ndarray):
+        if not isinstance(observations[0],
+                          np.ndarray) or len(observations.shape) > 2:
             observations = self.observation_space.flatten_n(observations)
         if self._state_include_action:
             assert self._prev_actions is not None

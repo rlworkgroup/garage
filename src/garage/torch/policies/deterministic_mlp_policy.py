@@ -3,7 +3,6 @@
 A neural network can be used as policy method in different RL algorithms.
 It accepts an observation of the environment and predicts an action.
 """
-import akro
 import numpy as np
 import torch
 
@@ -62,8 +61,8 @@ class DeterministicMLPPolicy(Policy):
                     * np.ndarray[float]: Log of standard deviation of the
                         distribution
         """
-        if not isinstance(observation, np.ndarray) and not isinstance(
-                observation, torch.Tensor):
+        if not isinstance(observation,
+                          np.ndarray) or len(observation.shape) > 1:
             observation = self._env_spec.observation_space.flatten(observation)
         with torch.no_grad():
             observation = torch.Tensor(observation).unsqueeze(0)
@@ -84,8 +83,8 @@ class DeterministicMLPPolicy(Policy):
                     * np.ndarray[float]: Log of standard deviation of the
                         distribution
         """
-        if not isinstance(observations[0], np.ndarray) and not isinstance(
-                observations[0], torch.Tensor):
+        if not isinstance(observations,
+                          np.ndarray) or len(observations.shape) > 2:
             observations = self._env_spec.observation_space.flatten_n(
                 observations)
         # frequently users like to pass lists of torch tensors or lists of
@@ -96,11 +95,6 @@ class DeterministicMLPPolicy(Policy):
             elif isinstance(observations[0], torch.Tensor):
                 observations = torch.stack(observations)
 
-        if isinstance(self._env_spec.observation_space, akro.Image) and \
-                len(observations.shape) < \
-                len(self._env_spec.observation_space.shape):
-            observations = self._env_spec.observation_space.unflatten_n(
-                observations)
         with torch.no_grad():
             x = self(torch.Tensor(observations).to(global_device()))
             return x.cpu().numpy(), dict()

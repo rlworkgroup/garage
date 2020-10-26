@@ -65,5 +65,9 @@ class DiscreteQFArgmaxPolicy(Policy):
             torch.Tensor: Predicted actions. Tensor has shape :math:`(N, A)`.
             dict: Empty since this policy does not produce a distribution.
         """
+        if not isinstance(observations,
+                          np.ndarray) or len(observations.shape) > 2:
+            observations = self._env_spec.observation_space.flatten_n(
+                observations)
         with torch.no_grad():
             return self(np_to_torch(observations)).cpu().numpy(), dict()

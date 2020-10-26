@@ -202,7 +202,8 @@ class GaussianMLPPolicy(GaussianMLPModel, Policy):
                 distribution.
 
         """
-        if not isinstance(observations[0], np.ndarray):
+        if not isinstance(observations[0],
+                          np.ndarray) or len(observations.shape) > 2:
             observations = self.observation_space.flatten_n(observations)
         samples, means, log_stds = self._f_dist(np.expand_dims(
             observations, 1))
