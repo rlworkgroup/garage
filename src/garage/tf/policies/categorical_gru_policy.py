@@ -230,7 +230,7 @@ class CategoricalGRUPolicy(CategoricalGRUModel, Policy):
 
         """
         if not isinstance(observations[0],
-                          np.ndarray) or len(observations.shape) > 2:
+                          np.ndarray) or len(observations[0].shape) > 1:
             observations = self.observation_space.flatten_n(observations)
         if self._state_include_action:
             assert self._prev_actions is not None

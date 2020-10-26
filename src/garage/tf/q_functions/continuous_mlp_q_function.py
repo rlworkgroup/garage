@@ -1,5 +1,4 @@
 """Continuous MLP QFunction."""
-import numpy as np
 import tensorflow as tf
 
 from garage.experiment import deterministic
@@ -113,10 +112,6 @@ class ContinuousMLPQFunction(MLPMergeModel):
             np.ndarray: Q values.
 
         """
-        if not isinstance(observation,
-                          np.ndarray) or len(observation.shape) > 1:
-            observation = self._env_spec.observation_space.flatten_n(
-                observation)
         return self._f_qval(observation, action)
 
     @property

@@ -139,7 +139,7 @@ class ContinuousMLPPolicy(MLPModel, Policy):
 
         """
         if not isinstance(observations[0],
-                          np.ndarray) or len(observations.shape) > 2:
+                          np.ndarray) or len(observations[0].shape) > 1:
             observations = self.observation_space.flatten_n(observations)
         actions = self._f_prob(observations)
         actions = self.action_space.unflatten_n(actions)

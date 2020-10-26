@@ -83,8 +83,8 @@ class DeterministicMLPPolicy(Policy):
                     * np.ndarray[float]: Log of standard deviation of the
                         distribution
         """
-        if not isinstance(observations,
-                          np.ndarray) or len(observations.shape) > 2:
+        if not isinstance(observations[0],
+                          np.ndarray) or len(observations[0].shape) > 1:
             observations = self._env_spec.observation_space.flatten_n(
                 observations)
         # frequently users like to pass lists of torch tensors or lists of

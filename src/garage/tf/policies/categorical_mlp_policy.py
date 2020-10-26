@@ -139,7 +139,7 @@ class CategoricalMLPPolicy(CategoricalMLPModel, Policy):
 
         """
         if not isinstance(observations[0],
-                          np.ndarray) or len(observations.shape) > 2:
+                          np.ndarray) or len(observations[0].shape) > 1:
             observations = self.observation_space.flatten_n(observations)
         samples, probs = self._f_prob(np.expand_dims(observations, 1))
         return np.squeeze(samples), dict(prob=np.squeeze(probs, axis=1))

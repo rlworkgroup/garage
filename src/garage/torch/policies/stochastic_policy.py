@@ -55,8 +55,8 @@ class StochasticPolicy(Policy, abc.ABC):
                     * np.ndarray[float]: Standard deviation of logarithmic
                         values of the distribution.
         """
-        if not isinstance(observations,
-                          np.ndarray) or len(observations.shape) > 2:
+        if not isinstance(observations[0],
+                          np.ndarray) or len(observations[0].shape) > 1:
             observations = self._env_spec.observation_space.flatten_n(
                 observations)
 
