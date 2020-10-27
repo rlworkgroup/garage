@@ -3,6 +3,7 @@
 A neural network can be used as policy method in different RL algorithms.
 It accepts an observation of the environment and predicts an action.
 """
+import akro
 import numpy as np
 import torch
 
@@ -95,6 +96,11 @@ class DeterministicMLPPolicy(Policy):
             elif isinstance(observations[0], torch.Tensor):
                 observations = torch.stack(observations)
 
+        if isinstance(self._env_spec.observation_space, akro.Image) and \
+                len(observations.shape) < \
+                len(self._env_spec.observation_space.shape):
+            observations = self._env_spec.observation_space.unflatten_n(
+                observations)
         with torch.no_grad():
             x = self(torch.Tensor(observations).to(global_device()))
             return x.cpu().numpy(), dict()
