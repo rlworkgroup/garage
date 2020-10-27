@@ -119,10 +119,15 @@ class PathBuffer:
 
         Returns:
             dict: A dict of arrays of shape (batch_size, flat_dim).
+            np.ndarray: Weights of the timesteps.
+            np.ndarray: Indices of sampled timesteps
+                in the replay buffer.
 
         """
         idx = np.random.randint(self._transitions_stored, size=batch_size)
-        return {key: buf_arr[idx] for key, buf_arr in self._buffer.items()}
+        w = np.ones(batch_size)
+        data = {key: buf_arr[idx] for key, buf_arr in self._buffer.items()}
+        return data, w, idx
 
     def sample_timesteps(self, batch_size):
         """Sample a batch of timesteps from the buffer.
@@ -132,9 +137,12 @@ class PathBuffer:
 
         Returns:
             TimeStepBatch: The batch of timesteps.
+            np.ndarray: Weights of the timesteps.
+            np.ndarray: Indices of sampled timesteps
+                in the replay buffer.
 
         """
-        samples = self.sample_transitions(batch_size)
+        samples, w, idx = self.sample_transitions(batch_size)
         step_types = np.array([
             StepType.TERMINAL if terminal else StepType.MID
             for terminal in samples['terminals'].reshape(-1)
@@ -147,7 +155,7 @@ class PathBuffer:
                              next_observations=samples['next_observations'],
                              step_types=step_types,
                              env_infos={},
-                             agent_infos={})
+                             agent_infos={}), w, idx
 
     def _next_path_segments(self, n_indices):
         """Compute where the next path should be stored.

@@ -236,7 +236,7 @@ class TD3(RLAlgorithm):
             if (self._replay_buffer.n_transitions_stored >=
                     self._min_buffer_size):
                 # Sample from buffer
-                samples = self._replay_buffer.sample_transitions(
+                samples, _, _ = self._replay_buffer.sample_transitions(
                     self._buffer_batch_size)
                 samples = dict_np_to_torch(samples)
 

@@ -66,7 +66,7 @@ class TestPathBuffer:
             'actions':
             np.array([[env.action_space.sample()]])
         })
-        sample = replay_buffer.sample_transitions(1)
+        sample, _, _ = replay_buffer.sample_transitions(1)
         sample_obs = sample['observations']
         sample_action = sample['actions']
 
@@ -77,7 +77,7 @@ class TestPathBuffer:
         t = EpisodeBatch(**eps_data)
         replay_buffer = PathBuffer(capacity_in_transitions=100)
         replay_buffer.add_episode_batch(t)
-        timesteps = replay_buffer.sample_timesteps(10)
+        timesteps, _, _ = replay_buffer.sample_timesteps(10)
         assert len(timesteps.rewards) == 10
 
     def test_eviction_policy(self):
@@ -85,7 +85,8 @@ class TestPathBuffer:
         replay_buffer = PathBuffer(capacity_in_transitions=3)
         replay_buffer.add_path(dict(obs=obs))
 
-        sampled_obs = replay_buffer.sample_transitions(3)['obs']
+        samples_data, _, _ = replay_buffer.sample_transitions(3)
+        sampled_obs = samples_data['obs']
         assert (sampled_obs == np.array([[1], [1], [1]])).all()
 
         sampled_path_obs = replay_buffer.sample_path()['obs']
@@ -106,7 +107,8 @@ class TestPathBuffer:
             assert replay_buffer.add_path(dict(obs=obs4))
 
         # Can still sample from old path
-        new_sampled_obs = replay_buffer.sample_transitions(1000)['obs']
+        new_samples_data, _, _ = replay_buffer.sample_transitions(1000)
+        new_sampled_obs = new_samples_data['obs']
         assert set(new_sampled_obs.flatten()) == {1, 2, 3}
 
         # Can't sample complete old path

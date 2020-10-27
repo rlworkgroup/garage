@@ -81,8 +81,8 @@ class TestHerReplayBuffer:
         for k in replay_buffer_pickled._buffer:
             assert replay_buffer_pickled._buffer[
                 k].shape == self.replay_buffer._buffer[k].shape
-        sample = self.replay_buffer.sample_transitions(1)
-        sample2 = replay_buffer_pickled.sample_transitions(1)
+        sample, _, _ = self.replay_buffer.sample_transitions(1)
+        sample2, _, _ = replay_buffer_pickled.sample_transitions(1)
         for k in sample.keys():
             assert sample[k].shape == sample2[k].shape
         assert len(sample) == len(sample2)

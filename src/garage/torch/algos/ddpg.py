@@ -6,9 +6,7 @@ from dowel import logger, tabular
 import numpy as np
 import torch
 
-from garage import (_Default,
-                    log_performance,
-                    make_optimizer,
+from garage import (_Default, log_performance, make_optimizer,
                     obtain_evaluation_episodes)
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, LocalSampler
@@ -188,7 +186,7 @@ class DDPG(RLAlgorithm):
         for _ in range(self._n_train_steps):
             if (self.replay_buffer.n_transitions_stored >=
                     self._min_buffer_size):
-                samples = self.replay_buffer.sample_transitions(
+                samples, _, _ = self.replay_buffer.sample_transitions(
                     self._buffer_batch_size)
                 samples['rewards'] *= self._reward_scale
                 qf_loss, y, q, policy_loss = torch_to_np(

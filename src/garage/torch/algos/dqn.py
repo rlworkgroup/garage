@@ -10,8 +10,9 @@ import torch.nn.functional as F
 from garage import _Default, log_performance, make_optimizer
 from garage._functions import obtain_evaluation_episodes
 from garage.np.algos import RLAlgorithm
+from garage.replay_buffer import PERReplayBuffer
 from garage.sampler import FragmentWorker
-from garage.torch import global_device, np_to_torch
+from garage.torch import global_device, np_to_torch, torch_to_np
 
 
 class DQN(RLAlgorithm):
@@ -122,6 +123,9 @@ class DQN(RLAlgorithm):
         self._qf_optimizer = make_optimizer(qf_optimizer,
                                             module=self._qf,
                                             lr=qf_lr)
+
+        self._prioritized_replay = isinstance(self.replay_buffer,
+                                              PERReplayBuffer)
         self._eval_env = eval_env
 
     def train(self, trainer):
@@ -192,10 +196,12 @@ class DQN(RLAlgorithm):
         for _ in range(self._n_train_steps):
             if (self.replay_buffer.n_transitions_stored >=
                     self._min_buffer_size):
-                timesteps = self.replay_buffer.sample_timesteps(
-                    self._buffer_batch_size)
-                qf_loss, y, q = tuple(v.cpu().numpy()
-                                      for v in self._optimize_qf(timesteps))
+                timesteps, weights, indices = (
+                    self.replay_buffer.sample_timesteps(
+                        self._buffer_batch_size))
+                qf_loss, y, q = tuple(
+                    v.cpu().numpy()
+                    for v in self._optimize_qf(timesteps, weights, indices))
 
                 self._episode_qf_losses.append(qf_loss)
                 self._epoch_ys.append(y)
@@ -228,11 +234,15 @@ class DQN(RLAlgorithm):
             tabular.record('QFunction/AverageAbsY',
                            np.mean(np.abs(self._epoch_ys)))
 
-    def _optimize_qf(self, timesteps):
+    def _optimize_qf(self, timesteps, weights=None, indices=None):
         """Perform algorithm optimizing.
 
         Args:
             timesteps (TimeStepBatch): Processed batch data.
+            weights (np.ndarray[float]): Weights used by PER when updating
+                the network.
+            indices (list[int or float]): Indices of the sampled
+                timesteps in the replay buffer.
 
         Returns:
             qval_loss: Loss of Q-value predicted by the Q-network.
@@ -274,7 +284,15 @@ class DQN(RLAlgorithm):
         # optimize qf
         qvals = self._qf(inputs)
         selected_qs = torch.sum(qvals * actions, axis=1)
-        qval_loss = F.smooth_l1_loss(selected_qs, y_target)
+        qval_loss = F.smooth_l1_loss(selected_qs, y_target, reduction='none')
+
+        if self._prioritized_replay:
+            qval_loss *= np_to_torch(weights)
+            priorities = qval_loss + 1e-5  # offset to avoid 0 priorities
+            priorities = torch_to_np(priorities.data.cpu())
+            self.replay_buffer.update_priorities(indices, priorities)
+
+        qval_loss = qval_loss.mean()
 
         self._qf_optimizer.zero_grad()
         qval_loss.backward()

@@ -55,6 +55,9 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
 
         Args:
             batch_size(int): The number of transitions to be sampled.
+            np.ndarray: Weights of the timesteps.
+            np.ndarray: Indices of sampled timesteps
+                in the replay buffer.
 
         """
         raise NotImplementedError
