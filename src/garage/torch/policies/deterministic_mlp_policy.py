@@ -62,9 +62,15 @@ class DeterministicMLPPolicy(Policy):
                     * np.ndarray[float]: Log of standard deviation of the
                         distribution
         """
-        if not isinstance(observation,
-                          np.ndarray) or len(observation.shape) > 1:
+        if not isinstance(observation, np.ndarray) and not isinstance(
+                observation, torch.Tensor):
             observation = self._env_spec.observation_space.flatten(observation)
+        elif isinstance(observation,
+                        np.ndarray) and len(observation.shape) > 1:
+            observation = self._env_spec.observation_space.flatten(observation)
+        elif isinstance(observation,
+                        torch.Tensor) and len(observation.shape) > 1:
+            observation = torch.flatten(observation, start_dim=-2)
         with torch.no_grad():
             observation = torch.Tensor(observation).unsqueeze(0)
             action, agent_infos = self.get_actions(observation)
@@ -84,10 +90,17 @@ class DeterministicMLPPolicy(Policy):
                     * np.ndarray[float]: Log of standard deviation of the
                         distribution
         """
-        if not isinstance(observations[0],
-                          np.ndarray) or len(observations[0].shape) > 1:
+        if not isinstance(observations[0], np.ndarray) and not isinstance(
+                observations[0], torch.Tensor):
             observations = self._env_spec.observation_space.flatten_n(
                 observations)
+        elif isinstance(observations[0],
+                        np.ndarray) and len(observations[0].shape) > 1:
+            observations = self._env_spec.observation_space.flatten_n(
+                observations)
+        elif isinstance(observations,
+                        torch.Tensor) and len(observations[0].shape) > 1:
+            observations = torch.flatten(observations, start_dim=-2)
         # frequently users like to pass lists of torch tensors or lists of
         # numpy arrays. This handles those conversions.
         if isinstance(observations, list):
