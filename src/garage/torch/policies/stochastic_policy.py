@@ -68,6 +68,11 @@ class StochasticPolicy(Policy, abc.ABC):
             elif isinstance(observations[0], torch.Tensor):
                 observations = torch.stack(observations)
 
+        if isinstance(self._env_spec.observation_space, akro.Image) and \
+                len(observations.shape) < \
+                len(self._env_spec.observation_space.shape):
+            observations = self._env_spec.observation_space.unflatten_n(
+                observations)
         with torch.no_grad():
             if not isinstance(observations, torch.Tensor):
                 observations = torch.as_tensor(observations).float().to(
