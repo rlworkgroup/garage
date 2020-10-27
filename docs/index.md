@@ -72,6 +72,7 @@ and how to implement new MDPs and new algorithms.
    user/environment_libraries
    user/concept_experiment
    user/sampling
+   user/logging_plotting
 
 .. toctree::
    :maxdepth: 2
