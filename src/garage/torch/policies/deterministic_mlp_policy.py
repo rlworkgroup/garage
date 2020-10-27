@@ -98,7 +98,7 @@ class DeterministicMLPPolicy(Policy):
                         np.ndarray) and len(observations[0].shape) > 1:
             observations = self._env_spec.observation_space.flatten_n(
                 observations)
-        elif isinstance(observations,
+        elif isinstance(observations[0],
                         torch.Tensor) and len(observations[0].shape) > 1:
             observations = torch.flatten(observations, start_dim=-2)
         # frequently users like to pass lists of torch tensors or lists of

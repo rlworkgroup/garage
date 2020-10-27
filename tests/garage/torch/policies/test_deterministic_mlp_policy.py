@@ -23,15 +23,15 @@ class TestDeterministicMLPPolicies:
         env_spec = GymEnv(DummyBoxEnv())
         obs_dim = env_spec.observation_space.flat_dim
         act_dim = env_spec.action_space.flat_dim
-        obs = torch.ones([1, obs_dim], dtype=torch.float32)
-        obs_np = np.ones([1, obs_dim], dtype=np.float32)
+        obs = torch.ones(obs_dim, dtype=torch.float32)
+        obs_np = np.ones(obs_dim, dtype=np.float32)
         policy = DeterministicMLPPolicy(env_spec=env_spec,
                                         hidden_nonlinearity=None,
                                         hidden_sizes=hidden_sizes,
                                         hidden_w_init=nn.init.ones_,
                                         output_w_init=nn.init.ones_)
 
-        expected_output = np.full([1, act_dim],
+        expected_output = np.full(act_dim,
                                   fill_value=obs_dim * np.prod(hidden_sizes),
                                   dtype=np.float32)
         assert np.array_equal(policy.get_action(obs)[0], expected_output)
