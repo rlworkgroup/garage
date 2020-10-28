@@ -10,9 +10,7 @@ import tensorflow as tf
 from garage import _Default, log_performance, make_optimizer
 from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
-from garage.tf import (compile_function,
-                       flatten_inputs,
-                       graph_inputs,
+from garage.tf import (compile_function, flatten_inputs, graph_inputs,
                        new_tensor)
 from garage.tf.optimizers import LBFGSOptimizer
 
