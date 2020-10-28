@@ -4,7 +4,7 @@
 import click
 
 from garage import wrap_experiment  # pylint: disable=import-self
-from garage.experiment import LocalTFRunner
+from garage.trainer import TFTrainer
 
 
 @click.group()
@@ -34,7 +34,7 @@ def resume(from_dir, from_epoch, log_dir):
 
     @wrap_experiment(log_dir=log_dir)
     def run_resume(ctxt=None):
-        with LocalTFRunner(snapshot_config=ctxt) as runner:
+        with TFTrainer(snapshot_config=ctxt) as runner:
             runner.restore(from_dir=from_dir, from_epoch=from_epoch)
             runner.resume()
 
