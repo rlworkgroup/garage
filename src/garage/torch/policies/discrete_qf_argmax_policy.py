@@ -75,6 +75,6 @@ class DiscreteQFArgmaxPolicy(Policy):
                 observations)
         elif isinstance(observations[0],
                         torch.Tensor) and len(observations[0].shape) > 1:
-            observations = torch.flatten(observations, start_dim=-2)
+            observations = torch.flatten(observations, start_dim=1)
         with torch.no_grad():
             return self(np_to_torch(observations)).cpu().numpy(), dict()
