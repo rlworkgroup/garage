@@ -10,12 +10,8 @@ import akro
 from dowel import logger
 import numpy as np
 
-from garage import (EnvSpec,
-                    EnvStep,
-                    EpisodeBatch,
-                    log_multitask_performance,
-                    StepType,
-                    Wrapper)
+from garage import (EnvSpec, EnvStep, EpisodeBatch, log_multitask_performance,
+                    StepType, Wrapper)
 from garage.np.algos import MetaRLAlgorithm
 from garage.sampler import DefaultWorker
 from garage.tf.algos._rl2npo import RL2NPO

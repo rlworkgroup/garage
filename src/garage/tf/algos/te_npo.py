@@ -9,21 +9,13 @@ import tensorflow as tf
 
 from garage import InOutSpec, log_performance
 from garage.experiment import deterministic
-from garage.np import (discount_cumsum,
-                       explained_variance_1d,
-                       rrse,
+from garage.np import (discount_cumsum, explained_variance_1d, rrse,
                        sliding_window)
 from garage.np.algos import RLAlgorithm
 from garage.sampler import LocalSampler
-from garage.tf import (center_advs,
-                       compile_function,
-                       compute_advantages,
-                       concat_tensor_list,
-                       discounted_returns,
-                       flatten_inputs,
-                       graph_inputs,
-                       pad_tensor_dict,
-                       positive_advs,
+from garage.tf import (center_advs, compile_function, compute_advantages,
+                       concat_tensor_list, discounted_returns, flatten_inputs,
+                       graph_inputs, pad_tensor_dict, positive_advs,
                        stack_tensor_dict_list)
 from garage.tf.embeddings import StochasticEncoder
 from garage.tf.optimizers import LBFGSOptimizer
