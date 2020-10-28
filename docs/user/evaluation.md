@@ -3,8 +3,8 @@
 garage provides two useful function to evaluate the performance of an
 algorithm, [log_performance](../_autoapi/garage/index.html#garage.log_performance)
 and [log_multitask_performance](../_autoapi/garage/index.html#garage.log_multitask_performance).
-`log_performance` is used for generous algorithms, while
-`log_multitask_performance` is used for multiple tasks algorithms.
+`log_performance` is used for single-task algorithms, while
+`log_multitask_performance` is used for multi-task algorithms.
 
 The input of the both functions is [EpisodeBatch](../_autoapi/garage/index.html#garage.EpisodeBatch),
 which is a batch of episodes.
