@@ -13,6 +13,7 @@ if [[ "$DOCKER_REPO" = *"rlworkgroup/garage" ]]; then
   echo "Building target garage"
   docker build \
 		-f "../$DOCKERFILE_PATH" \
+		--build-arg BUILDKIT_INLINE_CACHE=1 \
 		--target garage \
 		-t "$IMAGE_NAME" \
 		..
@@ -20,6 +21,7 @@ elif [[ "$DOCKER_REPO" = *"rlworkgroup/garage-nvidia" ]]; then
   echo "Building target garage-nvidia"
   docker build \
 		-f "../$DOCKERFILE_PATH" \
+		--build-arg BUILDKIT_INLINE_CACHE=1 \
 		--target garage-nvidia \
 		-t "$IMAGE_NAME" \
 		--build-arg PARENT_IMAGE="nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04" \

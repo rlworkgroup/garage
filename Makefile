@@ -152,6 +152,7 @@ build-ci: TAG ?= rlworkgroup/garage-ci:latest
 build-ci: assert-docker-version docker/Dockerfile
 	docker build \
 		--cache-from rlworkgroup/garage-ci:latest \
+		--build-arg BUILDKIT_INLINE_CACHE=1 \
 		-f docker/Dockerfile \
 		--target garage-dev \
 		-t ${TAG} \
