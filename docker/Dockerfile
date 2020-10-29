@@ -68,8 +68,8 @@ ENV PATH_NO_VENV $PATH
 WORKDIR $HOME
 
 RUN curl https://pyenv.run | bash && \
-  pyenv install 3.8.6 && \
-  pyenv global 3.8.6 && \
+  pyenv install 3.9.0 && \
+  pyenv global 3.9.0 && \
   pip install virtualenv && \
   rm -r $HOME/.cache/pip
 
