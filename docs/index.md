@@ -53,14 +53,17 @@ and how to implement new MDPs and new algorithms.
    user/algo_trpo
    user/algo_mttrpo
    user/algo_sac
+   user/algo_mtsac
    user/algo_pearl
    user/algo_rl2
    user/algo_ppo
+   user/algo_maml
    user/algo_mtppo
    user/algo_vpg
    user/algo_td3
    user/algo_ddpg
    user/algo_tnpg
+   user/algo_cem
 
 .. toctree::
    :maxdepth: 2
@@ -70,6 +73,7 @@ and how to implement new MDPs and new algorithms.
    user/environment_libraries
    user/concept_experiment
    user/sampling
+   user/logging_plotting
 
 .. toctree::
    :maxdepth: 2

@@ -4,11 +4,7 @@ import numpy as np
 import pytest
 
 # yapf: disable
-from garage import (EnvSpec,
-                    EnvStep,
-                    EpisodeBatch,
-                    StepType,
-                    TimeStep,
+from garage import (EnvSpec, EnvStep, EpisodeBatch, StepType, TimeStep,
                     TimeStepBatch)
 
 # yapf: enable

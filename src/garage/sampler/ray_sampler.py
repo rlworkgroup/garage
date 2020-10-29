@@ -30,9 +30,7 @@ class RaySampler(Sampler):
     def __init__(self, worker_factory, agents, envs):
         # pylint: disable=super-init-not-called
         if not ray.is_initialized():
-            ray.init(log_to_driver=False,
-                     ignore_reinit_error=True,
-                     include_dashboard=False)
+            ray.init(log_to_driver=False, ignore_reinit_error=True)
         self._sampler_worker = ray.remote(SamplerWorker)
         self._worker_factory = worker_factory
         self._agents = agents
@@ -40,6 +38,7 @@ class RaySampler(Sampler):
         self._all_workers = defaultdict(None)
         self._workers_started = False
         self.start_worker()
+        self.total_env_steps = 0
 
     @classmethod
     def from_worker_factory(cls, worker_factory, agents, envs):
@@ -170,7 +169,9 @@ class RaySampler(Sampler):
                     batches.append(episode_batch)
                     pbar.update(num_returned_samples)
 
-        return EpisodeBatch.concatenate(*batches)
+        samples = EpisodeBatch.concatenate(*batches)
+        self.total_env_steps += sum(samples.lengths)
+        return samples
 
     def obtain_exact_episodes(self,
                               n_eps_per_worker,
@@ -247,7 +248,9 @@ class RaySampler(Sampler):
             itertools.chain(
                 *[episodes[i] for i in range(self._worker_factory.n_workers)]))
 
-        return EpisodeBatch.concatenate(*ordered_episodes)
+        samples = EpisodeBatch.concatenate(*ordered_episodes)
+        self.total_env_steps += sum(samples.lengths)
+        return samples
 
     def shutdown_worker(self):
         """Shuts down the worker."""

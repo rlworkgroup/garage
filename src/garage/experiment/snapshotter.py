@@ -21,7 +21,10 @@ class Snapshotter:
         snapshot_mode (str): Mode to save the snapshot. Can be either "all"
             (all iterations will be saved), "last" (only the last iteration
             will be saved), "gap" (every snapshot_gap iterations are saved),
-            or "none" (do not save snapshots).
+            "gap_and_last" (save the last iteration as 'params.pkl' and save
+            every snapshot_gap iteration separately), "gap_overwrite" (same as
+            gap but overwrites the last saved snapshot), or "none" (do not
+            save snapshots).
         snapshot_gap (int): Gap between snapshot iterations. Wait this number
             of iterations before taking another snapshot.
 
@@ -35,6 +38,16 @@ class Snapshotter:
         self._snapshot_dir = snapshot_dir
         self._snapshot_mode = snapshot_mode
         self._snapshot_gap = snapshot_gap
+
+        if snapshot_mode == 'gap_overwrite' and snapshot_gap <= 1:
+            raise ValueError('snapshot_gap must be > 1 when using '
+                             'snapshot_mode="gap_overwrite". Use '
+                             'snapshot_mode="last" to snapshot after '
+                             'every iteration.')
+        if snapshot_mode == 'last' and snapshot_gap != 1:
+            raise ValueError('snapshot_gap should be set to 1 if using '
+                             'snapshot_mode="last". Did you mean to'
+                             ' use snapshot_mode="gap"?')
 
         pathlib.Path(snapshot_dir).mkdir(parents=True, exist_ok=True)
 
@@ -53,7 +66,8 @@ class Snapshotter:
         """Return the type of snapshot.
 
         Returns:
-            str: The type of snapshot. Can be "all", "last" or "gap"
+            str: The type of snapshot. Can be "all", "last", "gap",
+                "gap_overwrite", "gap_and_last", or "none".
 
         """
         return self._snapshot_mode
@@ -76,13 +90,17 @@ class Snapshotter:
             params (obj): Content of snapshot to be saved.
 
         Raises:
-            ValueError: If snapshot_mode is not one of "all", "last" or "gap".
+            ValueError: If snapshot_mode is not one of "all", "last", "gap",
+                "gap_overwrite", "gap_and_last", or "none".
 
         """
         file_name = None
 
         if self._snapshot_mode == 'all':
             file_name = os.path.join(self._snapshot_dir, 'itr_%d.pkl' % itr)
+        elif self._snapshot_mode == 'gap_overwrite':
+            if itr % self._snapshot_gap == 0:
+                file_name = os.path.join(self._snapshot_dir, 'params.pkl')
         elif self._snapshot_mode == 'last':
             # override previous params
             file_name = os.path.join(self._snapshot_dir, 'params.pkl')

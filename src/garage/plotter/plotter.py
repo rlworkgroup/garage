@@ -72,15 +72,13 @@ class Plotter:
                     rollout(env,
                             policy,
                             max_episode_length=max_length,
-                            animated=True,
-                            speedup=5)
+                            animated=True)
                 else:
                     if max_length:
                         rollout(env,
                                 policy,
                                 max_episode_length=max_length,
-                                animated=True,
-                                speedup=5)
+                                animated=True)
         except KeyboardInterrupt:
             pass
 
@@ -139,11 +137,7 @@ class Plotter:
 
         # Needed in order to draw glfw window on the main thread
         if 'Darwin' in platform.platform():
-            rollout(env,
-                    policy,
-                    max_episode_length=np.inf,
-                    animated=True,
-                    speedup=5)
+            rollout(env, policy, max_episode_length=np.inf, animated=True)
 
         self._queue.put(Message(op=Op.UPDATE, args=(env, policy), kwargs=None))
 

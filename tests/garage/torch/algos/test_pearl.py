@@ -36,6 +36,7 @@ import metaworld  # isort:skip
 class TestPEARL:
     """Test class for PEARL."""
 
+    @pytest.mark.skip
     @pytest.mark.large
     def test_pearl_ml1_push(self):
         """Test PEARL with ML1 Push environment."""

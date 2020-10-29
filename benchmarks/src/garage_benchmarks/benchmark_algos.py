@@ -1,9 +1,9 @@
 """Benchmarking for algorithms."""
 # yapf: disable
-from garage_benchmarks.experiments.algos import (ddpg_garage_tf,
-                                                 her_garage_tf,
+from garage_benchmarks.experiments.algos import (ddpg_garage_tf, her_garage_tf,
                                                  ppo_garage_pytorch,
                                                  ppo_garage_tf,
+                                                 td3_garage_pytorch,
                                                  td3_garage_tf,
                                                  trpo_garage_pytorch,
                                                  trpo_garage_tf,
@@ -40,7 +40,7 @@ def td3_benchmarks():
     td3_env_ids = [
         env_id for env_id in MuJoCo1M_ENV_SET if env_id != 'Reacher-v2'
     ]
-
+    iterate_experiments(td3_garage_pytorch, td3_env_ids)
     iterate_experiments(td3_garage_tf, td3_env_ids)
 
 

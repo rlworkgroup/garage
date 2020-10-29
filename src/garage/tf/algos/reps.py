@@ -7,18 +7,11 @@ import numpy as np
 import scipy.optimize
 import tensorflow as tf
 
-from garage import (_Default,
-                    EpisodeBatch,
-                    log_performance,
-                    make_optimizer,
-                    StepType)
+from garage import _Default, log_performance, make_optimizer
 from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
-from garage.tf import (compile_function,
-                       flatten_inputs,
-                       graph_inputs,
-                       new_tensor,
-                       paths_to_tensors)
+from garage.tf import (compile_function, flatten_inputs, graph_inputs,
+                       new_tensor)
 from garage.tf.optimizers import LBFGSOptimizer
 
 # yapf: disable
@@ -148,66 +141,38 @@ class REPS(RLAlgorithm):  # noqa: D416
         last_return = None
 
         for _ in trainer.step_epochs():
-            trainer.step_path = trainer.obtain_samples(trainer.step_itr)
+            trainer.step_path = trainer.obtain_episodes(trainer.step_itr)
             last_return = self._train_once(trainer.step_itr, trainer.step_path)
             trainer.step_itr += 1
 
         return last_return
 
-    def _train_once(self, itr, paths):
+    def _train_once(self, itr, episodes):
         """Perform one step of policy optimization given one batch of samples.
 
         Args:
             itr (int): Iteration number.
-            paths (list[dict]): A list of collected paths.
+            episodes (EpisodeBatch): Batch of episodes.
 
         Returns:
             numpy.float64: Average return.
 
         """
-        # -- Stage: Calculate baseline
-        paths = [
-            dict(
-                observations=path['observations'],
-                actions=(
-                    self._env_spec.action_space.flatten_n(  # noqa: E126
-                        path['actions'])),
-                rewards=path['rewards'],
-                env_infos=path['env_infos'],
-                agent_infos=path['agent_infos'],
-                dones=np.array([
-                    step_type == StepType.TERMINAL
-                    for step_type in path['step_types']
-                ])) for path in paths
-        ]
-
-        if hasattr(self._baseline, 'predict_n'):
-            baseline_predictions = self._baseline.predict_n(paths)
-        else:
-            baseline_predictions = [
-                self._baseline.predict(path) for path in paths
-            ]
-
-        # -- Stage: Pre-process samples based on collected paths
-        samples_data = paths_to_tensors(paths, self.max_episode_length,
-                                        baseline_predictions, self._discount,
-                                        self._gae_lambda)
-
         # -- Stage: Run and calculate performance of the algorithm
         undiscounted_returns = log_performance(
             itr,
-            EpisodeBatch.from_list(self._env_spec, paths),
+            episodes,
             discount=self._discount)
         self._episode_reward_mean.extend(undiscounted_returns)
         tabular.record('Extras/EpisodeRewardMean',
                        np.mean(self._episode_reward_mean))
 
-        samples_data['average_return'] = np.mean(undiscounted_returns)
+        average_return = np.mean(undiscounted_returns)
 
         logger.log('Optimizing policy...')
-        self._optimize_policy(samples_data)
+        self._optimize_policy(episodes)
 
-        return samples_data['average_return']
+        return average_return
 
     def __getstate__(self):
         """Parameters to save in snapshot.
@@ -238,12 +203,11 @@ class REPS(RLAlgorithm):  # noqa: D416
         self._name_scope = tf.name_scope(self._name)
         self._init_opt()
 
-    def _optimize_policy(self, samples_data):
+    def _optimize_policy(self, episodes):
         """Optimize the policy using the samples.
 
         Args:
-            samples_data (dict): Processed sample data.
-                See garage.tf.paths_to_tensors() for details.
+            episodes (EpisodeBatch): Batch of episodes.
 
         """
         # Initial BFGS parameter values.
@@ -255,8 +219,8 @@ class REPS(RLAlgorithm):  # noqa: D416
         # Optimize dual
         eta_before = self._param_eta
         logger.log('Computing dual before')
-        self._feat_diff = self._features(samples_data)
-        dual_opt_input_values = self._dual_opt_input_values(samples_data)
+        self._feat_diff = self._features(episodes)
+        dual_opt_input_values = self._dual_opt_input_values(episodes)
         dual_before = self._f_dual(*dual_opt_input_values)
         logger.log('Optimizing dual')
 
@@ -272,7 +236,7 @@ class REPS(RLAlgorithm):  # noqa: D416
             """
             self._param_eta = x[0]
             self._param_v = x[1:]
-            dual_opt_input_values = self._dual_opt_input_values(samples_data)
+            dual_opt_input_values = self._dual_opt_input_values(episodes)
             return self._f_dual(*dual_opt_input_values)
 
         def eval_dual_grad(x):
@@ -287,7 +251,7 @@ class REPS(RLAlgorithm):  # noqa: D416
             """
             self._param_eta = x[0]
             self._param_v = x[1:]
-            dual_opt_input_values = self._dual_opt_input_values(samples_data)
+            dual_opt_input_values = self._dual_opt_input_values(episodes)
             grad = self._f_dual_grad(*dual_opt_input_values)
             eta_grad = np.float(grad[0])
             v_grad = grad[1]
@@ -301,11 +265,11 @@ class REPS(RLAlgorithm):  # noqa: D416
 
         logger.log('Computing dual after')
         self._param_eta, self._param_v = params_ast[0], params_ast[1:]
-        dual_opt_input_values = self._dual_opt_input_values(samples_data)
+        dual_opt_input_values = self._dual_opt_input_values(episodes)
         dual_after = self._f_dual(*dual_opt_input_values)
 
         # Optimize policy
-        policy_opt_input_values = self._policy_opt_input_values(samples_data)
+        policy_opt_input_values = self._policy_opt_input_values(episodes)
         logger.log('Computing policy loss before')
         loss_before = self._optimizer.loss(policy_opt_input_values)
         logger.log('Computing policy KL before')
@@ -488,26 +452,25 @@ class REPS(RLAlgorithm):  # noqa: D416
 
         return loss
 
-    def _dual_opt_input_values(self, samples_data):
+    def _dual_opt_input_values(self, episodes):
         """Update dual func optimize input values based on samples data.
 
         Args:
-            samples_data (dict): Processed sample data.
-                See garage.tf.paths_to_tensors() for details.
+            episodes (EpisodeBatch): Batch of episodes.
 
         Returns:
             list(np.ndarray): Flatten dual function optimization input values.
 
         """
+        agent_infos = episodes.padded_agent_infos
         policy_state_info_list = [
-            samples_data['agent_infos'][k]
-            for k in self.policy.state_info_keys
-        ]  # yapf: disable
+            agent_infos[k] for k in self.policy.state_info_keys
+        ]
 
         # pylint: disable=unexpected-keyword-arg
         dual_opt_input_values = self._dual_opt_inputs._replace(
-            reward_var=samples_data['rewards'],
-            valid_var=samples_data['valids'],
+            reward_var=episodes.padded_rewards,
+            valid_var=episodes.valids,
             feat_diff=self._feat_diff,
             param_eta=self._param_eta,
             param_v=self._param_v,
@@ -516,28 +479,33 @@ class REPS(RLAlgorithm):  # noqa: D416
 
         return flatten_inputs(dual_opt_input_values)
 
-    def _policy_opt_input_values(self, samples_data):
+    def _policy_opt_input_values(self, episodes):
         """Update policy optimize input values based on samples data.
 
         Args:
-            samples_data (dict): Processed sample data.
-                See garage.tf.paths_to_tensors() for details.
+            episodes (EpisodeBatch): Batch of episodes.
 
         Returns:
             list(np.ndarray): Flatten policy optimization input values.
 
         """
+        agent_infos = episodes.padded_agent_infos
         policy_state_info_list = [
-            samples_data['agent_infos'][k]
-            for k in self.policy.state_info_keys
-        ]  # yapf: disable
+            agent_infos[k] for k in self.policy.state_info_keys
+        ]
+
+        actions = [
+            self._env_spec.action_space.flatten_n(act)
+            for act in episodes.actions_list
+        ]
+        padded_actions = episodes.pad_to_last(np.concatenate(actions))
 
         # pylint: disable=unexpected-keyword-arg
         policy_opt_input_values = self._policy_opt_inputs._replace(
-            obs_var=samples_data['observations'],
-            action_var=samples_data['actions'],
-            reward_var=samples_data['rewards'],
-            valid_var=samples_data['valids'],
+            obs_var=episodes.padded_observations,
+            action_var=padded_actions,
+            reward_var=episodes.padded_rewards,
+            valid_var=episodes.valids,
             feat_diff=self._feat_diff,
             param_eta=self._param_eta,
             param_v=self._param_v,
@@ -546,24 +514,24 @@ class REPS(RLAlgorithm):  # noqa: D416
 
         return flatten_inputs(policy_opt_input_values)
 
-    def _features(self, samples_data):
+    def _features(self, episodes):
         """Get valid view features based on samples data.
 
         Args:
-            samples_data (dict): Processed sample data.
-                See garage.tf.paths_to_tensors() for details.
+            episodes (EpisodeBatch): Batch of episodes.
 
         Returns:
             numpy.ndarray: Features for training.
 
         """
-        paths = samples_data['paths']
+        start = 0
         feat_diff = []
-        for path in paths:
-            o = np.clip(path['observations'],
+        for length in episodes.lengths:
+            stop = start + length
+            o = np.clip(episodes.observations[start:stop],
                         self._env_spec.observation_space.low,
                         self._env_spec.observation_space.high)
-            lr = len(path['rewards'])
+            lr = length
             al = np.arange(lr).reshape(-1, 1) / self.max_episode_length
             feats = np.concatenate(
                 [o, o**2, al, al**2, al**3,
@@ -571,5 +539,6 @@ class REPS(RLAlgorithm):  # noqa: D416
             # pylint: disable=unsubscriptable-object
             feats = np.vstack([feats, np.zeros(feats.shape[1])])
             feat_diff.append(feats[1:] - feats[:-1])
+            start = stop
 
         return np.vstack(feat_diff)

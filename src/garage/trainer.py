@@ -516,6 +516,7 @@ class Trainer:
                                      start_epoch=0)
 
         self._plot = plot
+        self._start_worker()
 
         average_return = self._algo.train(self)
         self._shutdown_worker()
@@ -543,7 +544,6 @@ class Trainer:
                 trainer.step_itr += 1
 
         """
-        self._start_worker()
         self._start_time = time.time()
         self.step_itr = self._stats.total_itr
         self.step_episode = None

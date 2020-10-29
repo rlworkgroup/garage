@@ -1,4 +1,4 @@
-import collections
+import collections.abc
 from copy import copy
 import pickle
 
@@ -79,7 +79,7 @@ class TestDMControlEnv:
         a_copy = copy(a)
         env.reset()
         env.step(a)
-        if isinstance(a, collections.Iterable):
+        if isinstance(a, collections.abc.Iterable):
             assert a.all() == a_copy.all()
         else:
             assert a == a_copy
@@ -94,7 +94,7 @@ class TestDMControlEnv:
         a_copy = copy(a)
         env.reset()
         env.step(a)
-        if isinstance(a, collections.Iterable):
+        if isinstance(a, collections.abc.Iterable):
             assert a.all() == a_copy.all()
         else:
             assert a == a_copy

@@ -49,7 +49,7 @@ ci-job-precommit: assert-docker
 
 ci-job-normal: assert-docker
 	[ ! -f $(MJKEY_PATH) ] || mv $(MJKEY_PATH) $(MJKEY_PATH).bak
-	pytest --cov=garage --cov-report=xml -m \
+	pytest --cov=garage --cov-report=xml --reruns 1 -m \
 	    'not nightly and not huge and not flaky and not large and not mujoco and not mujoco_long' --durations=20
 	for i in {1..5}; do \
 		bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
@@ -57,9 +57,20 @@ ci-job-normal: assert-docker
 		exit 1; \
 	done
 
+# Need to be able to access $!, a special bash variable
+define LARGE_TEST
+  pytest --cov=garage --cov-report=xml --reruns 1 -m 'large and not flaky' --durations=20 &
+  PYTEST_PID=$$!
+  while ps -p $$PYTEST_PID > /dev/null ; do
+    echo 'Still running'
+    sleep 60
+  done
+endef
+export LARGE_TEST
+
 ci-job-large: assert-docker
 	[ ! -f $(MJKEY_PATH) ] || mv $(MJKEY_PATH) $(MJKEY_PATH).bak
-	pytest --cov=garage --cov-report=xml -m 'large and not flaky' --durations=20
+	bash -c "$$LARGE_TEST"
 	for i in {1..5}; do \
 		bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
 			|| echo 'Retrying...' && sleep 30 && continue; \
@@ -67,7 +78,7 @@ ci-job-large: assert-docker
 	done
 
 ci-job-mujoco: assert-docker
-	pytest --cov=garage --cov-report=xml -m 'mujoco and not flaky' --durations=20
+	pytest --cov=garage --cov-report=xml --reruns 1 -m 'mujoco and not flaky' --durations=20
 	for i in {1..5}; do \
 		bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
 			|| echo 'Retrying...' && sleep 30 && continue; \
@@ -75,7 +86,7 @@ ci-job-mujoco: assert-docker
 	done
 
 ci-job-mujoco-long: assert-docker
-	pytest --cov=garage --cov-report=xml -m 'mujoco_long and not flaky' --durations=20
+	pytest --cov=garage --cov-report=xml --reruns 1 -m 'mujoco_long and not flaky' --durations=20
 	for i in {1..5}; do \
 		bash <(curl -s https://codecov.io/bash --retry 5) -Z && break \
 			|| echo 'Retrying...' && sleep 30 && continue; \
@@ -83,7 +94,7 @@ ci-job-mujoco-long: assert-docker
 	done
 
 ci-job-nightly: assert-docker
-	pytest -m nightly
+	pytest --reruns 1 -m nightly
 
 ci-job-verify-envs: assert-docker ci-job-verify-envs-pipenv ci-job-verify-envs-conda
 

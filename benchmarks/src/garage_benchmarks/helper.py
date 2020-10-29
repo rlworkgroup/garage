@@ -80,15 +80,12 @@ def benchmark(exec_func=None, *, plot=True, auto=False):
                 count += 1
             _log_dir = _log_dir + '_' + str(count)
 
-        snapshot_config = {}
-
         if auto:
             _auto = auto
             auto_dir = os.path.join(_log_dir, 'auto')
             os.makedirs(auto_dir)
-            snapshot_config['snapshot_mode'] = 'none'
 
-        exec_func(snapshot_config)
+        exec_func()
 
         if plot:
             plot_dir = os.path.join(_log_dir, 'plot')
@@ -148,7 +145,8 @@ def iterate_experiments(func,
             tf.compat.v1.reset_default_graph()
 
             ctxt = dict(log_dir=sub_log_dir)
-            ctxt.update(snapshot_config)
+            if snapshot_config:
+                ctxt.update(snapshot_config)
             func(ctxt, env_id=env_id, seed=seed)
 
             if _plot is not None or _auto:

@@ -161,6 +161,7 @@ class ExperimentTemplate:
             the function definition.
         use_existing_dir (bool): If true, (re)use the directory for this
             experiment, even if it already contains data.
+        x_axis (str): Key to use for x axis of plots.
 
 
 
@@ -170,7 +171,7 @@ class ExperimentTemplate:
 
     def __init__(self, *, function, log_dir, name, prefix, snapshot_mode,
                  snapshot_gap, archive_launch_repo, name_parameters,
-                 use_existing_dir):
+                 use_existing_dir, x_axis):
         self.function = function
         self.log_dir = log_dir
         self.name = name
@@ -180,6 +181,7 @@ class ExperimentTemplate:
         self.archive_launch_repo = archive_launch_repo
         self.name_parameters = name_parameters
         self.use_existing_dir = use_existing_dir
+        self.x_axis = x_axis
         if self.function is not None:
             self._update_wrap_params()
 
@@ -263,6 +265,7 @@ class ExperimentTemplate:
                        snapshot_gap=self.snapshot_gap,
                        snapshot_mode=self.snapshot_mode,
                        use_existing_dir=self.use_existing_dir,
+                       x_axis=self.x_axis,
                        signature=self.__signature__)
         if args:
             if len(args) == 1 and isinstance(args[0], dict):
@@ -321,7 +324,7 @@ class ExperimentTemplate:
         logger.add_output(dowel.TextOutput(text_log_file))
         logger.add_output(dowel.CsvOutput(tabular_log_file))
         logger.add_output(
-            dowel.TensorBoardOutput(log_dir, x_axis='TotalEnvSteps'))
+            dowel.TensorBoardOutput(log_dir, x_axis=options['x_axis']))
         logger.add_output(dowel.StdOutput())
 
         logger.push_prefix('[{}] '.format(name))
@@ -377,7 +380,8 @@ def wrap_experiment(function=None,
                     snapshot_gap=1,
                     archive_launch_repo=True,
                     name_parameters=None,
-                    use_existing_dir=False):
+                    use_existing_dir=False,
+                    x_axis='TotalEnvSteps'):
     """Decorate a function to turn it into an ExperimentTemplate.
 
     When invoked, the wrapped function will receive an ExperimentContext, which
@@ -424,6 +428,7 @@ def wrap_experiment(function=None,
             the function definition.
         use_existing_dir (bool): If true, (re)use the directory for this
             experiment, even if it already contains data.
+        x_axis (str): Key to use for x axis of plots.
 
     Returns:
         callable: The wrapped function.
@@ -437,7 +442,8 @@ def wrap_experiment(function=None,
                               snapshot_gap=snapshot_gap,
                               archive_launch_repo=archive_launch_repo,
                               name_parameters=name_parameters,
-                              use_existing_dir=use_existing_dir)
+                              use_existing_dir=use_existing_dir,
+                              x_axis=x_axis)
 
 
 def dump_json(filename, data):

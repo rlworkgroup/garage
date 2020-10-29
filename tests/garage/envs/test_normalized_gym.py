@@ -4,7 +4,7 @@ from garage.envs import GymEnv, normalize
 class TestNormalizedGym:
 
     def setup_method(self):
-        self.env = normalize(GymEnv('Pendulum-v0'),
+        self.env = normalize(GymEnv('CartPole-v1'),
                              normalize_reward=True,
                              normalize_obs=True,
                              flatten_obs=True)

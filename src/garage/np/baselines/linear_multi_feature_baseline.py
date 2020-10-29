@@ -21,7 +21,7 @@ class LinearMultiFeatureBaseline(LinearFeatureBaseline):
                  reg_coeff=1e-5,
                  name='LinearMultiFeatureBaseline'):
         super().__init__(env_spec, reg_coeff, name)
-        features = features or ['observation']
+        features = features or ['observations']
         self._feature_names = features
 
     def _features(self, path):
@@ -38,7 +38,7 @@ class LinearMultiFeatureBaseline(LinearFeatureBaseline):
             np.clip(path[feature_name], -10, 10)
             for feature_name in self._feature_names
         ]
-        n = len(path['rewards'])
+        n = len(path['observations'])
         return np.concatenate(sum([[f, f**2]
                                    for f in features], []) + [np.ones((n, 1))],
                               axis=1)
