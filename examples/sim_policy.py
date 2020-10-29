@@ -53,7 +53,6 @@ if __name__ == '__main__':
                         type=int,
                         default=1000,
                         help='Max length of episode')
-    parser.add_argument('--speedup', type=float, default=1, help='Speedup')
     args = parser.parse_args()
 
     # If the snapshot file use tensorflow, do:
@@ -68,7 +67,6 @@ if __name__ == '__main__':
             path = rollout(env,
                            policy,
                            max_episode_length=args.max_episode_length,
-                           animated=True,
-                           speedup=args.speedup)
+                           animated=True)
             if not query_yes_no('Continue simulation?'):
                 break

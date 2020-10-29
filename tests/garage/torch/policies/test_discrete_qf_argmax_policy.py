@@ -36,7 +36,7 @@ def test_get_action():
                               hidden_sizes=(2, 2))
     qvals = qf(obs.unsqueeze(0))
     policy = DiscreteQFArgmaxPolicy(qf, env_spec)
-    action, _ = policy.get_action(obs)
+    action, _ = policy.get_action(obs.numpy())
     assert action == torch.argmax(qvals, dim=1).numpy()
     assert action.shape == ()
 
@@ -51,7 +51,7 @@ def test_get_actions(batch_size):
                               hidden_sizes=(2, 2))
     qvals = qf(obs)
     policy = DiscreteQFArgmaxPolicy(qf, env_spec)
-    actions, _ = policy.get_actions(obs)
+    actions, _ = policy.get_actions(obs.numpy())
     assert (actions == torch.argmax(qvals, dim=1).numpy()).all()
     assert actions.shape == (batch_size, )
 
@@ -66,9 +66,9 @@ def test_is_pickleable(batch_size):
                               hidden_sizes=(2, 2))
     policy = DiscreteQFArgmaxPolicy(qf, env_spec)
 
-    output1 = policy.get_actions(obs)[0]
+    output1 = policy.get_actions(obs.numpy())[0]
 
     p = pickle.dumps(policy)
     policy_pickled = pickle.loads(p)
-    output2 = policy_pickled.get_actions(obs)[0]
+    output2 = policy_pickled.get_actions(obs.numpy())[0]
     assert np.array_equal(output1, output2)

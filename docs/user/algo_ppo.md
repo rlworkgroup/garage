@@ -4,8 +4,9 @@
 +-------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Paper**         | Proximal Policy Optimization Algorithms :cite:`schulman2017proximal`                                                                                                                                                      |
 +-------------------+----------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------+
-| **Framework(s)**  | .. figure:: ./images/pytorch.png                                                                               | .. figure:: ./images/tensorflow.png                                                                      |
+| **Framework(s)**  | .. figure:: ./images/pytorch.png                                                                               | .. figure:: ./images/tf.png                                                                              |
 |                   |    :scale: 10%                                                                                                 |    :scale: 20%                                                                                           |
+|                   |    :class: no-scaled-link                                                                                      |    :class: no-scaled-link                                                                                |
 |                   |                                                                                                                |                                                                                                          |
 |                   |    PyTorch                                                                                                     |    TensorFlow                                                                                            |
 +-------------------+----------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------+
@@ -34,13 +35,13 @@ regularization adds the mean entropy to the surrogate objective. See
 
 Garage has implementations of PPO with PyTorch and TensorFlow.
 
-## PyTorch
+### PyTorch
 
 ```eval_rst
 .. literalinclude:: ../../examples/torch/ppo_pendulum.py
 ```
 
-## TensorFlow
+### TensorFlow
 
 ```eval_rst
 .. literalinclude:: ../../examples/tf/ppo_pendulum.py

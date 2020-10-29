@@ -4,11 +4,7 @@ import numpy as np
 import pytest
 
 # yapf: disable
-from garage import (EnvSpec,
-                    EnvStep,
-                    EpisodeBatch,
-                    StepType,
-                    TimeStep,
+from garage import (EnvSpec, EnvStep, EpisodeBatch, StepType, TimeStep,
                     TimeStepBatch)
 
 # yapf: enable
@@ -22,7 +18,7 @@ def eps_data():
                                shape=(4, 3, 2),
                                dtype=np.float32)
     act_space = gym.spaces.MultiDiscrete([2, 5])
-    env_spec = EnvSpec(obs_space, act_space)
+    env_spec = EnvSpec(obs_space, act_space, max_episode_length=100)
 
     # generate data
     lens = np.array([10, 20, 7, 25, 25, 40, 10, 5])
@@ -219,6 +215,58 @@ def test_to_epsectory_list(eps_data):
     assert start == len(eps_data['rewards'])
 
 
+def test_episodes_padding_tensors(eps_data):
+    t = EpisodeBatch(**eps_data)
+    N = len(t.lengths)
+    max_ep_l = t.env_spec.max_episode_length
+
+    observations = t.padded_observations
+    actions = t.padded_actions
+    rewards = t.padded_rewards
+    valids = t.valids
+    agent_infos = t.padded_agent_infos
+
+    assert observations.shape == (N, max_ep_l, *t.observations[0].shape)
+    assert actions.shape == (N, max_ep_l, *t.actions[0].shape)
+    assert rewards.shape == (N, max_ep_l)
+    assert valids.shape == (N, max_ep_l)
+    assert agent_infos.keys() == t.agent_infos.keys()
+    for key in agent_infos.keys():
+        assert agent_infos[key].shape == (N, max_ep_l,
+                                          *t.agent_infos[key][0].shape)
+
+    start = 0
+    for i, length in enumerate(t.lengths):
+        stop = start + length
+        assert (observations[i][:length] == t.observations[start:stop]).all()
+        assert np.count_nonzero(observations[i][length:]) == 0
+        assert (actions[i][:length] == t.actions[start:stop]).all()
+        assert np.count_nonzero(actions[i][length:]) == 0
+        assert (rewards[i][:length] == t.rewards[start:stop]).all()
+        assert np.count_nonzero(rewards[i][length:]) == 0
+        assert (valids[i][:length] == np.ones((length, ))).all()
+        assert np.count_nonzero(valids[i][length:]) == 0
+        for key in agent_infos.keys():
+            assert (agent_infos[key][i][:length] == t.agent_infos[key]
+                    [start:stop]).all()
+            assert np.count_nonzero(agent_infos[key][i][length:]) == 0
+        start = stop
+
+
+def test_episodes_to_acts_obs_list(eps_data):
+    t = EpisodeBatch(**eps_data)
+    acts_list = t.actions_list
+    obs_list = t.observations_list
+    start = 0
+    assert len(acts_list) == len(t.lengths)
+    assert len(obs_list) == len(t.lengths)
+    for i, length in enumerate(t.lengths):
+        stop = start + length
+        assert (acts_list[i] == t.actions[start:stop]).all()
+        assert (obs_list[i] == t.observations[start:stop]).all()
+        start = stop
+
+
 def test_get_step_type():
     step_type = StepType.get_step_type(step_cnt=1,
                                        max_episode_length=5,
@@ -366,7 +414,7 @@ def batch_data():
     obs = np.stack([obs_space.low] * batch_size)
     next_obs = np.stack([obs_space.low] * batch_size)
     act = np.stack([[1, 3]] * batch_size)
-    rew = np.arange(batch_size)
+    rew = np.arange(batch_size).reshape(-1, 1)
     step_types = np.array([StepType.FIRST, StepType.TERMINAL], dtype=StepType)
 
     # env_infos
@@ -486,6 +534,13 @@ def test_act_box_env_spec_mismatch_batch(batch_data):
                                                        high=np.inf,
                                                        shape=(4, 3, 2),
                                                        dtype=np.float32)
+        s = TimeStepBatch(**batch_data)
+        del s
+
+
+def test_invalid_rewards_shape(batch_data):
+    with pytest.raises(ValueError, match='Rewards tensor must have shape'):
+        batch_data['rewards'] = np.squeeze(batch_data['rewards'])
         s = TimeStepBatch(**batch_data)
         del s
 
@@ -647,6 +702,20 @@ def test_to_time_step_list_batch(batch_data):
             assert key in batch_data['agent_infos']
             assert np.array_equal(batch['agent_infos'][key],
                                   [batch_data['agent_infos'][key][i]])
+
+
+def test_terminals(batch_data):
+    s = TimeStepBatch(
+        env_spec=batch_data['env_spec'],
+        observations=batch_data['observations'],
+        actions=batch_data['actions'],
+        rewards=batch_data['rewards'],
+        next_observations=batch_data['next_observations'],
+        step_types=batch_data['step_types'],
+        env_infos=batch_data['env_infos'],
+        agent_infos=batch_data['agent_infos'],
+    )
+    assert s.terminals.shape == s.rewards.shape
 
 
 def test_from_empty_time_step_list_batch(batch_data):

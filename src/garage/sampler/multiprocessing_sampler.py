@@ -61,6 +61,7 @@ class MultiprocessingSampler(Sampler):
         self._agent_version = 0
         for w in self._workers:
             w.start()
+        self.total_env_steps = 0
 
     @classmethod
     def from_worker_factory(cls, worker_factory, agents, envs):
@@ -182,7 +183,9 @@ class MultiprocessingSampler(Sampler):
                 except queue.Full:
                     pass
 
-        return EpisodeBatch.concatenate(*batches)
+        samples = EpisodeBatch.concatenate(*batches)
+        self.total_env_steps += sum(samples.lengths)
+        return samples
 
     def obtain_exact_episodes(self,
                               n_eps_per_worker,
@@ -254,7 +257,9 @@ class MultiprocessingSampler(Sampler):
         ordered_episodes = list(
             itertools.chain(
                 *[episodes[i] for i in range(self._factory.n_workers)]))
-        return EpisodeBatch.concatenate(*ordered_episodes)
+        samples = EpisodeBatch.concatenate(*ordered_episodes)
+        self.total_env_steps += sum(samples.lengths)
+        return samples
 
     def shutdown_worker(self):
         """Shutdown the workers."""

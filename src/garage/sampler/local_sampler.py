@@ -40,6 +40,7 @@ class LocalSampler(Sampler):
         for worker, agent, env in zip(self._workers, self._agents, self._envs):
             worker.update_agent(agent)
             worker.update_env(env)
+        self.total_env_steps = 0
 
     @classmethod
     def from_worker_factory(cls, worker_factory, agents, envs):
@@ -117,7 +118,9 @@ class LocalSampler(Sampler):
                 completed_samples += len(batch.actions)
                 batches.append(batch)
                 if completed_samples >= num_samples:
-                    return EpisodeBatch.concatenate(*batches)
+                    samples = EpisodeBatch.concatenate(*batches)
+                    self.total_env_steps += sum(samples.lengths)
+                    return samples
 
     def obtain_exact_episodes(self,
                               n_eps_per_worker,
@@ -149,7 +152,9 @@ class LocalSampler(Sampler):
             for _ in range(n_eps_per_worker):
                 batch = worker.rollout()
                 batches.append(batch)
-        return EpisodeBatch.concatenate(*batches)
+        samples = EpisodeBatch.concatenate(*batches)
+        self.total_env_steps += sum(samples.lengths)
+        return samples
 
     def shutdown_worker(self):
         """Shutdown the workers."""

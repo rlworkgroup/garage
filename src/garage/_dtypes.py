@@ -446,6 +446,125 @@ class EpisodeBatch(
                 for eps in self.split()
             ]))
 
+    @property
+    def padded_observations(self):
+        """Padded observations.
+
+        Returns:
+            np.ndarray: Padded observations with shape of
+                :math:`(N, max_episode_length, O^*)`.
+
+        """
+        return self.pad_to_last(self.observations)
+
+    @property
+    def padded_actions(self):
+        """Padded actions.
+
+        Returns:
+            np.ndarray: Padded actions with shape of
+                :math:`(N, max_episode_length, A^*)`.
+
+        """
+        return self.pad_to_last(self.actions)
+
+    @property
+    def observations_list(self):
+        """Split observations into a list.
+
+        Returns:
+            list[np.ndarray]: Splitted list.
+
+        """
+        start = 0
+        obs_list = []
+        for length in self.lengths:
+            stop = start + length
+            obs_list.append(self.observations[start:stop])
+            start = stop
+        return obs_list
+
+    @property
+    def actions_list(self):
+        """Split actions into a list.
+
+        Returns:
+            list[np.ndarray]: Splitted list.
+
+        """
+        start = 0
+        acts_list = []
+        for length in self.lengths:
+            stop = start + length
+            acts_list.append(self.actions[start:stop])
+            start = stop
+        return acts_list
+
+    @property
+    def padded_rewards(self):
+        """Padded rewards.
+
+        Returns:
+            np.ndarray: Padded rewards with shape of
+                :math:`(N, max_episode_length)`.
+
+        """
+        return self.pad_to_last(self.rewards)
+
+    @property
+    def valids(self):
+        """An array indicating valid steps in a padded tensor.
+
+        Returns:
+            np.ndarray: the shape is :math:`(N, max_episode_length)`.
+
+        """
+        valids = []
+        for length in self.lengths:
+            ones = np.ones(length)
+            n_zeros = max(self.env_spec.max_episode_length - length, 0)
+            zeros = np.zeros(n_zeros)
+            valids.append(np.concatenate((ones, zeros)))
+        return np.asarray(valids)
+
+    @property
+    def padded_agent_infos(self):
+        """Padded agent infos.
+
+        Returns:
+            dict[str, np.ndarray]: Padded agent infos. Each value should have
+                shape with :math:`(N, max_episode_length)` or
+                :math:`(N, max_episode_length, S^*)`.
+
+        """
+        info_keys = self.agent_infos.keys()
+        agent_infos = {k: [] for k in info_keys}
+        for key in info_keys:
+            agent_infos[key] = self.pad_to_last(self.agent_infos[key])
+        return agent_infos
+
+    def pad_to_last(self, input_array):
+        """Pad tensors with zeros.
+
+        Args:
+            input_array (np.ndarray): Tensors to be padded.
+
+        Return:
+            numpy.ndarray: Padded tensor with shape of
+                :math:`(N, max_episode_length)` or
+                :math:`(N, max_episode_length, S^*)`.
+
+        """
+        start = 0
+        padded_array = []
+        for length in self.lengths:
+            stop = start + length
+            pad_witdh = np.zeros((len(input_array.shape), 2), dtype=np.int32)
+            pad_witdh[0][1] = max(self.env_spec.max_episode_length - length, 0)
+            padded_array.append(np.pad(input_array[start:stop], pad_witdh))
+            start = stop
+        return np.asarray(padded_array)
+
 
 class StepType(enum.IntEnum):
     """Defines the status of a :class:`~TimeStep` within a sequence.
@@ -655,8 +774,7 @@ class TimeStepBatch(
         actions (numpy.ndarray): Non-flattened array of actions. Should
             have shape (batch_size, S^*) (the unflattened action space of the
             current environment).
-        rewards (numpy.ndarray): Array of rewards of shape (batch_size,) (1D
-            array of length batch_size).
+        rewards (numpy.ndarray): Array of rewards of shape (batch_size, 1).
         next_observation (numpy.ndarray): Non-flattened array of next
             observations. Has shape (batch_size, S^*). next_observations[i] was
             observed by the agent after taking actions[i].
@@ -759,6 +877,12 @@ class TimeStepBatch(
                 'Expected batch dimension of actions to be length {}, but got '
                 'length {} instead.'.format(inferred_batch_size,
                                             actions.shape[0]))
+
+        # rewards
+        if rewards.shape != (inferred_batch_size, 1):
+            raise ValueError(
+                'Rewards tensor must have shape {}, but got shape {} '
+                'instead.'.format((inferred_batch_size, 1), rewards.shape))
 
         # step_types
         if step_types.shape[0] != inferred_batch_size:
@@ -935,6 +1059,17 @@ class TimeStepBatch(
             })
         return samples
 
+    @property
+    def terminals(self):
+        """Get an array of boolean indicating ternianal information.
+
+        Returns:
+            numpy.ndarray: An array of boolean of shape (batch_size, 1)
+                indicating whether the `StepType is `TERMINAL
+
+        """
+        return np.array([[s == StepType.TERMINAL] for s in self.step_types])
+
     @classmethod
     def from_time_step_list(cls, env_spec, ts_samples):
         """Create a :class:`~TimeStepBatch` from a list of time step dictionaries.
@@ -1010,7 +1145,7 @@ class TimeStepBatch(
         return cls(env_spec=batch.env_spec,
                    observations=batch.observations,
                    actions=batch.actions,
-                   rewards=batch.rewards,
+                   rewards=batch.rewards.reshape(-1, 1),
                    next_observations=next_observations,
                    env_infos=batch.env_infos,
                    agent_infos=batch.agent_infos,

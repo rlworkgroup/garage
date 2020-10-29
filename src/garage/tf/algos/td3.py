@@ -9,9 +9,7 @@ from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
 
-from garage import (_Default,
-                    log_performance,
-                    make_optimizer,
+from garage import (_Default, log_performance, make_optimizer,
                     obtain_evaluation_episodes)
 from garage.np.algos import RLAlgorithm
 from garage.sampler import FragmentWorker, LocalSampler
@@ -140,11 +138,8 @@ class TD3(RLAlgorithm):
         self._discount = discount
         self._reward_scale = reward_scale
         self.max_episode_length = env_spec.max_episode_length
-        self._max_episode_length_eval = env_spec.max_episode_length
-
         if max_episode_length_eval is not None:
             self._max_episode_length_eval = max_episode_length_eval
-
         self._eval_env = None
 
         self._env_spec = env_spec
@@ -376,14 +371,14 @@ class TD3(RLAlgorithm):
             float: Q value predicted by the q network.
 
         """
-        transitions = self._replay_buffer.sample_transitions(
+        timesteps = self._replay_buffer.sample_timesteps(
             self._buffer_batch_size)
 
-        observations = transitions['observations']
-        rewards = transitions['rewards']
-        actions = transitions['actions']
-        next_observations = transitions['next_observations']
-        terminals = transitions['terminals']
+        observations = timesteps.observations
+        rewards = timesteps.rewards
+        actions = timesteps.actions
+        next_observations = timesteps.next_observations
+        terminals = timesteps.terminals
 
         rewards *= self._reward_scale
 
