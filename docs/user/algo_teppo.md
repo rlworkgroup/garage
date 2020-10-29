@@ -18,13 +18,13 @@
    * - **API Reference**
      - `garage.tf.algos.TEPPO <../_autoapi/garage/torch/algos/index.html#garage.tf.algos.TEPPO>`_
    * - **Code**
-     - `garage/tf/algos/td3.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/tf/algos/te_ppo.py>`_
+     - `garage/tf/algos/te_ppo.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/tf/algos/te_ppo.py>`_
    * - **Examples**
      - :ref:`te_ppo_metaworld_mt1_push`, :ref:`te_ppo_metaworld_mt10`, :ref:`te_ppo_metaworld_mt50`, :ref:`te_ppo_point`
 ```
 
 
-Proximal Policy Optimization Algorithms (PPO) is a family of policy gradient methods which alternate between sampling data through interaction with the environment, and optimizing a "surrogate" objective function using stochastic gradient ascent. TEPPO parameterizes PPO via a shared skill embedding space.
+Proximal Policy Optimization Algorithms (PPO) is a family of policy gradient methods which alternate between sampling data through interaction with the environment, and optimizing a "surrogate" objective function using stochastic gradient ascent. TEPPO parameterizes the PPO policy via a shared skill embedding space.
 
 ## Default Parameters
 
@@ -43,25 +43,25 @@ inference_ce_coeff=1e-3
 ### te_ppo_metaworld_mt1_push
 
 ```eval_rst
-.. literalinlcude:: ../../examples/tf/te_ppo_metaworld_mt1_push.py
+.. literalinclude:: ../../examples/tf/te_ppo_metaworld_mt1_push.py
 ```
 
 ### te_ppo_metaworld_mt10
 
 ```eval_rst
-.. literalinlcude:: ../../examples/tf/te_ppo_metaworld_mt10.py
+.. literalinclude:: ../../examples/tf/te_ppo_metaworld_mt10.py
 ```
 
 ### te_ppo_metaworld_mt50
 
 ```eval_rst
-.. literalinlcude:: ../../examples/tf/te_ppo_metaworld_mt50.py
+.. literalinclude:: ../../examples/tf/te_ppo_metaworld_mt50.py
 ```
 
 ### te_ppo_point
 
 ```eval_rst
-.. literalinlcude:: ../../examples/tf/te_ppo_point.py
+.. literalinclude:: ../../examples/tf/te_ppo_point.py
 ```
 
 ## References
