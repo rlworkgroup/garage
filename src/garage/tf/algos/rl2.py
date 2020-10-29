@@ -469,11 +469,9 @@ class RL2(MetaRLAlgorithm, abc.ABC):
                 different episodes, but the same task/environment.
 
         Returns:
-            dict: Concatenated paths from the same task/environment. Shape of
-                values: :math:`[max_episode_length * episode_per_task, S^*]`
-            list[dict]: Original input paths. Length of the list is
-                :math:`episode_per_task` and each path in the list has
-                values of shape :math:`[max_episode_length, S^*]`
+            EpisodeBatch: Concatenated episode from the same task/environment.
+                Shape of values: :math:`[max_episode_length * episode_per_task,
+                S^*]`
 
         """
         env_infos = {
