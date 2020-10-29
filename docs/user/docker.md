@@ -3,13 +3,13 @@
 Currently there are two types of garage images available on Docker Hub:
 
 - `garage`: garage without environment visualization.
-- `garage-nvidia`: garage with environment visualization capability using an
- NVIDIA graphics card.
+- `garage-nvidia`: garage with GPU support, CUDA, and environment visualization
+  capability using NVIDIA graphics cards.
 
 If you want to compile a new image using the the source, proceed to the document
 [Building garage Docker image from source](docker_dev.md) instead.
 
-# `garage` image
+## `garage` image
 
 ### Prerequisites
 
@@ -52,23 +52,23 @@ written to `/home/garage-user/data`.
 For example, if the path of the directory on your computer where you want
 the results to be stored is `/home/user/data`, make sure the directory exists.
 
-Additionally, if you are on linux, make sure that this directory is writeable by
-the container user `garage-user` by either making it accessible by running:
+```eval_rst
+.. note::
 
-```bash
-setfacl -m u:999:rwx /home/user/data
-```
+    Additionally, if you are on linux, make sure that this directory is
+    writeable by the container user ``garage-user``, by either making it
+    accessible by running:
 
-or making it writable to all other users by running:
+    ``setfacl -m u:999:rwx /home/user/data``
 
-```bash
-chmod 777 /home/user/data
-```
+    or making it writable to all other users by running:
 
-or giving ownership of the directory to `garage-user` through:
+    ``chmod 777 /home/user/data``
 
-```bash
-chown -R 999:docker /home/user/data
+    or giving ownership of the directory to ``garage-user`` through:
+
+    ``chown -R 999:docker /home/user/data``
+
 ```
 
 Then, if the path of the directory on your computer is `/home/user/data`,
@@ -137,7 +137,7 @@ image, except that the image name is `rlworkgroup/garage-nvidia`.
 
 For example, to execute a launcher file:
 
-```
+```bash
 docker run \
   -it \
   --rm \
@@ -186,7 +186,7 @@ described in official Docker documentation
 [here](https://docs.docker.com/config/containers/resource_constraints/#gpu),
 you can pass the desired values to `--gpus` option as follows:
 
-```
+```bash
 docker run \
   -it \
   --rm \
@@ -198,14 +198,13 @@ docker run \
 
 ### Using a different driver version
 
-The `garage-nvidia` Docker image uses `nvidia/cuda:10.2-cudnn7-runtime
--ubuntu18.04`
+The `garage-nvidia` Docker image uses `nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04`
 as the parent image which requires NVIDIA driver version 440.33+. If you need
 to use garage with a different driver version, you might be able to build the
 garage-nvidia image using a different parent image by following the guide at
 [Building garage Docker image from source](docker_dev.md)
 
-----
+---
 
-**This page was authored by Gitanshu Sardana ([@gitanshu](https://github.com
-/gitanshu>)).**
+**This page was authored by Gitanshu Sardana
+([@gitanshu](https://github.com/gitanshu>)).**

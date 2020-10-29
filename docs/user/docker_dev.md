@@ -1,6 +1,6 @@
 # Build garage Docker image from source
 
-Garage source comes with a Makefile that contains recipes for building and
+G~~~~arage source comes with a Makefile that contains recipes for building and
 running different Docker configurations for garage
 
 Garage uses multi-stage Docker builds with the Docker BuildKit backend. The
@@ -22,25 +22,25 @@ The important Docker related `make` targets are:
  machines without a display.
 
 
-## Prerequisites
+### Prerequisites
 
 Be aware of the following prerequisites to build the image.
 
 - Install [Docker CE](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce)
-  version 19.03 or higher. Tested on version 19.03.12.
+  version 19.03 or higher. Tested on version 19.03.
 
-Tested on Ubuntu 16.04, 18.04 & 20.04.
+Tested on Ubuntu 16.04, 18.04 and 20.04.
 
 ### Build and run the `garage-dev` image
 
 To build and run the headless image, first clone the garage repository,
 move to the root folder of your local repository and then execute;
 
-```
+```bash
 make run-dev RUN_CMD="python examples/tf/trpo_cartpole.py"
 ```
 
-Where RUN_CMD specifies the executable to run in the container.
+Where `RUN_CMD` specifies the executable to run in the container.
 
 The previous command adds a volume from the `data` folder inside your cloned
 garage repository to the `data` folder in the garage container, so any
@@ -56,7 +56,7 @@ a name for the container, you can do so with the variable `CONTAINER_NAME`. As a
 side effect, this will output the results in `data/$CONTAINER_NAME` directory
 instead of the `data` directory.
 
-```
+```bash
 make run-dev RUN_CMD="..." CONTAINER_NAME="my_container_123"
 ```
 
@@ -65,14 +65,14 @@ This will output results in `data/my_container_123` directory.
 If you need to use MuJoCo, you need to place your key at `~/.mujoco/mjkey.txt`
 or specify the corresponding path through the MJKEY_PATH variable:
 
-```
+```bash
 make run-dev RUN_CMD="..." MJKEY_PATH="/home/user/mjkey.txt"
 ```
 
 If you require to pass additional arguments to docker build and run commands,
 you can use the variables BUILD_ARGS and RUN_ARGS, for example:
 
-```
+```bash
 make run-dev BUILD_ARGS="--build-arg MY_VAR=123" RUN_ARGS="-e MY_VAR=123"
 ```
 
@@ -93,7 +93,7 @@ Tested on Ubuntu 18.04 & 20.04.
 The same rules for the headless image apply here, except that the target name
 is:
 
-```
+```bash
 make run-dev-nvidia ...
 ```
 
@@ -101,7 +101,7 @@ This make command builds the NVIDIA image and runs it in a non-headless mode.
 It will not work on headless machines. You can run the NVIDIA in a headless
 state using the following target:
 
-```
+```bash
 make run-dev-nvidia-headless ...
 ```
 
@@ -114,7 +114,7 @@ described in official Docker documentation
 you can pass the desired values to `--gpus` option using the variable GPUS. For
 example:
 
-```
+```bash
 make run-nvidia GPUS="device=0,2" ...
 ```
 
@@ -126,14 +126,15 @@ to use garage with a different driver version, you might be able to build the
 `garage-nvidia` image from scratch using a different parent image using the
 variable `PARENT_IMAGE`.
 
-```
+```bash
 make run-nvidia PARENT_IMAGE="nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04" ...
 ```
 
 You can find the required parent images at [NVIDIA CUDA's DockerHub](https://hub.docker.com/r/nvidia/cuda/tags)
 
-----
+---
 
-**This page was authored by Gitanshu Sardana ([@gitanshu](https://github.com
-/gitanshu>)), with contributions from Angel Ivan Gonzalez ([@gonzaiva](https://github
-.com/gonzaiva))**
+**This page was authored by Gitanshu Sardana
+([@gitanshu](https://github.com/gitanshu>)),
+with contributions from Angel Ivan Gonzalez
+([@gonzaiva](https://github.com/gonzaiva))**
