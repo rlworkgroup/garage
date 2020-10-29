@@ -1,4 +1,4 @@
-# Distribute experiments across machines
+# Distribute Experiments Across Machines
 
 This tutorial teaches you how to setup a [Prefect](https://docs.prefect.io/) +
 [Dask distributed](https://distributed.dask.org/en/latest/) cluster to

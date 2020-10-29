@@ -1,4 +1,4 @@
-# Change how your algorithm samples (Implement a Custom Worker)
+# Change How Your Algorithm samples (Implement a Custom Worker)
 
 ```eval_rst
 In sampling, :code:`Worker` perform rollouts to get samples. In this tutorial,
