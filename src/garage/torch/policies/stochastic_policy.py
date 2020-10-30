@@ -31,6 +31,12 @@ class StochasticPolicy(Policy, abc.ABC):
         if not isinstance(observation, np.ndarray) and not isinstance(
                 observation, torch.Tensor):
             observation = self._env_spec.observation_space.flatten(observation)
+        elif isinstance(observation,
+                        np.ndarray) and len(observation.shape) > 1:
+            observation = self._env_spec.observation_space.flatten(observation)
+        elif isinstance(observation,
+                        torch.Tensor) and len(observation.shape) > 1:
+            observation = torch.flatten(observation)
         with torch.no_grad():
             if not isinstance(observation, torch.Tensor):
                 observation = torch.as_tensor(observation).float().to(
@@ -67,6 +73,14 @@ class StochasticPolicy(Policy, abc.ABC):
                 observations = np.stack(observations)
             elif isinstance(observations[0], torch.Tensor):
                 observations = torch.stack(observations)
+
+        if isinstance(observations[0],
+                      np.ndarray) and len(observations[0].shape) > 1:
+            observations = self._env_spec.observation_space.flatten_n(
+                observations)
+        elif isinstance(observations[0],
+                        torch.Tensor) and len(observations[0].shape) > 1:
+            observations = torch.flatten(observations, start_dim=1)
 
         if isinstance(self._env_spec.observation_space, akro.Image) and \
                 len(observations.shape) < \

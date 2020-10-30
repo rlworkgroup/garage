@@ -244,6 +244,10 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
 
         """
         xs = np.concatenate([p['observations'] for p in paths])
+        if isinstance(self._env_spec.observation_space, akro.Image) and \
+                len(xs[0].shape) < \
+                len(self._env_spec.observation_space.shape):
+            xs = self._env_spec.observation_space.unflatten_n(xs)
         ys = np.concatenate([p['returns'] for p in paths])
         ys = ys.reshape((-1, 1))
 
@@ -291,6 +295,10 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
 
         """
         xs = paths['observations']
+        if isinstance(self._env_spec.observation_space, akro.Image) and \
+                len(xs[0].shape) < \
+                len(self._env_spec.observation_space.shape):
+            xs = self._env_spec.observation_space.unflatten_n(xs)
 
         return self._f_predict(xs).flatten()
 
