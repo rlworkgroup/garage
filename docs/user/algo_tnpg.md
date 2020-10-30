@@ -1,8 +1,8 @@
-# Truncated Natural Policy Gradient
+# Truncated Natural Policy Gradient (TNPG)
 
 ```eval_rst
 +-------------------+--------------------------------------------------------------------------------------------------------------+
-| **Paper**         | Benchmarking Deep Reinforcement Learning for Continuous Control :cite:`duan2016benchmarking`, A Natural      | 
+| **Paper**         | Benchmarking Deep Reinforcement Learning for Continuous Control :cite:`duan2016benchmarking`, A Natural      |
 |                   | Policy Gradient :cite:`10.5555/2980539.2980738`                                                              |
 +-------------------+--------------------------------------------------------------------------------------------------------------+
 | **Framework(s)**  | .. figure:: ./images/tf.png                                                                                  |
