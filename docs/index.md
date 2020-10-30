@@ -61,10 +61,10 @@ and how to implement new MDPs and new algorithms.
    user/algo_mtppo
    user/algo_vpg
    user/algo_td3
-   user/algo_teppo
+   TEPPO <user/algo_teppo>
    user/algo_ddpg
    user/algo_cem
-   
+
 .. toctree::
    :maxdepth: 2
    :caption: Reference Guide
