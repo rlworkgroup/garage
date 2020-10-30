@@ -72,7 +72,7 @@ class TestContinuousMLPBaseline(TfGraphTestCase):
         assert np.allclose(x_mean, x_mean_expected)
         assert np.allclose(x_std, x_std_expected)
 
-    def test_unflatten_input(self):
+    def test_unflattened_input(self):
         env = GymEnv(DummyBoxEnv(obs_dim=(2, 2)))
         cmb = ContinuousMLPBaseline(env_spec=env.spec)
         env.reset()
