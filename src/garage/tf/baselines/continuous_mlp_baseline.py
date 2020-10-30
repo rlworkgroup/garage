@@ -127,6 +127,8 @@ class ContinuousMLPBaseline(NormalizedInputMLPModel, Baseline):
 
         """
         xs = np.concatenate([p['observations'] for p in paths])
+        if not isinstance(xs, np.ndarray) or len(xs.shape) > 2:
+            xs = self._env_spec.observation_space.flatten_n(xs)
         ys = np.concatenate([p['returns'] for p in paths])
         ys = ys.reshape((-1, 1))
         if self._normalize_inputs:
@@ -152,7 +154,10 @@ class ContinuousMLPBaseline(NormalizedInputMLPModel, Baseline):
             numpy.ndarray: Predicted value.
 
         """
-        return self._f_predict(paths['observations']).flatten()
+        obs = paths['observations']
+        if not isinstance(obs, np.ndarray) or len(obs.shape) > 2:
+            obs = self._env_spec.observation_space.flatten_n(obs)
+        return self._f_predict(obs).flatten()
 
     @property
     def recurrent(self):

@@ -39,7 +39,7 @@ class TestTanhGaussianMLPPolicy:
         expected_mean = torch.full((act_dim, ), 1.0, dtype=torch.float)
         action, prob = policy.get_action(obs)
         assert np.allclose(prob['mean'], expected_mean.numpy(), rtol=1e-3)
-        assert action.squeeze(0).shape == (act_dim, )
+        assert action.shape == (act_dim, )
 
     # yapf: disable
     @pytest.mark.parametrize('hidden_sizes', [

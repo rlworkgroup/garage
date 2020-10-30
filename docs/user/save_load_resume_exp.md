@@ -1,4 +1,4 @@
-# Save, load and resume experiments
+# Save, Load and Resume Experiments
 
 This document provides solutions to a variety of use cases
 regarding saving, loading and resuming of Garage experiments.

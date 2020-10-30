@@ -14,7 +14,7 @@ from garage.sampler import RaySampler
 from garage.tf import (center_advs, compile_function, compute_advantages,
                        discounted_returns, flatten_inputs, graph_inputs,
                        positive_advs)
-from garage.tf.optimizers import LBFGSOptimizer
+from garage.tf.optimizers import FirstOrderOptimizer
 
 # yapf: enable
 
@@ -118,7 +118,7 @@ class NPO(RLAlgorithm):
         if optimizer is None:
             if optimizer_args is None:
                 optimizer_args = dict()
-            optimizer = LBFGSOptimizer
+            optimizer = FirstOrderOptimizer
 
         self._check_entropy_configuration(entropy_method, center_adv,
                                           stop_entropy_gradient,

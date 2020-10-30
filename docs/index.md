@@ -35,6 +35,7 @@ and how to implement new MDPs and new algorithms.
    user/ensure_your_experiments_are_reproducible
    user/meta_multi_task_rl_exp.md
    user/max_resource_usage
+   user/cluster_setup
 
 .. toctree::
    :maxdepth: 2
@@ -48,22 +49,22 @@ and how to implement new MDPs and new algorithms.
    :maxdepth: 2
    :caption: Algorithms and Methods
 
-   user/algo_bc
-   user/algo_erwr
-   user/algo_trpo
-   user/algo_mttrpo
-   user/algo_sac
-   user/algo_mtsac
-   user/algo_pearl
-   user/algo_rl2
-   user/algo_ppo
-   user/algo_maml
-   user/algo_mtppo
-   user/algo_vpg
-   user/algo_td3
+   BC <user/algo_bc>
+   CEM <user/algo_cem>
+   DDPG <user/algo_ddpg>
+   ERWR <user/algo_erwr>
+   MAML <user/algo_maml>
+   MT-PPO <user/algo_mtppo>
+   MT-SAC <user/algo_mtsac>
+   MT-TRPO <user/algo_mttrpo>
+   PEARL <user/algo_pearl>
+   PPO <user/algo_ppo>
+   RL2 <user/algo_rl2>
+   SAC <user/algo_sac>
+   TD3 <user/algo_td3>
    TEPPO <user/algo_teppo>
-   user/algo_ddpg
-   user/algo_cem
+   TRPO <user/algo_trpo>
+   REINFORCE <user/algo_vpg>
 
 .. toctree::
    :maxdepth: 2

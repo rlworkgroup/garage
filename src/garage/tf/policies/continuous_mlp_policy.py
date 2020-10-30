@@ -138,7 +138,8 @@ class ContinuousMLPPolicy(MLPModel, Policy):
             dict: Empty dict since this policy does not model a distribution.
 
         """
-        if not isinstance(observations[0], np.ndarray):
+        if not isinstance(observations[0],
+                          np.ndarray) or len(observations[0].shape) > 1:
             observations = self.observation_space.flatten_n(observations)
         actions = self._f_prob(observations)
         actions = self.action_space.unflatten_n(actions)
