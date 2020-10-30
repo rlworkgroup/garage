@@ -20,11 +20,14 @@ class TestDeterministicMLPPolicies:
         (1, ), (2, ), (3, ), (1, 1), (2, 2)])
     # yapf: enable
     def test_get_action(self, hidden_sizes):
-        env_spec = GymEnv(DummyBoxEnv())
+        unflat_dim = (2, 2)
+        env_spec = GymEnv(DummyBoxEnv(obs_dim=unflat_dim))
         obs_dim = env_spec.observation_space.flat_dim
         act_dim = env_spec.action_space.flat_dim
         obs = torch.ones(obs_dim, dtype=torch.float32)
+        obs_unflat = torch.ones(unflat_dim, dtype=torch.float32)
         obs_np = np.ones(obs_dim, dtype=np.float32)
+        obs_np_unflat = np.ones(unflat_dim, dtype=np.float32)
         policy = DeterministicMLPPolicy(env_spec=env_spec,
                                         hidden_nonlinearity=None,
                                         hidden_sizes=hidden_sizes,
@@ -35,7 +38,11 @@ class TestDeterministicMLPPolicies:
                                   fill_value=obs_dim * np.prod(hidden_sizes),
                                   dtype=np.float32)
         assert np.array_equal(policy.get_action(obs)[0], expected_output)
+        assert np.array_equal(
+            policy.get_action(obs_unflat)[0], expected_output)
         assert np.array_equal(policy.get_action(obs_np)[0], expected_output)
+        assert np.array_equal(
+            policy.get_action(obs_np_unflat)[0], expected_output)
 
     # yapf: disable
     @pytest.mark.parametrize('batch_size, hidden_sizes', [
@@ -47,12 +54,15 @@ class TestDeterministicMLPPolicies:
     ])
     # yapf: enable
     def test_get_actions(self, batch_size, hidden_sizes):
-        env_spec = GymEnv(DummyBoxEnv())
+        unflat_dim = (2, 2)
+        env_spec = GymEnv(DummyBoxEnv(obs_dim=unflat_dim))
         obs_dim = env_spec.observation_space.flat_dim
         act_dim = env_spec.action_space.flat_dim
         obs = torch.ones([batch_size, obs_dim], dtype=torch.float32)
         obs_np = np.ones([obs_dim], dtype=np.float32)
+        obs_np_unflat = np.ones(unflat_dim, dtype=np.float32)
         obs_torch = torch.Tensor(obs_np)
+        obs_torch_unflat = torch.Tensor(obs_np_unflat)
         policy = DeterministicMLPPolicy(env_spec=env_spec,
                                         hidden_nonlinearity=None,
                                         hidden_sizes=hidden_sizes,
@@ -66,7 +76,13 @@ class TestDeterministicMLPPolicies:
         assert np.array_equal(
             policy.get_actions([obs_torch] * batch_size)[0], expected_output)
         assert np.array_equal(
+            policy.get_actions([obs_torch_unflat] * batch_size)[0],
+            expected_output)
+        assert np.array_equal(
             policy.get_actions([obs_np] * batch_size)[0], expected_output)
+        assert np.array_equal(
+            policy.get_actions([obs_np_unflat] * batch_size)[0],
+            expected_output)
 
     # yapf: disable
     @pytest.mark.parametrize('batch_size, hidden_sizes', [

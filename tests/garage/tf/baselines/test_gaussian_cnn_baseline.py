@@ -163,6 +163,22 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
         prediction = gcb.predict(paths)
         assert np.allclose(0., prediction)
 
+    def test_flattened_image_input(self):
+        env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
+        gcb = GaussianCNNBaseline(env_spec=env.spec,
+                                  filters=((3, (3, 3)), (6, (3, 3))),
+                                  strides=(1, 1),
+                                  padding='SAME',
+                                  hidden_sizes=(32, ))
+        env.reset()
+        es = env.step(1)
+        obs, rewards = es.observation, es.reward
+        train_paths = [{'observations': [obs.flatten()], 'returns': [rewards]}]
+        gcb.fit(train_paths)
+        paths = {'observations': [obs.flatten()]}
+        prediction = gcb.predict(paths)
+        assert np.allclose(0., prediction)
+
     @pytest.mark.large
     def test_fit_without_trusted_region(self):
         gcr = GaussianCNNBaseline(env_spec=test_env_spec,
