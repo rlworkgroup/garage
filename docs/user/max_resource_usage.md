@@ -1,4 +1,4 @@
-# Maximize resource usage
+# Maximize Resource Usage
 
 To accelerate running an experiment, we want to maximize the usage of resources
 (CPUs or GPUs).
