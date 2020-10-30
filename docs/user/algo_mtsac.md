@@ -1,4 +1,4 @@
-# Multi-Task Soft Actor-Critic
+# Multi-Task Soft Actor-Critic (MT-SAC)
 
 ```eval_rst
 .. list-table::
@@ -21,7 +21,7 @@
      - :ref:`mtsac_metaworld_ml1_pick_place`, :ref:`mtsac_metaworld_mt10`, :ref:`mtsac_metaworld_mt50`
 ```
 
-The Multi-Task Soft Actor-Critic (MTSAC) algorithm is the same as the [Soft Actor Critic (SAC)](algo_sac) algorithm, except for a small change called "disentangled alphas". Alpha is the entropy coefficient that is used to control exploration of the agent/policy. Disentangling alphas refers to having a separate alpha coefficients for every task learned by the policy. The alphas are accessed by using a one-hot encoding of an id that is assigned to each task.
+The Multi-Task Soft Actor-Critic (MT-SAC) algorithm is the same as the [Soft Actor Critic (SAC)](algo_sac) algorithm, except for a small change called "disentangled alphas". Alpha is the entropy coefficient that is used to control exploration of the agent/policy. Disentangling alphas refers to having a separate alpha coefficients for every task learned by the policy. The alphas are accessed by using a one-hot encoding of an id that is assigned to each task.
 
 
 ## Default Parameters

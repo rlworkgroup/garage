@@ -1,4 +1,4 @@
-# Use a pre-trained network to start a new experiment
+# Use a Pre-Trained Network to Start a New Experiment
 
 In this section you will learn how to load a pre-trained network and use it in
 new experiments. In general, this process involves loading a snapshot, extracting

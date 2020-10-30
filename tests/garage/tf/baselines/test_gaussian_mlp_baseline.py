@@ -129,6 +129,18 @@ class TestGaussianMLPBaseline(TfGraphTestCase):
 
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
 
+    def test_unflattened_input(self):
+        env = GymEnv(DummyBoxEnv(obs_dim=(2, 2)))
+        gmb = GaussianMLPBaseline(env_spec=env.spec)
+        env.reset()
+        es = env.step(1)
+        obs, rewards = es.observation, es.reward
+        train_paths = [{'observations': [obs], 'returns': [rewards]}]
+        gmb.fit(train_paths)
+        paths = {'observations': [obs]}
+        prediction = gmb.predict(paths)
+        assert np.allclose(0., prediction)
+
     def test_param_values(self):
         box_env_spec = GymEnv(DummyBoxEnv(obs_dim=(2, ))).spec
         gmb = GaussianMLPBaseline(env_spec=box_env_spec)

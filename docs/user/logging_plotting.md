@@ -1,4 +1,4 @@
-# Logging and plotting
+# Logging and Plotting
 
 ## Logging
 

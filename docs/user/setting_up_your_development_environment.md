@@ -1,4 +1,4 @@
-# Setting up your development environment
+# Setting Up Your Development Environment
 
 In this section you will learn how to install garage and its dependencies in a
 manner that allows for development. If you would like to contribute changes back

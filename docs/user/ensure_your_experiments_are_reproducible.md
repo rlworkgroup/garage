@@ -1,5 +1,5 @@
 
-# Ensure your experiments are reproducible
+# Ensure Your Experiments are Reproducible
 
 Ensure the reproducibility of your experiments with comprehensive launcher
 files. Launcher files are used to initialize the algorithm, its components

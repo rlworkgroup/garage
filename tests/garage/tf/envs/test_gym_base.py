@@ -19,6 +19,9 @@ class TestGymEnv:
         if spec._env_name.startswith('CarRacing'):
             pytest.skip(
                 'CarRacing-* envs bundled in atari-py 0.2.x don\'t load')
+        if spec._env_name.startswith('KellyCoinflip'):
+            pytest.skip(
+                'KellyCoinflip env has tuple observation, not np.array')
         if 'Kuka' in spec.id:
             # Kuka environments calls py_bullet.resetSimulation() in reset()
             # unconditionally, which globally resets other simulations. So

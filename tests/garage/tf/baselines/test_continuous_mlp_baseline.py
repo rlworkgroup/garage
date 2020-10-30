@@ -72,6 +72,18 @@ class TestContinuousMLPBaseline(TfGraphTestCase):
         assert np.allclose(x_mean, x_mean_expected)
         assert np.allclose(x_std, x_std_expected)
 
+    def test_unflattened_input(self):
+        env = GymEnv(DummyBoxEnv(obs_dim=(2, 2)))
+        cmb = ContinuousMLPBaseline(env_spec=env.spec)
+        env.reset()
+        es = env.step(1)
+        obs, rewards = es.observation, es.reward
+        train_paths = [{'observations': [obs], 'returns': [rewards]}]
+        cmb.fit(train_paths)
+        paths = {'observations': [obs]}
+        prediction = cmb.predict(paths)
+        assert np.allclose(0., prediction)
+
     def test_is_pickleable(self):
         box_env_spec = GymEnv(DummyBoxEnv(obs_dim=(2, ))).spec
         cmb = ContinuousMLPBaseline(env_spec=box_env_spec)
