@@ -79,7 +79,7 @@ class HalfCheetahDirEnv(HalfCheetahEnvMetaBase):
         infos = dict(reward_forward=np.asarray([forward_reward]),
                      reward_ctrl=np.asarray([-ctrl_cost]),
                      task_dir=np.asarray([self._task['direction']]),
-                     task_name=np.asarray([task_name]))
+                     task_name=task_name)
         return observation, reward, done, infos
 
     def sample_tasks(self, num_tasks):

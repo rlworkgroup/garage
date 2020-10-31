@@ -47,4 +47,7 @@ def test_env_infos(env_type):
     env.set_task(task)
     _, _, _, infos = env.step(env.action_space.sample())
     for k in infos:
-        assert isinstance(infos[k], np.ndarray)
+        if k == 'task_name':
+            assert isinstance(infos[k], str)
+        else:
+            assert isinstance(infos[k], np.ndarray)
