@@ -103,6 +103,7 @@ setup(
     python_requires='>=3.6',
     install_requires=REQUIRED,
     extras_require=EXTRAS,
+    include_package_data=True,
     license='MIT',
     long_description=README,
     long_description_content_type='text/markdown',

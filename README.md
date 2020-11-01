@@ -34,6 +34,19 @@ getting started instructions and detailed APIs.
 pip install --user garage
 ```
 
+## Examples
+
+Starting from version v2020.10.0, garage comes packaged with examples. To get a
+list of examples, run:
+
+```
+garage examples
+```
+
+You can also run `garage examples --help`, or visit
+[the documentation](https://garage.readthedocs.io/en/latest/user/get_started.html#running-examples)
+for even more details.
+
 ## Join the Community
 
 **Join the [garage-announce mailing list](https://groups.google.com/forum/#!forum/garage-announce/join)**
