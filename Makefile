@@ -1,8 +1,10 @@
 SHELL := /bin/bash
 
-.PHONY: help test check docs ci-job-normal ci-job-large ci-job-nightly \
-	ci-job-verify-envs ci-verify-envs-conda ci-verify-envs-pipenv build-ci \
-	build-headless build-nvidia run-ci run-headless run-nvidia assert-docker
+.PHONY: help test build-test check docs ci-job-precommit ci-job-normal \
+	ci-job-large ci-job-mujoco ci-job-mujoco-long ci-job-nightly ci-job-verify-envs \
+	ci-verify-envs-conda ci-verify-envs-pipenv ci-deploy-docker build-ci build-dev \
+	build-dev-nvidia run-ci run-dev run-dev-nvidia run-dev-nvidia-headless \
+	assert-docker assert-travis ensure-data-path-exists assert-docker-version
 
 .DEFAULT_GOAL := help
 
@@ -170,9 +172,9 @@ build-dev: assert-docker-version docker/Dockerfile
 		-t ${TAG} \
 		${BUILD_ARGS} .
 
-build-nvidia-dev: TAG ?= rlworkgroup/garage-dev-nvidia:latest
-build-nvidia-dev: PARENT_IMAGE ?= nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04
-build-nvidia-dev: assert-docker-version docker/Dockerfile
+build-dev-nvidia: TAG ?= rlworkgroup/garage-dev-nvidia:latest
+build-dev-nvidia: PARENT_IMAGE ?= nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04
+build-dev-nvidia: assert-docker-version docker/Dockerfile
 	docker build \
 		-f docker/Dockerfile \
 		--cache-from rlworkgroup/garage-dev-nvidia:latest \
@@ -218,7 +220,7 @@ run-dev-nvidia: ## Requires https://github.com/NVIDIA/nvidia-container-runtime a
 run-dev-nvidia: CONTAINER_NAME ?= ''
 run-dev-nvidia: user ?= $$USER
 run-dev-nvidia: GPUS ?= "all"
-run-dev-nvidia: ensure-data-path-exists build-nvidia-dev
+run-dev-nvidia: ensure-data-path-exists build-dev-nvidia
 	xhost +local:docker
 	docker run \
 		-it \
@@ -238,7 +240,7 @@ run-dev-nvidia-headless: ## Requires https://github.com/NVIDIA/nvidia-container-
 run-dev-nvidia-headless: CONTAINER_NAME ?= ''
 run-dev-nvidia-headless: user ?= $$USER
 run-dev-nvidia-headless: GPUS ?= "all"
-run-dev-nvidia-headless: ensure-data-path-exists build-nvidia-dev
+run-dev-nvidia-headless: ensure-data-path-exists build-dev-nvidia
 	docker run \
 		-it \
 		--rm \

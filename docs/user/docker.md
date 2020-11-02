@@ -115,17 +115,16 @@ docker run \
 
 ## `garage-nvidia` image
 
-The garage NVIDIA images come with CUDA 10.2 and cuDNN 7.6 (required for
-TensorFlow).
+The garage NVIDIA images come with CUDA 10.1 and cuDNN 7.6 (required for
+TensorFlow >= 2.1.0).
 
 ### Prerequisites for `garage-nvidia` image
 
 Additional to the prerequisites for the headless image, make sure to have:
 
 - [Install the latest NVIDIA driver](https://tecadmin.net/install-latest-nvidia-drivers-ubuntu/),
-  tested on nvidia driver version 440.100. CUDA 10.2 requires a minimum of
-  version 440.33. For older driver versions, see [Using a different driver
-   version](#using-a-different-driver-version)
+  tested on nvidia driver version 440.100. CUDA 10.1 requires a minimum of
+  version 418.39.
 - [Install nvidia-container-runtime](https://github.com/NVIDIA/nvidia-container-runtime#installation)
 
 Tested on Ubuntu 18.04 and 20.04.
@@ -196,13 +195,13 @@ docker run \
   python examples/tf/trpo_cartpole.py
 ```
 
-### Using a different driver version
+### Using a different CUDA version
 
-The `garage-nvidia` Docker image uses `nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04`
-as the parent image which requires NVIDIA driver version 440.33+. If you need
-to use garage with a different driver version, you might be able to build the
-garage-nvidia image using a different parent image by following the guide at
-[Building garage Docker image from source](docker_dev.md)
+The `garage-nvidia` Docker image uses `nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04`
+as the parent image since TensorFlow requires CUDA 10.1 & cuDNN 7.6. If you
+need to use garage with a different CUDA version, you might be able to build
+the garage-nvidia image using a different parent image by following the guide
+at [Building garage Docker image from source](docker_dev.md)
 
 ---
 

@@ -1,6 +1,6 @@
 # Build garage Docker image from source
 
-G~~~~arage source comes with a Makefile that contains recipes for building and
+Garage source comes with a Makefile that contains recipes for building and
 running different Docker configurations for garage
 
 Garage uses multi-stage Docker builds with the Docker BuildKit backend. The
@@ -13,7 +13,7 @@ The important Docker related `make` targets are:
 - `run-dev`: builds and runs the Docker image with your copy of garage source
  installed. This builds the `garage-dev` target in Dockerfile and the
  resulting image is tagged as `rlworkgroup/garage-dev`
-- `run-dev-nvidia`: same as `run-dev` with CUDA 10.2 and cuDNN for taking
+- `run-dev-nvidia`: same as `run-dev` with CUDA 10.1 and cuDNN 7.6 for taking
  advantage of NVIDIA GPUs and also supports environment visualization. The
  build target is `garage-dev-nvidia` and the resulting image is tagged as
  `rlworkgroup/garage-dev-nvidia`
@@ -81,9 +81,9 @@ make run-dev BUILD_ARGS="--build-arg MY_VAR=123" RUN_ARGS="-e MY_VAR=123"
 Additional to the prerequisites for the `garage` image, make sure to have:
 
 - [Install the latest NVIDIA driver](https://tecadmin.net/install-latest-nvidia-drivers-ubuntu/),
-  tested on nvidia driver version 440.100. CUDA 10.2 requires a minimum of
-  version 440.33. For older driver versions, see [Using a different driver
-   version](#using-a-different-driver-version)
+  tested on nvidia driver version 440.100. CUDA 10.1 requires a minimum of
+  version 418.39. If you need a different CUDA version, see
+  [Using a different CUDA version](#using-a-different-cuda-version)
 - [Install nvidia-container-runtime](https://github.com/NVIDIA/nvidia-container-runtime#installation)
 
 Tested on Ubuntu 18.04 & 20.04.
@@ -115,19 +115,19 @@ you can pass the desired values to `--gpus` option using the variable GPUS. For
 example:
 
 ```bash
-make run-nvidia GPUS="device=0,2" ...
+make run-dev-nvidia GPUS="device=0,2" ...
 ```
 
-### Using a different NVIDIA driver version
+### Using a different CUDA version
 
-The `garage-nvidia` Docker image uses `nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04`
-as the parent image which requires NVIDIA driver version 440.33+. If you need
-to use garage with a different driver version, you might be able to build the
+The `garage-nvidia` Docker image uses `nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04`
+as the parent image which requires NVIDIA driver version 418.39+. If you need
+to use garage with a different CUDA version, you might be able to build the
 `garage-nvidia` image from scratch using a different parent image using the
 variable `PARENT_IMAGE`.
 
 ```bash
-make run-nvidia PARENT_IMAGE="nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04" ...
+make run-dev-nvidia PARENT_IMAGE="nvidia/cuda:11.1-cudnn8-runtime-ubuntu18.04" ...
 ```
 
 You can find the required parent images at [NVIDIA CUDA's DockerHub](https://hub.docker.com/r/nvidia/cuda/tags)
