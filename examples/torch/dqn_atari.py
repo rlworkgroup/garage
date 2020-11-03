@@ -3,6 +3,8 @@
 
 Here it creates a gym environment CartPole, and trains a DQN with 50k steps.
 """
+import math
+
 import click
 import gym
 import numpy as np
@@ -54,11 +56,13 @@ hyperparams = dict(n_epochs=500,
 @click.option('--seed', default=24)
 @click.option('--n', type=int, default=psutil.cpu_count(logical=False))
 @click.option('--buffer_size', type=int, default=None)
+@click.option('--n_steps', type=float, default=None)
 @click.option('--max_episode_length', type=int, default=None)
 def main(env=None,
          seed=24,
          n=psutil.cpu_count(logical=False),
          buffer_size=None,
+         n_steps=None,
          max_episode_length=None):
     """Wrapper to setup the logging directory.
 
@@ -73,6 +77,9 @@ def main(env=None,
         buffer_size (int): size of the replay buffer in transitions. If None,
             defaults to hyperparams['buffer_size']. This is used by the
             integration tests.
+        n_steps (float): Total number of environment steps to run for, not
+            not including evaluation. If this is not None, n_epochs will
+            be recalculated based on this value.
         max_episode_length (int): Max length of an episode. If None, defaults
             to the timelimit specific to the environment. Used by integration
             tests.
@@ -81,6 +88,10 @@ def main(env=None,
         env += 'NoFrameskip-v4'
     logdir = 'data/local/experiment/' + env
 
+    if n_steps is not None:
+        hyperparams['n_epochs'] = math.ceil(
+            int(n_steps) / (hyperparams['steps_per_epoch'] *
+                            hyperparams['sampler_batch_size']))
     if buffer_size is not None:
         hyperparams['buffer_size'] = buffer_size
 
