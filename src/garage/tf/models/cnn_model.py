@@ -50,12 +50,24 @@ class CNNModel(Model):
         self._hidden_w_init = hidden_w_init
         self._hidden_b_init = hidden_b_init
 
+    def network_input_spec(self):
+        """Network input spec.
+
+        Return:
+            list[str]: List of key(str) for the network inputs.
+
+        """
+        return ['state', 'input_dim']
+
     # pylint: disable=arguments-differ
-    def _build(self, state_input, name=None):
+    def _build(self, state_input, input_dim, name=None):
         """Build model given input placeholder(s).
 
         Args:
             state_input (tf.Tensor): Tensor input for state.
+            input_dim (Tuple[int, int, int]): Dimensions of unflattened input,
+                which means [in_height, in_width, in_channels]. If the last 3
+                dimensions of input_var is not this shape, it will be reshaped.
             name (str): Inner model name, also the variable scope of the
                 inner model, if exist. One example is
                 garage.tf.models.Sequential.
@@ -66,6 +78,7 @@ class CNNModel(Model):
         """
         del name
         return cnn(input_var=state_input,
+                   input_dim=input_dim,
                    filters=self._filters,
                    hidden_nonlinearity=self._hidden_nonlinearity,
                    hidden_w_init=self._hidden_w_init,

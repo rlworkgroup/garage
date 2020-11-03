@@ -49,14 +49,15 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
                                       strides=strides,
                                       padding=padding,
                                       hidden_sizes=hidden_sizes)
+        obs_dim = env.spec.observation_space.shape
 
         obs = env.reset()[0]
 
         state_input = tf.compat.v1.placeholder(tf.float32,
                                                shape=(None, None) +
                                                policy.input_dim)
-        dist_sym = policy.build(state_input, name='dist_sym').dist
-        dist_sym2 = policy.build(state_input, name='dist_sym2').dist
+        dist_sym = policy.build(state_input, obs_dim, name='dist_sym').dist
+        dist_sym2 = policy.build(state_input, obs_dim, name='dist_sym2').dist
         output1 = self.sess.run([dist_sym.probs],
                                 feed_dict={state_input: [[obs]]})
         output2 = self.sess.run([dist_sym2.probs],
@@ -70,6 +71,7 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
                                       strides=(1, ),
                                       padding='SAME',
                                       hidden_sizes=(4, ))
+        obs_dim = env.spec.observation_space.shape
 
         env.reset()
         obs = env.step(1).observation
@@ -84,7 +86,7 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
         state_input = tf.compat.v1.placeholder(tf.float32,
                                                shape=(None, None) +
                                                policy.input_dim)
-        dist_sym = policy.build(state_input, name='dist_sym').dist
+        dist_sym = policy.build(state_input, obs_dim, name='dist_sym').dist
         output1 = self.sess.run(dist_sym.probs,
                                 feed_dict={state_input: [[obs]]})
         p = pickle.dumps(policy)
@@ -94,7 +96,9 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
             state_input = tf.compat.v1.placeholder(tf.float32,
                                                    shape=(None, None) +
                                                    policy.input_dim)
-            dist_sym = policy_pickled.build(state_input, name='dist_sym').dist
+            dist_sym = policy_pickled.build(state_input,
+                                            obs_dim,
+                                            name='dist_sym').dist
             output2 = sess.run(dist_sym.probs,
                                feed_dict={state_input: [[obs]]})
             assert np.array_equal(output1, output2)

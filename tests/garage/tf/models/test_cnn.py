@@ -18,9 +18,10 @@ class TestCNN(TfGraphTestCase):
         self.obs_input = np.ones(
             (self.batch_size, self.input_width, self.input_height, 3))
 
-        input_shape = self.obs_input.shape[1:]  # height, width, channel
+        self.input_dim = self.obs_input.shape[1:]  # height, width, channel
         self._input_ph = tf.compat.v1.placeholder(tf.float32,
-                                                  shape=(None, ) + input_shape,
+                                                  shape=(None, ) +
+                                                  self.input_dim,
                                                   name='input')
         self.hidden_nonlinearity = tf.nn.relu
 
@@ -39,6 +40,7 @@ class TestCNN(TfGraphTestCase):
     def test_output_shape_same(self, filters, strides):
         with tf.compat.v1.variable_scope('CNN'):
             self.cnn = cnn(input_var=self._input_ph,
+                           input_dim=self.input_dim,
                            filters=filters,
                            strides=strides,
                            name='cnn',
@@ -74,6 +76,7 @@ class TestCNN(TfGraphTestCase):
     def test_output_shape_valid(self, filters, strides):
         with tf.compat.v1.variable_scope('CNN'):
             self.cnn = cnn(input_var=self._input_ph,
+                           input_dim=self.input_dim,
                            filters=filters,
                            strides=strides,
                            name='cnn',
@@ -85,6 +88,37 @@ class TestCNN(TfGraphTestCase):
 
         result = self.sess.run(self.cnn,
                                feed_dict={self._input_ph: self.obs_input})
+
+        height_size = self.input_height
+        width_size = self.input_width
+        for filter_iter, stride in zip(filters, strides):
+            height_size = int((height_size - filter_iter[1][0]) / stride) + 1
+            width_size = int((width_size - filter_iter[1][1]) / stride) + 1
+        flatten_shape = height_size * width_size * filters[-1][0]
+        assert result.shape == (self.batch_size, flatten_shape)
+
+    @pytest.mark.parametrize('filters, strides', [
+        (((32, (2, 3)), (64, (3, 3))), (2, 2)),
+    ])
+    def test_flattned_input(self, filters, strides):
+        dim_prod = self.input_width * self.input_height * 3
+        input_ph = tf.compat.v1.placeholder(tf.float32,
+                                            shape=(None, dim_prod),
+                                            name='input_flattened')
+        with tf.compat.v1.variable_scope('CNN'):
+            self.cnn = cnn(input_var=input_ph,
+                           input_dim=self.input_dim,
+                           filters=filters,
+                           strides=strides,
+                           name='cnn',
+                           padding='VALID',
+                           hidden_w_init=tf.constant_initializer(1),
+                           hidden_nonlinearity=self.hidden_nonlinearity)
+
+        self.sess.run(tf.compat.v1.global_variables_initializer())
+
+        obs_input = np.ones((self.batch_size, dim_prod))
+        result = self.sess.run(self.cnn, feed_dict={input_ph: obs_input})
 
         height_size = self.input_height
         width_size = self.input_width
@@ -108,6 +142,7 @@ class TestCNN(TfGraphTestCase):
     def test_output_with_identity_filter(self, filters, in_channels, strides):
         with tf.compat.v1.variable_scope('CNN'):
             self.cnn = cnn(input_var=self._input_ph,
+                           input_dim=self.input_dim,
                            filters=filters,
                            strides=strides,
                            name='cnn1',
@@ -155,6 +190,7 @@ class TestCNN(TfGraphTestCase):
         # Build a cnn with random filter weights
         with tf.compat.v1.variable_scope('CNN'):
             self.cnn2 = cnn(input_var=self._input_ph,
+                            input_dim=self.input_dim,
                             filters=filters,
                             strides=strides,
                             name='cnn1',
@@ -205,10 +241,16 @@ class TestCNN(TfGraphTestCase):
     # yapf: enable
     def test_output_with_max_pooling(self, filters, in_channels, strides,
                                      pool_shape, pool_stride):
+        dim_prod = self.input_width * self.input_height * 3
+        input_ph = tf.compat.v1.placeholder(tf.float32,
+                                            shape=(None, dim_prod),
+                                            name='input_flattened')
+
         # Build a cnn with random filter weights
         with tf.compat.v1.variable_scope('CNN'):
             self.cnn2 = cnn_with_max_pooling(
-                input_var=self._input_ph,
+                input_var=input_ph,
+                input_dim=self.input_dim,
                 filters=filters,
                 strides=strides,
                 name='cnn1',
@@ -220,8 +262,8 @@ class TestCNN(TfGraphTestCase):
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
 
-        result = self.sess.run(self.cnn2,
-                               feed_dict={self._input_ph: self.obs_input})
+        obs_input = np.ones((self.batch_size, dim_prod))
+        result = self.sess.run(self.cnn2, feed_dict={input_ph: obs_input})
 
         two_layer = len(filters) == 2
         # get weight values
@@ -262,6 +304,7 @@ class TestCNN(TfGraphTestCase):
         with pytest.raises(ValueError):
             with tf.compat.v1.variable_scope('CNN'):
                 self.cnn = cnn(input_var=self._input_ph,
+                               input_dim=self.input_dim,
                                filters=((32, (3, 3)), ),
                                strides=(1, ),
                                name='cnn',
@@ -271,6 +314,7 @@ class TestCNN(TfGraphTestCase):
         with pytest.raises(ValueError):
             with tf.compat.v1.variable_scope('CNN'):
                 self.cnn = cnn_with_max_pooling(input_var=self._input_ph,
+                                                input_dim=self.input_dim,
                                                 filters=((32, (3, 3)), ),
                                                 strides=(1, ),
                                                 name='cnn',

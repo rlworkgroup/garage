@@ -171,6 +171,7 @@ class GaussianCNNBaselineModel(GaussianCNNModel):
             'y_mean', 'y_std'
         ]
 
+    # pylint: disable=arguments-differ
     def _build(self, state_input, name=None):
         """Build model given input placeholder(s).
 
@@ -224,7 +225,7 @@ class GaussianCNNBaselineModel(GaussianCNNModel):
         normalized_xs_var = (state_input - x_mean_var) / x_std_var
 
         (sample, normalized_dist_mean, normalized_dist_log_std, std_param,
-         _) = super()._build(normalized_xs_var)
+         _) = super()._build(normalized_xs_var, self._input_shape)
 
         with tf.name_scope('mean_network'):
             means_var = normalized_dist_mean * y_std_var + y_mean_var

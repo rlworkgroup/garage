@@ -94,6 +94,15 @@ class CategoricalCNNModel(Model):
             layer_normalization=layer_normalization,
             name='MLPModel')
 
+    def network_input_spec(self):
+        """Network input spec.
+
+        Return:
+            list[str]: List of key(str) for the network inputs.
+
+        """
+        return ['state', 'input_dim']
+
     def network_output_spec(self):
         """Network output spec.
 
@@ -104,11 +113,14 @@ class CategoricalCNNModel(Model):
         return self._mlp_model.network_output_spec()
 
     # pylint: disable=arguments-differ
-    def _build(self, state_input, name=None):
+    def _build(self, state_input, input_dim, name=None):
         """Build model.
 
         Args:
             state_input (tf.Tensor): Observation inputs.
+            input_dim (Tuple[int, int, int]): Dimensions of unflattened input,
+                which means [in_height, in_width, in_channels]. If the last 3
+                dimensions of input_var is not this shape, it will be reshaped.
             name (str): Inner model name, also the variable scope of the
                 inner model, if exist. One example is
                 garage.tf.models.Sequential.
@@ -126,6 +138,7 @@ class CategoricalCNNModel(Model):
         dim = augmented_state_input.get_shape()[2:].as_list()
         augmented_state_input = tf.reshape(augmented_state_input, [-1, *dim])
         cnn_output = self._cnn_model.build(augmented_state_input,
+                                           input_dim,
                                            name=name).outputs
         dim = cnn_output.get_shape()[-1]
         cnn_output = tf.reshape(cnn_output, [-1, time_dim, dim])

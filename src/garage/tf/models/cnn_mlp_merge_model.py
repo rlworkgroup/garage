@@ -139,10 +139,10 @@ class CNNMLPMergeModel(Model):
             list[str]: List of key(str) for the network inputs.
 
         """
-        return ['state', 'action']
+        return ['state', 'action', 'input_dim']
 
     # pylint: disable=arguments-differ
-    def _build(self, state, action, name=None):
+    def _build(self, state, action, input_dim, name=None):
         """Build the model and return the outputs.
 
         This builds the model such that the output of the CNN is fed
@@ -155,13 +155,16 @@ class CNNMLPMergeModel(Model):
                 :math:`(N, O*)`.
             action (tf.Tensor): Action placeholder tensor of shape
                 :math:`(N, A*)`.
+            input_dim (Tuple[int, int, int]): Dimensions of unflattened input,
+                which means [in_height, in_width, in_channels]. If the last 3
+                dimensions of input_var is not this shape, it will be reshaped.
             name (str): Name of the model.
 
         Returns:
             tf.Tensor: Output of the model of shape (N, output_dim).
 
         """
-        cnn_out = self.cnn_model.build(state, name=name).outputs
+        cnn_out = self.cnn_model.build(state, input_dim, name=name).outputs
         mlp_out = self.mlp_merge_model.build(cnn_out, action,
                                              name=name).outputs
         return mlp_out

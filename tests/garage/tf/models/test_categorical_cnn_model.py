@@ -17,6 +17,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
         batch_size = 5
         input_width = 10
         input_height = 10
+        self._input_dim = (input_width, input_height, 3)
         self._obs_input = np.ones(
             (batch_size, 1, input_width, input_height, 3))
         self._input_shape = (input_width, input_height, 3
@@ -31,7 +32,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
                                     filters=((5, (3, 3)), ),
                                     strides=(1, ),
                                     padding='VALID')
-        dist = model.build(self._input_ph).dist
+        dist = model.build(self._input_ph, self._input_dim).dist
         assert isinstance(dist, tfp.distributions.OneHotCategorical)
 
     def test_instantiate_with_different_name(self):
@@ -39,8 +40,8 @@ class TestCategoricalMLPModel(TfGraphTestCase):
                                     filters=((5, (3, 3)), ),
                                     strides=(1, ),
                                     padding='VALID')
-        model.build(self._input_ph)
-        model.build(self._input_ph, name='another_model')
+        model.build(self._input_ph, self._input_dim)
+        model.build(self._input_ph, self._input_dim, name='another_model')
 
     # yapf: disable
     @pytest.mark.parametrize(
@@ -62,7 +63,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
                                     hidden_nonlinearity=None,
                                     hidden_w_init=tf.ones_initializer(),
                                     output_w_init=tf.ones_initializer())
-        dist = model.build(self._input_ph).dist
+        dist = model.build(self._input_ph, self._input_dim).dist
         # assign bias to all one
         with tf.compat.v1.variable_scope('CategoricalCNNModel', reuse=True):
             cnn_bias = tf.compat.v1.get_variable('CNNModel/cnn/h0/bias')
@@ -80,7 +81,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
                                                  shape=(None, None) +
                                                  self._input_shape)
             model_pickled = pickle.loads(h)
-            dist2 = model_pickled.build(input_var).dist
+            dist2 = model_pickled.build(input_var, self._input_dim).dist
             output2 = sess.run(dist2.probs,
                                feed_dict={input_var: self._obs_input})
 

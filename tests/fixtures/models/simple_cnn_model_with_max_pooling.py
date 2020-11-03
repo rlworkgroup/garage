@@ -55,12 +55,22 @@ class SimpleCNNModelWithMaxPooling(Model):
         self.pool_strides = pool_strides
         self.pool_shapes = pool_shapes
 
+    def network_input_spec(self):
+        """Network input spec.
+
+        Return:
+            list[str]: List of key(str) for the network inputs.
+
+        """
+        return ['state', 'input_dim']
+
     # pylint: disable=arguments-differ
-    def _build(self, obs_input, name=None):
+    def _build(self, obs_input, input_dim, name=None):
         """Build model given input placeholder(s).
 
         Args:
             obs_input (tf.Tensor): Tensor input for state.
+            input_dim (Tuple[int, int, int]): Consistent to real CNNModel.
             name (str): Inner model name, also the variable scope of the
                 inner model, if exist. One example is
                 garage.tf.models.Sequential.
@@ -70,6 +80,7 @@ class SimpleCNNModelWithMaxPooling(Model):
 
         """
         del name
+        del input_dim
         height_size = obs_input.get_shape().as_list()[1]
         width_size = obs_input.get_shape().as_list()[2]
         for filter_iter, stride in zip(self.filters, self.strides):

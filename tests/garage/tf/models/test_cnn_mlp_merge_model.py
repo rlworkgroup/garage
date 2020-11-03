@@ -56,7 +56,8 @@ class TestCNNMLPMergeModel(TfGraphTestCase):
                                  cnn_hidden_w_init=tf.constant_initializer(1),
                                  hidden_nonlinearity=self.hidden_nonlinearity)
 
-        model_out = model.build(self.obs_ph, self.action_ph).outputs
+        model_out = model.build(self.obs_ph, self.action_ph,
+                                self.input_shape).outputs
         filter_sum = 1
 
         # filter value after 3 layers of conv
@@ -131,7 +132,8 @@ class TestCNNMLPMergeModel(TfGraphTestCase):
                                  cnn_hidden_w_init=tf.constant_initializer(1),
                                  hidden_nonlinearity=self.hidden_nonlinearity)
 
-        model_out = model.build(self.obs_ph, self.action_ph).outputs
+        model_out = model.build(self.obs_ph, self.action_ph,
+                                self.input_shape).outputs
 
         filter_sum = 1
         # filter value after 3 layers of conv
@@ -203,7 +205,7 @@ class TestCNNMLPMergeModel(TfGraphTestCase):
                                  padding='VALID',
                                  cnn_hidden_w_init=tf.constant_initializer(1),
                                  hidden_nonlinearity=None)
-        outputs = model.build(self.obs_ph).outputs
+        outputs = model.build(self.obs_ph, None, self.input_shape).outputs
 
         with tf.compat.v1.variable_scope(
                 'cnn_mlp_merge_model/MLPMergeModel/mlp_concat', reuse=True):
@@ -219,7 +221,8 @@ class TestCNNMLPMergeModel(TfGraphTestCase):
                                                 shape=(None, ) +
                                                 self.input_shape,
                                                 name='input')
-            outputs = model_pickled.build(input_ph).outputs
+            outputs = model_pickled.build(input_ph, None,
+                                          self.input_shape).outputs
             output2 = sess.run(outputs, feed_dict={input_ph: self.obs_input})
 
             assert np.array_equal(output1, output2)
