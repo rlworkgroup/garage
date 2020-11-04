@@ -131,13 +131,27 @@ class CategoricalCNNPolicy(CategoricalCNNModel, Policy):
             augmented_state_input /= 255.0
         else:
             augmented_state_input = state_input
-        dist = self.build(augmented_state_input, self._obs_dim).outputs
+        dist = self.build(augmented_state_input).outputs
         self._f_prob = tf.compat.v1.get_default_session().make_callable(
             [
                 tf.argmax(dist.sample(seed=deterministic.get_tf_seed_stream()),
                           -1), dist.probs
             ],
             feed_list=[state_input])
+
+    # pylint: disable=arguments-differ
+    def build(self, state_input, name=None):
+        """Symbolic graph of the action.
+
+        Args:
+            state_input (tf.Tensor): Tensor input for symbolic graph.
+            name (str): Name for symbolic graph.
+
+        Returns:
+            tfp.distributions.OneHotCategorical: Policy distribution.
+
+        """
+        return super().build(state_input, self._obs_dim, name=name)
 
     @property
     def input_dim(self):
