@@ -38,8 +38,11 @@ class StochasticPolicy(Policy, abc.ABC):
                         torch.Tensor) and len(observation.shape) > 1:
             observation = torch.flatten(observation)
         with torch.no_grad():
+            if isinstance(observation, np.ndarray):
+                observation = torch.from_numpy(observation.astype(np.float32)).to(
+                    global_device())
             if not isinstance(observation, torch.Tensor):
-                observation = torch.as_tensor(observation).float().to(
+                observation = torch.as_tensor(observation, dtype=torch.float32).to(
                     global_device())
             observation = observation.unsqueeze(0)
             action, agent_infos = self.get_actions(observation)
@@ -88,8 +91,12 @@ class StochasticPolicy(Policy, abc.ABC):
             observations = self._env_spec.observation_space.unflatten_n(
                 observations)
         with torch.no_grad():
+            if isinstance(observation, np.ndarray):
+                observation = torch.from_numpy(observation.astype(np.float32)).to(
+                    global_device())
             if not isinstance(observations, torch.Tensor):
-                observations = torch.as_tensor(observations).float().to(
+                observations = torch.as_tensor(observations,
+                                               dtype=torch.float32).to(
                     global_device())
             if isinstance(self._env_spec.observation_space, akro.Image):
                 observations /= 255.0  # scale image

@@ -498,11 +498,11 @@ class PEARL(MetaRLAlgorithm):
                 no = np.vstack((no, batch['next_observations'][np.newaxis]))
                 d = np.vstack((d, batch['dones'][np.newaxis]))
 
-        o = torch.as_tensor(o, device=global_device()).float()
-        a = torch.as_tensor(a, device=global_device()).float()
-        r = torch.as_tensor(r, device=global_device()).float()
-        no = torch.as_tensor(no, device=global_device()).float()
-        d = torch.as_tensor(d, device=global_device()).float()
+        o = torch.from_numpy(o, device=global_device()).float()
+        a = torch.from_numpy(a, device=global_device()).float()
+        r = torch.from_numpy(r, device=global_device()).float()
+        no = torch.from_numpy(no, device=global_device()).float()
+        d = torch.from_numpy(d, device=global_device()).float()
 
         return o, a, r, no, d
 
@@ -542,7 +542,8 @@ class PEARL(MetaRLAlgorithm):
                 final_context = np.vstack((final_context, context[np.newaxis]))
 
         final_context = torch.as_tensor(final_context,
-                                        device=global_device()).float()
+                                        dtype=torch.float32,
+                                        device=global_device())
         if len(indices) == 1:
             final_context = final_context.unsqueeze(0)
 
