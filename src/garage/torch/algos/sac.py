@@ -162,12 +162,12 @@ class SAC(RLAlgorithm):
             else:
                 self._target_entropy = -np.prod(
                     self.env_spec.action_space.shape).item()
-            self._log_alpha = torch.Tensor([self._initial_log_entropy
-                                            ]).requires_grad_()
+            self._log_alpha = torch.as_tensor([self._initial_log_entropy
+                                               ]).requires_grad_()
             self._alpha_optimizer = optimizer([self._log_alpha],
                                               lr=self._policy_lr)
         else:
-            self._log_alpha = torch.Tensor([self._fixed_alpha]).log()
+            self._log_alpha = torch.as_tensor([self._fixed_alpha]).log()
         self.episode_rewards = deque(maxlen=30)
 
     def train(self, trainer):
