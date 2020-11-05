@@ -6,12 +6,12 @@ Here it runs InvertedDoublePendulum-v2 environment with 100 iterations.
 import torch
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv
-from garage.experiment import LocalRunner
+from garage.envs import GymEnv
 from garage.experiment.deterministic import set_seed
 from garage.torch.algos import TRPO
 from garage.torch.policies import GaussianMLPPolicy, GaussianGRUPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.trainer import Trainer
 
 
 @wrap_experiment
@@ -20,15 +20,15 @@ def trpo_pendulum_gru(ctxt=None, seed=1):
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by LocalRunner to create the snapshotter.
+            configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
 
     """
     set_seed(seed)
-    env = GarageEnv(env_name='InvertedDoublePendulum-v2')
+    env = GymEnv('InvertedDoublePendulum-v2')
 
-    runner = LocalRunner(ctxt)
+    trainer = Trainer(ctxt)
 
     policy = GaussianGRUPolicy(env.spec,
                                hidden_dim=32, # [32, 32]
@@ -44,12 +44,12 @@ def trpo_pendulum_gru(ctxt=None, seed=1):
     algo = TRPO(env_spec=env.spec,
                 policy=policy,
                 value_function=value_function,
-                max_path_length=100,
+                # max_path_length=100,
                 discount=0.99,
                 center_adv=False)
 
-    runner.setup(algo, env)
-    runner.train(n_epochs=100, batch_size=1024)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=100, batch_size=1024)
 
 
 trpo_pendulum_gru(seed=1)

@@ -25,11 +25,11 @@ class TestGRUModule:
                           self.output_dim)
 
         outputs, output, _, _ = model(self.input)  # read step output
-        assert output.size() == (self.batch_size, self.output_dim
+        assert output.size() == (self.input_dim, self.output_dim
                                  )  # (batch_size, output_dim)
-        assert outputs.shape == (self.input_dim, self.batch_size,
+        assert outputs.shape == (self.batch_size, self.input_dim, 
                                  self.output_dim
-                                 )  # (input_dim, batch_size, output_dim)
+                                 )  
 
     def test_is_pickleable(self):
         model = GRUModule(self.input_dim, self.hidden_dim, self.layer_dim,

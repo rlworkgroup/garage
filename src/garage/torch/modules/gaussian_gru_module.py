@@ -5,10 +5,11 @@ import torch
 from torch import nn
 from torch.distributions import Normal
 from torch.distributions.independent import Independent
+import torch.nn.functional as F
 
+from garage.torch import global_device, set_gpu_mode
 from garage.torch.distributions import TanhNormal
 from garage.torch.modules.gru_module import GRUModule
-
 
 class GaussianGRUBaseModule(nn.Module):
     """Gaussian GRU Module.
@@ -30,13 +31,8 @@ class GaussianGRUBaseModule(nn.Module):
             output_nonlinearity=None,
             output_w_init=nn.init.xavier_uniform_,
             output_b_init=nn.init.zeros_,
-            #  hidden_state_init=nn.init.zeros_,
-            #  hidden_state_init_trainable=False,
             learn_std=True,
             init_std=1.0,
-            #  min_std=1e-6,
-            #  max_std=None,
-            #  std_share_network=False,
             std_parameterization='exp',
             layer_normalization=False,
             normal_distribution_cls=Normal):
@@ -52,18 +48,15 @@ class GaussianGRUBaseModule(nn.Module):
         self._output_nonlinearity = output_nonlinearity
         self._output_w_init = output_w_init
         self._output_b_init = output_b_init
-        # self._hidden_state_init = hidden_state_init
-        # self._hidden_state_init_trainable = hidden_state_init_trainable
         self._learn_std = learn_std
-        # self._min_std = min_std
-        # self._max_std = max_std
-        # self._std_share_network = std_share_network
         self._std_parameterization = std_parameterization,
         self._layer_normalization = layer_normalization
         self._norm_dist_class = normal_distribution_cls
 
-        # if self._std_parameterization not in ('exp', 'softplus'):
-        #     raise NotImplementedError
+        self.continuous_action_space = True# continuous_action_space 
+        self.log_std_dev = nn.Parameter(init_std * torch.ones(( self._output_dim), dtype=torch.float), requires_grad=self._learn_std)
+        self.covariance_eye = torch.eye(int(self._output_dim)).unsqueeze(0)
+
         init_std_param = torch.Tensor([init_std]).log()
         if self._learn_std:
             self._init_std = torch.nn.Parameter(init_std_param)
@@ -88,7 +81,7 @@ class GaussianGRUBaseModule(nn.Module):
     def _get_mean_and_log_std(self, *inputs):
         pass
 
-    def forward(self, *inputs):
+    def forward(self, *inputs, terminal=None):
         """Forward method.
 
         Args:
@@ -99,6 +92,26 @@ class GaussianGRUBaseModule(nn.Module):
                 distribution.
 
         """
+        if torch.cuda.is_available():
+            set_gpu_mode(True)
+        else:
+            set_gpu_mode(False)
+        device = global_device()
+
+        _ , _ , _ , _, policy_logits_out, _ = self._get_mean_and_log_std(*inputs)
+        if self.continuous_action_space:
+            cov_matrix = self.covariance_eye.to(device).expand(self._input_dim, self._output_dim, self._output_dim) * torch.exp(self._init_std.to(device))
+            # We define the distribution on the CPU since otherwise operations fail with CUDA illegal memory access error.
+            policy_dist = torch.distributions.multivariate_normal.MultivariateNormal(policy_logits_out.to("cpu"), cov_matrix.to("cpu"))
+        else:
+            policy_dist = torch.distributions.Categorical(F.softmax(policy_logits_out, dim=1).to("cpu"))
+        
+        # if not isinstance(policy_dist, TanhNormal):
+        # #     # Makes it so that a sample from the distribution is treated as a
+        # #     # single sample and not dist.batch_shape samples.
+        #     policy_dist = Independent(policy_dist, 1)
+        return policy_dist
+
         (mean, step_mean, log_std, step_log_std, step_hidden,
          hidden_init) = self._get_mean_and_log_std(*inputs)
 
@@ -112,8 +125,8 @@ class GaussianGRUBaseModule(nn.Module):
             # single sample and not dist.batch_shape samples.
             dist = Independent(dist, 1)
 
-        # return dist
-        return (dist, step_mean, step_log_std, step_hidden, hidden_init)
+        return dist
+        # return (dist, step_mean, step_log_std, step_hidden, hidden_init)
 
 
 class GaussianGRUModule(GaussianGRUBaseModule):
@@ -152,8 +165,6 @@ class GaussianGRUModule(GaussianGRUBaseModule):
             output_b_init=output_b_init,
             learn_std=learn_std,
             init_std=init_std,
-            #  min_std=min_std,
-            #  max_std=max_std,
             std_parameterization=std_parameterization,
             layer_normalization=layer_normalization,
             normal_distribution_cls=normal_distribution_cls)
@@ -185,10 +196,3 @@ class GaussianGRUModule(GaussianGRUBaseModule):
 
         return (mean_outputs, step_mean_outputs, uncentered_log_std,
                 uncentered_step_log_std, step_hidden, hidden_init_var)
-
-        # mean = self._mean_gru_module(*inputs)
-
-        # broadcast_shape = list(inputs[0].shape[:-1]) + [self._action_dim]
-        # uncentered_log_std = torch.zeros(*broadcast_shape) + self._init_std
-
-        # return mean, uncentered_log_std

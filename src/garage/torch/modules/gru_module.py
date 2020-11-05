@@ -18,12 +18,12 @@ class GRUModule(nn.Module):
         self._hidden_dim = hidden_dim
         # Number of hidden layers
         self._layer_dim = layer_dim
+        print(input_dim, hidden_dim)
         self._gru_cell = nn.GRUCell(input_dim, hidden_dim)
         # self.gru_cell = GRUCell(input_dim, hidden_dim, layer_dim)
         self._fc = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, *input):
-        # input = input[0]
         input = Variable(input[0].view(-1, input[0].size(0), input[0].size(1)))
 
         # Initialize hidden state with zeros
@@ -34,7 +34,6 @@ class GRUModule(nn.Module):
         else:
             h0 = Variable(
                 torch.zeros(self._layer_dim, input.size(0), self._hidden_dim))
-
         outs = []
         hn = h0[0, :, :]
 
@@ -45,6 +44,4 @@ class GRUModule(nn.Module):
         out = self._fc(out)
         outs = torch.stack(outs)  # convert list of tensors to tensor
         outs = self._fc(outs)
-        # out.size() --> 100, 10
-        # return out
         return outs, out, hn, h0

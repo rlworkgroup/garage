@@ -5,6 +5,7 @@ from torch.distributions.independent import Independent
 
 from garage.torch.modules import GaussianGRUModule
 from garage.torch.policies.stochastic_policy import StochasticPolicy
+from garage.torch.modules.gru_module import GRUModule
 
 
 class GaussianGRUPolicy(StochasticPolicy):
@@ -23,15 +24,15 @@ class GaussianGRUPolicy(StochasticPolicy):
             output_b_init=nn.init.zeros_,
             learn_std=True,
             init_std=1.0,
-            #  min_std=1e-6,
-            #  max_std=None,
             std_parameterization='exp',
             layer_normalization=False,
             name='GaussianGRUPolicy'):
         super().__init__(env_spec, name)
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
-        self._module = GaussianGRUModule(
+        print(self._obs_dim, self._action_dim, hidden_dim)
+        
+        self._actor = GaussianGRUModule(
             input_dim=self._obs_dim,
             output_dim=self._action_dim,
             hidden_dim=hidden_dim,
@@ -45,6 +46,11 @@ class GaussianGRUPolicy(StochasticPolicy):
             init_std=init_std,
             std_parameterization=std_parameterization,
             layer_normalization=layer_normalization)
+        
+        self._critic = GRUModule(input_dim=self._obs_dim,
+                                output_dim=self._action_dim,
+                                hidden_dim=hidden_dim,
+                                layer_dim=1)
 
     def forward(self, observations):
         """Compute the action distributions from the observations.
@@ -59,9 +65,7 @@ class GaussianGRUPolicy(StochasticPolicy):
 
         """
 
-        dist = self._module(observations)
-        dist = dist[0]
+        dist = self._actor(observations)
         assert isinstance(dist, torch.distributions.independent.Independent)
         assert dist.event_shape == torch.Size((1, ))
-        assert dist.batch_shape == torch.Size((1, ))
         return (dist, dict(mean=dist.mean, log_std=(dist.variance**.5).log()))

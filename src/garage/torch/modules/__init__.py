@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 """PyTorch Modules."""
 # yapf: disable
 # isort:skip_file
