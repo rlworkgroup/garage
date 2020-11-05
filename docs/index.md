@@ -64,6 +64,7 @@ and how to implement new MDPs and new algorithms.
    TD3 <user/algo_td3>
    TRPO <user/algo_trpo>
    REINFORCE <user/algo_vpg>
+   DQN <user/algo_dqn>
 
 .. toctree::
    :maxdepth: 2
