@@ -498,11 +498,11 @@ class PEARL(MetaRLAlgorithm):
                 no = np.vstack((no, batch['next_observations'][np.newaxis]))
                 d = np.vstack((d, batch['dones'][np.newaxis]))
 
-        o = torch.from_numpy(o, device=global_device()).float()
-        a = torch.from_numpy(a, device=global_device()).float()
-        r = torch.from_numpy(r, device=global_device()).float()
-        no = torch.from_numpy(no, device=global_device()).float()
-        d = torch.from_numpy(d, device=global_device()).float()
+        o = torch.from_numpy(o).to(global_device()).float()
+        a = torch.from_numpy(a).to(global_device()).float()
+        r = torch.from_numpy(r).to(global_device()).float()
+        no = torch.from_numpy(no).to(global_device()).float()
+        d = torch.from_numpy(d).to(device=global_device()).float()
 
         return o, a, r, no, d
 

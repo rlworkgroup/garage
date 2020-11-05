@@ -52,6 +52,9 @@ class CNNModule(nn.Module):
         layer_normalization (bool): Bool for using layer normalization or not.
         n_layers (int): number of convolutional layer.
         is_image (bool): Whether observations are images or not.
+        enable_cudnn_benchmarks (bool): Whether to enable cudnn benchmarks
+            in `torch`. If enabled, the backend selects the CNN benchamark
+            algorithm with the best performance.
     """
 
     def __init__(self,
@@ -68,8 +71,8 @@ class CNNModule(nn.Module):
                  pool_shape=None,
                  pool_stride=1,
                  layer_normalization=False,
-                 n_layers=None,
-                 is_image=True):
+                 is_image=True,
+                 enable_cudnn_benchmarks=True):
         if len(strides) != len(hidden_channels):
             raise ValueError('Strides and hidden_channels must have the same'
                              ' number of dimensions')
@@ -91,6 +94,8 @@ class CNNModule(nn.Module):
         self._cnn_layers = nn.ModuleList()
         self._in_channel = input_var.shape[1]  # read in N, C, H, W
         self._CNNCell()
+
+        torch.backends.cudnn.benchmark = enable_cudnn_benchmarks
 
     @classmethod
     def _check_parameter_for_output_layer(cls, var, n_layers):
