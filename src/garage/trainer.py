@@ -9,6 +9,7 @@ import psutil
 
 # This is avoiding a circular import
 from garage.experiment.deterministic import get_seed, set_seed
+from garage.experiment.experiment import dump_json
 from garage.experiment.snapshotter import Snapshotter
 from garage.sampler.default_worker import DefaultWorker
 from garage.sampler.worker_factory import WorkerFactory
@@ -517,6 +518,10 @@ class Trainer:
 
         self._plot = plot
         self._start_worker()
+
+        log_dir = self._snapshotter.snapshot_dir
+        summary_file = os.path.join(log_dir, 'experiment.json')
+        dump_json(summary_file, self)
 
         average_return = self._algo.train(self)
         self._shutdown_worker()
