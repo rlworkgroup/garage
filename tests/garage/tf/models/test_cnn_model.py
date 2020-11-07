@@ -34,14 +34,15 @@ class TestCNNModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_output_value(self, filters, in_channels, strides):
-        model = CNNModel(filters=filters,
+        model = CNNModel(input_dim=self.input_dim,
+                         filters=filters,
                          strides=strides,
                          name='cnn_model',
                          padding='VALID',
                          hidden_w_init=tf.constant_initializer(1),
                          hidden_nonlinearity=None)
 
-        outputs = model.build(self._input_ph, self.input_dim).outputs
+        outputs = model.build(self._input_ph).outputs
         output = self.sess.run(outputs,
                                feed_dict={self._input_ph: self.obs_input})
 
@@ -82,6 +83,7 @@ class TestCNNModel(TfGraphTestCase):
     def test_output_value_max_pooling(self, filters, in_channels, strides,
                                       pool_strides, pool_shapes):
         model = CNNModelWithMaxPooling(
+            input_dim=self.input_dim,
             filters=filters,
             strides=strides,
             name='cnn_model',
@@ -91,7 +93,7 @@ class TestCNNModel(TfGraphTestCase):
             hidden_w_init=tf.constant_initializer(1),
             hidden_nonlinearity=None)
 
-        outputs = model.build(self._input_ph, self.input_dim).outputs
+        outputs = model.build(self._input_ph).outputs
         output = self.sess.run(outputs,
                                feed_dict={self._input_ph: self.obs_input})
 
@@ -130,13 +132,14 @@ class TestCNNModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_is_pickleable(self, filters, strides):
-        model = CNNModel(filters=filters,
+        model = CNNModel(input_dim=self.input_dim,
+                         filters=filters,
                          strides=strides,
                          name='cnn_model',
                          padding='VALID',
                          hidden_w_init=tf.constant_initializer(1),
                          hidden_nonlinearity=None)
-        outputs = model.build(self._input_ph, self.input_dim).outputs
+        outputs = model.build(self._input_ph).outputs
         with tf.compat.v1.variable_scope('cnn_model/cnn/h0', reuse=True):
             bias = tf.compat.v1.get_variable('bias')
         bias.load(tf.ones_like(bias).eval())
@@ -151,7 +154,7 @@ class TestCNNModel(TfGraphTestCase):
             input_ph = tf.compat.v1.placeholder(tf.float32,
                                                 shape=(None, ) + input_shape,
                                                 name='input')
-            outputs = model_pickled.build(input_ph, self.input_dim).outputs
+            outputs = model_pickled.build(input_ph).outputs
             output2 = sess.run(outputs, feed_dict={input_ph: self.obs_input})
 
             assert np.array_equal(output1, output2)

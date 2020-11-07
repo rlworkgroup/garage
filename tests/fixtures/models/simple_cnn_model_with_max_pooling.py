@@ -8,6 +8,7 @@ class SimpleCNNModelWithMaxPooling(Model):
     """Simple CNNModel with max pooling for testing.
 
     Args:
+        input_dim (Tuple[int, int, int]): Consistent to real CNNModel.
         filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
             of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
             are two convolutional layers. The filter for the first layer have 3
@@ -38,6 +39,7 @@ class SimpleCNNModelWithMaxPooling(Model):
     """
 
     def __init__(self,
+                 input_dim,
                  filters,
                  strides,
                  padding,
@@ -47,7 +49,7 @@ class SimpleCNNModelWithMaxPooling(Model):
                  hidden_nonlinearity=None,
                  hidden_w_init=None,
                  hidden_b_init=None):
-        del hidden_nonlinearity, hidden_w_init, hidden_b_init
+        del hidden_nonlinearity, hidden_w_init, hidden_b_init, input_dim
         super().__init__(name)
         self.filters = filters
         self.strides = strides
@@ -55,22 +57,12 @@ class SimpleCNNModelWithMaxPooling(Model):
         self.pool_strides = pool_strides
         self.pool_shapes = pool_shapes
 
-    def network_input_spec(self):
-        """Network input spec.
-
-        Return:
-            list[str]: List of key(str) for the network inputs.
-
-        """
-        return ['state', 'input_dim']
-
     # pylint: disable=arguments-differ
-    def _build(self, obs_input, input_dim, name=None):
+    def _build(self, obs_input, name=None):
         """Build model given input placeholder(s).
 
         Args:
             obs_input (tf.Tensor): Tensor input for state.
-            input_dim (Tuple[int, int, int]): Consistent to real CNNModel.
             name (str): Inner model name, also the variable scope of the
                 inner model, if exist. One example is
                 garage.tf.models.Sequential.
@@ -80,7 +72,6 @@ class SimpleCNNModelWithMaxPooling(Model):
 
         """
         del name
-        del input_dim
         height_size = obs_input.get_shape().as_list()[1]
         width_size = obs_input.get_shape().as_list()[2]
         for filter_iter, stride in zip(self.filters, self.strides):

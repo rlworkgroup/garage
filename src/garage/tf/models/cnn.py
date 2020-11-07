@@ -52,8 +52,7 @@ def cnn(input_var,
     """
     with tf.compat.v1.variable_scope(name):
         # unflatten
-        if len(input_var.get_shape()[1:].as_list()) < len(input_dim):
-            input_var = tf.reshape(input_var, [-1, *input_dim])
+        input_var = tf.reshape(input_var, [-1, *input_dim])
 
         h = input_var
         for index, (filter_iter, stride) in enumerate(zip(filters, strides)):
@@ -126,8 +125,7 @@ def cnn_with_max_pooling(input_var,
 
     with tf.compat.v1.variable_scope(name):
         # unflatten
-        if len(input_var.get_shape()[1:].as_list()) < len(input_dim):
-            input_var = tf.reshape(input_var, [-1, *input_dim])
+        input_var = tf.reshape(input_var, [-1, *input_dim])
 
         h = input_var
         for index, (filter_iter, stride) in enumerate(zip(filters, strides)):

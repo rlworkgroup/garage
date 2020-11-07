@@ -120,12 +120,14 @@ class DiscreteCNNQFunction(Sequential):
         action_dim = self._env_spec.action_space.flat_dim
 
         if not max_pooling:
-            cnn_model = CNNModel(filters=filters,
+            cnn_model = CNNModel(input_dim=self.obs_dim,
+                                 filters=filters,
                                  strides=strides,
                                  padding=padding,
                                  hidden_nonlinearity=cnn_hidden_nonlinearity)
         else:
             cnn_model = CNNModelWithMaxPooling(
+                input_dim=self.obs_dim,
                 filters=filters,
                 strides=strides,
                 padding=padding,
@@ -195,33 +197,6 @@ class DiscreteCNNQFunction(Sequential):
 
         """
         return self._obs_input
-
-    # pylint: disable=arguments-differ
-    def _build(self, input_var, name=None):
-        """Build model given input placeholder(s).
-
-        Args:
-            input_var (tf.Tensor): Tensor input.
-            name (str): Inner model name, also the variable scope of the
-                inner model.
-
-        Return:
-            tf.Tensor: Tensor output of the model.
-
-        """
-        out = input_var
-        is_first = True
-        for model in self._models:
-            if is_first:
-                self._last_network = model.build(out, self.obs_dim, name=name)
-                is_first = False
-            else:
-                self._last_network = model.build(out, name=name)
-            if self._first_network is None:
-                self._first_network = self._last_network
-            out = self._last_network.outputs
-
-        return out
 
     # pylint: disable=arguments-differ
     def build(self, state_input, name):

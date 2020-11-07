@@ -121,6 +121,7 @@ class ContinuousCNNQFunction(CNNMLPMergeModel):
         self._action_dim = self._env_spec.action_space.shape
 
         super().__init__(name=name,
+                         input_dim=self._obs_dim,
                          filters=self._filters,
                          strides=self._strides,
                          hidden_sizes=self._hidden_sizes,
@@ -155,8 +156,7 @@ class ContinuousCNNQFunction(CNNMLPMergeModel):
                                               (None, ) + self._obs_dim,
                                               name='state')
             augmented_obs_ph = obs_ph
-        outputs = super().build(augmented_obs_ph, action_ph,
-                                self._obs_dim).outputs
+        outputs = super().build(augmented_obs_ph, action_ph).outputs
         self._f_qval = tf.compat.v1.get_default_session().make_callable(
             outputs, feed_list=[obs_ph, action_ph])
 
@@ -210,9 +210,7 @@ class ContinuousCNNQFunction(CNNMLPMergeModel):
         augmented_state_input = state_input
         if isinstance(self._env_spec.observation_space, akro.Image):
             augmented_state_input = tf.cast(state_input, tf.float32) / 255.0
-        return super().build(augmented_state_input,
-                             action_input,
-                             self._obs_dim,
+        return super().build(augmented_state_input, action_input,
                              name=name).outputs
 
     def clone(self, name):

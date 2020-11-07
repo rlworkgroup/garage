@@ -16,6 +16,9 @@ class CNNMLPMergeModel(Model):
     the MLP accepts the CNN's output and the action as inputs.
 
     Args:
+        input_dim (Tuple[int, int, int]): Dimensions of unflattened input,
+            which means [in_height, in_width, in_channels]. If the last 3
+            dimensions of input_var is not this shape, it will be reshaped.
         filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
             of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
             are two convolutional layers. The filter for the first layer have 3
@@ -76,6 +79,7 @@ class CNNMLPMergeModel(Model):
     """
 
     def __init__(self,
+                 input_dim,
                  filters,
                  strides,
                  hidden_sizes=(256, ),
@@ -103,6 +107,7 @@ class CNNMLPMergeModel(Model):
 
         if not max_pooling:
             self.cnn_model = CNNModel(
+                input_dim=input_dim,
                 filters=filters,
                 hidden_w_init=cnn_hidden_w_init,
                 hidden_b_init=cnn_hidden_b_init,
@@ -111,6 +116,7 @@ class CNNMLPMergeModel(Model):
                 hidden_nonlinearity=cnn_hidden_nonlinearity)
         else:
             self.cnn_model = CNNModelWithMaxPooling(
+                input_dim=input_dim,
                 filters=filters,
                 hidden_w_init=cnn_hidden_w_init,
                 hidden_b_init=cnn_hidden_b_init,
@@ -139,10 +145,10 @@ class CNNMLPMergeModel(Model):
             list[str]: List of key(str) for the network inputs.
 
         """
-        return ['state', 'action', 'input_dim']
+        return ['state', 'action']
 
     # pylint: disable=arguments-differ
-    def _build(self, state, action, input_dim, name=None):
+    def _build(self, state, action, name=None):
         """Build the model and return the outputs.
 
         This builds the model such that the output of the CNN is fed
@@ -155,16 +161,13 @@ class CNNMLPMergeModel(Model):
                 :math:`(N, O*)`.
             action (tf.Tensor): Action placeholder tensor of shape
                 :math:`(N, A*)`.
-            input_dim (Tuple[int, int, int]): Dimensions of unflattened input,
-                which means [in_height, in_width, in_channels]. If the last 3
-                dimensions of input_var is not this shape, it will be reshaped.
             name (str): Name of the model.
 
         Returns:
             tf.Tensor: Output of the model of shape (N, output_dim).
 
         """
-        cnn_out = self.cnn_model.build(state, input_dim, name=name).outputs
+        cnn_out = self.cnn_model.build(state, name=name).outputs
         mlp_out = self.mlp_merge_model.build(cnn_out, action,
                                              name=name).outputs
         return mlp_out

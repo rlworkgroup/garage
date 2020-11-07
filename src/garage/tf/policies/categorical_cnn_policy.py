@@ -104,7 +104,8 @@ class CategoricalCNNPolicy(CategoricalCNNModel, Policy):
 
         is_image = isinstance(self.env_spec.observation_space, akro.Image)
 
-        super().__init__(output_dim=self._action_dim,
+        super().__init__(input_dim=self._obs_dim,
+                         output_dim=self._action_dim,
                          filters=filters,
                          strides=strides,
                          padding=padding,
@@ -138,20 +139,6 @@ class CategoricalCNNPolicy(CategoricalCNNModel, Policy):
                           -1), dist.probs
             ],
             feed_list=[state_input])
-
-    # pylint: disable=arguments-differ
-    def build(self, state_input, name=None):
-        """Symbolic graph of the action.
-
-        Args:
-            state_input (tf.Tensor): Tensor input for symbolic graph.
-            name (str): Name for symbolic graph.
-
-        Returns:
-            tfp.distributions.OneHotCategorical: Policy distribution.
-
-        """
-        return super().build(state_input, self._obs_dim, name=name)
 
     @property
     def input_dim(self):

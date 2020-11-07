@@ -28,20 +28,22 @@ class TestCategoricalMLPModel(TfGraphTestCase):
                                                   name='input')
 
     def test_dist(self):
-        model = CategoricalCNNModel(output_dim=1,
+        model = CategoricalCNNModel(input_dim=self._input_dim,
+                                    output_dim=1,
                                     filters=((5, (3, 3)), ),
                                     strides=(1, ),
                                     padding='VALID')
-        dist = model.build(self._input_ph, self._input_dim).dist
+        dist = model.build(self._input_ph).dist
         assert isinstance(dist, tfp.distributions.OneHotCategorical)
 
     def test_instantiate_with_different_name(self):
-        model = CategoricalCNNModel(output_dim=1,
+        model = CategoricalCNNModel(input_dim=self._input_dim,
+                                    output_dim=1,
                                     filters=((5, (3, 3)), ),
                                     strides=(1, ),
                                     padding='VALID')
-        model.build(self._input_ph, self._input_dim)
-        model.build(self._input_ph, self._input_dim, name='another_model')
+        model.build(self._input_ph)
+        model.build(self._input_ph, name='another_model')
 
     # yapf: disable
     @pytest.mark.parametrize(
@@ -55,7 +57,8 @@ class TestCategoricalMLPModel(TfGraphTestCase):
     # yapf: enable
     def test_is_pickleable(self, output_dim, filters, strides, padding,
                            hidden_sizes):
-        model = CategoricalCNNModel(output_dim=output_dim,
+        model = CategoricalCNNModel(input_dim=self._input_dim,
+                                    output_dim=output_dim,
                                     filters=filters,
                                     strides=strides,
                                     padding=padding,
@@ -63,7 +66,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
                                     hidden_nonlinearity=None,
                                     hidden_w_init=tf.ones_initializer(),
                                     output_w_init=tf.ones_initializer())
-        dist = model.build(self._input_ph, self._input_dim).dist
+        dist = model.build(self._input_ph).dist
         # assign bias to all one
         with tf.compat.v1.variable_scope('CategoricalCNNModel', reuse=True):
             cnn_bias = tf.compat.v1.get_variable('CNNModel/cnn/h0/bias')
@@ -81,7 +84,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
                                                  shape=(None, None) +
                                                  self._input_shape)
             model_pickled = pickle.loads(h)
-            dist2 = model_pickled.build(input_var, self._input_dim).dist
+            dist2 = model_pickled.build(input_var).dist
             output2 = sess.run(dist2.probs,
                                feed_dict={input_var: self._obs_input})
 
