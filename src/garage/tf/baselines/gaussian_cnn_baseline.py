@@ -159,7 +159,7 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
         else:
             self._optimizer = make_optimizer(optimizer, **optimizer_args)
 
-        super().__init__(input_shape=env_spec.observation_space.shape,
+        super().__init__(input_dim=env_spec.observation_space.shape,
                          output_dim=1,
                          filters=filters,
                          strides=strides,
@@ -318,7 +318,7 @@ class GaussianCNNBaseline(GaussianCNNBaselineModel, Baseline):
         """
         new_baseline = GaussianCNNBaselineModel(
             name=name,
-            input_shape=self._env_spec.observation_space.shape,
+            input_dim=self._env_spec.observation_space.shape,
             output_dim=1,
             filters=self._filters,
             strides=self._strides,
