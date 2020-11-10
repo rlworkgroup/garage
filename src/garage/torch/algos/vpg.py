@@ -11,7 +11,7 @@ from garage import log_performance
 from garage.np import discount_cumsum
 from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
-from garage.torch import compute_advantages, filter_valids, pad_to_last
+from garage.torch import compute_advantages, filter_valids
 from garage.torch.optimizers import OptimizerWrapper
 
 
@@ -143,15 +143,24 @@ class VPG(RLAlgorithm):
             numpy.float64: Calculated mean value of undiscounted returns.
 
         """
-        obs, rewards, returns, valids, baselines = self._process_samples(eps)
+        obs = torch.Tensor(eps.padded_observations)
+        rewards = torch.Tensor(eps.padded_rewards)
+        returns = torch.Tensor(
+            np.stack([
+                discount_cumsum(reward, self.discount)
+                for reward in eps.padded_rewards
+            ]))
+        valids = eps.lengths
+        with torch.no_grad():
+            baselines = self._value_function(obs)
 
         if self._maximum_entropy:
             policy_entropies = self._compute_policy_entropy(obs)
             rewards += self._policy_ent_coeff * policy_entropies
 
-        obs_flat = torch.from_numpy(eps.observations).float()
-        actions_flat = torch.from_numpy(eps.actions).float()
-        rewards_flat = torch.from_numpy(eps.rewards).float()
+        obs_flat = torch.Tensor(eps.observations)
+        actions_flat = torch.Tensor(eps.actions)
+        rewards_flat = torch.Tensor(eps.rewards)
         returns_flat = torch.cat(filter_valids(returns, valids))
         advs_flat = self._compute_advantage(rewards, valids, baselines)
 
@@ -443,43 +452,3 @@ class VPG(RLAlgorithm):
         log_likelihoods = self.policy(obs)[0].log_prob(actions)
 
         return log_likelihoods * advantages
-
-    def _process_samples(self, eps):
-        r"""Process sample data based on the collected paths.
-
-        Notes: P is the maximum episode length (self.max_episode_length)
-
-        Args:
-            eps (EpisodeBatch): An episode batch
-
-        Returns:
-            torch.Tensor: The observations of the environment
-                with shape :math:`(N, P, O*)`.
-            torch.Tensor: The actions fed to the environment
-                with shape :math:`(N, P, A*)`.
-            torch.Tensor: The acquired rewards with shape :math:`(N, P)`.
-            list[int]: Numbers of valid steps in each paths.
-            torch.Tensor: Value function estimation at each step
-                with shape :math:`(N, P)`.
-
-        """
-        paths = eps.to_list()
-        valids = torch.Tensor(eps.lengths).int()
-
-        obs = torch.stack([
-            pad_to_last(path['observations'],
-                        total_length=self.max_episode_length,
-                        axis=0) for path in paths
-        ])
-        rewards = torch.stack([
-            pad_to_last(path['rewards'], total_length=self.max_episode_length)
-            for path in paths
-        ])
-        returns = torch.stack([
-            pad_to_last(discount_cumsum(path['rewards'], self.discount).copy(),
-                        total_length=self.max_episode_length) for path in paths
-        ])
-        with torch.no_grad():
-            baselines = self._value_function(obs)
-
-        return obs, rewards, returns, valids, baselines
