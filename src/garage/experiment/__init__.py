@@ -5,8 +5,7 @@ from garage.experiment.snapshotter import SnapshotConfig, Snapshotter
 from garage.experiment.task_sampler import (ConstructEnvsSampler,
                                             EnvPoolSampler,
                                             MetaWorldTaskSampler,
-                                            SetTaskSampler,
-                                            TaskSampler)
+                                            SetTaskSampler, TaskSampler)
 
 # yapf: enable
 

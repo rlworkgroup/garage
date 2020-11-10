@@ -7,9 +7,7 @@ from dowel import tabular
 import numpy as np
 import torch
 
-from garage import (_Default,
-                    EpisodeBatch,
-                    log_multitask_performance,
+from garage import (_Default, EpisodeBatch, log_multitask_performance,
                     make_optimizer)
 from garage.np import discount_cumsum
 from garage.sampler import RaySampler

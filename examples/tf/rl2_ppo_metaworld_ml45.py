@@ -7,8 +7,7 @@ import metaworld
 
 from garage import wrap_experiment
 from garage.envs import MetaWorldSetTaskEnv
-from garage.experiment import (MetaEvaluator,
-                               MetaWorldTaskSampler,
+from garage.experiment import (MetaEvaluator, MetaWorldTaskSampler,
                                SetTaskSampler)
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
