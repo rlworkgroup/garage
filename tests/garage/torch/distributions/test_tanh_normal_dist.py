@@ -48,7 +48,7 @@ class TestBenchmarkTanhNormalDistribution:
         log_prob = dist.log_prob(action, pre_tanh_action)
         log_prob_approx = dist.log_prob(action)
         assert torch.allclose(log_prob, torch.Tensor([-0.2798519]))
-        assert torch.allclose(log_prob_approx, torch.Tensor([-0.2798519]))
+        assert torch.allclose(log_prob_approx, torch.Tensor([-0.2798185]))
         del dist
 
     def test_tanh_normal_expand(self):
@@ -71,3 +71,14 @@ class TestBenchmarkTanhNormalDistribution:
         std = torch.ones(1)
         dist = TanhNormal(mean, std)
         assert repr(dist) == 'TanhNormal'
+
+    def test_tanh_normal_log_prob_of_clipped_action(self):
+        """Verify that clipped actions still have a valid log probability."""
+        mean = torch.zeros(2)
+        std = torch.ones(2)
+        dist = TanhNormal(mean, std)
+        action = torch.Tensor([[1., -1.]])
+        log_prob_approx = dist.log_prob(action)
+        assert torch.isfinite(log_prob_approx)
+        assert log_prob_approx < -20
+        del dist
