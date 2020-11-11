@@ -1,6 +1,5 @@
 from garage.envs import GymEnv
 from garage.np.algos import CMAES
-from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.trainer import TFTrainer
@@ -18,14 +17,10 @@ class TestCMAES(TfGraphTestCase):
             policy = CategoricalMLPPolicy(name='policy',
                                           env_spec=env.spec,
                                           hidden_sizes=(32, 32))
-            baseline = LinearFeatureBaseline(env_spec=env.spec)
 
             n_samples = 20
 
-            algo = CMAES(env_spec=env.spec,
-                         policy=policy,
-                         baseline=baseline,
-                         n_samples=n_samples)
+            algo = CMAES(env_spec=env.spec, policy=policy, n_samples=n_samples)
 
             trainer.setup(algo, env, sampler_cls=LocalSampler)
             trainer.train(n_epochs=1, batch_size=1000)

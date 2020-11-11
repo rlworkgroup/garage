@@ -5,8 +5,7 @@ import cma
 from dowel import logger, tabular
 import numpy as np
 
-from garage import EpisodeBatch, log_performance
-from garage.np import paths_to_tensors
+from garage import log_performance
 from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.sampler import RaySampler
 
@@ -22,21 +21,13 @@ class CMAES(RLAlgorithm):
     Args:
         env_spec (EnvSpec): Environment specification.
         policy (garage.np.policies.Policy): Action policy.
-        baseline (garage.np.baselines.Baseline): Baseline for GAE (Generalized
-            Advantage Estimation).
         n_samples (int): Number of policies sampled in one epoch.
         discount (float): Environment reward discount.
         sigma0 (float): Initial std for param distribution.
 
     """
 
-    def __init__(self,
-                 env_spec,
-                 policy,
-                 baseline,
-                 n_samples,
-                 discount=0.99,
-                 sigma0=1.):
+    def __init__(self, env_spec, policy, n_samples, discount=0.99, sigma0=1.):
         self.policy = policy
         self.max_episode_length = env_spec.max_episode_length
         self.sampler_cls = RaySampler
@@ -45,7 +36,6 @@ class CMAES(RLAlgorithm):
         self._discount = discount
         self._sigma0 = sigma0
         self._n_samples = n_samples
-        self._baseline = baseline
         self._episode_reward_mean = collections.deque(maxlen=100)
 
         self._es = None
@@ -87,54 +77,41 @@ class CMAES(RLAlgorithm):
 
         for _ in trainer.step_epochs():
             for _ in range(self._n_samples):
-                trainer.step_path = trainer.obtain_samples(trainer.step_itr)
-                last_return = self.train_once(trainer.step_itr,
-                                              trainer.step_path)
+                trainer.step_path = trainer.obtain_episodes(trainer.step_itr)
+                last_return = self._train_once(trainer.step_itr,
+                                               trainer.step_path)
                 trainer.step_itr += 1
 
         return last_return
 
-    def train_once(self, itr, paths):
+    def _train_once(self, itr, episodes):
         """Perform one step of policy optimization given one batch of samples.
 
         Args:
             itr (int): Iteration number.
-            paths (list[dict]): A list of collected paths.
+            episodes (garage.EpisodeBatch): Episodes collected using the
+                current policy.
 
         Returns:
-            float: The average return in last epoch cycle.
+            float: The average return of epoch cycle.
 
         """
-        # -- Stage: Calculate baseline
-        if hasattr(self._baseline, 'predict_n'):
-            baseline_predictions = self._baseline.predict_n(paths)
-        else:
-            baseline_predictions = [
-                self._baseline.predict(path) for path in paths
-            ]
-
-        # -- Stage: Pre-process samples based on collected paths
-        samples_data = paths_to_tensors(paths, self.max_episode_length,
-                                        baseline_predictions, self._discount)
-
         # -- Stage: Run and calculate performance of the algorithm
         undiscounted_returns = log_performance(itr,
-                                               EpisodeBatch.from_list(
-                                                   self._env_spec, paths),
+                                               episodes,
                                                discount=self._discount)
         self._episode_reward_mean.extend(undiscounted_returns)
         tabular.record('Extras/EpisodeRewardMean',
                        np.mean(self._episode_reward_mean))
-        samples_data['average_return'] = np.mean(undiscounted_returns)
+        average_return = np.mean(undiscounted_returns)
 
         epoch = itr // self._n_samples
         i_sample = itr - epoch * self._n_samples
 
         tabular.record('Epoch', epoch)
         tabular.record('# Sample', i_sample)
-
-        rtn = samples_data['average_return']
-        self._all_returns.append(samples_data['average_return'])
+        rtn = average_return
+        self._all_returns.append(average_return)
 
         if (itr + 1) % self._n_samples == 0:
             avg_rtns = np.array(self._all_returns)
