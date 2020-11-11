@@ -67,11 +67,11 @@ def pre_trained_trpo_cartpole(
 
 if __name__ == '__main__':
     # To train a new TRPO
-    trpo_gym_tf_cartpole()
+    log_dir = 'data/local/experiment/trpo_gym_tf_cartpole'
+    trpo_gym_tf_cartpole(dict(log_dir=log_dir, use_existing_dir=True))
 
     # Clear tensorflow graph
     tf.compat.v1.reset_default_graph()
 
     # To use a pretrained TRPO
-    # snapshot_dir = 'data/local/experiment/trpo_gym_tf_cartpole'
-    pre_trained_trpo_cartpole()
+    pre_trained_trpo_cartpole(snapshot_dir=log_dir)
