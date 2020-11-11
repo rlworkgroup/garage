@@ -198,9 +198,9 @@ class MAML:
         for i, env_up in enumerate(tasks):
 
             for j in range(self._num_grad_updates + 1):
-                paths = trainer.obtain_samples(trainer.step_itr,
-                                               env_update=env_up)
-                batch_samples = self._process_samples(paths)
+                episodes = trainer.obtain_episodes(trainer.step_itr,
+                                                   env_update=env_up)
+                batch_samples = self._process_samples(episodes)
                 all_samples[i].append(batch_samples)
 
                 # The last iteration does only sampling but no adapting
@@ -363,23 +363,31 @@ class MAML:
         # pylint: disable=protected-access
         return self._inner_algo._old_policy
 
-    def _process_samples(self, paths):
+    def _process_samples(self, episodes):
         """Process sample data based on the collected paths.
 
         Args:
-            paths (list[dict]): A list of collected paths.
+            episodes (EpisodeBatch): Collected batch of episodes.
 
         Returns:
             _MAMLEpisodeBatch: Processed samples data.
 
         """
+        paths = episodes.to_list()
         for path in paths:
             path['returns'] = discount_cumsum(
                 path['rewards'], self._inner_algo.discount).copy()
 
         self._train_value_function(paths)
-        obs, actions, rewards, _, valids, baselines = self._inner_algo._process_samples(  # pylint: disable=protected-access # noqa: E501
-            paths)
+
+        obs = torch.Tensor(episodes.padded_observations)
+        actions = torch.Tensor(episodes.padded_actions)
+        rewards = torch.Tensor(episodes.padded_rewards)
+        valids = torch.Tensor(episodes.lengths).int()
+        with torch.no_grad():
+            # pylint: disable=protected-access
+            baselines = self._inner_algo._value_function(obs)
+
         return _MAMLEpisodeBatch(paths, obs, actions, rewards, valids,
                                  baselines)
 
@@ -464,8 +472,7 @@ class MAML:
         self._inner_algo.policy = exploration_policy
         self._inner_optimizer.module = exploration_policy
 
-        paths = exploration_episodes.to_list()
-        batch_samples = self._process_samples(paths)
+        batch_samples = self._process_samples(exploration_episodes)
 
         self._adapt(batch_samples, set_grad=False)
 
