@@ -10,13 +10,14 @@ This collection of functions can be used to manage the following:
     - Updating model parameters
 """
 import copy
+import dataclasses
 
 import akro
 import torch
 from torch import nn
 import torch.nn.functional as F
 
-from garage import Wrapper
+from garage import EnvSpec, Wrapper
 
 _USE_GPU = False
 _DEVICE = None
@@ -385,9 +386,7 @@ class TransposeImage(Wrapper):
     @property
     def spec(self):
         """EnvSpec: The environment specification."""
-        env_spec = copy.deepcopy(self._env.spec)
-        env_spec.observation_space = self.observation_space
-        return env_spec
+        return EnvSpec(self.observation_space, self._env.spec.action_space)
 
     def step(self, action):
         """Step the wrapped env.
@@ -401,4 +400,4 @@ class TransposeImage(Wrapper):
         """
         env_step = super().step(action)
         obs = env_step.observation.transpose(2, 0, 1)
-        return env_step._replace(observation=obs)
+        return dataclasses.replace(env_step, observation=obs)

@@ -6,7 +6,7 @@ from dowel import tabular
 import numpy as np
 import torch
 
-from garage import (_Default, EpisodeBatch, log_performance, make_optimizer,
+from garage import (_Default, log_performance, make_optimizer,
                     obtain_evaluation_episodes, TimeStepBatch)
 from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.np.policies import Policy
@@ -148,8 +148,7 @@ class BC(RLAlgorithm):
 
         """
         if isinstance(self._source, Policy):
-            batch = EpisodeBatch.from_list(self._env_spec,
-                                           trainer.obtain_samples(epoch))
+            batch = trainer.obtain_episodes(epoch)
             log_performance(epoch, batch, 1.0, prefix='Expert')
             return batch
         else:

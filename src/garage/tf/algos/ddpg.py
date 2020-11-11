@@ -354,10 +354,10 @@ class DDPG(RLAlgorithm):
             self._buffer_batch_size)
 
         observations = timesteps.observations
-        rewards = timesteps.rewards
+        rewards = timesteps.rewards.reshape(-1, 1)
         actions = timesteps.actions
         next_observations = timesteps.next_observations
-        terminals = timesteps.terminals
+        terminals = timesteps.terminals.reshape(-1, 1)
 
         rewards *= self._reward_scale
 

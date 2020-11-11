@@ -9,8 +9,8 @@ import tensorflow as tf
 
 from garage import InOutSpec, log_performance
 from garage.experiment import deterministic
-from garage.np import (discount_cumsum, explained_variance_1d, rrse,
-                       sliding_window)
+from garage.np import (discount_cumsum, explained_variance_1d, pad_batch_array,
+                       rrse, sliding_window)
 from garage.np.algos import RLAlgorithm
 from garage.sampler import LocalSampler
 from garage.tf import (center_advs, compile_function, compute_advantages,
@@ -234,7 +234,8 @@ class TENPO(RLAlgorithm):
                      latents=episodes.agent_infos['latent'][start:stop]))
             baselines.append(baseline)
             start = stop
-        baselines = episodes.pad_to_last(np.concatenate(baselines))
+        baselines = pad_batch_array(np.concatenate(baselines),
+                                    episodes.lengths, self.max_episode_length)
 
         # Process trajectories
         embed_eps, embed_ep_infos = self._process_episodes(episodes)
@@ -714,9 +715,12 @@ class TENPO(RLAlgorithm):
             self._env_spec.action_space.flatten_n(act)
             for act in episodes.actions_list
         ]
-        actions = episodes.pad_to_last(np.concatenate(actions))
-        tasks = episodes.pad_to_last(episodes.env_infos['task_onehot'])
-        latents = episodes.pad_to_last(episodes.agent_infos['latent'])
+        actions = pad_batch_array(np.concatenate(actions), episodes.lengths,
+                                  self.max_episode_length)
+        tasks = pad_batch_array(episodes.env_infos['task_onehot'],
+                                episodes.lengths, self.max_episode_length)
+        latents = pad_batch_array(episodes.agent_infos['latent'],
+                                  episodes.lengths, self.max_episode_length)
 
         agent_infos = episodes.padded_agent_infos
         policy_state_info_list = [
@@ -754,7 +758,8 @@ class TENPO(RLAlgorithm):
             list(np.ndarray): Flatten inference optimization input values.
 
         """
-        latents = episodes.pad_to_last(episodes.agent_infos['latent'])
+        latents = pad_batch_array(episodes.agent_infos['latent'],
+                                  episodes.lengths, self.max_episode_length)
 
         infer_state_info_list = [
             embed_ep_infos[k] for k in self._inference.state_info_keys
@@ -788,8 +793,10 @@ class TENPO(RLAlgorithm):
         fit_paths = []
         valids = episodes.valids
         observations = episodes.padded_observations
-        tasks = episodes.pad_to_last(episodes.env_infos['task_onehot'])
-        latents = episodes.pad_to_last(episodes.agent_infos['latent'])
+        tasks = pad_batch_array(episodes.env_infos['task_onehot'],
+                                episodes.lengths, self.max_episode_length)
+        latents = pad_batch_array(episodes.agent_infos['latent'],
+                                  episodes.lengths, self.max_episode_length)
         baselines_list = []
         for baseline, valid in zip(baselines, valids):
             baselines_list.append(baseline[valid.astype(np.bool)])

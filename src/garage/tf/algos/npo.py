@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage import log_performance, make_optimizer
-from garage.np import explained_variance_1d
+from garage.np import explained_variance_1d, pad_batch_array
 from garage.np.algos import RLAlgorithm
 from garage.sampler import RaySampler
 from garage.tf import (center_advs, compile_function, compute_advantages,
@@ -194,7 +194,8 @@ class NPO(RLAlgorithm):
             self._baseline.predict({'observations': obs})
             for obs in episodes.observations_list
         ]
-        baselines = episodes.pad_to_last(np.concatenate(obs))
+        baselines = pad_batch_array(np.concatenate(obs), episodes.lengths,
+                                    self.max_episode_length)
 
         # -- Stage: Run and calculate performance of the algorithm
         undiscounted_returns = log_performance(itr,
@@ -496,7 +497,9 @@ class NPO(RLAlgorithm):
             self._env_spec.action_space.flatten_n(act)
             for act in episodes.actions_list
         ]
-        padded_actions = episodes.pad_to_last(np.concatenate(actions))
+        padded_actions = pad_batch_array(np.concatenate(actions),
+                                         episodes.lengths,
+                                         self.max_episode_length)
 
         # pylint: disable=unexpected-keyword-arg
         policy_opt_input_values = self._policy_opt_inputs._replace(

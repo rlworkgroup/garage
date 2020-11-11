@@ -1,5 +1,6 @@
 """setuptools based setup module."""
 import os
+import sys
 
 from setuptools import find_packages, setup
 
@@ -26,6 +27,9 @@ REQUIRED = [
     'torch>=1.0.0,!=1.5.0',
     'torchvision>=0.2.1',
 ]
+
+if sys.version_info < (3, 7):
+    REQUIRED.append('dataclasses==0.7')
 
 # Dependencies for optional features
 EXTRAS = {}

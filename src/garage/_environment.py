@@ -1,13 +1,26 @@
 """Base Garage Environment API."""
 
 import abc
-import collections
+from dataclasses import dataclass
+from typing import Dict
 
-from garage import InOutSpec, StepType
+import akro
+import numpy as np
+
+# Can't use naive garage import, or Sphinx AutoAPI breaks.
+from garage._dtypes import StepType
 
 
+@dataclass(frozen=True)
+class InOutSpec:
+    """Describes the input and output spaces of a primitive or module."""
+    input_space: akro.Space
+    output_space: akro.Space
+
+
+@dataclass(frozen=True, init=False)
 class EnvSpec(InOutSpec):
-    """Describes the action and observation spaces of an environment.
+    """Describes the observations, actions, and time horizon of an MDP.
 
     Args:
         observation_space (akro.Space): The observation space of the env.
@@ -21,8 +34,11 @@ class EnvSpec(InOutSpec):
                  observation_space,
                  action_space,
                  max_episode_length=None):
-        self._max_episode_length = max_episode_length
-        super().__init__(action_space, observation_space)
+        object.__setattr__(self, 'max_episode_length', max_episode_length)
+        super().__init__(input_space=action_space,
+                         output_space=observation_space)
+
+    max_episode_length: int or None = None
 
     @property
     def action_space(self):
@@ -64,35 +80,9 @@ class EnvSpec(InOutSpec):
         """
         self._output_space = observation_space
 
-    @property
-    def max_episode_length(self):
-        """Get max episode steps.
 
-        Returns:
-            int: The maximum number of steps that an episode
-
-        """
-        return self._max_episode_length
-
-    def __eq__(self, other):
-        """See :meth:`object.__eq__`.
-
-        Args:
-            other (EnvSpec): :class:`~EnvSpec` to compare with.
-
-        Returns:
-            bool: Whether these :class:`~EnvSpec` instances are equal.
-        """
-        return (self.observation_space == other.observation_space
-                and self.action_space == other.action_space
-                and self.max_episode_length == other.max_episode_length)
-
-
-class EnvStep(
-        collections.namedtuple('EnvStep', [
-            'env_spec', 'action', 'reward', 'observation', 'env_info',
-            'step_type'
-        ])):
+@dataclass
+class EnvStep:
     # pylint: disable=missing-return-doc, missing-return-type-doc, missing-param-doc, missing-type-doc  # noqa: E501
     r"""A tuple representing a single step returned by the environment.
 
@@ -118,6 +108,13 @@ class EnvStep(
             StepType.FIRST, StepType.MID, StepType.TERMINAL, StepType.TIMEOUT.
 
     """
+
+    env_spec: EnvSpec
+    action: np.ndarray
+    reward: np.ndarray
+    observation: np.ndarray
+    env_info: Dict[str, np.ndarray or dict]
+    step_type: StepType
 
     @property
     def first(self):

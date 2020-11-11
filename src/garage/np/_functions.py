@@ -1,4 +1,6 @@
 """Utility functions for NumPy-based Reinforcement learning algorithms."""
+import warnings
+
 import numpy as np
 import scipy.signal
 
@@ -123,7 +125,7 @@ def discount_cumsum(x, discount):
 
     """
     return scipy.signal.lfilter([1], [1, float(-discount)], x[::-1],
-                                axis=0)[::-1]
+                                axis=-1)[::-1]
 
 
 def flatten_tensors(tensors):
@@ -368,3 +370,37 @@ def slice_nested_dict(dict_or_array, start, stop):
         # It *should* be a numpy array (unless someone ignored the type
         # signature).
         return dict_or_array[start:stop]
+
+
+def pad_batch_array(array, lengths, max_length=None):
+    r"""Convert a packed into a padded array with one more dimension.
+
+    Args:
+        array (np.ndarray): Array of length :math:`(N \bullet [T], X^*)`
+        lengths (list[int]): List of length :math:`N` containing the length
+            of each episode in the batch array.
+        max_length (int): Defaults to max(lengths) if not provided.
+
+    Returns:
+        np.ndarray: Of shape :math:`(N, max_length, X^*)`
+
+    """
+    assert array.shape[0] == sum(lengths)
+    if max_length is None:
+        max_length = max(lengths)
+    elif max_length < max(lengths):
+        # We have at least one episode longther than max_length (whtich is
+        # usually max_episode_length).
+        # This is probably not a good idea to allow, but RL2 already uses it.
+        warnings.warn('Creating a padded array with longer length than '
+                      'requested')
+        max_length = max(lengths)
+
+    padded = np.zeros((len(lengths), max_length) + array.shape[1:],
+                      dtype=array.dtype)
+    start = 0
+    for i, length in enumerate(lengths):
+        stop = start + length
+        padded[i][0:length] = array[start:stop]
+        start = stop
+    return padded

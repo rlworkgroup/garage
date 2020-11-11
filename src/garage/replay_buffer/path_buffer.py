@@ -144,7 +144,7 @@ class PathBuffer:
                              episode_infos={},
                              observations=samples['observations'],
                              actions=samples['actions'],
-                             rewards=samples['rewards'],
+                             rewards=samples['rewards'].flatten(),
                              next_observations=samples['next_observations'],
                              step_types=step_types,
                              env_infos={},
