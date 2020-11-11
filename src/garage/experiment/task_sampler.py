@@ -7,8 +7,7 @@ import math
 import numpy as np
 
 from garage.envs import GymEnv, TaskNameWrapper, TaskOnehotWrapper
-from garage.sampler.env_update import (ExistingEnvUpdate,
-                                       NewEnvUpdate,
+from garage.sampler.env_update import (ExistingEnvUpdate, NewEnvUpdate,
                                        SetTaskUpdate)
 
 # yapf: enable

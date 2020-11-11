@@ -10,8 +10,7 @@ from garage.tf.q_functions import DiscreteCNNQFunction
 
 # yapf: disable
 from tests.fixtures import TfGraphTestCase
-from tests.fixtures.envs.dummy import (DummyDictEnv,
-                                       DummyDiscreteEnv,
+from tests.fixtures.envs.dummy import (DummyDictEnv, DummyDiscreteEnv,
                                        DummyDiscretePixelEnvBaselines)
 from tests.fixtures.q_functions import SimpleQFunction
 

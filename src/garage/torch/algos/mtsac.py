@@ -3,8 +3,7 @@
 import numpy as np
 import torch
 
-from garage import (EpisodeBatch,
-                    log_multitask_performance,
+from garage import (EpisodeBatch, log_multitask_performance,
                     obtain_evaluation_episodes)
 from garage.torch import global_device
 from garage.torch.algos import SAC

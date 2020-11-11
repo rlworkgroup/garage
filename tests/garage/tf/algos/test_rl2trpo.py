@@ -12,8 +12,7 @@ from garage.sampler import LocalSampler
 from garage.tf.algos import RL2TRPO
 from garage.tf.algos.rl2 import RL2Env, RL2Worker
 from garage.tf.optimizers import (ConjugateGradientOptimizer,
-                                  FiniteDifferenceHVP,
-                                  PenaltyLBFGSOptimizer)
+                                  FiniteDifferenceHVP, PenaltyLBFGSOptimizer)
 from garage.tf.policies import GaussianGRUPolicy
 from garage.trainer import TFTrainer
 
