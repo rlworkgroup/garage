@@ -11,7 +11,6 @@ from garage import wrap_experiment
 from garage.envs import GymEnv
 from garage.experiment.deterministic import set_seed
 from garage.np.algos import CEM
-from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.trainer import TFTrainer
 
@@ -34,13 +33,11 @@ def cem_cartpole(ctxt=None, seed=1):
         policy = CategoricalMLPPolicy(name='policy',
                                       env_spec=env.spec,
                                       hidden_sizes=(32, 32))
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
 
         n_samples = 20
 
         algo = CEM(env_spec=env.spec,
                    policy=policy,
-                   baseline=baseline,
                    best_frac=0.05,
                    n_samples=n_samples)
 

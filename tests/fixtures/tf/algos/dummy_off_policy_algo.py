@@ -32,6 +32,5 @@ class DummyOffPolicyAlgo(RLAlgorithm):
 
         Args:
             samples_data (dict): Processed sample data.
-                See garage.tf.paths_to_tensors() for details.
 
         """

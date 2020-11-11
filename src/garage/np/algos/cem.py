@@ -4,8 +4,7 @@ import collections
 from dowel import logger, tabular
 import numpy as np
 
-from garage import EpisodeBatch, log_performance
-from garage.np import paths_to_tensors
+from garage import log_performance
 from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.sampler import RaySampler
 
@@ -25,8 +24,6 @@ class CEM(RLAlgorithm):
     Args:
         env_spec (EnvSpec): Environment specification.
         policy (garage.np.policies.Policy): Action policy.
-        baseline(garage.np.baselines.Baseline): Baseline for GAE
-            (Generalized Advantage Estimation).
         n_samples (int): Number of policies sampled in one epoch.
         discount (float): Environment reward discount.
         best_frac (float): The best fraction.
@@ -39,7 +36,6 @@ class CEM(RLAlgorithm):
     def __init__(self,
                  env_spec,
                  policy,
-                 baseline,
                  n_samples,
                  discount=0.99,
                  init_std=1,
@@ -52,7 +48,6 @@ class CEM(RLAlgorithm):
         self.sampler_cls = RaySampler
 
         self._best_frac = best_frac
-        self._baseline = baseline
         self._init_std = init_std
         self._extra_std = extra_std
         self._extra_decay_time = extra_decay_time
@@ -115,53 +110,40 @@ class CEM(RLAlgorithm):
 
         for _ in trainer.step_epochs():
             for _ in range(self._n_samples):
-                trainer.step_path = trainer.obtain_samples(trainer.step_itr)
-                last_return = self.train_once(trainer.step_itr,
-                                              trainer.step_path)
+                trainer.step_path = trainer.obtain_episodes(trainer.step_itr)
+                last_return = self._train_once(trainer.step_itr,
+                                               trainer.step_path)
                 trainer.step_itr += 1
 
         return last_return
 
-    def train_once(self, itr, paths):
+    def _train_once(self, itr, episodes):
         """Perform one step of policy optimization given one batch of samples.
 
         Args:
             itr (int): Iteration number.
-            paths (list[dict]): A list of collected paths.
+            episodes (garage.EpisodeBatch): Episodes collected using the
+                current policy.
 
         Returns:
             float: The average return of epoch cycle.
 
         """
-        # -- Stage: Calculate baseline
-        if hasattr(self._baseline, 'predict_n'):
-            baseline_predictions = self._baseline.predict_n(paths)
-        else:
-            baseline_predictions = [
-                self._baseline.predict(path) for path in paths
-            ]
-
-        # -- Stage: Pre-process samples based on collected paths
-        samples_data = paths_to_tensors(paths, self.max_episode_length,
-                                        baseline_predictions, self._discount)
-
         # -- Stage: Run and calculate performance of the algorithm
         undiscounted_returns = log_performance(itr,
-                                               EpisodeBatch.from_list(
-                                                   self._env_spec, paths),
+                                               episodes,
                                                discount=self._discount)
         self._episode_reward_mean.extend(undiscounted_returns)
         tabular.record('Extras/EpisodeRewardMean',
                        np.mean(self._episode_reward_mean))
-        samples_data['average_return'] = np.mean(undiscounted_returns)
+        average_return = np.mean(undiscounted_returns)
 
         epoch = itr // self._n_samples
         i_sample = itr - epoch * self._n_samples
         tabular.record('Epoch', epoch)
         tabular.record('# Sample', i_sample)
-        # -- Stage: Process samples_data
-        rtn = samples_data['average_return']
-        self._all_returns.append(samples_data['average_return'])
+        rtn = average_return
+        self._all_returns.append(average_return)
 
         # -- Stage: Update policy distribution.
         if (itr + 1) % self._n_samples == 0:
