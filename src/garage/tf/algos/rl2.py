@@ -437,7 +437,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
         # all path in paths_by_task[i] are sampled from task[i]
         for episode_list in paths_by_task.values():
-            concatenated_path = self._concatenate_paths(episode_list)
+            concatenated_path = self._concatenate_episodes(episode_list)
             concatenated_paths.append(concatenated_path)
 
         concatenated_episodes = EpisodeBatch.concatenate(*concatenated_paths)
@@ -457,23 +457,21 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
         return concatenated_episodes, average_return
 
-    def _concatenate_paths(self, episode_list):
-        """Concatenate paths.
+    def _concatenate_episodes(self, episode_list):
+        """Concatenate episodes.
 
-        The input paths are from different episodes but same task/environment.
-        In RL^2, paths within each meta batch are all concatenate into a single
-        path and fed to the policy.
+        The input list contains samples from different episodes but same
+        task/environment. In RL^2, paths within each meta batch are all
+        concatenate into a single path and fed to the policy.
 
         Args:
             episode_list (list[EpisodeBatch]): Input paths. All paths are from
                 different episodes, but the same task/environment.
 
         Returns:
-            dict: Concatenated paths from the same task/environment. Shape of
-                values: :math:`[max_episode_length * episode_per_task, S^*]`
-            list[dict]: Original input paths. Length of the list is
-                :math:`episode_per_task` and each path in the list has
-                values of shape :math:`[max_episode_length, S^*]`
+            EpisodeBatch: Concatenated episode from the same task/environment.
+                Shape of values: :math:`[max_episode_length * episode_per_task,
+                S^*]`
 
         """
         env_infos = {
