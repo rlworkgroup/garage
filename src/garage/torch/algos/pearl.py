@@ -716,6 +716,7 @@ class PEARLWorker(DefaultWorker):
                  accum_context=False):
         self._deterministic = deterministic
         self._accum_context = accum_context
+        self._episode_info = None
         super().__init__(seed=seed,
                          max_episode_length=max_episode_length,
                          worker_number=worker_number)
@@ -723,7 +724,7 @@ class PEARLWorker(DefaultWorker):
     def start_episode(self):
         """Begin a new episode."""
         self._eps_length = 0
-        self._prev_obs = self.env.reset()[0]
+        self._prev_obs, self._episode_info = self.env.reset()
 
     def step_episode(self):
         """Take a single time-step in the current episode.
@@ -748,7 +749,8 @@ class PEARLWorker(DefaultWorker):
             if self._accum_context:
                 s = TimeStep.from_env_step(env_step=es,
                                            last_observation=self._prev_obs,
-                                           agent_info=agent_info)
+                                           agent_info=agent_info,
+                                           episode_info=self._episode_info)
                 self.agent.update_context(s)
             if not es.last:
                 self._prev_obs = es.observation

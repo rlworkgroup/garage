@@ -18,13 +18,28 @@ class InProgressEpisode:
             in.
         initial_observation (np.ndarray): The first observation. If None, the
             environment will be reset to generate this observation.
+        episode_info (dict[str, np.ndarray]): Info for this episode.
+
+    Raises:
+        ValueError: if either initial_observation and episode_info is passed in
+            but not the other. Either both or neither should be passed in.
 
     """
 
-    def __init__(self, env, initial_observation=None):
-        self.env = env
+    def __init__(self, env, initial_observation=None, episode_info=None):
+        if initial_observation is None and episode_info is not None:
+            raise ValueError(
+                'Initial observation and episode info must be both or '
+                'neither provided, but only episode info was passed in')
+        if initial_observation is not None and episode_info is None:
+            raise ValueError(
+                'Initial observation and episode info must be both or '
+                'neither provided, but only initial observation was passed in')
+
         if initial_observation is None:
-            initial_observation = env.reset()[0]
+            initial_observation, episode_info = env.reset()
+        self.env = env
+        self.episode_info = episode_info
         self.observations = [initial_observation]
         self.actions = []
         self.rewards = []
@@ -68,11 +83,15 @@ class InProgressEpisode:
         assert len(self.rewards) > 0
         env_infos = dict(self.env_infos)
         agent_infos = dict(self.agent_infos)
+        episode_infos = dict(self.episode_info)
         for k, v in env_infos.items():
             env_infos[k] = np.asarray(v)
         for k, v in agent_infos.items():
             agent_infos[k] = np.asarray(v)
-        return EpisodeBatch(env_spec=self.env.spec,
+        for k, v in episode_infos.items():
+            episode_infos[k] = np.asarray([v])
+        return EpisodeBatch(episode_infos=episode_infos,
+                            env_spec=self.env.spec,
                             observations=np.asarray(self.observations[:-1]),
                             last_observations=np.asarray([self.last_obs]),
                             actions=np.asarray(self.actions),

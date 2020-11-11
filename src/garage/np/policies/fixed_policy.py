@@ -1,4 +1,6 @@
 """Policy that performs a fixed sequence of actions."""
+import numpy as np
+
 from garage.np.policies.policy import Policy
 
 
@@ -97,7 +99,10 @@ class FixedPolicy(Policy):
         if len(observations) != 1:
             raise ValueError('FixedPolicy does not support more than one '
                              'observation at a time.')
-        return self.get_action(observations[0])
+        action, agent_info = self.get_action(observations[0])
+        return np.array(
+            [action]), {k: np.array([v])
+                        for (k, v) in agent_info.items()}
 
     @property
     def env_spec(self):

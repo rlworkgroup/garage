@@ -5,8 +5,9 @@ import numpy as np
 import pytest
 
 from garage import EpisodeBatch, StepType
-from garage.envs import GridWorldEnv
-from garage.np.policies import ScriptedPolicy
+from garage.envs import GridWorldEnv, PointEnv
+from garage.experiment.task_sampler import SetTaskSampler
+from garage.np.policies import FixedPolicy, ScriptedPolicy
 from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
 
 SEED = 100
@@ -64,6 +65,7 @@ def slice_episodes(episodes, slice_size):
             last_obs = np.asarray([next_obs[indices[-1]]])
             t = EpisodeBatch(
                 env_spec=eps.env_spec,
+                episode_infos={},
                 observations=eps.observations[indices],
                 last_observations=last_obs,
                 actions=eps.actions[indices],
@@ -135,3 +137,44 @@ def test_in_local_sampler(policy, envs, other_envs, timesteps_per_call):
 
     true_sampler.shutdown_worker()
     vec_sampler.shutdown_worker()
+
+
+@pytest.mark.parametrize('timesteps_per_call', [1, 2])
+def test_update_envs_env_update(timesteps_per_call):
+    max_episode_length = 16
+    env = PointEnv()
+    n_workers = 8
+    policies = [
+        FixedPolicy(env.spec,
+                    scripted_actions=[
+                        env.action_space.sample()
+                        for _ in range(max_episode_length)
+                    ]) for _ in range(n_workers)
+    ]
+    tasks = SetTaskSampler(PointEnv)
+    workers = WorkerFactory(seed=100,
+                            max_episode_length=max_episode_length,
+                            n_workers=n_workers,
+                            worker_class=FragmentWorker,
+                            worker_args=dict(
+                                n_envs=1,
+                                timesteps_per_call=timesteps_per_call))
+    sampler = LocalSampler.from_worker_factory(workers, policies, env)
+    episodes = sampler.obtain_samples(0,
+                                      160,
+                                      None,
+                                      env_update=tasks.sample(n_workers))
+    mean_rewards = []
+    goals = []
+    for eps in episodes.split():
+        mean_rewards.append(eps.rewards.mean())
+        goals.append(eps.env_infos['task'][0]['goal'])
+    assert len(mean_rewards) == int(160 / timesteps_per_call)
+    assert len(goals) == int(160 / timesteps_per_call)
+    assert np.var(mean_rewards) > 1e-2
+    assert np.var(goals) > 1e-2
+    with pytest.raises(ValueError):
+        sampler.obtain_samples(0,
+                               10,
+                               None,
+                               env_update=tasks.sample(n_workers + 1))

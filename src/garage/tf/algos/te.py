@@ -120,12 +120,16 @@ class TaskEmbeddingWorker(DefaultWorker):
         self._agent_infos = defaultdict(list)
         latent_infos = self._latent_infos
         self._latent_infos = defaultdict(list)
+        episode_infos = self._episode_infos
+        self._episode_infos = defaultdict(list)
         for k, v in latent_infos.items():
             latent_infos[k] = np.asarray(v)
         for k, v in agent_infos.items():
             agent_infos[k] = np.asarray(v)
         for k, v in env_infos.items():
             env_infos[k] = np.asarray(v)
+        for k, v in episode_infos.items():
+            episode_infos[k] = np.asarray(v)
         env_infos['task_onehot'] = np.asarray(tasks)
         agent_infos['latent'] = np.asarray(latents)
         for k, v in latent_infos.items():
@@ -134,6 +138,7 @@ class TaskEmbeddingWorker(DefaultWorker):
         self._lengths = []
 
         return EpisodeBatch(env_spec=self.env.spec,
+                            episode_infos=episode_infos,
                             observations=np.asarray(observations),
                             last_observations=np.asarray(last_observations),
                             actions=np.asarray(actions),
