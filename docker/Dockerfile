@@ -1,3 +1,4 @@
+# syntax = docker/dockerfile:1.1.7-experimental
 ARG PARENT_IMAGE=ubuntu:18.04
 
 # Garage base target ###########################################################
@@ -133,9 +134,9 @@ FROM garage-base AS garage
 
 RUN pip install --upgrade pip setuptools wheel && \
   pip install garage[all] && \
-  rm -r $HOME/.cache/pip
-
-COPY --chown=$user:$user ./examples $HOME/examples
+  rm -r $HOME/.cache/pip && \
+  (python -c 'import mujoco_py' || true) && \
+  rm $MJKEY_PATH
 
 # Nvidia target ################################################################
 FROM garage AS garage-nvidia
@@ -190,6 +191,7 @@ RUN git init && \
 # Install deps (but not the code)
 RUN pip install --upgrade pip setuptools wheel && \
   pip install .[all,dev] && \
+  (python -c 'import mujoco_py' || true) && \
   rm $MJKEY_PATH && \
   rm -r $HOME/.cache/pip
 
