@@ -11,6 +11,621 @@ from garage.np import (concat_tensor_dict_list, slice_nested_dict,
 # pylint: disable=too-many-lines
 
 
+class StepType(enum.IntEnum):
+    """Defines the status of a :class:`~TimeStep` within a sequence.
+
+    Note that the last :class:`~TimeStep` in a sequence can either be
+    :attribute:`StepType.TERMINAL` or :attribute:`StepType.TIMEOUT`.
+
+    Suppose max_episode_length = 5:
+    * A success sequence terminated at step 4 will look like:
+        FIRST, MID, MID, TERMINAL
+    * A success sequence terminated at step 5 will look like:
+        FIRST, MID, MID, MID, TERMINAL
+    * An unsuccessful sequence truncated by time limit will look like:
+        FIRST, MID, MID, MID, TIMEOUT
+    """
+    # Denotes the first :class:`~TimeStep` in a sequence.
+    FIRST = 0
+    # Denotes any :class:`~TimeStep` in the middle of a sequence (i.e. not the
+    # first or last one).
+    MID = 1
+    # Denotes the last :class:`~TimeStep` in a sequence that terminates
+    # successfully.
+    TERMINAL = 2
+    # Denotes the last :class:`~TimeStep` in a sequence truncated by time
+    # limit.
+    TIMEOUT = 3
+
+    @classmethod
+    def get_step_type(cls, step_cnt, max_episode_length, done):
+        """Determines the step type based on step cnt and done signal.
+
+        Args:
+            step_cnt (int): current step cnt of the environment.
+            max_episode_length (int): maximum episode length.
+            done (bool): the done signal returned by Environment.
+
+        Returns:
+            StepType: the step type.
+
+        Raises:
+            ValueError: if step_cnt is < 1. In this case a environment's
+            `reset()` is likely not called yet and the step_cnt is None.
+        """
+        if max_episode_length is not None and step_cnt >= max_episode_length:
+            return StepType.TIMEOUT
+        elif done:
+            return StepType.TERMINAL
+        elif step_cnt == 1:
+            return StepType.FIRST
+        elif step_cnt < 1:
+            raise ValueError('Expect step_cnt to be >= 1, but got {} '
+                             'instead. Did you forget to call `reset('
+                             ')`?'.format(step_cnt))
+        else:
+            return StepType.MID
+
+
+class TimeStep(
+        collections.namedtuple('TimeStep', [
+            'env_spec', 'episode_info', 'observation', 'action', 'reward',
+            'next_observation', 'env_info', 'agent_info', 'step_type'
+        ])):
+    # pylint: disable=missing-return-doc, missing-return-type-doc, missing-param-doc, missing-type-doc  # noqa: E501
+    r"""A tuple representing a single TimeStep.
+
+    A :class:`~TimeStep` represents a single sample when an agent interacts
+        with an environment. It describes as SARS (State–action–reward–state)
+        tuple that characterizes the evolution of a MDP.
+
+    Attributes:
+        env_spec (EnvSpec): Specification for the environment from which this
+            data was sampled.
+        episode_info (dict[str, np.ndarray]): A dict of numpy arrays of shape
+            :math:`(S*^,)` containing episode-level information of each
+            episode.  For example, in goal-conditioned reinforcement learning
+            this could contain the goal state for each episode.
+        observation (numpy.ndarray): A numpy array of shape :math:`(O^*)`
+            containing the observation for this time step in the
+            environment. These must conform to
+            :obj:`EnvStep.observation_space`.
+            The observation before applying the action.
+            `None` if `step_type` is `StepType.FIRST`, i.e. at the start of a
+            sequence.
+        action (numpy.ndarray): A numpy array of shape :math:`(A^*)`
+            containing the action for this time step. These must conform
+            to :obj:`EnvStep.action_space`.
+            `None` if `step_type` is `StepType.FIRST`, i.e. at the start of a
+            sequence.
+        reward (float): A float representing the reward for taking the action
+            given the observation, at this time step.
+            `None` if `step_type` is `StepType.FIRST`, i.e. at the start of a
+            sequence.
+        next_observation (numpy.ndarray): A numpy array of shape :math:`(O^*)`
+            containing the observation for this time step in the
+            environment. These must conform to
+            :obj:`EnvStep.observation_space`.
+            The observation after applying the action.
+        env_info (dict): A dict arbitrary environment state information.
+        agent_info (dict): A dict of arbitrary agent
+            state information. For example, this may contain the hidden states
+            from an RNN policy.
+        step_type (StepType): a :class:`~StepType` enum value. Can be one of
+            :attribute:`~StepType.FIRST`, :attribute:`~StepType.MID`,
+            :attribute:`~StepType.TERMINAL`, or :attribute:`~StepType.TIMEOUT`.
+
+    """
+
+    @property
+    def first(self):
+        """bool: Whether this step is the first of its episode."""
+        return self.step_type is StepType.FIRST
+
+    @property
+    def mid(self):
+        """bool: Whether this step is in the middle of its episode."""
+        return self.step_type is StepType.MID
+
+    @property
+    def terminal(self):
+        """bool: Whether this step records a termination condition."""
+        return self.step_type is StepType.TERMINAL
+
+    @property
+    def timeout(self):
+        """bool: Whether this step records a timeout condition."""
+        return self.step_type is StepType.TIMEOUT
+
+    @property
+    def last(self):
+        """bool: Whether this step is the last of its episode."""
+        return self.step_type is StepType.TERMINAL or self.step_type \
+            is StepType.TIMEOUT
+
+    @classmethod
+    def from_env_step(cls, env_step, last_observation, agent_info,
+                      episode_info):
+        """Create a TimeStep from a EnvStep.
+
+        Args:
+            env_step (EnvStep): the env step returned by the environment.
+            last_observation (numpy.ndarray): A numpy array of shape
+                :math:`(O^*)` containing the observation for this time
+                step in the environment. These must conform to
+                :attr:`EnvStep.observation_space`.
+                The observation before applying the action.
+            agent_info (dict):  A dict of arbitrary agent state information.
+
+        Returns:
+            TimeStep: The TimeStep with all information of EnvStep plus the
+            agent info.
+        """
+        return cls(env_spec=env_step.env_spec,
+                   episode_info=episode_info,
+                   observation=last_observation,
+                   action=env_step.action,
+                   reward=env_step.reward,
+                   next_observation=env_step.observation,
+                   env_info=env_step.env_info,
+                   agent_info=agent_info,
+                   step_type=env_step.step_type)
+
+
+class TimeStepBatch(
+        collections.namedtuple('TimeStepBatch', [
+            'env_spec', 'episode_infos', 'observations', 'actions', 'rewards',
+            'next_observations', 'env_infos', 'agent_infos', 'step_types'
+        ])):
+    # pylint: disable=missing-param-doc, missing-type-doc
+    """A tuple representing a batch of TimeSteps.
+
+    Data type for off-policy algorithms, imitation learning and batch-RL.
+
+    Attributes:
+        env_spec (EnvSpec): Specification for the environment from
+            which this data was sampled.
+        episode_infos (dict[str, np.ndarray]): A dict of numpy arrays
+            containing the episode-level information of each episode. Each
+            value of this dict should be a numpy array of shape :math:`(N,
+            S^*)`. For example, in goal-conditioned reinforcement learning this
+            could contain the goal state for each episode.
+        observations (numpy.ndarray): Non-flattened array of observations.
+            Typically has shape (batch_size, S^*) (the unflattened state space
+            of the current environment).
+        actions (numpy.ndarray): Non-flattened array of actions. Should
+            have shape (batch_size, S^*) (the unflattened action space of the
+            current environment).
+        rewards (numpy.ndarray): Array of rewards of shape (batch_size, 1).
+        next_observation (numpy.ndarray): Non-flattened array of next
+            observations. Has shape (batch_size, S^*). next_observations[i] was
+            observed by the agent after taking actions[i].
+        env_infos (dict): A dict arbitrary environment state
+            information.
+        agent_infos (dict): A dict of arbitrary agent state information. For
+            example, this may contain the hidden states from an RNN policy.
+        step_types (numpy.ndarray): A numpy array of `StepType with shape (
+            batch_size,) containing the time step types for all transitions in
+            this batch.
+
+    Raises:
+        ValueError: If any of the above attributes do not conform to their
+            prescribed types and shapes.
+
+    """
+    __slots__ = ()
+
+    def __new__(cls, env_spec, episode_infos, observations, actions, rewards,
+                next_observations, env_infos, agent_infos,
+                step_types):  # noqa: D102
+        # pylint: disable=missing-return-doc, missing-return-type-doc,
+        # pylint: disable=too-many-branches
+
+        inferred_batch_size = len(rewards)
+        if inferred_batch_size < 1:
+            raise ValueError(
+                'Expected batch dimension of rewards to be greater than 1, '
+                'but got length {} instead.'.format(inferred_batch_size))
+
+        first_observation = observations[0]
+        first_action = actions[0]
+
+        # observation
+        if not env_spec.observation_space.contains(first_observation):
+            if isinstance(env_spec.observation_space,
+                          (akro.Box, akro.Discrete, akro.Dict)):
+                if env_spec.observation_space.flat_dim != np.prod(
+                        first_observation.shape):
+                    raise ValueError('observations should have the same '
+                                     'dimensionality as the observation_space '
+                                     '({}), but got data with shape {} '
+                                     'instead'.format(
+                                         env_spec.observation_space.flat_dim,
+                                         first_observation.shape))
+            else:
+                raise ValueError(
+                    'observations must conform to observation_space {}, '
+                    'but got data with shape {} instead.'.format(
+                        env_spec.observation_space, first_observation.shape))
+        if observations.shape[0] != inferred_batch_size:
+            raise ValueError(
+                'Expected batch dimension of observations to be length {}, '
+                'but got length {} instead.'.format(inferred_batch_size,
+                                                    observations.shape[0]))
+
+        # next_observation
+        if not env_spec.observation_space.contains(next_observations[0]):
+            if isinstance(env_spec.observation_space,
+                          (akro.Box, akro.Discrete, akro.Dict)):
+                if env_spec.observation_space.flat_dim != np.prod(
+                        next_observations[0].shape):
+                    raise ValueError('next_observations should have the same '
+                                     'dimensionality as the observation_space '
+                                     '({}), but got data with shape {} '
+                                     'instead'.format(
+                                         env_spec.observation_space.flat_dim,
+                                         next_observations[0].shape))
+            else:
+                raise ValueError(
+                    'next_observations must conform to observation_space {}, '
+                    'but got data with shape {} instead.'.format(
+                        env_spec.observation_space,
+                        next_observations[0].shape[0]))
+        if next_observations.shape[0] != inferred_batch_size:
+            raise ValueError(
+                'Expected batch dimension of next_observations to be length {'
+                '}, but got length {} instead.'.format(
+                    inferred_batch_size, next_observations[0].shape[0]))
+
+        # action
+        if not env_spec.action_space.contains(first_action):
+            if isinstance(env_spec.action_space,
+                          (akro.Box, akro.Discrete, akro.Dict)):
+                if env_spec.action_space.flat_dim != np.prod(
+                        first_action.shape):
+                    raise ValueError('actions should have the same '
+                                     'dimensionality as the action_space '
+                                     '({}), but got data with shape {} '
+                                     'instead'.format(
+                                         env_spec.action_space.flat_dim,
+                                         first_action.shape))
+            else:
+                raise ValueError('actions must conform to action_space {}, '
+                                 'but got data with shape {} instead.'.format(
+                                     env_spec.action_space,
+                                     first_action.shape))
+        if actions.shape[0] != inferred_batch_size:
+            raise ValueError(
+                'Expected batch dimension of actions to be length {}, but got '
+                'length {} instead.'.format(inferred_batch_size,
+                                            actions.shape[0]))
+
+        # rewards
+        if rewards.shape != (inferred_batch_size, 1):
+            raise ValueError(
+                'Rewards tensor must have shape {}, but got shape {} '
+                'instead.'.format((inferred_batch_size, 1), rewards.shape))
+
+        # step_types
+        if step_types.shape[0] != inferred_batch_size:
+            raise ValueError(
+                'Expected batch dimension of step_types to be length {}, '
+                'but got '
+                'length {} instead.'.format(inferred_batch_size,
+                                            rewards.shape[0]))
+
+        for step_type in step_types:
+            if not isinstance(step_type, StepType):
+                raise ValueError(
+                    'Each entry in step_types must be a StepType, but got'
+                    ' value type {} instead.'.format(type(step_type)))
+
+        # env_infos
+        for key, val in env_infos.items():
+            if not isinstance(val, (dict, np.ndarray)):
+                raise ValueError(
+                    'Each entry in env_infos must be a numpy array or '
+                    'dictionary, but got key {} with value type {} '
+                    'instead.'.format(key, type(val)))
+
+            if (isinstance(val, np.ndarray)
+                    and val.shape[0] != inferred_batch_size):
+                raise ValueError(
+                    'Each entry in env_infos must have a batch dimension '
+                    'of '
+                    'length {}, but got key {} with batch size {} instead.'.
+                    format(inferred_batch_size, key, val.shape[0]))
+
+        # agent_infos
+        for key, val in agent_infos.items():
+            if not isinstance(val, (dict, np.ndarray)):
+                raise ValueError(
+                    'Each entry in agent_infos must be a numpy array or '
+                    'dictionary, but got key {} with value type {} instead.'
+                    'instead'.format(key, type(val)))
+
+            if (isinstance(val, np.ndarray)
+                    and val.shape[0] != inferred_batch_size):
+                raise ValueError(
+                    'Each entry in agent_infos must have a batch '
+                    'dimension of '
+                    'length {}, but got key {} with batch size {} instead.'.
+                    format(inferred_batch_size, key, val.shape[0]))
+
+        # episode_infos
+        for key, val in episode_infos.items():
+            if not isinstance(val, (dict, np.ndarray)):
+                raise ValueError(
+                    'Each entry in episode_infos must be a numpy array, '
+                    'but got key {} with value type {} instead.'.format(
+                        key, type(val)))
+
+            if (isinstance(val, np.ndarray)
+                    and val.shape[0] != inferred_batch_size):
+                raise ValueError(
+                    'Each entry in episode_infos must have a batch '
+                    'dimension of '
+                    'length {}, but got key {} with batch size {} instead.'.
+                    format(inferred_batch_size, key, val.shape[0]))
+
+        return super().__new__(TimeStepBatch, env_spec, episode_infos,
+                               observations, actions, rewards,
+                               next_observations, env_infos, agent_infos,
+                               step_types)
+
+    @classmethod
+    def concatenate(cls, *batches):
+        """Concatenate two or more :class:`TimeStepBatch`s.
+
+        Args:
+            batches (list[TimeStepBatch]): Batches to concatenate.
+
+        Returns:
+            TimeStepBatch: The concatenation of the batches.
+
+        Raises:
+            ValueError: If no TimeStepBatches are provided.
+
+        """
+        if len(batches) < 1:
+            raise ValueError('Please provide at least one TimeStepBatch to '
+                             'concatenate')
+        episode_infos = {
+            k: np.concatenate([b.episode_infos[k] for b in batches])
+            for k in batches[0].episode_infos.keys()
+        }
+        env_infos = {
+            k: np.concatenate([b.env_infos[k] for b in batches])
+            for k in batches[0].env_infos.keys()
+        }
+        agent_infos = {
+            k: np.concatenate([b.agent_infos[k] for b in batches])
+            for k in batches[0].agent_infos.keys()
+        }
+
+        return cls(
+            env_spec=batches[0].env_spec,
+            episode_infos=episode_infos,
+            observations=np.concatenate(
+                [batch.observations for batch in batches]),
+            actions=np.concatenate([batch.actions for batch in batches]),
+            rewards=np.concatenate([batch.rewards for batch in batches]),
+            next_observations=np.concatenate(
+                [batch.next_observations for batch in batches]),
+            env_infos=env_infos,
+            agent_infos=agent_infos,
+            step_types=np.concatenate([batch.step_types for batch in batches]))
+
+    def split(self):
+        """Split a :class:`~TimeStepBatch` into a list of :class:`~TimeStepBatch`s.
+
+        The opposite of concatenate.
+
+        Returns:
+            list[TimeStepBatch]: A list of :class:`TimeStepBatch`s, with one
+                :class:`~TimeStep` per :class:`~TimeStepBatch`.
+
+        """
+        time_steps = []
+
+        for i in range(len(self.rewards)):
+            time_step = TimeStepBatch(
+                episode_infos={
+                    k: np.asarray([v[i]])
+                    for (k, v) in self.episode_infos.items()
+                },
+                env_spec=self.env_spec,
+                observations=np.asarray([self.observations[i]]),
+                actions=np.asarray([self.actions[i]]),
+                rewards=np.asarray([self.rewards[i]]),
+                next_observations=np.asarray([self.next_observations[i]]),
+                env_infos={
+                    k: np.asarray([v[i]])
+                    for (k, v) in self.env_infos.items()
+                },
+                agent_infos={
+                    k: np.asarray([v[i]])
+                    for (k, v) in self.agent_infos.items()
+                },
+                step_types=np.asarray([self.step_types[i]], dtype=StepType))
+            time_steps.append(time_step)
+        return time_steps
+
+    def to_time_step_list(self):
+        """Convert the batch into a list of dictionaries.
+
+        Breaks the :class:`~TimeStepBatch` into a list of single time step
+        sample dictionaries. len(rewards) (or the number of discrete time step)
+        dictionaries are returned
+
+        Returns:
+            list[dict[str, np.ndarray or dict[str, np.ndarray]]]: Keys:
+                episode_infos (dict[str, np.ndarray]): A dict of numpy arrays
+                    containing the episode-level information of each episode.
+                    Each value of this dict should be a numpy array of shape
+                    :math:`(S^*,)`. For example, in goal-conditioned
+                    reinforcement learning this could contain the goal state
+                    for each episode.
+                observations (numpy.ndarray): Non-flattened array of
+                    observations.
+                    Typically has shape (batch_size, S^*) (the unflattened
+                    state space
+                    of the current environment).
+                actions (numpy.ndarray): Non-flattened array of actions. Should
+                    have shape (batch_size, S^*) (the unflattened action
+                    space of the
+                    current environment).
+                rewards (numpy.ndarray): Array of rewards of shape (
+                    batch_size,) (1D array of length batch_size).
+                next_observation (numpy.ndarray): Non-flattened array of next
+                    observations. Has shape (batch_size, S^*).
+                    next_observations[i] was
+                    observed by the agent after taking actions[i].
+                env_infos (dict): A dict arbitrary environment state
+                    information.
+                agent_infos (dict): A dict of arbitrary agent state
+                    information. For example, this may contain the
+                    hidden states from an RNN policy.
+                step_types (numpy.ndarray): A numpy array of `StepType with
+                        shape (batch_size,) containing the time step types for
+                        all transitions in this batch.
+        """
+        samples = []
+        for i in range(len(self.rewards)):
+            samples.append({
+                'episode_infos': {
+                    k: np.asarray([v[i]])
+                    for (k, v) in self.episode_infos.items()
+                },
+                'observations':
+                np.asarray([self.observations[i]]),
+                'actions':
+                np.asarray([self.actions[i]]),
+                'rewards':
+                np.asarray([self.rewards[i]]),
+                'next_observations':
+                np.asarray([self.next_observations[i]]),
+                'env_infos':
+                {k: np.asarray([v[i]])
+                 for (k, v) in self.env_infos.items()},
+                'agent_infos':
+                {k: np.asarray([v[i]])
+                 for (k, v) in self.agent_infos.items()},
+                'step_types':
+                np.asarray([self.step_types[i]])
+            })
+        return samples
+
+    @property
+    def terminals(self):
+        """Get an array of boolean indicating ternianal information.
+
+        Returns:
+            numpy.ndarray: An array of boolean of shape (batch_size, 1)
+                indicating whether the `StepType is `TERMINAL
+
+        """
+        return np.array([[s == StepType.TERMINAL] for s in self.step_types])
+
+    @classmethod
+    def from_time_step_list(cls, env_spec, ts_samples):
+        """Create a :class:`~TimeStepBatch` from a list of time step dictionaries.
+
+        Args:
+            env_spec (EnvSpec): Specification for the environment from which
+                this data was sampled.
+            ts_samples (list[dict[str, np.ndarray or dict[str, np.ndarray]]]):
+                keys:
+                * episode_infos (dict[str, np.ndarray]): A dict of numpy arrays
+                    containing the episode-level information of each episode.
+                    Each value of this dict should be a numpy array of shape
+                    :math:`(N, S^*)`. For example, in goal-conditioned
+                    reinforcement learning this could contain the goal state
+                    for each episode.
+                * observations (numpy.ndarray): Non-flattened array of
+                    observations.
+                    Typically has shape (batch_size, S^*) (the unflattened
+                    state space of the current environment).
+                * actions (numpy.ndarray): Non-flattened array of actions.
+                    Should have shape (batch_size, S^*) (the unflattened action
+                    space of the current environment).
+                * rewards (numpy.ndarray): Array of rewards of shape (
+                    batch_size,) (1D array of length batch_size).
+                * next_observation (numpy.ndarray): Non-flattened array of next
+                    observations. Has shape (batch_size, S^*).
+                    next_observations[i] was observed by the agent after
+                    taking actions[i].
+                * env_infos (dict): A dict arbitrary environment state
+                    information.
+                * agent_infos (dict): A dict of arbitrary agent
+                    state information. For example, this may contain the
+                    hidden states from an RNN policy.
+                * step_types (numpy.ndarray): A numpy array of `StepType with
+                shape (batch_size,) containing the time step types for all
+                    transitions in this batch.
+
+        Returns:
+            TimeStepBatch: The concatenation of samples.
+
+        Raises:
+            ValueError: If no dicts are provided.
+
+        """
+        if len(ts_samples) < 1:
+            raise ValueError('Please provide at least one dict')
+
+        ts_batches = [
+            TimeStepBatch(episode_infos=sample['episode_infos'],
+                          env_spec=env_spec,
+                          observations=sample['observations'],
+                          actions=sample['actions'],
+                          rewards=sample['rewards'],
+                          next_observations=sample['next_observations'],
+                          env_infos=sample['env_infos'],
+                          agent_infos=sample['agent_infos'],
+                          step_types=sample['step_types'])
+            for sample in ts_samples
+        ]
+
+        return TimeStepBatch.concatenate(*ts_batches)
+
+    @classmethod
+    def from_episode_batch(cls, batch):
+        """Construct a :class:`~TimeStepBatch` from an :class:`~EpisodeBatch`.
+
+        Args:
+            batch (EpisodeBatch): Episode batch to convert.
+
+        Returns:
+            TimeStepBatch: The converted batch.
+
+        """
+        episode_infos = dict()
+        for i in range(len(batch.lengths)):
+            for k, v in batch.episode_infos.items():
+                for _ in range(batch.lengths[i]):
+                    episode_infos.setdefault(k, []).append(v[i])
+
+        for k, v in batch.episode_infos.items():
+            episode_infos[k] = np.asarray(episode_infos[k])
+
+        next_observations = np.concatenate(
+            tuple([
+                np.concatenate((eps.observations[1:], eps.last_observations))
+                for eps in batch.split()
+            ]))
+
+        return cls(episode_infos=episode_infos,
+                   env_spec=batch.env_spec,
+                   observations=batch.observations,
+                   actions=batch.actions,
+                   rewards=batch.rewards.reshape(-1, 1),
+                   next_observations=next_observations,
+                   env_infos=batch.env_infos,
+                   agent_infos=batch.agent_infos,
+                   step_types=batch.step_types)
+
+
 class EpisodeBatch(
         collections.namedtuple('EpisodeBatch', [
             'env_spec',
@@ -609,167 +1224,6 @@ class EpisodeBatch(
         return np.asarray(padded_array)
 
 
-class StepType(enum.IntEnum):
-    """Defines the status of a :class:`~TimeStep` within a sequence.
-
-    Note that the last :class:`~TimeStep` in a sequence can either be
-    :attribute:`StepType.TERMINAL` or :attribute:`StepType.TIMEOUT`.
-
-    Suppose max_episode_length = 5:
-    * A success sequence terminated at step 4 will look like:
-        FIRST, MID, MID, TERMINAL
-    * A success sequence terminated at step 5 will look like:
-        FIRST, MID, MID, MID, TERMINAL
-    * An unsuccessful sequence truncated by time limit will look like:
-        FIRST, MID, MID, MID, TIMEOUT
-    """
-    # Denotes the first :class:`~TimeStep` in a sequence.
-    FIRST = 0
-    # Denotes any :class:`~TimeStep` in the middle of a sequence (i.e. not the
-    # first or last one).
-    MID = 1
-    # Denotes the last :class:`~TimeStep` in a sequence that terminates
-    # successfully.
-    TERMINAL = 2
-    # Denotes the last :class:`~TimeStep` in a sequence truncated by time
-    # limit.
-    TIMEOUT = 3
-
-    @classmethod
-    def get_step_type(cls, step_cnt, max_episode_length, done):
-        """Determines the step type based on step cnt and done signal.
-
-        Args:
-            step_cnt (int): current step cnt of the environment.
-            max_episode_length (int): maximum episode length.
-            done (bool): the done signal returned by Environment.
-
-        Returns:
-            StepType: the step type.
-
-        Raises:
-            ValueError: if step_cnt is < 1. In this case a environment's
-            `reset()` is likely not called yet and the step_cnt is None.
-        """
-        if max_episode_length is not None and step_cnt >= max_episode_length:
-            return StepType.TIMEOUT
-        elif done:
-            return StepType.TERMINAL
-        elif step_cnt == 1:
-            return StepType.FIRST
-        elif step_cnt < 1:
-            raise ValueError('Expect step_cnt to be >= 1, but got {} '
-                             'instead. Did you forget to call `reset('
-                             ')`?'.format(step_cnt))
-        else:
-            return StepType.MID
-
-
-class TimeStep(
-        collections.namedtuple('TimeStep', [
-            'env_spec', 'episode_info', 'observation', 'action', 'reward',
-            'next_observation', 'env_info', 'agent_info', 'step_type'
-        ])):
-    # pylint: disable=missing-return-doc, missing-return-type-doc, missing-param-doc, missing-type-doc  # noqa: E501
-    r"""A tuple representing a single TimeStep.
-
-    A :class:`~TimeStep` represents a single sample when an agent interacts
-        with an environment. It describes as SARS (State–action–reward–state)
-        tuple that characterizes the evolution of a MDP.
-
-    Attributes:
-        env_spec (EnvSpec): Specification for the environment from which this
-            data was sampled.
-        episode_info (dict[str, np.ndarray]): A dict of numpy arrays of shape
-            :math:`(S*^,)` containing episode-level information of each
-            episode.  For example, in goal-conditioned reinforcement learning
-            this could contain the goal state for each episode.
-        observation (numpy.ndarray): A numpy array of shape :math:`(O^*)`
-            containing the observation for this time step in the
-            environment. These must conform to
-            :obj:`EnvStep.observation_space`.
-            The observation before applying the action.
-            `None` if `step_type` is `StepType.FIRST`, i.e. at the start of a
-            sequence.
-        action (numpy.ndarray): A numpy array of shape :math:`(A^*)`
-            containing the action for this time step. These must conform
-            to :obj:`EnvStep.action_space`.
-            `None` if `step_type` is `StepType.FIRST`, i.e. at the start of a
-            sequence.
-        reward (float): A float representing the reward for taking the action
-            given the observation, at this time step.
-            `None` if `step_type` is `StepType.FIRST`, i.e. at the start of a
-            sequence.
-        next_observation (numpy.ndarray): A numpy array of shape :math:`(O^*)`
-            containing the observation for this time step in the
-            environment. These must conform to
-            :obj:`EnvStep.observation_space`.
-            The observation after applying the action.
-        env_info (dict): A dict arbitrary environment state information.
-        agent_info (dict): A dict of arbitrary agent
-            state information. For example, this may contain the hidden states
-            from an RNN policy.
-        step_type (StepType): a :class:`~StepType` enum value. Can be one of
-            :attribute:`~StepType.FIRST`, :attribute:`~StepType.MID`,
-            :attribute:`~StepType.TERMINAL`, or :attribute:`~StepType.TIMEOUT`.
-
-    """
-
-    @property
-    def first(self):
-        """bool: Whether this step is the first of its episode."""
-        return self.step_type is StepType.FIRST
-
-    @property
-    def mid(self):
-        """bool: Whether this step is in the middle of its episode."""
-        return self.step_type is StepType.MID
-
-    @property
-    def terminal(self):
-        """bool: Whether this step records a termination condition."""
-        return self.step_type is StepType.TERMINAL
-
-    @property
-    def timeout(self):
-        """bool: Whether this step records a timeout condition."""
-        return self.step_type is StepType.TIMEOUT
-
-    @property
-    def last(self):
-        """bool: Whether this step is the last of its episode."""
-        return self.step_type is StepType.TERMINAL or self.step_type \
-            is StepType.TIMEOUT
-
-    @classmethod
-    def from_env_step(cls, env_step, last_observation, agent_info,
-                      episode_info):
-        """Create a TimeStep from a EnvStep.
-
-        Args:
-            env_step (EnvStep): the env step returned by the environment.
-            last_observation (numpy.ndarray): A numpy array of shape
-                :math:`(O^*)` containing the observation for this time
-                step in the environment. These must conform to
-                :attr:`EnvStep.observation_space`.
-                The observation before applying the action.
-            agent_info (dict):  A dict of arbitrary agent state information.
-
-        Returns:
-            TimeStep: The TimeStep with all information of EnvStep plus the
-            agent info.
-        """
-        return cls(env_spec=env_step.env_spec,
-                   episode_info=episode_info,
-                   observation=last_observation,
-                   action=env_step.action,
-                   reward=env_step.reward,
-                   next_observation=env_step.observation,
-                   env_info=env_step.env_info,
-                   agent_info=agent_info,
-                   step_type=env_step.step_type)
-
-
 class InOutSpec:
     """Describes the input and output spaces of a primitive or module.
 
@@ -802,457 +1256,3 @@ class InOutSpec:
 
         """
         return self._output_space
-
-
-class TimeStepBatch(
-        collections.namedtuple('TimeStepBatch', [
-            'env_spec', 'episode_infos', 'observations', 'actions', 'rewards',
-            'next_observations', 'env_infos', 'agent_infos', 'step_types'
-        ])):
-    # pylint: disable=missing-param-doc, missing-type-doc
-    """A tuple representing a batch of TimeSteps.
-
-    Data type for off-policy algorithms, imitation learning and batch-RL.
-
-    Attributes:
-        env_spec (EnvSpec): Specification for the environment from
-            which this data was sampled.
-        episode_infos (dict[str, np.ndarray]): A dict of numpy arrays
-            containing the episode-level information of each episode. Each
-            value of this dict should be a numpy array of shape :math:`(N,
-            S^*)`. For example, in goal-conditioned reinforcement learning this
-            could contain the goal state for each episode.
-        observations (numpy.ndarray): Non-flattened array of observations.
-            Typically has shape (batch_size, S^*) (the unflattened state space
-            of the current environment).
-        actions (numpy.ndarray): Non-flattened array of actions. Should
-            have shape (batch_size, S^*) (the unflattened action space of the
-            current environment).
-        rewards (numpy.ndarray): Array of rewards of shape (batch_size, 1).
-        next_observation (numpy.ndarray): Non-flattened array of next
-            observations. Has shape (batch_size, S^*). next_observations[i] was
-            observed by the agent after taking actions[i].
-        env_infos (dict): A dict arbitrary environment state
-            information.
-        agent_infos (dict): A dict of arbitrary agent state information. For
-            example, this may contain the hidden states from an RNN policy.
-        step_types (numpy.ndarray): A numpy array of `StepType with shape (
-            batch_size,) containing the time step types for all transitions in
-            this batch.
-
-    Raises:
-        ValueError: If any of the above attributes do not conform to their
-            prescribed types and shapes.
-
-    """
-    __slots__ = ()
-
-    def __new__(cls, env_spec, episode_infos, observations, actions, rewards,
-                next_observations, env_infos, agent_infos,
-                step_types):  # noqa: D102
-        # pylint: disable=missing-return-doc, missing-return-type-doc,
-        # pylint: disable=too-many-branches
-
-        inferred_batch_size = len(rewards)
-        if inferred_batch_size < 1:
-            raise ValueError(
-                'Expected batch dimension of rewards to be greater than 1, '
-                'but got length {} instead.'.format(inferred_batch_size))
-
-        first_observation = observations[0]
-        first_action = actions[0]
-
-        # observation
-        if not env_spec.observation_space.contains(first_observation):
-            if isinstance(env_spec.observation_space,
-                          (akro.Box, akro.Discrete, akro.Dict)):
-                if env_spec.observation_space.flat_dim != np.prod(
-                        first_observation.shape):
-                    raise ValueError('observations should have the same '
-                                     'dimensionality as the observation_space '
-                                     '({}), but got data with shape {} '
-                                     'instead'.format(
-                                         env_spec.observation_space.flat_dim,
-                                         first_observation.shape))
-            else:
-                raise ValueError(
-                    'observations must conform to observation_space {}, '
-                    'but got data with shape {} instead.'.format(
-                        env_spec.observation_space, first_observation.shape))
-        if observations.shape[0] != inferred_batch_size:
-            raise ValueError(
-                'Expected batch dimension of observations to be length {}, '
-                'but got length {} instead.'.format(inferred_batch_size,
-                                                    observations.shape[0]))
-
-        # next_observation
-        if not env_spec.observation_space.contains(next_observations[0]):
-            if isinstance(env_spec.observation_space,
-                          (akro.Box, akro.Discrete, akro.Dict)):
-                if env_spec.observation_space.flat_dim != np.prod(
-                        next_observations[0].shape):
-                    raise ValueError('next_observations should have the same '
-                                     'dimensionality as the observation_space '
-                                     '({}), but got data with shape {} '
-                                     'instead'.format(
-                                         env_spec.observation_space.flat_dim,
-                                         next_observations[0].shape))
-            else:
-                raise ValueError(
-                    'next_observations must conform to observation_space {}, '
-                    'but got data with shape {} instead.'.format(
-                        env_spec.observation_space,
-                        next_observations[0].shape[0]))
-        if next_observations.shape[0] != inferred_batch_size:
-            raise ValueError(
-                'Expected batch dimension of next_observations to be length {'
-                '}, but got length {} instead.'.format(
-                    inferred_batch_size, next_observations[0].shape[0]))
-
-        # action
-        if not env_spec.action_space.contains(first_action):
-            if isinstance(env_spec.action_space,
-                          (akro.Box, akro.Discrete, akro.Dict)):
-                if env_spec.action_space.flat_dim != np.prod(
-                        first_action.shape):
-                    raise ValueError('actions should have the same '
-                                     'dimensionality as the action_space '
-                                     '({}), but got data with shape {} '
-                                     'instead'.format(
-                                         env_spec.action_space.flat_dim,
-                                         first_action.shape))
-            else:
-                raise ValueError('actions must conform to action_space {}, '
-                                 'but got data with shape {} instead.'.format(
-                                     env_spec.action_space,
-                                     first_action.shape))
-        if actions.shape[0] != inferred_batch_size:
-            raise ValueError(
-                'Expected batch dimension of actions to be length {}, but got '
-                'length {} instead.'.format(inferred_batch_size,
-                                            actions.shape[0]))
-
-        # rewards
-        if rewards.shape != (inferred_batch_size, 1):
-            raise ValueError(
-                'Rewards tensor must have shape {}, but got shape {} '
-                'instead.'.format((inferred_batch_size, 1), rewards.shape))
-
-        # step_types
-        if step_types.shape[0] != inferred_batch_size:
-            raise ValueError(
-                'Expected batch dimension of step_types to be length {}, '
-                'but got '
-                'length {} instead.'.format(inferred_batch_size,
-                                            rewards.shape[0]))
-
-        for step_type in step_types:
-            if not isinstance(step_type, StepType):
-                raise ValueError(
-                    'Each entry in step_types must be a StepType, but got'
-                    ' value type {} instead.'.format(type(step_type)))
-
-        # env_infos
-        for key, val in env_infos.items():
-            if not isinstance(val, (dict, np.ndarray)):
-                raise ValueError(
-                    'Each entry in env_infos must be a numpy array or '
-                    'dictionary, but got key {} with value type {} '
-                    'instead.'.format(key, type(val)))
-
-            if (isinstance(val, np.ndarray)
-                    and val.shape[0] != inferred_batch_size):
-                raise ValueError(
-                    'Each entry in env_infos must have a batch dimension '
-                    'of '
-                    'length {}, but got key {} with batch size {} instead.'.
-                    format(inferred_batch_size, key, val.shape[0]))
-
-        # agent_infos
-        for key, val in agent_infos.items():
-            if not isinstance(val, (dict, np.ndarray)):
-                raise ValueError(
-                    'Each entry in agent_infos must be a numpy array or '
-                    'dictionary, but got key {} with value type {} instead.'
-                    'instead'.format(key, type(val)))
-
-            if (isinstance(val, np.ndarray)
-                    and val.shape[0] != inferred_batch_size):
-                raise ValueError(
-                    'Each entry in agent_infos must have a batch '
-                    'dimension of '
-                    'length {}, but got key {} with batch size {} instead.'.
-                    format(inferred_batch_size, key, val.shape[0]))
-
-        # episode_infos
-        for key, val in episode_infos.items():
-            if not isinstance(val, (dict, np.ndarray)):
-                raise ValueError(
-                    'Each entry in episode_infos must be a numpy array, '
-                    'but got key {} with value type {} instead.'.format(
-                        key, type(val)))
-
-            if (isinstance(val, np.ndarray)
-                    and val.shape[0] != inferred_batch_size):
-                raise ValueError(
-                    'Each entry in episode_infos must have a batch '
-                    'dimension of '
-                    'length {}, but got key {} with batch size {} instead.'.
-                    format(inferred_batch_size, key, val.shape[0]))
-
-        return super().__new__(TimeStepBatch, env_spec, episode_infos,
-                               observations, actions, rewards,
-                               next_observations, env_infos, agent_infos,
-                               step_types)
-
-    @classmethod
-    def concatenate(cls, *batches):
-        """Concatenate two or more :class:`TimeStepBatch`s.
-
-        Args:
-            batches (list[TimeStepBatch]): Batches to concatenate.
-
-        Returns:
-            TimeStepBatch: The concatenation of the batches.
-
-        Raises:
-            ValueError: If no TimeStepBatches are provided.
-
-        """
-        if len(batches) < 1:
-            raise ValueError('Please provide at least one TimeStepBatch to '
-                             'concatenate')
-        episode_infos = {
-            k: np.concatenate([b.episode_infos[k] for b in batches])
-            for k in batches[0].episode_infos.keys()
-        }
-        env_infos = {
-            k: np.concatenate([b.env_infos[k] for b in batches])
-            for k in batches[0].env_infos.keys()
-        }
-        agent_infos = {
-            k: np.concatenate([b.agent_infos[k] for b in batches])
-            for k in batches[0].agent_infos.keys()
-        }
-
-        return cls(
-            env_spec=batches[0].env_spec,
-            episode_infos=episode_infos,
-            observations=np.concatenate(
-                [batch.observations for batch in batches]),
-            actions=np.concatenate([batch.actions for batch in batches]),
-            rewards=np.concatenate([batch.rewards for batch in batches]),
-            next_observations=np.concatenate(
-                [batch.next_observations for batch in batches]),
-            env_infos=env_infos,
-            agent_infos=agent_infos,
-            step_types=np.concatenate([batch.step_types for batch in batches]))
-
-    def split(self):
-        """Split a :class:`~TimeStepBatch` into a list of :class:`~TimeStepBatch`s.
-
-        The opposite of concatenate.
-
-        Returns:
-            list[TimeStepBatch]: A list of :class:`TimeStepBatch`s, with one
-                :class:`~TimeStep` per :class:`~TimeStepBatch`.
-
-        """
-        time_steps = []
-
-        for i in range(len(self.rewards)):
-            time_step = TimeStepBatch(
-                episode_infos={
-                    k: np.asarray([v[i]])
-                    for (k, v) in self.episode_infos.items()
-                },
-                env_spec=self.env_spec,
-                observations=np.asarray([self.observations[i]]),
-                actions=np.asarray([self.actions[i]]),
-                rewards=np.asarray([self.rewards[i]]),
-                next_observations=np.asarray([self.next_observations[i]]),
-                env_infos={
-                    k: np.asarray([v[i]])
-                    for (k, v) in self.env_infos.items()
-                },
-                agent_infos={
-                    k: np.asarray([v[i]])
-                    for (k, v) in self.agent_infos.items()
-                },
-                step_types=np.asarray([self.step_types[i]], dtype=StepType))
-            time_steps.append(time_step)
-        return time_steps
-
-    def to_time_step_list(self):
-        """Convert the batch into a list of dictionaries.
-
-        Breaks the :class:`~TimeStepBatch` into a list of single time step
-        sample dictionaries. len(rewards) (or the number of discrete time step)
-        dictionaries are returned
-
-        Returns:
-            list[dict[str, np.ndarray or dict[str, np.ndarray]]]: Keys:
-                episode_infos (dict[str, np.ndarray]): A dict of numpy arrays
-                    containing the episode-level information of each episode.
-                    Each value of this dict should be a numpy array of shape
-                    :math:`(S^*,)`. For example, in goal-conditioned
-                    reinforcement learning this could contain the goal state
-                    for each episode.
-                observations (numpy.ndarray): Non-flattened array of
-                    observations.
-                    Typically has shape (batch_size, S^*) (the unflattened
-                    state space
-                    of the current environment).
-                actions (numpy.ndarray): Non-flattened array of actions. Should
-                    have shape (batch_size, S^*) (the unflattened action
-                    space of the
-                    current environment).
-                rewards (numpy.ndarray): Array of rewards of shape (
-                    batch_size,) (1D array of length batch_size).
-                next_observation (numpy.ndarray): Non-flattened array of next
-                    observations. Has shape (batch_size, S^*).
-                    next_observations[i] was
-                    observed by the agent after taking actions[i].
-                env_infos (dict): A dict arbitrary environment state
-                    information.
-                agent_infos (dict): A dict of arbitrary agent state
-                    information. For example, this may contain the
-                    hidden states from an RNN policy.
-                step_types (numpy.ndarray): A numpy array of `StepType with
-                        shape (batch_size,) containing the time step types for
-                        all transitions in this batch.
-        """
-        samples = []
-        for i in range(len(self.rewards)):
-            samples.append({
-                'episode_infos': {
-                    k: np.asarray([v[i]])
-                    for (k, v) in self.episode_infos.items()
-                },
-                'observations':
-                np.asarray([self.observations[i]]),
-                'actions':
-                np.asarray([self.actions[i]]),
-                'rewards':
-                np.asarray([self.rewards[i]]),
-                'next_observations':
-                np.asarray([self.next_observations[i]]),
-                'env_infos':
-                {k: np.asarray([v[i]])
-                 for (k, v) in self.env_infos.items()},
-                'agent_infos':
-                {k: np.asarray([v[i]])
-                 for (k, v) in self.agent_infos.items()},
-                'step_types':
-                np.asarray([self.step_types[i]])
-            })
-        return samples
-
-    @property
-    def terminals(self):
-        """Get an array of boolean indicating ternianal information.
-
-        Returns:
-            numpy.ndarray: An array of boolean of shape (batch_size, 1)
-                indicating whether the `StepType is `TERMINAL
-
-        """
-        return np.array([[s == StepType.TERMINAL] for s in self.step_types])
-
-    @classmethod
-    def from_time_step_list(cls, env_spec, ts_samples):
-        """Create a :class:`~TimeStepBatch` from a list of time step dictionaries.
-
-        Args:
-            env_spec (EnvSpec): Specification for the environment from which
-                this data was sampled.
-            ts_samples (list[dict[str, np.ndarray or dict[str, np.ndarray]]]):
-                keys:
-                * episode_infos (dict[str, np.ndarray]): A dict of numpy arrays
-                    containing the episode-level information of each episode.
-                    Each value of this dict should be a numpy array of shape
-                    :math:`(N, S^*)`. For example, in goal-conditioned
-                    reinforcement learning this could contain the goal state
-                    for each episode.
-                * observations (numpy.ndarray): Non-flattened array of
-                    observations.
-                    Typically has shape (batch_size, S^*) (the unflattened
-                    state space of the current environment).
-                * actions (numpy.ndarray): Non-flattened array of actions.
-                    Should have shape (batch_size, S^*) (the unflattened action
-                    space of the current environment).
-                * rewards (numpy.ndarray): Array of rewards of shape (
-                    batch_size,) (1D array of length batch_size).
-                * next_observation (numpy.ndarray): Non-flattened array of next
-                    observations. Has shape (batch_size, S^*).
-                    next_observations[i] was observed by the agent after
-                    taking actions[i].
-                * env_infos (dict): A dict arbitrary environment state
-                    information.
-                * agent_infos (dict): A dict of arbitrary agent
-                    state information. For example, this may contain the
-                    hidden states from an RNN policy.
-                * step_types (numpy.ndarray): A numpy array of `StepType with
-                shape (batch_size,) containing the time step types for all
-                    transitions in this batch.
-
-        Returns:
-            TimeStepBatch: The concatenation of samples.
-
-        Raises:
-            ValueError: If no dicts are provided.
-
-        """
-        if len(ts_samples) < 1:
-            raise ValueError('Please provide at least one dict')
-
-        ts_batches = [
-            TimeStepBatch(episode_infos=sample['episode_infos'],
-                          env_spec=env_spec,
-                          observations=sample['observations'],
-                          actions=sample['actions'],
-                          rewards=sample['rewards'],
-                          next_observations=sample['next_observations'],
-                          env_infos=sample['env_infos'],
-                          agent_infos=sample['agent_infos'],
-                          step_types=sample['step_types'])
-            for sample in ts_samples
-        ]
-
-        return TimeStepBatch.concatenate(*ts_batches)
-
-    @classmethod
-    def from_episode_batch(cls, batch):
-        """Construct a :class:`~TimeStepBatch` from an :class:`~EpisodeBatch`.
-
-        Args:
-            batch (EpisodeBatch): Episode batch to convert.
-
-        Returns:
-            TimeStepBatch: The converted batch.
-
-        """
-        episode_infos = dict()
-        for i in range(len(batch.lengths)):
-            for k, v in batch.episode_infos.items():
-                for _ in range(batch.lengths[i]):
-                    episode_infos.setdefault(k, []).append(v[i])
-
-        for k, v in batch.episode_infos.items():
-            episode_infos[k] = np.asarray(episode_infos[k])
-
-        next_observations = np.concatenate(
-            tuple([
-                np.concatenate((eps.observations[1:], eps.last_observations))
-                for eps in batch.split()
-            ]))
-
-        return cls(episode_infos=episode_infos,
-                   env_spec=batch.env_spec,
-                   observations=batch.observations,
-                   actions=batch.actions,
-                   rewards=batch.rewards.reshape(-1, 1),
-                   next_observations=next_observations,
-                   env_infos=batch.env_infos,
-                   agent_infos=batch.agent_infos,
-                   step_types=batch.step_types)
