@@ -20,6 +20,8 @@ on:
   pull_request:
     branches:
       - master
+  repository_dispatch:
+    types: [ ok-to-test-command ]
 
 jobs:
   build_docker_container:
