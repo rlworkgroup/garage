@@ -1,0 +1,26 @@
+# If someone with write access comments "/ok-to-test" on a pull request, emit a repository_dispatch event
+name: Ok To Test
+on:
+  issue_comment:
+    types: [created]
+jobs:
+  ok-to-test:
+    if: ${{ github.event.issue.pull_request }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get PR details
+      id: pr_details
+      run: |
+        pr_details=$(curl -v -H "Accept: application/vnd.github.sailor-v-preview+json" -u ${{ secrets.CI_REGISTRY_TOKEN }} ${{ github.event.issue.pull_request.url }})
+        echo "::set-output name=is_from_fork::$(echo $pr_details | jq '.head.repo.fork')"
+        echo "::set-output name=base_ref::$(echo $pr_details | jq '.base.ref' | sed 's/\"//g')"
+    - name: Slash Command Dispatch
+      uses: peter-evans/slash-command-dispatch@v1
+      if: ${{ steps.pr_details.outputs.is_from_fork && steps.pr_details.outputs.base_ref == 'master' }}
+      with:
+        token: ${{ secrets.CI_REGISTRY_TOKEN }}
+        reaction-token: ${{ secrets.GITHUB_TOKEN }}
+        issue-type: pull-request
+        commands: ok-to-test
+        named-args: true
+        permission: write
