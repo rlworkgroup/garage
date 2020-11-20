@@ -1,11 +1,11 @@
 # yapf: disable
+import warnings
+
 import numpy as np
 
-from garage.np import (concat_tensor_dict_list,
-                       explained_variance_1d,
-                       pad_tensor,
-                       stack_and_pad_tensor_dict_list,
-                       stack_tensor_dict_list)
+from garage.np import (concat_tensor_dict_list, explained_variance_1d,
+                       pad_batch_array, pad_tensor,
+                       stack_and_pad_tensor_dict_list, stack_tensor_dict_list)
 
 # yapf: enable
 
@@ -76,3 +76,13 @@ def test_stack_and_pad_tensor_dict_list():
                           np.array([[1, 1, 0, 0, 0], [1, 1, 0, 0, 0]]))
     assert np.array_equal(result['info']['baba'],
                           np.array([[2, 2, 0, 0, 0], [2, 2, 0, 0, 0]]))
+
+
+def test_pad_batch_array_warns_on_too_long():
+    with warnings.catch_warnings(record=True) as warns:
+        warnings.simplefilter('always')
+        result = pad_batch_array(np.ones(9), [5, 2, 2], 2)
+        assert len(warns) == 1
+        assert 'longer length than requested' in str(warns[0].message)
+    assert (result == np.asarray([[1., 1., 1., 1., 1.], [1., 1., 0., 0., 0.],
+                                  [1., 1., 0., 0., 0.]])).all()

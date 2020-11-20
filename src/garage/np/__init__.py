@@ -2,8 +2,9 @@
 # yapf: disable
 from garage.np._functions import (concat_tensor_dict_list, discount_cumsum,
                                   explained_variance_1d, flatten_tensors,
-                                  pad_tensor, pad_tensor_dict, pad_tensor_n,
-                                  rrse, slice_nested_dict, sliding_window,
+                                  pad_batch_array, pad_tensor, pad_tensor_dict,
+                                  pad_tensor_n, rrse, slice_nested_dict,
+                                  sliding_window,
                                   stack_and_pad_tensor_dict_list,
                                   stack_tensor_dict_list, truncate_tensor_dict,
                                   unflatten_tensors)
@@ -15,6 +16,7 @@ __all__ = [
     'explained_variance_1d',
     'flatten_tensors',
     'unflatten_tensors',
+    'pad_batch_array',
     'pad_tensor',
     'pad_tensor_n',
     'pad_tensor_dict',

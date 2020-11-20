@@ -262,10 +262,10 @@ class DQN(RLAlgorithm):
             self._buffer_batch_size)
 
         observations = timesteps.observations
-        rewards = timesteps.rewards
+        rewards = timesteps.rewards.reshape(-1, 1)
         actions = self._env_spec.action_space.unflatten_n(timesteps.actions)
         next_observations = timesteps.next_observations
-        dones = timesteps.terminals
+        dones = timesteps.terminals.reshape(-1, 1)
 
         if isinstance(self._env_spec.observation_space, akro.Image):
             if len(observations.shape[1:]) < len(

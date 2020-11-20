@@ -143,9 +143,6 @@ def dqn_atari(ctxt=None,
     set_seed(seed)
     trainer = Trainer(ctxt)
 
-    env.spec.observation_space = env.observation_space
-    env.spec.action_space = env.action_space
-
     n_epochs = hyperparams['n_epochs']
     steps_per_epoch = hyperparams['steps_per_epoch']
     sampler_batch_size = hyperparams['sampler_batch_size']

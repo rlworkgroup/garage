@@ -2,7 +2,7 @@
 from dowel import logger, tabular
 import numpy as np
 
-from garage.np import explained_variance_1d
+from garage.np import explained_variance_1d, pad_batch_array
 from garage.tf.algos import NPO
 
 
@@ -66,7 +66,7 @@ class RL2NPO(NPO):
 
         """
         # Baseline predictions with all zeros for feeding inputs of Tensorflow
-        baselines = np.zeros_like(episodes.padded_rewards)
+        baselines = np.zeros((len(episodes.lengths), max(episodes.lengths)))
 
         returns = self._fit_baseline_with_data(episodes, baselines)
         baselines = self._get_baseline_prediction(episodes)
@@ -113,4 +113,5 @@ class RL2NPO(NPO):
             self._baseline.predict({'observations': obs})
             for obs in episodes.observations_list
         ]
-        return episodes.pad_to_last(np.concatenate(obs))
+        return pad_batch_array(np.concatenate(obs), episodes.lengths,
+                               self.max_episode_length)

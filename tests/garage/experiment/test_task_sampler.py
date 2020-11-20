@@ -73,7 +73,7 @@ def test_set_task_task_sampler_ml10():
     for env in envs:
         env.reset()
     action = envs[0].action_space.sample()
-    rewards = [env.step(action)[1] for env in envs]
+    rewards = [env.step(action).reward for env in envs]
     assert np.var(rewards) > 0
     env = envs[0]
     env.close = unittest.mock.MagicMock(name='env.close')

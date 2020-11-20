@@ -2,13 +2,11 @@
 import numpy as np
 import ray
 
-from garage import TimeStepBatch
 from garage.envs import PointEnv
 from garage.experiment import deterministic
 from garage.sampler import LocalSampler, WorkerFactory
 from garage.torch.algos import BC
-from garage.torch.policies import (DeterministicMLPPolicy,
-                                   GaussianMLPPolicy,
+from garage.torch.policies import (DeterministicMLPPolicy, GaussianMLPPolicy,
                                    Policy)
 from garage.trainer import Trainer
 
@@ -127,7 +125,7 @@ def expert_source(env, goal, max_episode_length, n_eps):
     expert_sampler = LocalSampler.from_worker_factory(workers, expert, env)
     for _ in range(n_eps):
         eps_batch = expert_sampler.obtain_samples(0, max_episode_length, None)
-        yield TimeStepBatch.from_episode_batch(eps_batch)
+        yield eps_batch
 
 
 def test_bc_point_sample_batches():

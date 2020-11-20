@@ -74,41 +74,41 @@ def test_new_eps(eps_data):
     assert t.agent_infos is eps_data['agent_infos']
     assert t.step_types is eps_data['step_types']
     assert t.lengths is eps_data['lengths']
-    assert t.episode_infos is eps_data['episode_infos']
+    assert t.episode_infos_by_episode is eps_data['episode_infos']
 
 
 def test_lengths_shape_mismatch_eps(eps_data):
-    with pytest.raises(ValueError,
-                       match='Lengths tensor must be a tensor of shape'):
+    with pytest.raises(ValueError, match='lengths has shape'):
         eps_data['lengths'] = eps_data['lengths'].reshape((4, -1))
         t = EpisodeBatch(**eps_data)
         del t
 
 
 def test_lengths_dtype_mismatch_eps(eps_data):
-    with pytest.raises(ValueError,
-                       match='Lengths tensor must have an integer dtype'):
+    with pytest.raises(ValueError, match='lengths has dtype float32'):
         eps_data['lengths'] = eps_data['lengths'].astype(np.float32)
         t = EpisodeBatch(**eps_data)
         del t
 
 
 def test_obs_env_spec_mismatch_eps(eps_data):
-    with pytest.raises(ValueError, match='observations must conform'):
+    with pytest.raises(ValueError, match='Each observation has shape'):
         eps_data['observations'] = eps_data['observations'][:, :, :, :1]
         t = EpisodeBatch(**eps_data)
         del t
 
 
 def test_obs_batch_mismatch_eps(eps_data):
-    with pytest.raises(ValueError, match='batch dimension of observations'):
+    with pytest.raises(ValueError, match='observations has batch size'):
         eps_data['observations'] = eps_data['observations'][:-1]
         t = EpisodeBatch(**eps_data)
         del t
 
 
 def test_last_obs_env_spec_mismatch_eps(eps_data):
-    with pytest.raises(ValueError, match='last_observations must conform'):
+    with pytest.raises(ValueError,
+                       match=('last_observations must have the '
+                              'same number of entries')):
         eps_data['last_observations'] = \
                 eps_data['last_observations'][:, :, :, :1]
         t = EpisodeBatch(**eps_data)
@@ -116,47 +116,44 @@ def test_last_obs_env_spec_mismatch_eps(eps_data):
 
 
 def test_last_obs_batch_mismatch_eps(eps_data):
-    with pytest.raises(ValueError,
-                       match='batch dimension of last_observations'):
+    with pytest.raises(ValueError, match='last_observations has batch size 7'):
         eps_data['last_observations'] = eps_data['last_observations'][:-1]
         t = EpisodeBatch(**eps_data)
         del t
 
 
 def test_act_env_spec_mismatch_eps(eps_data):
-    with pytest.raises(ValueError, match='actions must conform'):
+    with pytest.raises(ValueError, match='Each action has shape '):
         eps_data['actions'] = eps_data['actions'][:, 0]
         t = EpisodeBatch(**eps_data)
         del t
 
 
 def test_act_box_env_spec_mismatch_eps(eps_data):
-    with pytest.raises(ValueError, match='actions should have'):
-        eps_data['env_spec'].action_space = akro.Box(low=1,
-                                                     high=np.inf,
-                                                     shape=(4, 3, 2),
-                                                     dtype=np.float32)
+    with pytest.raises(ValueError, match='Each action has shape'):
+        eps_data['env_spec'] = EnvSpec(
+            eps_data['env_spec'].observation_space,
+            akro.Box(low=1, high=np.inf, shape=(4, 3, 2), dtype=np.float32))
         t = EpisodeBatch(**eps_data)
         del t
 
 
 def test_act_batch_mismatch_eps(eps_data):
-    with pytest.raises(ValueError, match='batch dimension of actions'):
+    with pytest.raises(ValueError, match='actions has batch size'):
         eps_data['actions'] = eps_data['actions'][:-1]
         t = EpisodeBatch(**eps_data)
         del t
 
 
 def test_rewards_shape_mismatch_eps(eps_data):
-    with pytest.raises(ValueError, match='Rewards tensor'):
+    with pytest.raises(ValueError, match='rewards has shape'):
         eps_data['rewards'] = eps_data['rewards'].reshape((2, -1))
         t = EpisodeBatch(**eps_data)
         del t
 
 
 def test_env_infos_not_ndarray_eps(eps_data):
-    with pytest.raises(ValueError,
-                       match='entry in env_infos must be a numpy array'):
+    with pytest.raises(ValueError, match="Entry 'bar' in env_infos"):
         eps_data['env_infos']['bar'] = []
         t = EpisodeBatch(**eps_data)
         del t
@@ -164,15 +161,14 @@ def test_env_infos_not_ndarray_eps(eps_data):
 
 def test_env_infos_batch_mismatch_eps(eps_data):
     with pytest.raises(ValueError,
-                       match='entry in env_infos must have a batch dimension'):
+                       match="Entry 'goal' in env_infos has batch size 141"):
         eps_data['env_infos']['goal'] = eps_data['env_infos']['goal'][:-1]
         t = EpisodeBatch(**eps_data)
         del t
 
 
 def test_agent_infos_not_ndarray_eps(eps_data):
-    with pytest.raises(ValueError,
-                       match='entry in agent_infos must be a numpy array'):
+    with pytest.raises(ValueError, match="Entry 'bar' in agent_infos"):
         eps_data['agent_infos']['bar'] = list()
         t = EpisodeBatch(**eps_data)
         del t
@@ -181,7 +177,7 @@ def test_agent_infos_not_ndarray_eps(eps_data):
 def test_agent_infos_batch_mismatch_eps(eps_data):
     with pytest.raises(
             ValueError,
-            match='entry in agent_infos must have a batch dimension'):
+            match="Entry 'hidden' in agent_infos has batch size 141"):
         eps_data['agent_infos']['hidden'] = eps_data['agent_infos'][
             'hidden'][:-1]
         t = EpisodeBatch(**eps_data)
@@ -189,38 +185,36 @@ def test_agent_infos_batch_mismatch_eps(eps_data):
 
 
 def test_step_types_shape_mismatch_eps(eps_data):
-    with pytest.raises(ValueError, match='step_types tensor must have shape'):
+    with pytest.raises(ValueError, match='step_types has batch size 2'):
         eps_data['step_types'] = eps_data['step_types'].reshape((2, -1))
         t = EpisodeBatch(**eps_data)
         del t
 
 
 def test_step_types_dtype_mismatch_eps(eps_data):
-    with pytest.raises(ValueError, match='step_types tensor must be dtype'):
+    with pytest.raises(ValueError, match='step_types has dtype float32'):
         eps_data['step_types'] = eps_data['step_types'].astype(np.float32)
         t = EpisodeBatch(**eps_data)
         del t
 
 
 def test_episode_infos_not_ndarray_eps(eps_data):
-    with pytest.raises(ValueError,
-                       match='entry in episode_infos must be a numpy array'):
+    with pytest.raises(ValueError, match="Entry 'bar' in episode_infos"):
         eps_data['episode_infos']['bar'] = list()
         t = EpisodeBatch(**eps_data)
         del t
 
 
 def test_episode_infos_batch_mismatch_eps(eps_data):
-    with pytest.raises(
-            ValueError,
-            match='entry in episode_infos must have a batch dimension'):
+    with pytest.raises(ValueError,
+                       match="Entry 'task_one_hot' in episode_infos"):
         eps_data['episode_infos']['task_one_hot'] = eps_data['episode_infos'][
             'task_one_hot'][:-1]
         t = EpisodeBatch(**eps_data)
         del t
 
 
-def test_to_epsectory_list(eps_data):
+def test_to_epsbatch_list(eps_data):
     t = EpisodeBatch(**eps_data)
     t_list = t.to_list()
     assert len(t_list) == len(eps_data['lengths'])
@@ -444,7 +438,7 @@ def batch_data():
     obs = np.stack([obs_space.low] * batch_size)
     next_obs = np.stack([obs_space.low] * batch_size)
     act = np.stack([[1, 3]] * batch_size)
-    rew = np.arange(batch_size).reshape(-1, 1)
+    rew = np.arange(batch_size)
     step_types = np.array([StepType.FIRST, StepType.TERMINAL], dtype=StepType)
 
     # env_infos
@@ -488,14 +482,14 @@ def test_new_ts_batch(batch_data):
 
 
 def test_invalid_inferred_batch_size(batch_data):
-    with pytest.raises(ValueError, match='batch dimension of rewards'):
+    with pytest.raises(ValueError, match='rewards is not of type'):
         batch_data['rewards'] = []
         s = TimeStepBatch(**batch_data)
         del s
 
 
 def test_observations_env_spec_mismatch_batch(batch_data):
-    with pytest.raises(ValueError, match='observations must conform'):
+    with pytest.raises(ValueError, match='Each observation has shape'):
         batch_data['observations'] = batch_data['observations'][:, :, :, :1]
         s = TimeStepBatch(**batch_data)
         del s
@@ -505,23 +499,21 @@ def test_observations_env_spec_mismatch_batch(batch_data):
     env_spec = EnvSpec(obs_space, act_space)
     batch_data['env_spec'] = env_spec
 
-    with pytest.raises(
-            ValueError,
-            match='observations should have the same dimensionality'):
+    with pytest.raises(ValueError, match='Each observation has shape'):
         batch_data['observations'] = batch_data['observations'][:, :, :, :1]
         s = TimeStepBatch(**batch_data)
         del s
 
 
 def test_observations_batch_mismatch_batch(batch_data):
-    with pytest.raises(ValueError, match='batch dimension of observations'):
+    with pytest.raises(ValueError, match='observations has batch size 1'):
         batch_data['observations'] = batch_data['observations'][:-1]
         s = TimeStepBatch(**batch_data)
         del s
 
 
 def test_next_observations_env_spec_mismatch_batch(batch_data):
-    with pytest.raises(ValueError, match='next_observations must conform'):
+    with pytest.raises(ValueError, match='Each next_observation has shape'):
         batch_data['next_observations'] = batch_data[
             'next_observations'][:, :, :, :1]
         s = TimeStepBatch(**batch_data)
@@ -532,9 +524,7 @@ def test_next_observations_env_spec_mismatch_batch(batch_data):
     env_spec = EnvSpec(obs_space, act_space)
     batch_data['env_spec'] = env_spec
 
-    with pytest.raises(
-            ValueError,
-            match='next_observations should have the same dimensionality'):
+    with pytest.raises(ValueError, match='Each next_observation has shape'):
         batch_data['next_observations'] = batch_data[
             'next_observations'][:, :, :, :1]
         s = TimeStepBatch(**batch_data)
@@ -542,48 +532,44 @@ def test_next_observations_env_spec_mismatch_batch(batch_data):
 
 
 def test_next_observations_batch_mismatch_batch(batch_data):
-    with pytest.raises(ValueError,
-                       match='batch dimension of '
-                       'next_observations'):
+    with pytest.raises(ValueError, match='next_observations has batch size 1'):
         batch_data['next_observations'] = batch_data['next_observations'][:-1]
         s = TimeStepBatch(**batch_data)
         del s
 
 
 def test_actions_batch_mismatch_batch(batch_data):
-    with pytest.raises(ValueError, match='batch dimension of actions'):
+    with pytest.raises(ValueError, match='actions has batch size 1'):
         batch_data['actions'] = batch_data['actions'][:-1]
         s = TimeStepBatch(**batch_data)
         del s
 
 
 def test_act_env_spec_mismatch_batch(batch_data):
-    with pytest.raises(ValueError, match='actions must conform'):
+    with pytest.raises(ValueError, match='Each action has shape'):
         batch_data['actions'] = batch_data['actions'][:, 0]
         s = TimeStepBatch(**batch_data)
         del s
 
 
 def test_act_box_env_spec_mismatch_batch(batch_data):
-    with pytest.raises(ValueError, match='actions should have'):
-        batch_data['env_spec'].action_space = akro.Box(low=1,
-                                                       high=np.inf,
-                                                       shape=(4, 3, 2),
-                                                       dtype=np.float32)
+    with pytest.raises(ValueError, match='Each action has'):
+        batch_data['env_spec'] = EnvSpec(
+            batch_data['env_spec'].observation_space,
+            akro.Box(low=1, high=np.inf, shape=(4, 3, 2), dtype=np.float32))
         s = TimeStepBatch(**batch_data)
         del s
 
 
 def test_invalid_rewards_shape(batch_data):
-    with pytest.raises(ValueError, match='Rewards tensor must have shape'):
-        batch_data['rewards'] = np.squeeze(batch_data['rewards'])
+    with pytest.raises(ValueError, match='rewards has shape'):
+        batch_data['rewards'] = batch_data['rewards'].reshape(-1, 1)
         s = TimeStepBatch(**batch_data)
         del s
 
 
 def test_env_infos_not_ndarray_batch(batch_data):
-    with pytest.raises(ValueError,
-                       match='entry in env_infos must be a numpy array'):
+    with pytest.raises(ValueError, match="Entry 'bar' in env_infos"):
         batch_data['env_infos']['bar'] = []
         s = TimeStepBatch(**batch_data)
         del s
@@ -591,24 +577,22 @@ def test_env_infos_not_ndarray_batch(batch_data):
 
 def test_env_infos_batch_mismatch_batch(batch_data):
     with pytest.raises(ValueError,
-                       match='entry in env_infos must have a batch dimension'):
+                       match="Entry 'goal' in env_infos has batch size 1"):
         batch_data['env_infos']['goal'] = batch_data['env_infos']['goal'][:-1]
         s = TimeStepBatch(**batch_data)
         del s
 
 
 def test_agent_infos_not_ndarray_batch(batch_data):
-    with pytest.raises(ValueError,
-                       match='entry in agent_infos must be a numpy array'):
+    with pytest.raises(ValueError, match="Entry 'bar' in agent_infos"):
         batch_data['agent_infos']['bar'] = list()
         s = TimeStepBatch(**batch_data)
         del s
 
 
 def test_agent_infos_batch_mismatch_batch(batch_data):
-    with pytest.raises(
-            ValueError,
-            match='entry in agent_infos must have a batch dimension'):
+    with pytest.raises(ValueError,
+                       match="Entry 'hidden' in agent_infos has batch size 1"):
         batch_data['agent_infos']['hidden'] = batch_data['agent_infos'][
             'hidden'][:-1]
         s = TimeStepBatch(**batch_data)
@@ -616,14 +600,14 @@ def test_agent_infos_batch_mismatch_batch(batch_data):
 
 
 def test_step_types_batch_mismatch_batch(batch_data):
-    with pytest.raises(ValueError, match='batch dimension of step_types'):
+    with pytest.raises(ValueError, match='step_types has batch size 0'):
         batch_data['step_types'] = np.array([])
         s = TimeStepBatch(**batch_data)
         del s
 
 
 def test_step_types_dtype_mismatch_batch(batch_data):
-    with pytest.raises(ValueError, match='step_types must be a StepType'):
+    with pytest.raises(ValueError, match='step_types has dtype float32'):
         batch_data['step_types'] = batch_data['step_types'].astype(np.float32)
         s = TimeStepBatch(**batch_data)
         del s
@@ -809,19 +793,9 @@ def test_from_time_step_list_batch(batch_data):
         assert np.array_equal(new_agent_infos[key], s.agent_infos[key])
 
 
-def test_time_step_batch_from_episode_batch(eps_data):
-    eps = EpisodeBatch(**eps_data)
-    timestep_batch = TimeStepBatch.from_episode_batch(eps)
-    assert (timestep_batch.observations == eps.observations).all()
-    assert (timestep_batch.next_observations[:eps.lengths[0] - 1] ==
-            eps.observations[1:eps.lengths[0]]).all()
-    assert (timestep_batch.next_observations[eps.lengths[0]] ==
-            eps.last_observations[0]).all()
-
-
 def test_episode_info_wrong_length(eps_data):
     with pytest.raises(ValueError,
-                       match='Each entry in episode_infos must have'):
+                       match="Entry 'task_one_hot' in episode_infos has"):
         eps_data['episode_infos']['task_one_hot'] = np.stack([[1, 1]] * 3)
         t = EpisodeBatch(**eps_data)
         del t
@@ -829,7 +803,7 @@ def test_episode_info_wrong_length(eps_data):
 
 def test_episode_info_not_numpy(eps_data):
     with pytest.raises(ValueError,
-                       match='Each entry in episode_infos must be a numpy'):
+                       match="Entry 'task_one_hot' in episode_infos"):
         n = len(eps_data['lengths'])
         eps_data['episode_infos']['task_one_hot'] = ['test'] * n
         t = EpisodeBatch(**eps_data)
