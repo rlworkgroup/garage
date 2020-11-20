@@ -822,11 +822,12 @@ class TFTrainer(Trainer):
         self._sampler.start_worker()
         if self._plot:
             # pylint: disable=import-outside-toplevel
-            from garage.tf.plotter import Plotter
-            self._plotter = Plotter(self.get_env_copy(),
+            from garage.plotter import Plotter
+            self._plotter = Plotter()
+            self._plotter.init_plot(self.get_env_copy(),
                                     self._algo.policy,
+                                    tf_plot=True,
                                     sess=tf.compat.v1.get_default_session())
-            self._plotter.start()
 
     def initialize_tf_vars(self):
         """Initialize all uninitialized variables in session."""
