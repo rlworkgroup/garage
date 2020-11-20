@@ -86,7 +86,7 @@ def test_dqn_loss(setup):
 
     paths = trainer.obtain_episodes(0, batch_size=batch_size)
     buff.add_episode_batch(paths)
-    timesteps = buff.sample_timesteps(algo._buffer_batch_size)
+    timesteps, _, _ = buff.sample_timesteps(algo._buffer_batch_size)
     timesteps_copy = copy.deepcopy(timesteps)
 
     observations = np_to_torch(timesteps.observations)
@@ -130,7 +130,7 @@ def test_double_dqn_loss(setup):
 
     paths = trainer.obtain_episodes(0, batch_size=batch_size)
     buff.add_episode_batch(paths)
-    timesteps = buff.sample_timesteps(algo._buffer_batch_size)
+    timesteps, _, _ = buff.sample_timesteps(algo._buffer_batch_size)
     timesteps_copy = copy.deepcopy(timesteps)
 
     observations = np_to_torch(timesteps.observations)

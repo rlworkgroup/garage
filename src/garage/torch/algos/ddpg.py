@@ -186,7 +186,7 @@ class DDPG(RLAlgorithm):
         for _ in range(self._n_train_steps):
             if (self.replay_buffer.n_transitions_stored >=
                     self._min_buffer_size):
-                samples = self.replay_buffer.sample_transitions(
+                samples, _, _ = self.replay_buffer.sample_transitions(
                     self._buffer_batch_size)
                 samples['rewards'] *= self._reward_scale
                 qf_loss, y, q, policy_loss = torch_to_np(

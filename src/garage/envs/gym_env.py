@@ -13,7 +13,6 @@ from garage import Environment, EnvSpec, EnvStep, StepType
 # entry points don't close their viewer windows.
 KNOWN_GYM_NOT_CLOSE_VIEWER = [
     # Please keep alphabetized
-    'gym.envs.atari',
     'gym.envs.box2d',
     'gym.envs.classic_control'
 ]

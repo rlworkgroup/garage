@@ -371,7 +371,7 @@ class TD3(RLAlgorithm):
             float: Q value predicted by the q network.
 
         """
-        timesteps = self._replay_buffer.sample_timesteps(
+        timesteps, _, _ = self._replay_buffer.sample_timesteps(
             self._buffer_batch_size)
 
         observations = timesteps.observations

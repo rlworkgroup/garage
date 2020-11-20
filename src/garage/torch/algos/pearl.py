@@ -478,7 +478,7 @@ class PEARL(MetaRLAlgorithm):
         # transitions sampled randomly from replay buffer
         initialized = False
         for idx in indices:
-            batch = self._replay_buffers[idx].sample_transitions(
+            batch, _, _ = self._replay_buffers[idx].sample_transitions(
                 self._batch_size)
             if not initialized:
                 o = batch['observations'][np.newaxis]
@@ -522,7 +522,7 @@ class PEARL(MetaRLAlgorithm):
 
         initialized = False
         for idx in indices:
-            batch = self._context_replay_buffers[idx].sample_transitions(
+            batch, _, _ = self._context_replay_buffers[idx].sample_transitions(
                 self._embedding_batch_size)
             o = batch['observations']
             a = batch['actions']

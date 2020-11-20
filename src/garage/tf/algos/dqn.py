@@ -258,7 +258,7 @@ class DQN(RLAlgorithm):
             numpy.float64: Loss of policy.
 
         """
-        timesteps = self._replay_buffer.sample_timesteps(
+        timesteps, _, _ = self._replay_buffer.sample_timesteps(
             self._buffer_batch_size)
 
         observations = timesteps.observations

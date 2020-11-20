@@ -234,7 +234,7 @@ class SAC(RLAlgorithm):
         del itr
         del paths
         if self.replay_buffer.n_transitions_stored >= self._min_buffer_size:
-            samples = self.replay_buffer.sample_transitions(
+            samples, _, _ = self.replay_buffer.sample_transitions(
                 self._buffer_batch_size)
             samples = dict_np_to_torch(samples)
             policy_loss, qf1_loss, qf2_loss = self.optimize_policy(samples)
