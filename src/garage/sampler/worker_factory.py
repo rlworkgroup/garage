@@ -1,7 +1,9 @@
 """Worker factory used by Samplers to construct Workers."""
 import psutil
 
+from garage.experiment.deterministic import get_seed
 from garage.sampler.default_worker import DefaultWorker
+from garage.tf.samplers import TFWorkerClassWrapper
 
 
 def identity_function(value):
@@ -31,10 +33,11 @@ class WorkerFactory:
     All arguments to this type must be passed by keyword.
 
     Args:
-        seed(int): The seed to use to intialize random number generators.
-        n_workers(int): The number of workers to use.
         max_episode_length(int): The maximum length episodes which will be
             sampled.
+        is_tf_worker (bool): Whether it is workers for TFTrainer.
+        seed(int): The seed to use to initialize random number generators.
+        n_workers(int): The number of workers to use.
         worker_class(type): Class of the workers. Instances should implement
             the Worker interface.
         worker_args (dict or None): Additional arguments that should be passed
@@ -45,14 +48,17 @@ class WorkerFactory:
     def __init__(
             self,
             *,  # Require passing by keyword.
-            seed,
             max_episode_length,
+            is_tf_worker=False,
+            seed=get_seed(),
             n_workers=psutil.cpu_count(logical=False),
             worker_class=DefaultWorker,
             worker_args=None):
         self.n_workers = n_workers
         self._seed = seed
         self._max_episode_length = max_episode_length
+        if is_tf_worker:
+            worker_class = TFWorkerClassWrapper(worker_class)
         self._worker_class = worker_class
         if worker_args is None:
             self._worker_args = {}

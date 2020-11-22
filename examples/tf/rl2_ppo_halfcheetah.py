@@ -9,7 +9,7 @@ from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv
 from garage.experiment import task_sampler
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
-from garage.sampler import LocalSampler
+from garage.sampler import LocalSampler, WorkerFactory
 from garage.tf.algos import RL2PPO
 from garage.tf.algos.rl2 import RL2Env, RL2Worker
 from garage.tf.policies import GaussianGRUPolicy
@@ -55,11 +55,23 @@ def rl2_ppo_halfcheetah(ctxt, seed, max_episode_length, meta_batch_size,
 
         baseline = LinearFeatureBaseline(env_spec=env_spec)
 
+        envs = tasks.sample(meta_batch_size)
+        worker_factory = WorkerFactory(
+            max_episode_length=env_spec.max_episode_length,
+            is_tf_worker=True,
+            n_workers=meta_batch_size,
+            worker_class=RL2Worker,
+            worker_args=dict(n_episodes_per_trial=episode_per_task))
+        sampler = LocalSampler.from_worker_factory(worker_factory,
+                                                   agents=policy,
+                                                   envs=envs)
+
         algo = RL2PPO(meta_batch_size=meta_batch_size,
                       task_sampler=tasks,
                       env_spec=env_spec,
                       policy=policy,
                       baseline=baseline,
+                      sampler=sampler,
                       episodes_per_trial=episode_per_task,
                       discount=0.99,
                       gae_lambda=0.95,
@@ -73,12 +85,7 @@ def rl2_ppo_halfcheetah(ctxt, seed, max_episode_length, meta_batch_size,
                       policy_ent_coeff=0.02,
                       center_adv=False)
 
-        trainer.setup(algo,
-                      tasks.sample(meta_batch_size),
-                      sampler_cls=LocalSampler,
-                      n_workers=meta_batch_size,
-                      worker_class=RL2Worker,
-                      worker_args=dict(n_episodes_per_trial=episode_per_task))
+        trainer.setup(algo, envs)
 
         trainer.train(n_epochs=n_epochs,
                       batch_size=episode_per_task * max_episode_length *

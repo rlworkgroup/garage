@@ -10,13 +10,11 @@ import tensorflow as tf
 # yapf: disable
 from garage.envs import GymEnv, normalize
 from garage.np.baselines import LinearFeatureBaseline
-from garage.sampler import LocalSampler
+from garage.sampler import LocalSampler, WorkerFactory
 from garage.tf.algos import PPO
 from garage.tf.baselines import ContinuousMLPBaseline, GaussianMLPBaseline
-from garage.tf.policies import (CategoricalMLPPolicy,
-                                GaussianGRUPolicy,
-                                GaussianLSTMPolicy,
-                                GaussianMLPPolicy)
+from garage.tf.policies import (CategoricalMLPPolicy, GaussianGRUPolicy,
+                                GaussianLSTMPolicy, GaussianMLPPolicy)
 from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
@@ -43,6 +41,12 @@ class TestPPO(TfGraphTestCase):
             env_spec=self.env.spec,
             hidden_sizes=(32, 32),
         )
+        worker_factory = WorkerFactory(
+            max_episode_length=self.env.spec.max_episode_length,
+            is_tf_worker=True)
+        self.sampler = LocalSampler.from_worker_factory(worker_factory,
+                                                        agents=self.policy,
+                                                        envs=self.env)
 
     @pytest.mark.mujoco
     def test_ppo_pendulum(self):
@@ -51,11 +55,12 @@ class TestPPO(TfGraphTestCase):
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
+                       sampler=self.sampler,
                        discount=0.99,
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32,
                                            max_optimization_epochs=10))
-            trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+            trainer.setup(algo, self.env)
             last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
@@ -66,6 +71,7 @@ class TestPPO(TfGraphTestCase):
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
+                       sampler=self.sampler,
                        discount=0.99,
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32,
@@ -74,7 +80,7 @@ class TestPPO(TfGraphTestCase):
                        entropy_method='max',
                        policy_ent_coeff=0.02,
                        center_adv=False)
-            trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+            trainer.setup(algo, self.env)
             last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
@@ -88,6 +94,7 @@ class TestPPO(TfGraphTestCase):
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
+                       sampler=self.sampler,
                        discount=0.99,
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32,
@@ -97,7 +104,7 @@ class TestPPO(TfGraphTestCase):
                        entropy_method='max',
                        policy_ent_coeff=0.02,
                        center_adv=False)
-            trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+            trainer.setup(algo, self.env)
             last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
@@ -111,6 +118,7 @@ class TestPPO(TfGraphTestCase):
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
+                       sampler=self.sampler,
                        discount=0.99,
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32,
@@ -120,7 +128,7 @@ class TestPPO(TfGraphTestCase):
                        entropy_method='regularized',
                        policy_ent_coeff=0.0,
                        center_adv=True)
-            trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+            trainer.setup(algo, self.env)
             last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
@@ -131,6 +139,7 @@ class TestPPO(TfGraphTestCase):
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
+                       sampler=self.sampler,
                        discount=0.99,
                        lr_clip_range=0.01,
                        optimizer_args=dict(batch_size=32,
@@ -139,7 +148,7 @@ class TestPPO(TfGraphTestCase):
                        entropy_method='regularized',
                        policy_ent_coeff=0.02,
                        center_adv=True)
-            trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+            trainer.setup(algo, self.env)
             last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
@@ -166,10 +175,17 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
                 env_spec=env.spec,
                 hidden_sizes=(32, 32),
             )
+            worker_factory = WorkerFactory(
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True)
+            sampler = LocalSampler.from_worker_factory(worker_factory,
+                                                       agents=policy,
+                                                       envs=env)
             algo = PPO(
                 env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
+                sampler=sampler,
                 discount=0.99,
                 gae_lambda=0.95,
                 lr_clip_range=0.2,
@@ -182,7 +198,7 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
                 policy_ent_coeff=0.02,
                 center_adv=False,
             )
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.setup(algo, env)
             last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 100
 
@@ -199,10 +215,17 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
                 env_spec=env.spec,
                 hidden_sizes=(32, 32),
             )
+            worker_factory = WorkerFactory(
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True)
+            sampler = LocalSampler.from_worker_factory(worker_factory,
+                                                       agents=policy,
+                                                       envs=env)
             algo = PPO(
                 env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
+                sampler=sampler,
                 discount=0.99,
                 gae_lambda=0.95,
                 lr_clip_range=0.2,
@@ -215,7 +238,7 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
                 policy_ent_coeff=0.02,
                 center_adv=False,
             )
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.setup(algo, env)
             last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 100
 
@@ -235,10 +258,17 @@ class TestPPOPendulumLSTM(TfGraphTestCase):
                 env_spec=env.spec,
                 hidden_sizes=(32, 32),
             )
+            worker_factory = WorkerFactory(
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True)
+            sampler = LocalSampler.from_worker_factory(worker_factory,
+                                                       agents=lstm_policy,
+                                                       envs=env)
             algo = PPO(
                 env_spec=env.spec,
                 policy=lstm_policy,
                 baseline=baseline,
+                sampler=sampler,
                 discount=0.99,
                 gae_lambda=0.95,
                 lr_clip_range=0.2,
@@ -251,7 +281,7 @@ class TestPPOPendulumLSTM(TfGraphTestCase):
                 policy_ent_coeff=0.02,
                 center_adv=False,
             )
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.setup(algo, env)
             last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 60
 
@@ -269,10 +299,17 @@ class TestPPOPendulumGRU(TfGraphTestCase):
                 env_spec=env.spec,
                 hidden_sizes=(32, 32),
             )
+            worker_factory = WorkerFactory(
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True)
+            sampler = LocalSampler.from_worker_factory(worker_factory,
+                                                       agents=gru_policy,
+                                                       envs=env)
             algo = PPO(
                 env_spec=env.spec,
                 policy=gru_policy,
                 baseline=baseline,
+                sampler=sampler,
                 discount=0.99,
                 gae_lambda=0.95,
                 lr_clip_range=0.2,
@@ -285,6 +322,6 @@ class TestPPOPendulumGRU(TfGraphTestCase):
                 policy_ent_coeff=0.02,
                 center_adv=False,
             )
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.setup(algo, env)
             last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 80

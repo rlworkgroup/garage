@@ -14,6 +14,7 @@ class MAMLPPO(MAML):
         env (Environment): A multi-task environment.
         policy (garage.torch.policies.Policy): Policy.
         value_function (garage.np.baselines.Baseline): The value function.
+        sampler (garage.sampler.Sampler): Sampler.
         task_sampler (garage.experiment.TaskSampler): Task sampler.
         inner_lr (float): Adaptation learning rate.
         outer_lr (float): Meta policy learning rate.
@@ -51,6 +52,7 @@ class MAMLPPO(MAML):
                  env,
                  policy,
                  value_function,
+                 sampler,
                  task_sampler,
                  inner_lr=_Default(1e-1),
                  outer_lr=1e-3,
@@ -76,6 +78,7 @@ class MAMLPPO(MAML):
         inner_algo = PPO(env.spec,
                          policy,
                          value_function,
+                         None,
                          policy_optimizer=policy_optimizer,
                          vf_optimizer=vf_optimizer,
                          lr_clip_range=lr_clip_range,
@@ -92,6 +95,7 @@ class MAMLPPO(MAML):
         super().__init__(inner_algo=inner_algo,
                          env=env,
                          policy=policy,
+                         sampler=sampler,
                          task_sampler=task_sampler,
                          meta_optimizer=torch.optim.Adam,
                          meta_batch_size=meta_batch_size,

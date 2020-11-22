@@ -10,7 +10,6 @@ import torch.nn.functional as F
 from garage import _Default, log_performance, make_optimizer
 from garage._functions import obtain_evaluation_episodes
 from garage.np.algos import RLAlgorithm
-from garage.sampler import FragmentWorker
 from garage.torch import global_device, np_to_torch
 
 
@@ -28,6 +27,7 @@ class DQN(RLAlgorithm):
             policy that performs the action that yields the highest Q value.
         qf (nn.Module): Q-value network.
         replay_buffer (ReplayBuffer): Replay buffer.
+        sampler (garage.sampler.Sampler): Sampler.
         steps_per_epoch (int): Number of train_once calls per epoch.
         n_train_steps (int): Training steps.
         eval_env (Environment): Evaluation environment. If None, a copy of the
@@ -59,7 +59,6 @@ class DQN(RLAlgorithm):
             gradient are not clipped. Defaults to 10.
         reward_scale (float): Reward scale.
     """
-    worker_cls = FragmentWorker
 
     def __init__(
             self,
@@ -67,6 +66,7 @@ class DQN(RLAlgorithm):
             policy,
             qf,
             replay_buffer,
+            sampler,
             exploration_policy=None,
             eval_env=None,
             double_q=True,
@@ -123,6 +123,8 @@ class DQN(RLAlgorithm):
                                             module=self._qf,
                                             lr=qf_lr)
         self._eval_env = eval_env
+
+        self.sampler = sampler
 
     def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.

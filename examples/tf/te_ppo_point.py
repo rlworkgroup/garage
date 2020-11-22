@@ -10,7 +10,7 @@ from garage.envs import PointEnv
 from garage.envs.multi_env_wrapper import MultiEnvWrapper, round_robin_strategy
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearMultiFeatureBaseline
-from garage.sampler import LocalSampler
+from garage.sampler import LocalSampler, WorkerFactory
 from garage.tf.algos import TEPPO
 from garage.tf.algos.te import TaskEmbeddingWorker
 from garage.tf.embeddings import GaussianMLPEncoder
@@ -137,9 +137,18 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
         baseline = LinearMultiFeatureBaseline(
             env_spec=env.spec, features=['observations', 'tasks', 'latents'])
 
+        worker_factory = WorkerFactory(
+            max_episode_length=env.spec.max_episode_length,
+            is_tf_worker=True,
+            worker_class=TaskEmbeddingWorker)
+        sampler = LocalSampler.from_worker_factory(worker_factory,
+                                                   agents=policy,
+                                                   envs=env)
+
         algo = TEPPO(env_spec=env.spec,
                      policy=policy,
                      baseline=baseline,
+                     sampler=sampler,
                      inference=inference,
                      discount=0.99,
                      lr_clip_range=0.2,
@@ -160,11 +169,7 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
                      center_adv=True,
                      stop_ce_gradient=True)
 
-        trainer.setup(algo,
-                      env,
-                      sampler_cls=LocalSampler,
-                      sampler_args=None,
-                      worker_class=TaskEmbeddingWorker)
+        trainer.setup(algo, env)
         trainer.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
 
 

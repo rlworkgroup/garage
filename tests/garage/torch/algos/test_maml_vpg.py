@@ -4,7 +4,7 @@ import torch
 
 from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic, MetaEvaluator, SetTaskSampler
-from garage.sampler import LocalSampler
+from garage.sampler import LocalSampler, WorkerFactory
 from garage.torch.algos import MAMLVPG
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -71,10 +71,15 @@ class TestMAMLVPG:
         meta_evaluator = MetaEvaluator(test_task_sampler=task_sampler,
                                        n_test_tasks=1,
                                        n_test_episodes=10)
-
+        worker_factory = WorkerFactory(
+            max_episode_length=self.env.spec.max_episode_length)
+        sampler = LocalSampler.from_worker_factory(worker_factory,
+                                                   agents=self.policy,
+                                                   envs=self.env)
         trainer = Trainer(snapshot_config)
         algo = MAMLVPG(env=self.env,
                        policy=self.policy,
+                       sampler=sampler,
                        task_sampler=self.task_sampler,
                        value_function=self.value_function,
                        meta_batch_size=5,
@@ -84,7 +89,7 @@ class TestMAMLVPG:
                        num_grad_updates=1,
                        meta_evaluator=meta_evaluator)
 
-        trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+        trainer.setup(algo, self.env)
         last_avg_ret = trainer.train(n_epochs=10,
                                      batch_size=episodes_per_task *
                                      max_episode_length)

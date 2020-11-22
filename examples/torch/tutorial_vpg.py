@@ -7,7 +7,7 @@ from garage import EpisodeBatch, log_performance, wrap_experiment
 from garage.envs import PointEnv
 from garage.experiment.deterministic import set_seed
 from garage.np import discount_cumsum
-from garage.sampler import LocalSampler
+from garage.sampler import LocalSampler, WorkerFactory
 from garage.torch.policies import GaussianMLPPolicy
 from garage.trainer import Trainer
 
@@ -19,13 +19,14 @@ class SimpleVPG:
     Args:
         env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.StochasticPolicy): Policy.
+        sampler (garage.sampler.Sampler): Sampler.
 
     """
-    sampler_cls = LocalSampler
 
-    def __init__(self, env_spec, policy):
+    def __init__(self, env_spec, policy, sampler):
         self.env_spec = env_spec
         self.policy = policy
+        self.sampler = sampler
         self.max_episode_length = env_spec.max_episode_length
 
         self._discount = 0.99
@@ -84,7 +85,12 @@ def tutorial_vpg(ctxt=None):
     trainer = Trainer(ctxt)
     env = PointEnv()
     policy = GaussianMLPPolicy(env.spec)
-    algo = SimpleVPG(env.spec, policy)
+    worker_factory = WorkerFactory(
+        max_episode_length=env.spec.max_episode_length, )
+    sampler = LocalSampler.from_worker_factory(worker_factory,
+                                               agents=policy,
+                                               envs=env)
+    algo = SimpleVPG(env.spec, policy, sampler)
     trainer.setup(algo, env)
     trainer.train(n_epochs=200, batch_size=4000)
 

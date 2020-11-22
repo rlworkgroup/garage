@@ -11,6 +11,7 @@ from garage.envs import MetaWorldSetTaskEnv
 from garage.experiment import (MetaEvaluator, MetaWorldTaskSampler,
                                SetTaskSampler)
 from garage.experiment.deterministic import set_seed
+from garage.sampler import RaySampler, WorkerFactory
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -61,9 +62,17 @@ def maml_trpo_metaworld_ml10(ctxt, seed, epochs, episodes_per_task,
 
     meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler)
 
+    worker_factory = WorkerFactory(
+        n_workers=meta_batch_size,
+        max_episode_length=env.spec.max_episode_length)
+    sampler = RaySampler.from_worker_factory(worker_factory,
+                                             agents=policy,
+                                             envs=env)
+
     trainer = Trainer(ctxt)
     algo = MAMLTRPO(env=env,
                     policy=policy,
+                    sampler=sampler,
                     task_sampler=tasks,
                     value_function=value_function,
                     meta_batch_size=meta_batch_size,
@@ -73,7 +82,7 @@ def maml_trpo_metaworld_ml10(ctxt, seed, epochs, episodes_per_task,
                     num_grad_updates=1,
                     meta_evaluator=meta_evaluator)
 
-    trainer.setup(algo, env, n_workers=meta_batch_size)
+    trainer.setup(algo, env)
     trainer.train(n_epochs=epochs,
                   batch_size=episodes_per_task * env.spec.max_episode_length)
 

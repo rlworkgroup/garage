@@ -13,6 +13,7 @@ from garage.envs import GymEnv, normalize
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
+from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
 from garage.torch.algos import DDPG
 from garage.torch.policies import DeterministicMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
@@ -50,10 +51,18 @@ def ddpg_pendulum(ctxt=None, seed=1, lr=1e-4):
 
     policy_optimizer = (torch.optim.Adagrad, {'lr': lr, 'lr_decay': 0.99})
 
+    worker_factory = WorkerFactory(
+        max_episode_length=env.spec.max_episode_length,
+        worker_class=FragmentWorker)
+    sampler = LocalSampler.from_worker_factory(worker_factory,
+                                               agents=exploration_policy,
+                                               envs=env)
+
     ddpg = DDPG(env_spec=env.spec,
                 policy=policy,
                 qf=qf,
                 replay_buffer=replay_buffer,
+                sampler=sampler,
                 steps_per_epoch=20,
                 n_train_steps=50,
                 min_buffer_size=int(1e4),

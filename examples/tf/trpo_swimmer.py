@@ -4,6 +4,7 @@ from garage import wrap_experiment
 from garage.envs import GymEnv
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import RaySampler, WorkerFactory
 from garage.tf.algos import TRPO
 from garage.tf.policies import GaussianMLPPolicy
 from garage.trainer import TFTrainer
@@ -29,9 +30,16 @@ def trpo_swimmer(ctxt=None, seed=1, batch_size=4000):
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+        worker_factory = WorkerFactory(
+            max_episode_length=env.spec.max_episode_length, is_tf_worker=True)
+        sampler = RaySampler.from_worker_factory(worker_factory,
+                                                 agents=policy,
+                                                 envs=env)
+
         algo = TRPO(env_spec=env.spec,
                     policy=policy,
                     baseline=baseline,
+                    sampler=sampler,
                     discount=0.99,
                     max_kl_step=0.01)
 

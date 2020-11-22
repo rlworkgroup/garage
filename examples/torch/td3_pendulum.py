@@ -9,6 +9,7 @@ from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddGaussianNoise
 from garage.np.policies import UniformRandomPolicy
 from garage.replay_buffer import PathBuffer
+from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
 from garage.torch import prefer_gpu
 from garage.torch.algos import TD3
 from garage.torch.policies import DeterministicMLPPolicy
@@ -59,11 +60,19 @@ def td3_pendulum(ctxt=None, seed=1):
 
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
 
+    worker_factory = WorkerFactory(
+        max_episode_length=env.spec.max_episode_length,
+        worker_class=FragmentWorker)
+    sampler = LocalSampler.from_worker_factory(worker_factory,
+                                               agents=exploration_policy,
+                                               envs=env)
+
     td3 = TD3(env_spec=env.spec,
               policy=policy,
               qf1=qf1,
               qf2=qf2,
               replay_buffer=replay_buffer,
+              sampler=sampler,
               policy_optimizer=torch.optim.Adam,
               qf_optimizer=torch.optim.Adam,
               exploration_policy=exploration_policy,

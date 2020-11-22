@@ -6,7 +6,7 @@ import tensorflow as tf
 from garage.envs import GymEnv
 from garage.np.exploration_policies import AddGaussianNoise
 from garage.replay_buffer import PathBuffer
-from garage.sampler import LocalSampler
+from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
 from garage.tf.algos import TD3
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
@@ -55,6 +55,13 @@ class TestTD3(TfGraphTestCase):
 
             replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
 
+            worker_factory = WorkerFactory(
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True,
+                worker_class=FragmentWorker)
+            sampler = LocalSampler.from_worker_factory(
+                worker_factory, agents=exploration_policy, envs=env)
+
             algo = TD3(env_spec=env.spec,
                        policy=policy,
                        policy_lr=1e-3,
@@ -62,6 +69,7 @@ class TestTD3(TfGraphTestCase):
                        qf=qf,
                        qf2=qf2,
                        replay_buffer=replay_buffer,
+                       sampler=sampler,
                        steps_per_epoch=steps_per_epoch,
                        target_update_tau=0.005,
                        n_train_steps=50,
@@ -74,7 +82,7 @@ class TestTD3(TfGraphTestCase):
                        policy_optimizer=tf.compat.v1.train.AdamOptimizer,
                        qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.setup(algo, env)
             last_avg_ret = trainer.train(n_epochs=n_epochs,
                                          batch_size=sampler_batch_size)
             assert last_avg_ret > 200

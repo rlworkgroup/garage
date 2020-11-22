@@ -9,7 +9,7 @@ from torch.nn import functional as F
 from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic
 from garage.replay_buffer import PathBuffer
-from garage.sampler import LocalSampler
+from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
 from garage.torch import set_gpu_mode
 from garage.torch.algos import SAC
 from garage.torch.policies import TanhGaussianMLPPolicy
@@ -90,6 +90,7 @@ def testCriticLoss():
               policy=policy,
               qf1=DummyCriticNet(),
               qf2=DummyCriticNet(),
+              sampler=None,
               replay_buffer=None,
               gradient_steps_per_itr=1,
               discount=0.9,
@@ -129,6 +130,7 @@ def testActorLoss():
               policy=policy,
               qf1=DummyCriticNet(),
               qf2=DummyCriticNet(),
+              sampler=None,
               replay_buffer=None,
               discount=1,
               buffer_batch_size=2,
@@ -157,6 +159,7 @@ def testTemperatureLoss():
               policy=policy,
               qf1=DummyCriticNet(),
               qf2=DummyCriticNet(),
+              sampler=None,
               replay_buffer=None,
               discount=1,
               buffer_batch_size=2,
@@ -199,10 +202,17 @@ def test_sac_inverted_double_pendulum():
                                  hidden_nonlinearity=F.relu)
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
     trainer = Trainer(snapshot_config=snapshot_config)
+    worker_factory = WorkerFactory(
+        max_episode_length=env.spec.max_episode_length,
+        worker_class=FragmentWorker)
+    sampler = LocalSampler.from_worker_factory(worker_factory,
+                                               agents=policy,
+                                               envs=env)
     sac = SAC(env_spec=env.spec,
               policy=policy,
               qf1=qf1,
               qf2=qf2,
+              sampler=sampler,
               gradient_steps_per_itr=100,
               replay_buffer=replay_buffer,
               min_buffer_size=1e3,
@@ -211,7 +221,7 @@ def test_sac_inverted_double_pendulum():
               buffer_batch_size=64,
               reward_scale=1.,
               steps_per_epoch=2)
-    trainer.setup(sac, env, sampler_cls=LocalSampler)
+    trainer.setup(sac, env)
     if torch.cuda.is_available():
         set_gpu_mode(True)
     else:
@@ -253,10 +263,17 @@ def test_fixed_alpha():
                                  hidden_nonlinearity=F.relu)
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
     trainer = Trainer(snapshot_config=snapshot_config)
+    worker_factory = WorkerFactory(
+        max_episode_length=env.spec.max_episode_length,
+        worker_class=FragmentWorker)
+    sampler = LocalSampler.from_worker_factory(worker_factory,
+                                               agents=policy,
+                                               envs=env)
     sac = SAC(env_spec=env.spec,
               policy=policy,
               qf1=qf1,
               qf2=qf2,
+              sampler=sampler,
               gradient_steps_per_itr=100,
               replay_buffer=replay_buffer,
               min_buffer_size=100,
@@ -266,7 +283,7 @@ def test_fixed_alpha():
               reward_scale=1.,
               steps_per_epoch=1,
               fixed_alpha=np.exp(0.5))
-    trainer.setup(sac, env, sampler_cls=LocalSampler)
+    trainer.setup(sac, env)
     sac.to()
     trainer.train(n_epochs=1, batch_size=100, plot=False)
     assert torch.allclose(torch.Tensor([0.5]), sac._log_alpha.cpu())

@@ -8,6 +8,7 @@ from garage.envs import GymEnv
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
+from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
 from garage.tf.algos import DQN
 from garage.tf.policies import DiscreteQFArgmaxPolicy
 from garage.tf.q_functions import DiscreteMLPQFunction
@@ -41,11 +42,21 @@ def dqn_cartpole(ctxt=None, seed=1):
                                                  max_epsilon=1.0,
                                                  min_epsilon=0.02,
                                                  decay_ratio=0.1)
+
+        worker_factory = WorkerFactory(
+            max_episode_length=env.spec.max_episode_length,
+            is_tf_worker=True,
+            worker_class=FragmentWorker)
+        sampler = LocalSampler.from_worker_factory(worker_factory,
+                                                   agents=exploration_policy,
+                                                   envs=env)
+
         algo = DQN(env_spec=env.spec,
                    policy=policy,
                    qf=qf,
                    exploration_policy=exploration_policy,
                    replay_buffer=replay_buffer,
+                   sampler=sampler,
                    steps_per_epoch=steps_per_epoch,
                    qf_lr=1e-4,
                    discount=1.0,

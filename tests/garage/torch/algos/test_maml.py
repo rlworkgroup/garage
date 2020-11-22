@@ -47,6 +47,7 @@ class TestMAML:
                                                        hidden_sizes=(32, 32))
         self.algo = MAMLPPO(env=self.env,
                             policy=self.policy,
+                            sampler=None,
                             task_sampler=task_sampler,
                             value_function=self.value_function,
                             meta_batch_size=5,

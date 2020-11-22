@@ -9,7 +9,6 @@ import torch.nn.functional as F
 from garage import (_Default, log_performance, make_optimizer,
                     obtain_evaluation_episodes)
 from garage.np.algos import RLAlgorithm
-from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch import (dict_np_to_torch, global_device, soft_update_model,
                           torch_to_np)
 
@@ -25,6 +24,7 @@ class TD3(RLAlgorithm):
         qf1 (garage.torch.q_functions.QFunction): Q function (critic network).
         qf2 (garage.torch.q_functions.QFunction): Q function (critic network).
         replay_buffer (ReplayBuffer): Replay buffer.
+        sampler (garage.sampler.Sampler): Sampler.
         replay_buffer_size (int): Size of the replay buffer
         exploration_policy (garage.np.exploration_policies.ExplorationPolicy):
                 Exploration strategy.
@@ -81,6 +81,7 @@ class TD3(RLAlgorithm):
             qf1,
             qf2,
             replay_buffer,
+            sampler,
             *,  # Everything after this is numbers.
             max_episode_length_eval=None,
             grad_steps_per_env_step,
@@ -142,8 +143,7 @@ class TD3(RLAlgorithm):
         self._eval_env = None
         self.exploration_policy = exploration_policy
         self._uniform_random_policy = uniform_random_policy
-        self.worker_cls = FragmentWorker
-        self.sampler_cls = LocalSampler
+        self.sampler = sampler
 
         self._replay_buffer = replay_buffer
         self.policy = policy

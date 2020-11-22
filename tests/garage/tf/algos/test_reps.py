@@ -6,7 +6,7 @@ import pytest
 
 from garage.envs import GymEnv
 from garage.np.baselines import LinearFeatureBaseline
-from garage.sampler import LocalSampler
+from garage.sampler import LocalSampler, WorkerFactory
 from garage.tf.algos import REPS
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.trainer import TFTrainer
@@ -27,12 +27,20 @@ class TestREPS(TfGraphTestCase):
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+            worker_factory = WorkerFactory(
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True)
+            sampler = LocalSampler.from_worker_factory(worker_factory,
+                                                       agents=policy,
+                                                       envs=env)
+
             algo = REPS(env_spec=env.spec,
                         policy=policy,
                         baseline=baseline,
+                        sampler=sampler,
                         discount=0.99)
 
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.setup(algo, env)
 
             last_avg_ret = trainer.train(n_epochs=10, batch_size=4000)
             assert last_avg_ret > 5

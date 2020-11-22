@@ -8,7 +8,7 @@ from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic
 from garage.np.exploration_policies import AddGaussianNoise
 from garage.replay_buffer import PathBuffer
-from garage.sampler import LocalSampler
+from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
 from garage.torch import prefer_gpu
 from garage.torch.algos import TD3
 from garage.torch.policies import DeterministicMLPPolicy
@@ -47,11 +47,18 @@ class TestTD3(TfGraphTestCase):
                                      hidden_sizes=[256, 256],
                                      hidden_nonlinearity=F.relu)
         replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
+        worker_factory = WorkerFactory(
+            max_episode_length=env.spec.max_episode_length,
+            worker_class=FragmentWorker)
+        sampler = LocalSampler.from_worker_factory(worker_factory,
+                                                   agents=exploration_policy,
+                                                   envs=env)
         td3 = TD3(env_spec=env.spec,
                   policy=policy,
                   qf1=qf1,
                   qf2=qf2,
                   replay_buffer=replay_buffer,
+                  sampler=sampler,
                   exploration_policy=exploration_policy,
                   steps_per_epoch=steps_per_epoch,
                   grad_steps_per_env_step=1,
@@ -60,7 +67,7 @@ class TestTD3(TfGraphTestCase):
 
         prefer_gpu()
         td3.to()
-        trainer.setup(td3, env, sampler_cls=LocalSampler)
+        trainer.setup(td3, env)
         trainer.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
 
     @pytest.mark.mujoco
@@ -90,11 +97,18 @@ class TestTD3(TfGraphTestCase):
                                      hidden_sizes=[256, 256],
                                      hidden_nonlinearity=F.relu)
         replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
+        worker_factory = WorkerFactory(
+            max_episode_length=env.spec.max_episode_length,
+            worker_class=FragmentWorker)
+        sampler = LocalSampler.from_worker_factory(worker_factory,
+                                                   agents=exploration_policy,
+                                                   envs=env)
         td3 = TD3(env_spec=env.spec,
                   policy=policy,
                   qf1=qf1,
                   qf2=qf2,
                   replay_buffer=replay_buffer,
+                  sampler=sampler,
                   exploration_policy=exploration_policy,
                   steps_per_epoch=steps_per_epoch,
                   grad_steps_per_env_step=1,

@@ -4,7 +4,7 @@ import torch
 
 from garage.envs import GymEnv, normalize
 from garage.experiment import SetTaskSampler
-from garage.sampler import LocalSampler
+from garage.sampler import LocalSampler, WorkerFactory
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -51,9 +51,16 @@ def test_maml_trpo_pendulum():
             env, max_episode_length=max_episode_length),
                                          expected_action_scale=10.))
 
+    worker_factory = WorkerFactory(
+        max_episode_length=env.spec.max_episode_length)
+    sampler = LocalSampler.from_worker_factory(worker_factory,
+                                               agents=policy,
+                                               envs=env)
+
     trainer = Trainer(snapshot_config)
     algo = MAMLTRPO(env=env,
                     policy=policy,
+                    sampler=sampler,
                     task_sampler=task_sampler,
                     value_function=value_function,
                     meta_batch_size=5,
@@ -62,7 +69,7 @@ def test_maml_trpo_pendulum():
                     inner_lr=0.1,
                     num_grad_updates=1)
 
-    trainer.setup(algo, env, sampler_cls=LocalSampler)
+    trainer.setup(algo, env)
     last_avg_ret = trainer.train(n_epochs=5,
                                  batch_size=episodes_per_task *
                                  max_episode_length)
@@ -92,9 +99,16 @@ def test_maml_trpo_dummy_named_env():
     episodes_per_task = 2
     max_episode_length = env.spec.max_episode_length
 
+    worker_factory = WorkerFactory(
+        max_episode_length=env.spec.max_episode_length)
+    sampler = LocalSampler.from_worker_factory(worker_factory,
+                                               agents=policy,
+                                               envs=env)
+
     trainer = Trainer(snapshot_config)
     algo = MAMLTRPO(env=env,
                     policy=policy,
+                    sampler=sampler,
                     task_sampler=task_sampler,
                     value_function=value_function,
                     meta_batch_size=5,
@@ -103,6 +117,6 @@ def test_maml_trpo_dummy_named_env():
                     inner_lr=0.1,
                     num_grad_updates=1)
 
-    trainer.setup(algo, env, sampler_cls=LocalSampler)
+    trainer.setup(algo, env)
     trainer.train(n_epochs=2,
                   batch_size=episodes_per_task * max_episode_length)

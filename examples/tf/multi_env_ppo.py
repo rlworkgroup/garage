@@ -7,6 +7,7 @@ from garage.envs import GymEnv, normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import RaySampler, WorkerFactory
 from garage.tf.algos import PPO
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.trainer import TFTrainer
@@ -36,9 +37,16 @@ def multi_env_ppo(ctxt=None, seed=1):
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+        worker_factory = WorkerFactory(
+            max_episode_length=env.spec.max_episode_length, is_tf_worker=True)
+        sampler = RaySampler.from_worker_factory(worker_factory,
+                                                 agents=policy,
+                                                 envs=env)
+
         algo = PPO(env_spec=env.spec,
                    policy=policy,
                    baseline=baseline,
+                   sampler=sampler,
                    discount=0.99,
                    gae_lambda=0.95,
                    lr_clip_range=0.2,

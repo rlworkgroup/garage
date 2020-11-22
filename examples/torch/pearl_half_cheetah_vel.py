@@ -7,7 +7,7 @@ from garage.envs import GymEnv, normalize
 from garage.envs.mujoco import HalfCheetahVelEnv
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
-from garage.sampler import LocalSampler
+from garage.sampler import LocalSampler, WorkerFactory
 from garage.torch import set_gpu_mode
 from garage.torch.algos import PEARL
 from garage.torch.algos.pearl import PEARLWorker
@@ -117,6 +117,14 @@ def pearl_half_cheetah_vel(ctxt=None,
     inner_policy = TanhGaussianMLPPolicy(
         env_spec=augmented_env, hidden_sizes=[net_size, net_size, net_size])
 
+    worker_factory = WorkerFactory(
+        max_episode_length=env[0]().spec.max_episode_length,
+        n_workers=1,
+        worker_class=PEARLWorker)
+    sampler = LocalSampler.from_worker_factory(worker_factory,
+                                               agents=None,
+                                               envs=env[0]())
+
     pearl = PEARL(
         env=env,
         policy_class=ContextConditionedPolicy,
@@ -124,6 +132,7 @@ def pearl_half_cheetah_vel(ctxt=None,
         inner_policy=inner_policy,
         qf=qf,
         vf=vf,
+        sampler=sampler,
         num_train_tasks=num_train_tasks,
         num_test_tasks=num_test_tasks,
         latent_dim=latent_size,
@@ -145,12 +154,7 @@ def pearl_half_cheetah_vel(ctxt=None,
     if use_gpu:
         pearl.to()
 
-    trainer.setup(algo=pearl,
-                  env=env[0](),
-                  sampler_cls=LocalSampler,
-                  sampler_args=dict(max_episode_length=max_episode_length),
-                  n_workers=1,
-                  worker_class=PEARLWorker)
+    trainer.setup(algo=pearl, env=env[0]())
 
     trainer.train(n_epochs=num_epochs, batch_size=batch_size)
 

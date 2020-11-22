@@ -11,7 +11,7 @@ import torch
 from garage import wrap_experiment
 from garage.envs import GymEnv
 from garage.experiment import deterministic
-from garage.sampler import RaySampler
+from garage.sampler import RaySampler, WorkerFactory
 from garage.torch.algos import TRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -51,13 +51,20 @@ def trpo_pendulum_ray_sampler(ctxt=None, seed=1):
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
+    worker_factory = WorkerFactory(
+        max_episode_length=env.spec.max_episode_length)
+    sampler = RaySampler.from_worker_factory(worker_factory,
+                                             agents=policy,
+                                             envs=env)
+
     algo = TRPO(env_spec=env.spec,
                 policy=policy,
                 value_function=value_function,
+                sampler=sampler,
                 discount=0.99,
                 center_adv=False)
 
-    trainer.setup(algo, env, sampler_cls=RaySampler)
+    trainer.setup(algo, env)
     trainer.train(n_epochs=100, batch_size=1024)
 
 

@@ -15,6 +15,7 @@ from garage.envs import GymEnv
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
+from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
 from garage.tf.algos import DDPG
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
@@ -51,12 +52,21 @@ def ddpg_pendulum(ctxt=None, seed=1):
 
         replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
 
+        worker_factory = WorkerFactory(
+            max_episode_length=env.spec.max_episode_length,
+            is_tf_worker=True,
+            worker_class=FragmentWorker)
+        sampler = LocalSampler.from_worker_factory(worker_factory,
+                                                   agents=exploration_policy,
+                                                   envs=env)
+
         ddpg = DDPG(env_spec=env.spec,
                     policy=policy,
                     policy_lr=1e-4,
                     qf_lr=1e-3,
                     qf=qf,
                     replay_buffer=replay_buffer,
+                    sampler=sampler,
                     steps_per_epoch=20,
                     target_update_tau=1e-2,
                     n_train_steps=50,

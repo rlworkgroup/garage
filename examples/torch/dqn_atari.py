@@ -24,7 +24,7 @@ from garage.envs.wrappers.stack_frames import StackFrames
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
-from garage.sampler import FragmentWorker, LocalSampler
+from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
 from garage.torch import set_gpu_mode
 from garage.torch.algos import DQN
 from garage.torch.policies import DiscreteQFArgmaxPolicy
@@ -169,11 +169,20 @@ def dqn_atari(ctxt=None,
         min_epsilon=hyperparams['min_epsilon'],
         decay_ratio=hyperparams['decay_ratio'])
 
+    worker_factory = WorkerFactory(
+        max_episode_length=env.spec.max_episode_length,
+        worker_class=FragmentWorker,
+        n_workers=n_workers)
+    sampler = LocalSampler.from_worker_factory(worker_factory,
+                                               agents=exploration_policy,
+                                               envs=env)
+
     algo = DQN(env_spec=env.spec,
                policy=policy,
                qf=qf,
                exploration_policy=exploration_policy,
                replay_buffer=replay_buffer,
+               sampler=sampler,
                steps_per_epoch=steps_per_epoch,
                qf_lr=hyperparams['lr'],
                clip_gradient=hyperparams['clip_gradient'],
@@ -189,11 +198,7 @@ def dqn_atari(ctxt=None,
         set_gpu_mode(True)
         algo.to()
 
-    trainer.setup(algo,
-                  env,
-                  sampler_cls=LocalSampler,
-                  worker_class=FragmentWorker,
-                  n_workers=n_workers)
+    trainer.setup(algo, env)
 
     trainer.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
     env.close()

@@ -9,7 +9,6 @@ import torch
 from garage import (_Default, log_performance, make_optimizer,
                     obtain_evaluation_episodes)
 from garage.np.algos import RLAlgorithm
-from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch import dict_np_to_torch, torch_to_np
 
 # yapf: enable
@@ -29,6 +28,7 @@ class DDPG(RLAlgorithm):
         policy (garage.torch.policies.Policy): Policy.
         qf (object): Q-value network.
         replay_buffer (ReplayBuffer): Replay buffer.
+        sampler (garage.sampler.Sampler): Sampler.
         steps_per_epoch (int): Number of train_once calls per epoch.
         n_train_steps (int): Training steps.
         buffer_batch_size (int): Batch size of replay buffer.
@@ -71,6 +71,7 @@ class DDPG(RLAlgorithm):
             policy,
             qf,
             replay_buffer,
+            sampler,
             *,  # Everything after this is numbers.
             steps_per_epoch=20,
             n_train_steps=50,
@@ -135,8 +136,7 @@ class DDPG(RLAlgorithm):
                                             module=self._qf,
                                             lr=qf_lr)
         self._eval_env = None
-        self.sampler_cls = LocalSampler
-        self.worker_cls = FragmentWorker
+        self.sampler = sampler
 
     def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.

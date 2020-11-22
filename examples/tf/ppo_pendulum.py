@@ -14,6 +14,7 @@ import tensorflow as tf
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.experiment.deterministic import set_seed
+from garage.sampler import RaySampler, WorkerFactory
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.policies import GaussianMLPPolicy
@@ -48,6 +49,12 @@ def ppo_pendulum(ctxt=None, seed=1):
             use_trust_region=True,
         )
 
+        worker_factory = WorkerFactory(
+            max_episode_length=env.spec.max_episode_length, is_tf_worker=True)
+        sampler = RaySampler.from_worker_factory(worker_factory,
+                                                 agents=policy,
+                                                 envs=env)
+
         # NOTE: make sure when setting entropy_method to 'max', set
         # center_adv to False and turn off policy gradient. See
         # tf.algos.NPO for detailed documentation.
@@ -55,6 +62,7 @@ def ppo_pendulum(ctxt=None, seed=1):
             env_spec=env.spec,
             policy=policy,
             baseline=baseline,
+            sampler=sampler,
             discount=0.99,
             gae_lambda=0.95,
             lr_clip_range=0.2,

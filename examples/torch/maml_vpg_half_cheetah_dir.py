@@ -10,6 +10,7 @@ from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import MetaEvaluator
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
+from garage.sampler import RaySampler, WorkerFactory
 from garage.torch.algos import MAMLVPG
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -65,9 +66,16 @@ def maml_vpg_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
                                    n_test_tasks=1,
                                    n_test_episodes=10)
 
+    worker_factory = WorkerFactory(
+        max_episode_length=env.spec.max_episode_length)
+    sampler = RaySampler.from_worker_factory(worker_factory,
+                                             agents=policy,
+                                             envs=env)
+
     trainer = Trainer(ctxt)
     algo = MAMLVPG(env=env,
                    policy=policy,
+                   sampler=sampler,
                    task_sampler=task_sampler,
                    value_function=value_function,
                    meta_batch_size=meta_batch_size,

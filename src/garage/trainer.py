@@ -5,22 +5,17 @@ import time
 
 import cloudpickle
 from dowel import logger, tabular
-import psutil
 
 # This is avoiding a circular import
 from garage.experiment.deterministic import get_seed, set_seed
 from garage.experiment.experiment import dump_json
 from garage.experiment.snapshotter import Snapshotter
-from garage.sampler.default_worker import DefaultWorker
-from garage.sampler.worker_factory import WorkerFactory
 
 # pylint: disable=no-name-in-module
 
 tf = False
-TFWorkerClassWrapper = False
 try:
     import tensorflow as tf
-    from garage.tf.samplers import TFWorkerClassWrapper  # noqa: E501; pylint: disable=ungrouped-imports
 except ImportError:
     pass
 
@@ -42,23 +37,6 @@ class ExperimentStats:
         self.total_itr = total_itr
         self.total_env_steps = total_env_steps
         self.last_episode = last_episode
-
-
-class SetupArgs:
-    # pylint: disable=too-few-public-methods
-    """Arguments to setup a trainer.
-
-    Args:
-        sampler_cls (Sampler): A sampler class.
-        sampler_args (dict): Arguments to be passed to sampler constructor.
-        seed (int): Random seed.
-
-    """
-
-    def __init__(self, sampler_cls, sampler_args, seed):
-        self.sampler_cls = sampler_cls
-        self.sampler_args = sampler_args
-        self.seed = seed
 
 
 class TrainArgs:
@@ -132,7 +110,7 @@ class Trainer:
         self._has_setup = False
         self._plot = False
 
-        self._setup_args = None
+        self._seed = None
         self._train_args = None
         self._stats = ExperimentStats(total_itr=0,
                                       total_env_steps=0,
@@ -156,76 +134,7 @@ class Trainer:
         self._worker_class = None
         self._worker_args = None
 
-    def make_sampler(self,
-                     sampler_cls,
-                     *,
-                     seed=None,
-                     n_workers=psutil.cpu_count(logical=False),
-                     max_episode_length=None,
-                     worker_class=None,
-                     sampler_args=None,
-                     worker_args=None):
-        """Construct a Sampler from a Sampler class.
-
-        Args:
-            sampler_cls (type): The type of sampler to construct.
-            seed (int): Seed to use in sampler workers.
-            max_episode_length (int): Maximum episode length to be sampled by
-                the sampler. Epsiodes longer than this will be truncated.
-            n_workers (int): The number of workers the sampler should use.
-            worker_class (type): Type of worker the Sampler should use.
-            sampler_args (dict or None): Additional arguments that should be
-                passed to the sampler.
-            worker_args (dict or None): Additional arguments that should be
-                passed to the sampler.
-
-        Raises:
-            ValueError: If `max_episode_length` isn't passed and the algorithm
-                doesn't contain a `max_episode_length` field, or if the
-                algorithm doesn't have a policy field.
-
-        Returns:
-            sampler_cls: An instance of the sampler class.
-
-        """
-        policy = getattr(self._algo, 'exploration_policy', None)
-        if policy is None:
-            policy = getattr(self._algo, 'policy', None)
-        if policy is None:
-            raise ValueError('If the trainer is used to construct a sampler, '
-                             'the algorithm must have a `policy` or '
-                             '`exploration_policy` field.')
-        if max_episode_length is None:
-            if hasattr(self._algo, 'max_episode_length'):
-                max_episode_length = self._algo.max_episode_length
-        if max_episode_length is None:
-            raise ValueError('If `sampler_cls` is specified in trainer.setup, '
-                             'the algorithm must specify `max_episode_length`')
-        if worker_class is None:
-            worker_class = getattr(self._algo, 'worker_cls', DefaultWorker)
-        if seed is None:
-            seed = get_seed()
-        if sampler_args is None:
-            sampler_args = {}
-        if worker_args is None:
-            worker_args = {}
-        return sampler_cls.from_worker_factory(WorkerFactory(
-            seed=seed,
-            max_episode_length=max_episode_length,
-            n_workers=n_workers,
-            worker_class=worker_class,
-            worker_args=worker_args),
-                                               agents=policy,
-                                               envs=self._env)
-
-    def setup(self,
-              algo,
-              env,
-              sampler_cls=None,
-              sampler_args=None,
-              n_workers=psutil.cpu_count(logical=False),
-              worker_class=None,
-              worker_args=None):
+    def setup(self, algo, env):
         """Set up trainer for algorithm and environment.
 
         This method saves algo and env within trainer and creates a sampler.
@@ -238,12 +147,6 @@ class Trainer:
         Args:
             algo (RLAlgorithm): An algorithm instance.
             env (Environment): An environment instance.
-            sampler_cls (type): A class which implements :class:`Sampler`.
-            sampler_args (dict): Arguments to be passed to sampler constructor.
-            n_workers (int): The number of workers the sampler should use.
-            worker_class (type): Type of worker the sampler should use.
-            worker_args (dict or None): Additional arguments that should be
-                passed to the worker.
 
         Raises:
             ValueError: If sampler_cls is passed and the algorithm doesn't
@@ -252,32 +155,11 @@ class Trainer:
         """
         self._algo = algo
         self._env = env
-        self._n_workers = n_workers
-        self._worker_class = worker_class
-        if sampler_args is None:
-            sampler_args = {}
-        if sampler_cls is None:
-            sampler_cls = getattr(algo, 'sampler_cls', None)
-        if worker_class is None:
-            worker_class = getattr(algo, 'worker_cls', DefaultWorker)
-        if worker_args is None:
-            worker_args = {}
 
-        self._worker_args = worker_args
-        if sampler_cls is None:
-            self._sampler = None
-        else:
-            self._sampler = self.make_sampler(sampler_cls,
-                                              sampler_args=sampler_args,
-                                              n_workers=n_workers,
-                                              worker_class=worker_class,
-                                              worker_args=worker_args)
+        self._seed = get_seed()
+        self._sampler = self._algo.sampler
 
         self._has_setup = True
-
-        self._setup_args = SetupArgs(sampler_cls=sampler_cls,
-                                     sampler_args=sampler_args,
-                                     seed=get_seed())
 
     def _start_worker(self):
         """Start Plotter and Sampler workers."""
@@ -395,7 +277,7 @@ class Trainer:
 
         params = dict()
         # Save arguments
-        params['setup_args'] = self._setup_args
+        params['seed'] = self._seed
         params['train_args'] = self._train_args
         params['stats'] = self._stats
 
@@ -426,19 +308,13 @@ class Trainer:
         """
         saved = self._snapshotter.load(from_dir, from_epoch)
 
-        self._setup_args = saved['setup_args']
+        self._seed = saved['seed']
         self._train_args = saved['train_args']
         self._stats = saved['stats']
 
-        set_seed(self._setup_args.seed)
+        set_seed(self._seed)
 
-        self.setup(env=saved['env'],
-                   algo=saved['algo'],
-                   sampler_cls=self._setup_args.sampler_cls,
-                   sampler_args=self._setup_args.sampler_args,
-                   n_workers=saved['n_workers'],
-                   worker_class=saved['worker_class'],
-                   worker_args=saved['worker_args'])
+        self.setup(env=saved['env'], algo=saved['algo'])
 
         n_epochs = self._train_args.n_epochs
         last_epoch = self._stats.total_epoch
@@ -744,53 +620,7 @@ class TFTrainer(Trainer):
             self.sess.__exit__(exc_type, exc_val, exc_tb)
             self.sess_entered = False
 
-    def make_sampler(self,
-                     sampler_cls,
-                     *,
-                     seed=None,
-                     n_workers=psutil.cpu_count(logical=False),
-                     max_episode_length=None,
-                     worker_class=None,
-                     sampler_args=None,
-                     worker_args=None):
-        """Construct a Sampler from a Sampler class.
-
-        Args:
-            sampler_cls (type): The type of sampler to construct.
-            seed (int): Seed to use in sampler workers.
-            max_episode_length (int): Maximum episode length to be sampled by
-                the sampler. Paths longer than this will be truncated.
-            n_workers (int): The number of workers the sampler should use.
-            worker_class (type): Type of worker the sampler should use.
-            sampler_args (dict or None): Additional arguments that should be
-                passed to the sampler.
-            worker_args (dict or None): Additional arguments that should be
-                passed to the worker.
-
-        Returns:
-            sampler_cls: An instance of the sampler class.
-
-        """
-        if worker_class is None:
-            worker_class = getattr(self._algo, 'worker_cls', DefaultWorker)
-        # pylint: disable=useless-super-delegation
-        return super().make_sampler(
-            sampler_cls,
-            seed=seed,
-            n_workers=n_workers,
-            max_episode_length=max_episode_length,
-            worker_class=TFWorkerClassWrapper(worker_class),
-            sampler_args=sampler_args,
-            worker_args=worker_args)
-
-    def setup(self,
-              algo,
-              env,
-              sampler_cls=None,
-              sampler_args=None,
-              n_workers=psutil.cpu_count(logical=False),
-              worker_class=None,
-              worker_args=None):
+    def setup(self, algo, env):
         """Set up trainer and sessions for algorithm and environment.
 
         This method saves algo and env within trainer and creates a sampler,
@@ -804,18 +634,11 @@ class TFTrainer(Trainer):
         Args:
             algo (RLAlgorithm): An algorithm instance.
             env (Environment): An environment instance.
-            sampler_cls (type): A class which implements :class:`Sampler`
-            sampler_args (dict): Arguments to be passed to sampler constructor.
-            n_workers (int): The number of workers the sampler should use.
-            worker_class (type): Type of worker the sampler should use.
-            worker_args (dict or None): Additional arguments that should be
-                passed to the worker.
 
         """
         self.initialize_tf_vars()
         logger.log(self.sess.graph)
-        super().setup(algo, env, sampler_cls, sampler_args, n_workers,
-                      worker_class, worker_args)
+        super().setup(algo, env)
 
     def _start_worker(self):
         """Start Plotter and Sampler workers."""

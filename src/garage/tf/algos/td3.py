@@ -12,7 +12,6 @@ import tensorflow as tf
 from garage import (_Default, log_performance, make_optimizer,
                     obtain_evaluation_episodes)
 from garage.np.algos import RLAlgorithm
-from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf import compile_function, get_target_ops
 
 # yapf: enable
@@ -32,6 +31,7 @@ class TD3(RLAlgorithm):
         qf (garage.tf.q_functions.QFunction): Q-function.
         qf2 (garage.tf.q_functions.QFunction): Q function to use
         replay_buffer (ReplayBuffer): Replay buffer.
+        sampler (garage.sampler.Sampler): Sampler.
         target_update_tau (float): Interpolation parameter for doing the
             soft target update.
         policy_lr (float): Learning rate for training policy network.
@@ -73,6 +73,7 @@ class TD3(RLAlgorithm):
             qf,
             qf2,
             replay_buffer,
+            sampler,
             *,  # Everything after this is numbers.
             target_update_tau=0.01,
             policy_weight_decay=0,
@@ -147,8 +148,7 @@ class TD3(RLAlgorithm):
         self.policy = policy
         self.exploration_policy = exploration_policy
 
-        self.sampler_cls = LocalSampler
-        self.worker_cls = FragmentWorker
+        self.sampler = sampler
 
         self._init_opt()
 

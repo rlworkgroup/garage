@@ -7,7 +7,6 @@ import tensorflow as tf
 
 from garage import log_performance, make_optimizer, obtain_evaluation_episodes
 from garage.np.algos import RLAlgorithm
-from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf import compile_function, get_target_ops
 
 # yapf: enable
@@ -27,6 +26,7 @@ class DQN(RLAlgorithm):
         policy (Policy): Policy.
         qf (object): The q value network.
         replay_buffer (ReplayBuffer): Replay buffer.
+        sampler (garage.sampler.Sampler): Sampler.
         exploration_policy (ExplorationPolicy): Exploration strategy.
         steps_per_epoch (int): Number of train_once calls per epoch.
         min_buffer_size (int): The minimum buffer size for replay buffer.
@@ -55,6 +55,7 @@ class DQN(RLAlgorithm):
                  policy,
                  qf,
                  replay_buffer,
+                 sampler,
                  exploration_policy=None,
                  steps_per_epoch=20,
                  min_buffer_size=int(1e4),
@@ -99,8 +100,7 @@ class DQN(RLAlgorithm):
         self.policy = policy
         self.exploration_policy = exploration_policy
 
-        self.sampler_cls = LocalSampler
-        self.worker_cls = FragmentWorker
+        self.sampler = sampler
 
         self._init_opt()
 

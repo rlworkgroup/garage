@@ -14,6 +14,7 @@ class TRPO(VPG):
         policy (garage.torch.policies.Policy): Policy.
         value_function (garage.torch.value_functions.ValueFunction): The value
             function.
+        sampler (garage.sampler.Sampler): Sampler.
         policy_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer
             for policy.
         vf_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer for
@@ -46,6 +47,7 @@ class TRPO(VPG):
                  env_spec,
                  policy,
                  value_function,
+                 sampler,
                  policy_optimizer=None,
                  vf_optimizer=None,
                  num_train_per_epoch=1,
@@ -72,6 +74,7 @@ class TRPO(VPG):
         super().__init__(env_spec=env_spec,
                          policy=policy,
                          value_function=value_function,
+                         sampler=sampler,
                          policy_optimizer=policy_optimizer,
                          vf_optimizer=vf_optimizer,
                          num_train_per_epoch=num_train_per_epoch,

@@ -5,6 +5,7 @@ import numpy as np
 
 from garage import wrap_experiment
 from garage.envs import PointEnv
+from garage.sampler import RaySampler, WorkerFactory
 from garage.torch.algos import BC
 from garage.torch.policies import GaussianMLPPolicy, Policy
 from garage.trainer import Trainer
@@ -80,10 +81,16 @@ def bc_point(ctxt=None, loss='log_prob'):
     expert = OptimalPolicy(env.spec, goal=goal)
     policy = GaussianMLPPolicy(env.spec, [8, 8])
     batch_size = 1000
+    worker_factory = WorkerFactory(
+        max_episode_length=env.spec.max_episode_length, )
+    sampler = RaySampler.from_worker_factory(worker_factory,
+                                             agents=expert,
+                                             envs=env)
     algo = BC(env.spec,
               policy,
               batch_size=batch_size,
               source=expert,
+              sampler=sampler,
               policy_lr=1e-2,
               loss=loss)
     trainer.setup(algo, env)

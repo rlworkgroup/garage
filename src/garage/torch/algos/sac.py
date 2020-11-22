@@ -10,7 +10,6 @@ import torch.nn.functional as F
 
 from garage import log_performance, obtain_evaluation_episodes, StepType
 from garage.np.algos import RLAlgorithm
-from garage.sampler import FragmentWorker, RaySampler
 from garage.torch import dict_np_to_torch, global_device
 
 # yapf: enable
@@ -43,6 +42,7 @@ class SAC(RLAlgorithm):
             Applications.
         replay_buffer (ReplayBuffer): Stores transitions that are previously
             collected by the sampler.
+        sampler (garage.sampler.Sampler): Sampler.
         env_spec (EnvSpec): The env_spec attribute of the environment that the
             agent is being trained in.
         max_episode_length_eval (int or None): Maximum length of episodes used
@@ -93,6 +93,7 @@ class SAC(RLAlgorithm):
             qf1,
             qf2,
             replay_buffer,
+            sampler,
             *,  # Everything after this is numbers.
             max_episode_length_eval=None,
             gradient_steps_per_itr,
@@ -140,8 +141,7 @@ class SAC(RLAlgorithm):
         self.env_spec = env_spec
         self.replay_buffer = replay_buffer
 
-        self.sampler_cls = RaySampler
-        self.worker_cls = FragmentWorker
+        self.sampler = sampler
 
         self._reward_scale = reward_scale
         # use 2 target q networks
