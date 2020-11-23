@@ -1,14 +1,13 @@
 """Test categoricalCNNPolicy in PyTorch."""
 import cloudpickle
 import pytest
-import torch
+import torch.nn as nn
 
 from garage.envs import GymEnv
 from garage.torch import TransposeImage
 from garage.torch.policies import DiscreteCNNPolicy
 
-from tests.fixtures.envs.dummy import (DummyBoxEnv, DummyDictEnv,
-                                       DummyDiscretePixelEnv)
+from tests.fixtures.envs.dummy import DummyDiscreteEnv
 
 
 class TestCategoricalCNNPolicy:
@@ -28,143 +27,162 @@ class TestCategoricalCNNPolicy:
         return env
 
     @pytest.mark.parametrize(
-        'hidden_channels, kernel_sizes, strides, hidden_sizes, batch_size', [
-            ((3, ), (3, ), (1, ), (4, ), 1),
-            ((3, 3), (3, 3), (1, 1), (4, 4), 5),
-            ((3, 3), (3, 3), (2, 2), (4, 4), 10),
+        'action_dim, kernel_sizes, hidden_channels, strides, paddings', [
+            (3, (1, ), (32, ), (1, ), (0, )),
+            (3, (3, ), (32, ), (1, ), (0, )),
+            (3, (3, ), (32, ), (2, ), (0, )),
+            (3, (5, ), (12, ), (1, ), (2, )),
+            (3, (1, 1), (32, 64), (1, 1), (0, 0)),
+            (3, (3, 3), (32, 64), (1, 1), (0, 0)),
+            (3, (3, 3), (32, 64), (2, 2), (0, 0)),
         ])
-    def test_get_action(self, hidden_channels, kernel_sizes, strides,
-                        hidden_sizes, batch_size):
+    def test_get_action(self, action_dim, kernel_sizes, hidden_channels,
+                        strides, paddings):
         """Test get_action function."""
-        env_spec = GymEnv(DummyBoxEnv()).spec
-        obs_dim = env_spec.observation_space.flat_dim
-        obs = torch.ones([batch_size, obs_dim], dtype=torch.float32)
-        # env = self._initialize_obs_env(env)
-        policy = DiscreteCNNPolicy(env_spec=env_spec,
-                                   kernel_sizes=kernel_sizes,
-                                   hidden_channels=hidden_channels,
-                                   strides=strides,
-                                   hidden_sizes=hidden_sizes)
-        # env.reset()
-        # obs = env.step(1).observation
-        # action, _ = policy(obs)
-        assert policy(obs).shape == (batch_size, )
+        batch_size = 64
+        input_width = 32
+        input_height = 32
+        in_channel = 3
+        input_shape = (batch_size, in_channel, input_height, input_width)
+        env = GymEnv(
+            DummyDiscreteEnv(obs_dim=input_shape, action_dim=action_dim))
 
-    @pytest.mark.parametrize(
-        'hidden_channels, kernel_sizes, strides, hidden_sizes', [
-            ((3, ), (3, ), (1, ), (4, )),
-            ((3, 3), (3, 3), (1, 1), (4, 4)),
-            ((3, 3), (3, 3), (2, 2), (4, 4)),
-        ])
-    def test_get_action_img_obs(self, hidden_channels, kernel_sizes, strides,
-                                hidden_sizes):
-        """Test get_action function with akro.Image observation space."""
-        env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
         env = self._initialize_obs_env(env)
         policy = DiscreteCNNPolicy(env_spec=env.spec,
-                                   kernel_sizes=kernel_sizes,
                                    hidden_channels=hidden_channels,
+                                   hidden_sizes=hidden_channels,
+                                   kernel_sizes=kernel_sizes,
                                    strides=strides,
-                                   hidden_sizes=hidden_sizes)
+                                   paddings=paddings,
+                                   padding_mode='zeros',
+                                   hidden_w_init=nn.init.ones_,
+                                   output_w_init=nn.init.ones_)
         env.reset()
         obs = env.step(1).observation
 
-        action, _ = policy.get_action(obs)
-        assert env.action_space.contains(action)
+        action, _ = policy.get_action(obs.flatten())
+        assert env.action_space.contains(int(action[0]))
+        assert env.action_space.n == action_dim
 
     @pytest.mark.parametrize(
-        'hidden_channels, kernel_sizes, strides, hidden_sizes', [
-            ((3, ), (3, ), (1, ), (4, )),
-            ((3, 3), (3, 3), (1, 1), (4, 4)),
-            ((3, 3), (3, 3), (2, 2), (4, 4)),
+        'action_dim, kernel_sizes, hidden_channels, strides, paddings', [
+            (3, (1, ), (32, ), (1, ), (0, )),
+            (3, (3, ), (32, ), (1, ), (0, )),
+            (3, (3, ), (32, ), (2, ), (0, )),
+            (3, (5, ), (12, ), (1, ), (2, )),
+            (3, (1, 1), (32, 64), (1, 1), (0, 0)),
+            (3, (3, 3), (32, 64), (1, 1), (0, 0)),
+            (3, (3, 3), (32, 64), (2, 2), (0, 0)),
         ])
-    def test_get_actions(self, hidden_channels, kernel_sizes, strides,
-                         hidden_sizes):
-        """Test get_actions function with akro.Image observation space."""
-        env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
+    def test_get_actions(self, action_dim, kernel_sizes, hidden_channels,
+                         strides, paddings):
+        """Test get_actions function."""
+        batch_size = 64
+        input_width = 32
+        input_height = 32
+        in_channel = 3
+        input_shape = (batch_size, in_channel, input_height, input_width)
+        env = GymEnv(
+            DummyDiscreteEnv(obs_dim=input_shape, action_dim=action_dim))
+
         env = self._initialize_obs_env(env)
         policy = DiscreteCNNPolicy(env_spec=env.spec,
-                                   kernel_sizes=kernel_sizes,
                                    hidden_channels=hidden_channels,
+                                   hidden_sizes=hidden_channels,
+                                   kernel_sizes=kernel_sizes,
                                    strides=strides,
-                                   hidden_sizes=hidden_sizes)
+                                   paddings=paddings,
+                                   padding_mode='zeros',
+                                   hidden_w_init=nn.init.ones_,
+                                   output_w_init=nn.init.ones_)
+
         env.reset()
         obs = env.step(1).observation
 
         actions, _ = policy.get_actions([obs, obs, obs])
         for action in actions:
-            assert env.action_space.contains(action)
-        torch_obs = torch.Tensor(obs)
-        actions, _ = policy.get_actions([torch_obs, torch_obs, torch_obs])
-        for action in actions:
-            assert env.action_space.contains(action)
+            assert env.action_space.contains(int(action[0]))
+            assert env.action_space.n == action_dim
 
     @pytest.mark.parametrize(
-        'hidden_channels, kernel_sizes, strides, hidden_sizes', [
-            ((3, ), (3, ), (1, ), (4, )),
-            ((3, 3), (3, 3), (1, 1), (4, 4)),
-            ((3, 3), (3, 3), (2, 2), (4, 4)),
+        'action_dim, kernel_sizes, hidden_channels, strides, paddings', [
+            (3, (1, ), (32, ), (1, ), (0, )),
+            (3, (3, ), (32, ), (1, ), (0, )),
+            (3, (3, ), (32, ), (2, ), (0, )),
+            (3, (5, ), (12, ), (1, ), (2, )),
+            (3, (1, 1), (32, 64), (1, 1), (0, 0)),
+            (3, (3, 3), (32, 64), (1, 1), (0, 0)),
+            (3, (3, 3), (32, 64), (2, 2), (0, 0)),
         ])
-    def test_is_pickleable(self, hidden_channels, kernel_sizes, strides,
-                           hidden_sizes):
+    def test_is_pickleable(self, action_dim, kernel_sizes, hidden_channels,
+                           strides, paddings):
         """Test if policy is pickable."""
-        env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
+        batch_size = 64
+        input_width = 32
+        input_height = 32
+        in_channel = 3
+        input_shape = (batch_size, in_channel, input_height, input_width)
+        env = GymEnv(
+            DummyDiscreteEnv(obs_dim=input_shape, action_dim=action_dim))
+
         env = self._initialize_obs_env(env)
         policy = DiscreteCNNPolicy(env_spec=env.spec,
-                                   kernel_sizes=kernel_sizes,
                                    hidden_channels=hidden_channels,
+                                   hidden_sizes=hidden_channels,
+                                   kernel_sizes=kernel_sizes,
                                    strides=strides,
-                                   hidden_sizes=hidden_sizes)
+                                   paddings=paddings,
+                                   padding_mode='zeros',
+                                   hidden_w_init=nn.init.ones_,
+                                   output_w_init=nn.init.ones_)
         env.reset()
         obs = env.step(1).observation
 
-        output_action_1, _ = policy.get_action(obs)
+        output_action_1, _ = policy.get_action(obs.flatten())
 
         p = cloudpickle.dumps(policy)
         policy_pickled = cloudpickle.loads(p)
         output_action_2, _ = policy_pickled.get_action(obs)
 
-        assert env.action_space.contains(output_action_1)
-        assert env.action_space.contains(output_action_2)
+        assert env.action_space.contains(int(output_action_1[0]))
+        assert env.action_space.contains(int(output_action_2[0]))
         assert output_action_1.shape == output_action_2.shape
 
-    # def test_does_not_support_dict_obs_space(self):
-    #     """Test that policy raises error if passed a dict obs space."""
-    #     env = GymEnv(DummyDictEnv(act_space_type='discrete'))
-    #     with pytest.raises(ValueError,
-    #                        match=('CNN policies do not support '
-    #                               'with akro.Dict observation spaces.')):
-    #         DiscreteCNNPolicy(env_spec=env.spec,
-    #                              kernel_sizes=(3, ),
-    #                              hidden_channels=(3, ))
-
-    # def test_invalid_action_spaces(self):
-    #     """Test that policy raises error if passed a box obs space."""
-    #     env = GymEnv(DummyDictEnv(act_space_type='box'))
-    #     with pytest.raises(ValueError):
-    #         DiscreteCNNPolicy(env_spec=env.spec,
-    #                              kernel_sizes=(3, ),
-    #                              hidden_channels=(3, ))
-
     @pytest.mark.parametrize(
-        'hidden_channels, kernel_sizes, strides, hidden_sizes', [
-            ((3, ), (3, ), (1, ), (4, )),
-            ((3, 3), (3, 3), (1, 1), (4, 4)),
-            ((3, 3), (3, 3), (2, 2), (4, 4)),
+        'action_dim, kernel_sizes, hidden_channels, strides, paddings', [
+            (3, (1, ), (32, ), (1, ), (0, )),
+            (3, (3, ), (32, ), (1, ), (0, )),
+            (3, (3, ), (32, ), (2, ), (0, )),
+            (3, (5, ), (12, ), (1, ), (2, )),
+            (3, (1, 1), (32, 64), (1, 1), (0, 0)),
+            (3, (3, 3), (32, 64), (1, 1), (0, 0)),
+            (3, (3, 3), (32, 64), (2, 2), (0, 0)),
         ])
-    def test_obs_unflattened(self, hidden_channels, kernel_sizes, strides,
-                             hidden_sizes):
+    def test_obs_unflattened(self, action_dim, kernel_sizes, hidden_channels,
+                             strides, paddings):
         """Test if a flattened image obs is passed to get_action
            then it is unflattened.
         """
-        env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
+        batch_size = 64
+        input_width = 32
+        input_height = 32
+        in_channel = 3
+        input_shape = (batch_size, in_channel, input_height, input_width)
+        env = GymEnv(
+            DummyDiscreteEnv(obs_dim=input_shape, action_dim=action_dim))
         env = self._initialize_obs_env(env)
+
         env.reset()
         policy = DiscreteCNNPolicy(env_spec=env.spec,
-                                   kernel_sizes=kernel_sizes,
                                    hidden_channels=hidden_channels,
+                                   hidden_sizes=hidden_channels,
+                                   kernel_sizes=kernel_sizes,
                                    strides=strides,
-                                   hidden_sizes=hidden_sizes)
+                                   paddings=paddings,
+                                   padding_mode='zeros',
+                                   hidden_w_init=nn.init.ones_,
+                                   output_w_init=nn.init.ones_)
+
         obs = env.observation_space.sample()
         action, _ = policy.get_action(env.observation_space.flatten(obs))
         env.step(action)

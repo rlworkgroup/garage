@@ -87,7 +87,7 @@ class DiscreteCNNPolicy(StochasticPolicy):
 
         super().__init__(env_spec, name)
         self._env_spec = env_spec
-        self._input_shape = (1, ) + env_spec.observation_space.shape
+        self._input_shape = env_spec.observation_space.shape
         self._output_dim = env_spec.action_space.flat_dim
         self._is_image = isinstance(self._env_spec.observation_space,
                                     akro.Image)
@@ -114,7 +114,12 @@ class DiscreteCNNPolicy(StochasticPolicy):
             dict[str, torch.Tensor]: Additional agent_info, as torch Tensors.
                 Do not need to be detached, and can be on any device.
         """
+        observations = self._env_spec.observation_space.unflatten_n(
+            observations)
+        if isinstance(self._env_spec.observation_space, akro.Image):
+            observations = torch.div(observations, 255.0)
 
+        observations = torch.Tensor(observations[0])
         output = self._cnn_module(observations)
         logits = torch.softmax(output, axis=1)
         dist = torch.distributions.Bernoulli(logits=logits)
