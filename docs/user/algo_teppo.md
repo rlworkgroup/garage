@@ -16,7 +16,7 @@
 
         Tensorflow
    * - **API Reference**
-     - `garage.tf.algos.TEPPO <../_autoapi/garage/torch/algos/index.html#garage.tf.algos.TEPPO>`_
+     - `garage.tf.algos.TEPPO <../_autoapi/garage/tf/algos/index.html#garage.tf.algos.TEPPO>`_
    * - **Code**
      - `garage/tf/algos/te_ppo.py <https://github.com/rlworkgroup/garage/blob/master/src/garage/tf/algos/te_ppo.py>`_
    * - **Examples**
