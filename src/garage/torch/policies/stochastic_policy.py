@@ -7,6 +7,7 @@ import torch
 
 from garage.torch import global_device
 from garage.torch.policies.policy import Policy
+from garage.torch._functions import np_to_torch, list_to_tensor
 
 
 class StochasticPolicy(Policy, abc.ABC):
@@ -39,11 +40,9 @@ class StochasticPolicy(Policy, abc.ABC):
             observation = torch.flatten(observation)
         with torch.no_grad():
             if isinstance(observation, np.ndarray):
-                observation = torch.from_numpy(observation.astype(np.float32)).to(
-                    global_device())
+                observation = np_to_torch(observation)
             if not isinstance(observation, torch.Tensor):
-                observation = torch.as_tensor(observation, dtype=torch.float32).to(
-                    global_device())
+                observation = list_to_tensor(observation)
             observation = observation.unsqueeze(0)
             action, agent_infos = self.get_actions(observation)
             return action[0], {k: v[0] for k, v in agent_infos.items()}
@@ -92,12 +91,10 @@ class StochasticPolicy(Policy, abc.ABC):
                 observations)
         with torch.no_grad():
             if isinstance(observation, np.ndarray):
-                observation = torch.from_numpy(observation.astype(np.float32)).to(
-                    global_device())
+                observation = np_to_torch(observation)
             if not isinstance(observations, torch.Tensor):
-                observations = torch.as_tensor(observations,
-                                               dtype=torch.float32).to(
-                    global_device())
+                observations = list_to_tensor(observations)
+
             if isinstance(self._env_spec.observation_space, akro.Image):
                 observations /= 255.0  # scale image
             dist, info = self.forward(observations)
@@ -107,7 +104,7 @@ class StochasticPolicy(Policy, abc.ABC):
             }
 
     # pylint: disable=arguments-differ
-    @abc.abstractmethod
+    @ abc.abstractmethod
     def forward(self, observations):
         """Compute the action distributions from the observations.
 

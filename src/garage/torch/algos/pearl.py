@@ -18,6 +18,7 @@ from garage.sampler import DefaultWorker
 from garage.torch import global_device
 from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import ContextConditionedPolicy
+from garage.torch._functions import np_to_torch
 
 
 class PEARL(MetaRLAlgorithm):
@@ -498,11 +499,11 @@ class PEARL(MetaRLAlgorithm):
                 no = np.vstack((no, batch['next_observations'][np.newaxis]))
                 d = np.vstack((d, batch['dones'][np.newaxis]))
 
-        o = torch.from_numpy(o).to(global_device()).float()
-        a = torch.from_numpy(a).to(global_device()).float()
-        r = torch.from_numpy(r).to(global_device()).float()
-        no = torch.from_numpy(no).to(global_device()).float()
-        d = torch.from_numpy(d).to(device=global_device()).float()
+        o = np_to_torch(o)
+        a = np_to_torch(a)
+        r = np_to_torch(r)
+        no = np_to_torch(no)
+        d = np_to_torch(d)
 
         return o, a, r, no, d
 
@@ -541,9 +542,8 @@ class PEARL(MetaRLAlgorithm):
             else:
                 final_context = np.vstack((final_context, context[np.newaxis]))
 
-        final_context = torch.as_tensor(final_context,
-                                        dtype=torch.float32,
-                                        device=global_device())
+        final_context = np_to_torch(final_context)
+
         if len(indices) == 1:
             final_context = final_context.unsqueeze(0)
 
@@ -615,7 +615,7 @@ class PEARL(MetaRLAlgorithm):
         a = exploration_episodes.actions
         r = exploration_episodes.rewards.reshape(total_steps, 1)
         ctxt = np.hstack((o, a, r)).reshape(1, total_steps, -1)
-        context = torch.as_tensor(ctxt, device=global_device()).float()
+        context = np_to_torch(ctxt)
         self._policy.infer_posterior(context)
 
         return self._policy

@@ -144,7 +144,26 @@ def np_to_torch(array):
         torch.Tensor: float tensor on the global device.
 
     """
-    return torch.from_numpy(array).float().to(global_device())
+
+    tensor = torch.from_numpy(array)
+
+    if tensor.dtype != torch.float32:
+        tensor = tensor.float()
+
+    return tensor.to(global_device())
+
+
+def list_to_tensor(data):
+    """Convert a list to a PyTorch tensor
+
+    Args:
+        data (list): Data to convert to tensor
+
+    Returns:
+        torch.Tensor: A float tensor
+    """
+
+    return torch.as_tensor(data, dtype=torch.float32, device=global_device())
 
 
 def dict_np_to_torch(array_dict):
