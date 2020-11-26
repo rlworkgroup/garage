@@ -251,6 +251,13 @@ class MetaWorldSetTaskEnv(Environment):
         """Creates a visualization of the wrapped environment."""
         self._current_env.visualize()
 
+    def seed(self, seed):
+        """Sets all environment seeds.
+
+        Args:
+            seed (int): The seed value to set
+        """
+
     def close(self):
         """Close the wrapped env."""
         for env in self._envs.values():
