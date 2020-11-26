@@ -184,6 +184,13 @@ class DMControlEnv(Environment):
             self._viewer = DmControlViewer(title=title)
             self._viewer.launch(self._env)
 
+    def seed(self, seed):
+        """Sets all environment seeds.
+
+        Args:
+            seed (int): The seed value to set
+        """
+
     def close(self):
         """Close the environment."""
         if self._viewer:

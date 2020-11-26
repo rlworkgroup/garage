@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from garage.envs import PointEnv
+from garage.envs import GymEnv, PointEnv
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.np.policies import FixedPolicy, ScriptedPolicy
 from garage.sampler import LocalSampler, WorkerFactory
@@ -103,3 +103,36 @@ def test_no_seed():
     sampler = LocalSampler.from_worker_factory(workers, policy, env)
     episodes = sampler.obtain_samples(0, 160, policy)
     assert sum(episodes.lengths) >= 160
+
+
+def test_deterministic_on_policy_sampling():
+    max_episode_length = 1
+    env1 = GymEnv('LunarLander-v2')
+    env2 = GymEnv('LunarLander-v2')
+    # Fix the action sequence
+    env1.action_space.seed(10)
+    env2.action_space.seed(10)
+    policy1 = FixedPolicy(env1.spec,
+                          scripted_actions=[
+                              env1.action_space.sample()
+                              for _ in range(max_episode_length)
+                          ])
+    policy2 = FixedPolicy(env2.spec,
+                          scripted_actions=[
+                              env2.action_space.sample()
+                              for _ in range(max_episode_length)
+                          ])
+    n_workers = 1
+    worker1 = WorkerFactory(seed=10,
+                            max_episode_length=max_episode_length,
+                            n_workers=n_workers)
+    worker2 = WorkerFactory(seed=10,
+                            max_episode_length=max_episode_length,
+                            n_workers=n_workers)
+    sampler1 = LocalSampler.from_worker_factory(worker1, policy1, env1)
+    sampler2 = LocalSampler.from_worker_factory(worker2, policy2, env2)
+    episodes1 = sampler1.obtain_samples(0, 1, policy1)
+    episodes2 = sampler2.obtain_samples(0, 1, policy2)
+    assert np.array_equal(episodes1.observations, episodes2.observations)
+    assert np.array_equal(episodes1.next_observations,
+                          episodes2.next_observations)

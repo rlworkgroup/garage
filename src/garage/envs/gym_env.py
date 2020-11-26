@@ -288,6 +288,15 @@ class GymEnv(Environment):
         self._env.render(mode='human')
         self._visualize = True
 
+    def seed(self, seed):
+        """Sets all environment seeds.
+
+        Args:
+            seed (int): The seed value to set
+        """
+        self._env.seed(seed)
+        self.action_space.seed(seed)
+
     def close(self):
         """Close the wrapped env."""
         self._close_viewer_window()

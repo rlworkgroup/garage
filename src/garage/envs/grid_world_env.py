@@ -184,6 +184,13 @@ class GridWorldEnv(Environment):
     def visualize(self):
         """Creates a visualization of the environment."""
 
+    def seed(self, seed):
+        """Sets all environment seeds.
+
+        Args:
+            seed (int): The seed value to set
+        """
+
     def close(self):
         """Close the env."""
 
