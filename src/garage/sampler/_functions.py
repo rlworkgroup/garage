@@ -1,5 +1,6 @@
 """Functions used by multiple Samplers or Workers."""
 from garage import Environment
+from garage.experiment import deterministic
 from garage.sampler.env_update import EnvUpdate
 
 
@@ -33,6 +34,7 @@ def _apply_env_update(old_env, env_update):
         elif isinstance(env_update, Environment):
             if old_env is not None:
                 old_env.close()
+            env_update.seed(deterministic.get_seed())
             return env_update, True
         else:
             raise TypeError('Unknown environment update type.')
