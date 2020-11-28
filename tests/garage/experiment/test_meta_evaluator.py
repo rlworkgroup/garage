@@ -45,12 +45,13 @@ class SingleActionPolicy:
 
 class OptimalActionInference(MetaRLAlgorithm):
 
-    sampler_cls = LocalSampler
-
     def __init__(self, env, max_episode_length):
         self.env = env
         self.policy = RandomPolicy(self.env.spec.action_space)
         self.max_episode_length = max_episode_length
+        self.sampler = LocalSampler(agents=self.policy,
+                                    envs=self.env,
+                                    max_episode_length=self.max_episode_length)
 
     def train(self, trainer):
         del trainer
@@ -108,8 +109,6 @@ def test_meta_evaluator():
 
 class MockAlgo:
 
-    sampler_cls = LocalSampler
-
     def __init__(self, env, policy, max_episode_length, n_exploration_eps,
                  meta_eval):
         self.env = env
@@ -117,6 +116,9 @@ class MockAlgo:
         self.max_episode_length = max_episode_length
         self.n_exploration_eps = n_exploration_eps
         self.meta_eval = meta_eval
+        self.sampler = LocalSampler(agents=self.policy,
+                                    envs=self.env,
+                                    max_episode_length=self.max_episode_length)
 
     def train(self, trainer):
         for step in trainer.step_epochs():

@@ -62,8 +62,7 @@ class MultiprocessingSampler(Sampler):
             worker_class=DefaultWorker,
             worker_args=None):
         # pylint: disable=super-init-not-called
-        if not isinstance(worker_factory, WorkerFactory) and not isinstance(
-                max_episode_length, int):
+        if worker_factory is None and max_episode_length is None:
             raise TypeError('Must construct a sampler from WorkerFactory or'
                             'parameters (at least max_episode_length)')
         if isinstance(worker_factory, WorkerFactory):

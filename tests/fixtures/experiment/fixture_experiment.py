@@ -32,13 +32,18 @@ def fixture_exp(snapshot_config, sess):
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+        sampler = LocalSampler(agents=policy,
+                               envs=env,
+                               max_episode_length=env.spec.max_episode_length)
+
         algo = VPG(env_spec=env.spec,
                    policy=policy,
                    baseline=baseline,
+                   sampler=sampler,
                    discount=0.99,
                    optimizer_args=dict(learning_rate=0.01, ))
 
-        trainer.setup(algo, env, sampler_cls=LocalSampler)
+        trainer.setup(algo, env)
         trainer.train(n_epochs=5, batch_size=100)
 
         return policy.get_param_values()

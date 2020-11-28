@@ -20,9 +20,18 @@ class TestCMAES(TfGraphTestCase):
 
             n_samples = 20
 
-            algo = CMAES(env_spec=env.spec, policy=policy, n_samples=n_samples)
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True)
 
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            algo = CMAES(env_spec=env.spec,
+                         policy=policy,
+                         sampler=sampler,
+                         n_samples=n_samples)
+
+            trainer.setup(algo, env)
             trainer.train(n_epochs=1, batch_size=1000)
             # No assertion on return because CMAES is not stable.
 
