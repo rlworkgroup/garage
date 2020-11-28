@@ -205,6 +205,7 @@ def test_pickle():
     env.close()
 
 
+@pytest.mark.timeout(10)
 def test_init_without_worker_factory():
     max_episode_length = 16
     env = PointEnv()
@@ -224,3 +225,5 @@ def test_init_without_worker_factory():
             worker_factory._max_episode_length)
     with pytest.raises(TypeError, match='Must construct a sampler from'):
         MultiprocessingSampler(agents=policy, envs=env)
+    sampler.shutdown_worker()
+    env.close()
