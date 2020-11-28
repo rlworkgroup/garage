@@ -16,7 +16,7 @@ from garage import wrap_experiment
 from garage.envs import normalize
 from garage.experiment import deterministic, MetaWorldTaskSampler
 from garage.replay_buffer import PathBuffer
-from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch import set_gpu_mode
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
@@ -73,14 +73,11 @@ def mtsac_metaworld_mt1_pick_place(ctxt=None, *, seed, timesteps, _gpu):
                                  hidden_nonlinearity=F.relu)
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
 
-    worker_factory = WorkerFactory(
-        n_workers=n_tasks,
-        max_episode_length=env.spec.max_episode_length,
-        worker_class=FragmentWorker,
-    )
-    sampler = LocalSampler.from_worker_factory(worker_factory,
-                                               agents=policy,
-                                               envs=train_envs)
+    sampler = LocalSampler(agents=policy,
+                           envs=train_envs,
+                           max_episode_length=env.spec.max_episode_length,
+                           n_workers=n_tasks,
+                           worker_class=FragmentWorker)
 
     batch_size = int(env.spec.max_episode_length * n_tasks)
     num_evaluation_points = 500

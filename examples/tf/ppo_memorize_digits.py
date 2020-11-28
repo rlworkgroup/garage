@@ -8,7 +8,7 @@ import click
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.experiment.deterministic import set_seed
-from garage.sampler import RaySampler, WorkerFactory
+from garage.sampler import RaySampler
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.policies import CategoricalCNNPolicy
@@ -62,11 +62,10 @@ def ppo_memorize_digits(ctxt=None,
             hidden_sizes=(256, ),
             use_trust_region=True)  # yapf: disable
 
-        worker_factory = WorkerFactory(
-            max_episode_length=env.spec.max_episode_length, is_tf_worker=True)
-        sampler = RaySampler.from_worker_factory(worker_factory,
-                                                 agents=policy,
-                                                 envs=env)
+        sampler = RaySampler(agents=policy,
+                             envs=env,
+                             max_episode_length=env.spec.max_episode_length,
+                             is_tf_worker=True)
 
         algo = PPO(env_spec=env.spec,
                    policy=policy,

@@ -7,7 +7,7 @@ from garage import EpisodeBatch, log_performance, wrap_experiment
 from garage.envs import PointEnv
 from garage.experiment.deterministic import set_seed
 from garage.np import discount_cumsum
-from garage.sampler import LocalSampler, WorkerFactory
+from garage.sampler import LocalSampler
 from garage.tf.policies import GaussianMLPPolicy
 from garage.trainer import TFTrainer
 
@@ -128,11 +128,10 @@ def tutorial_vpg(ctxt=None):
     with TFTrainer(ctxt) as trainer:
         env = PointEnv(max_episode_length=200)
         policy = GaussianMLPPolicy(env.spec)
-        worker_factory = WorkerFactory(
-            max_episode_length=env.spec.max_episode_length, is_tf_worker=True)
-        sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                   agents=policy,
-                                                   envs=env)
+        sampler = LocalSampler(agents=policy,
+                               envs=env,
+                               max_episode_length=env.spec.max_episode_length,
+                               is_tf_worker=True)
         algo = SimpleVPG(env.spec, policy, sampler)
         trainer.setup(algo, env)
         trainer.train(n_epochs=200, batch_size=4000)

@@ -4,7 +4,7 @@ import torch
 
 from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic
-from garage.sampler import LocalSampler, WorkerFactory
+from garage.sampler import LocalSampler
 from garage.torch.algos import PPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -36,11 +36,10 @@ class TestPPO:
     def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
         deterministic.set_seed(0)
-        worker_factory = WorkerFactory(
+        sampler = LocalSampler(
+            agents=self.policy,
+            envs=self.env,
             max_episode_length=self.env.spec.max_episode_length)
-        sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                   agents=self.policy,
-                                                   envs=self.env)
         trainer = Trainer(snapshot_config)
         algo = PPO(env_spec=self.env.spec,
                    policy=self.policy,

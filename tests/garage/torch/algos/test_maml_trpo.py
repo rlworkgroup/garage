@@ -4,7 +4,7 @@ import torch
 
 from garage.envs import GymEnv, normalize
 from garage.experiment import SetTaskSampler
-from garage.sampler import LocalSampler, WorkerFactory
+from garage.sampler import LocalSampler
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -51,11 +51,9 @@ def test_maml_trpo_pendulum():
             env, max_episode_length=max_episode_length),
                                          expected_action_scale=10.))
 
-    worker_factory = WorkerFactory(
-        max_episode_length=env.spec.max_episode_length)
-    sampler = LocalSampler.from_worker_factory(worker_factory,
-                                               agents=policy,
-                                               envs=env)
+    sampler = LocalSampler(agents=policy,
+                           envs=env,
+                           max_episode_length=env.spec.max_episode_length)
 
     trainer = Trainer(snapshot_config)
     algo = MAMLTRPO(env=env,
@@ -99,11 +97,9 @@ def test_maml_trpo_dummy_named_env():
     episodes_per_task = 2
     max_episode_length = env.spec.max_episode_length
 
-    worker_factory = WorkerFactory(
-        max_episode_length=env.spec.max_episode_length)
-    sampler = LocalSampler.from_worker_factory(worker_factory,
-                                               agents=policy,
-                                               envs=env)
+    sampler = LocalSampler(agents=policy,
+                           envs=env,
+                           max_episode_length=env.spec.max_episode_length)
 
     trainer = Trainer(snapshot_config)
     algo = MAMLTRPO(env=env,

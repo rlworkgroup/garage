@@ -1,7 +1,7 @@
 """Default TensorFlow sampler Worker."""
 import tensorflow as tf
 
-from garage.sampler import Worker
+from garage.sampler.worker import Worker
 
 
 class TFWorkerClassWrapper:

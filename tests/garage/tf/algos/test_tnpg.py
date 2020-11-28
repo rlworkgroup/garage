@@ -2,7 +2,7 @@ import pytest
 
 from garage.envs import GymEnv, normalize
 from garage.np.baselines import LinearFeatureBaseline
-from garage.sampler import LocalSampler, WorkerFactory
+from garage.sampler import LocalSampler
 from garage.tf.algos import TNPG
 from garage.tf.policies import GaussianMLPPolicy
 from garage.trainer import TFTrainer
@@ -24,12 +24,11 @@ class TestTNPG(TfGraphTestCase):
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            worker_factory = WorkerFactory(
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
                 max_episode_length=env.spec.max_episode_length,
                 is_tf_worker=True)
-            sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                       agents=policy,
-                                                       envs=env)
 
             algo = TNPG(env_spec=env.spec,
                         policy=policy,

@@ -10,7 +10,7 @@ from garage.envs import normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper, round_robin_strategy
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import MetaWorldTaskSampler
-from garage.sampler import RaySampler, WorkerFactory
+from garage.sampler import RaySampler
 from garage.torch.algos import PPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -54,11 +54,9 @@ def mtppo_metaworld_mt1_push(ctxt, seed, epochs, batch_size):
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
-    worker_factory = WorkerFactory(
-        max_episode_length=env.spec.max_episode_length)
-    sampler = RaySampler.from_worker_factory(worker_factory,
-                                             agents=policy,
-                                             envs=env)
+    sampler = RaySampler(agents=policy,
+                         envs=env,
+                         max_episode_length=env.spec.max_episode_length)
 
     algo = PPO(env_spec=env.spec,
                policy=policy,

@@ -10,7 +10,7 @@ import tensorflow as tf
 from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic, snapshotter
 from garage.np.baselines import LinearFeatureBaseline
-from garage.sampler import LocalSampler, WorkerFactory
+from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
 from garage.tf.baselines import GaussianCNNBaseline, GaussianMLPBaseline
 from garage.tf.optimizers import FiniteDifferenceHVP
@@ -39,12 +39,11 @@ class TestTRPO(TfGraphTestCase):
             env_spec=self.env.spec,
             hidden_sizes=(32, 32),
         )
-        worker_factory = WorkerFactory(
+        self.sampler = LocalSampler(
+            agents=self.policy,
+            envs=self.env,
             max_episode_length=self.env.spec.max_episode_length,
             is_tf_worker=True)
-        self.sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                        agents=self.policy,
-                                                        envs=self.env)
 
     @pytest.mark.mujoco_long
     def test_trpo_pendulum(self):
@@ -101,12 +100,11 @@ class TestTRPO(TfGraphTestCase):
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            worker_factory = WorkerFactory(
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
                 max_episode_length=env.spec.max_episode_length,
                 is_tf_worker=True)
-            sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                       agents=policy,
-                                                       envs=env)
 
             algo = TRPO(env_spec=env.spec,
                         policy=policy,
@@ -134,12 +132,11 @@ class TestTRPO(TfGraphTestCase):
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            worker_factory = WorkerFactory(
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
                 max_episode_length=env.spec.max_episode_length,
                 is_tf_worker=True)
-            sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                       agents=policy,
-                                                       envs=env)
 
             algo = TRPO(env_spec=env.spec,
                         policy=policy,
@@ -182,12 +179,11 @@ class TestTRPOCNNCubeCrash(TfGraphTestCase):
                                            hidden_sizes=(32, 32),
                                            use_trust_region=True)
 
-            worker_factory = WorkerFactory(
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
                 max_episode_length=env.spec.max_episode_length,
                 is_tf_worker=True)
-            sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                       agents=policy,
-                                                       envs=env)
 
             algo = TRPO(env_spec=env.spec,
                         policy=policy,

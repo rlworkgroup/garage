@@ -4,7 +4,7 @@ import torch
 
 from garage.envs import GymEnv
 from garage.experiment import deterministic
-from garage.sampler import LocalSampler, WorkerFactory
+from garage.sampler import LocalSampler
 from garage.torch.algos import VPG
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -47,11 +47,10 @@ class TestVPG:
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=torch.tanh,
                                          output_nonlinearity=None)
-        worker_factory = WorkerFactory(
+        self._sampler = LocalSampler(
+            agents=self._policy,
+            envs=self._env,
             max_episode_length=self._env.spec.max_episode_length)
-        self._sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                         agents=self._policy,
-                                                         envs=self._env)
         self._params = {
             'env_spec': self._env.spec,
             'policy': self._policy,

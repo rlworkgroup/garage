@@ -4,7 +4,7 @@ import numpy as np
 
 from garage import wrap_experiment
 from garage.envs import PointEnv
-from garage.sampler import RaySampler, WorkerFactory
+from garage.sampler import RaySampler
 from garage.torch.algos import BC
 from garage.torch.policies import DeterministicMLPPolicy, Policy
 from garage.trainer import Trainer
@@ -77,11 +77,9 @@ def bc_point(ctxt=None):
     expert = OptimalPolicy(env.spec, goal=goal)
     policy = DeterministicMLPPolicy(env.spec, hidden_sizes=[8, 8])
     batch_size = 1000
-    worker_factory = WorkerFactory(
-        max_episode_length=env.spec.max_episode_length, )
-    sampler = RaySampler.from_worker_factory(worker_factory,
-                                             agents=expert,
-                                             envs=env)
+    sampler = RaySampler(agents=expert,
+                         envs=env,
+                         max_episode_length=env.spec.max_episode_length)
     algo = BC(env.spec,
               policy,
               batch_size=batch_size,

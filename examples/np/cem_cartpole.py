@@ -11,6 +11,7 @@ from garage import wrap_experiment
 from garage.envs import GymEnv
 from garage.experiment.deterministic import set_seed
 from garage.np.algos import CEM
+from garage.sampler import LocalSampler
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.trainer import TFTrainer
 
@@ -36,8 +37,14 @@ def cem_cartpole(ctxt=None, seed=1):
 
         n_samples = 20
 
+        sampler = LocalSampler(agents=policy,
+                               envs=env,
+                               max_episode_length=env.spec.max_episode_length,
+                               is_tf_worker=True)
+
         algo = CEM(env_spec=env.spec,
                    policy=policy,
+                   sampler=sampler,
                    best_frac=0.05,
                    n_samples=n_samples)
 

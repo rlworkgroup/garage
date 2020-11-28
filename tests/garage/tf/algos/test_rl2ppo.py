@@ -10,7 +10,7 @@ from garage.envs import GymEnv, normalize
 from garage.experiment import task_sampler
 from garage.experiment.meta_evaluator import MetaEvaluator
 from garage.np.baselines import LinearFeatureBaseline
-from garage.sampler import LocalSampler, WorkerFactory
+from garage.sampler import LocalSampler
 from garage.tf.algos import RL2PPO
 from garage.tf.algos.rl2 import RL2Env, RL2Worker
 from garage.tf.policies import GaussianGRUPolicy
@@ -57,28 +57,24 @@ class TestRL2PPO(TfGraphTestCase):
                                         hidden_dim=64,
                                         state_include_action=False)
         self.baseline = LinearFeatureBaseline(env_spec=self.env_spec)
-        envs = self.tasks.sample(self.meta_batch_size)
-        worker_factory = WorkerFactory(
+        self.sampler = LocalSampler(
+            agents=self.policy,
+            envs=self.tasks.sample(self.meta_batch_size),
             max_episode_length=self.env_spec.max_episode_length,
             is_tf_worker=True,
             n_workers=self.meta_batch_size,
             worker_class=RL2Worker)
-        self.sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                        agents=self.policy,
-                                                        envs=envs)
 
     def test_rl2_ppo_pendulum(self):
         with TFTrainer(snapshot_config, sess=self.sess) as trainer:
-            envs = self.tasks.sample(self.meta_batch_size)
-            worker_factory = WorkerFactory(
+            sampler = LocalSampler(
+                agents=self.policy,
+                envs=self.tasks.sample(self.meta_batch_size),
                 max_episode_length=self.env_spec.max_episode_length,
                 is_tf_worker=True,
                 n_workers=self.meta_batch_size,
                 worker_class=RL2Worker,
                 worker_args=dict(n_episodes_per_trial=self.episode_per_task))
-            sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                       agents=self.policy,
-                                                       envs=envs)
             algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                           task_sampler=self.tasks,
                           env_spec=self.env_spec,
@@ -201,15 +197,12 @@ class TestRL2PPO(TfGraphTestCase):
     def test_rl2_ppo_pendulum_wrong_worker(self):
         with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             with pytest.raises(ValueError):
-                envs = self.tasks.sample(self.meta_batch_size)
-                worker_factory = WorkerFactory(
+                sampler = LocalSampler(
+                    agents=self.policy,
+                    envs=self.tasks.sample(self.meta_batch_size),
                     max_episode_length=self.env_spec.max_episode_length,
                     is_tf_worker=True,
-                    n_workers=self.meta_batch_size,
-                )
-                sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                           agents=self.policy,
-                                                           envs=envs)
+                    n_workers=self.meta_batch_size)
                 algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                               task_sampler=self.tasks,
                               env_spec=self.env_spec,

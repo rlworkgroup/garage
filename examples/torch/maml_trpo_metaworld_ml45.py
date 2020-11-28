@@ -11,7 +11,7 @@ from garage.envs import MetaWorldSetTaskEnv, normalize
 from garage.experiment import (MetaEvaluator, MetaWorldTaskSampler,
                                SetTaskSampler)
 from garage.experiment.deterministic import set_seed
-from garage.sampler import RaySampler, WorkerFactory
+from garage.sampler import RaySampler
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -69,12 +69,10 @@ def maml_trpo_metaworld_ml45(ctxt, seed, epochs, episodes_per_task,
 
     meta_evaluator = MetaEvaluator(test_task_sampler=test_task_sampler)
 
-    worker_factory = WorkerFactory(
-        n_workers=meta_batch_size,
-        max_episode_length=env.spec.max_episode_length)
-    sampler = RaySampler.from_worker_factory(worker_factory,
-                                             agents=policy,
-                                             envs=env)
+    sampler = RaySampler(agents=policy,
+                         envs=env,
+                         max_episode_length=env.spec.max_episode_length,
+                         n_workers=meta_batch_size)
 
     trainer = Trainer(ctxt)
     algo = MAMLTRPO(env=env,

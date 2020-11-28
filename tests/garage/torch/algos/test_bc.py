@@ -89,11 +89,9 @@ def test_bc_point_deterministic(ray_local_session_fixture):  # NOQA
     expert = OptimalPolicy(env.spec, goal=goal)
     policy = DeterministicMLPPolicy(env.spec, hidden_sizes=[8, 8])
     batch_size = 600
-    worker_factory = WorkerFactory(
-        max_episode_length=env.spec.max_episode_length, )
-    sampler = LocalSampler.from_worker_factory(worker_factory,
-                                               agents=expert,
-                                               envs=env)
+    sampler = LocalSampler(agents=expert,
+                           envs=env,
+                           max_episode_length=env.spec.max_episode_length)
     algo = BC(env.spec,
               policy,
               batch_size=batch_size,
@@ -115,11 +113,9 @@ def test_bc_point(ray_local_session_fixture):  # NOQA
     expert = OptimalPolicy(env.spec, goal=goal)
     policy = GaussianMLPPolicy(env.spec, [4])
     batch_size = 400
-    worker_factory = WorkerFactory(
-        max_episode_length=env.spec.max_episode_length, )
-    sampler = LocalSampler.from_worker_factory(worker_factory,
-                                               agents=expert,
-                                               envs=env)
+    sampler = LocalSampler(agents=expert,
+                           envs=env,
+                           max_episode_length=env.spec.max_episode_length)
     algo = BC(env.spec,
               policy,
               batch_size=batch_size,

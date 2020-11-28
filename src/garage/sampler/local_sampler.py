@@ -1,8 +1,13 @@
 """Sampler that runs workers in the main process."""
 import copy
 
+import psutil
+
 from garage import EpisodeBatch
+from garage.experiment.deterministic import get_seed
+from garage.sampler.default_worker import DefaultWorker
 from garage.sampler.sampler import Sampler
+from garage.sampler.worker_factory import WorkerFactory
 
 
 class LocalSampler(Sampler):
@@ -12,11 +17,11 @@ class LocalSampler(Sampler):
     sampler because it runs everything in the same process and thread as where
     it was called from.
 
+    The sampler need to be created either from a worker factory or from
+    parameters which can construct a worker factory. See the __init__ method
+    of WorkerFactory for the detail of these parameters.
+
     Args:
-        worker_factory (WorkerFactory): Pickleable factory for creating
-            workers. Should be transmitted to other processes / nodes where
-            work needs to be done, then workers should be constructed
-            there.
         agents (Policy or List[Policy]): Agent(s) to use to sample episodes.
             If a list is passed in, it must have length exactly
             `worker_factory.n_workers`, and will be spread across the
@@ -25,17 +30,56 @@ class LocalSampler(Sampler):
             episodes are sampled. If a list is passed in, it must have length
             exactly `worker_factory.n_workers`, and will be spread across the
             workers.
+        worker_factory (WorkerFactory): Pickleable factory for creating
+            workers. Should be transmitted to other processes / nodes where
+            work needs to be done, then workers should be constructed
+            there. Either this param or params after this are required to
+            construct a sampler.
+        max_episode_length(int): Params used to construct a worker factory.
+            The maximum length episodes which will be sampled.
+        is_tf_worker (bool): Whether it is workers for TFTrainer.
+        seed(int): The seed to use to initialize random number generators.
+        n_workers(int): The number of workers to use.
+        worker_class(type): Class of the workers. Instances should implement
+            the Worker interface.
+        worker_args (dict or None): Additional arguments that should be passed
+            to the worker.
 
     """
 
-    def __init__(self, worker_factory, agents, envs):
+    def __init__(
+            self,
+            agents,
+            envs,
+            *,  # After this require passing by keyword.
+            worker_factory=None,
+            max_episode_length=None,
+            is_tf_worker=False,
+            seed=get_seed(),
+            n_workers=psutil.cpu_count(logical=False),
+            worker_class=DefaultWorker,
+            worker_args=None):
         # pylint: disable=super-init-not-called
-        self._factory = worker_factory
-        self._agents = worker_factory.prepare_worker_messages(agents)
-        self._envs = worker_factory.prepare_worker_messages(
+        if not isinstance(worker_factory, WorkerFactory) and not isinstance(
+                max_episode_length, int):
+            raise TypeError('Must construct a sampler from WorkerFactory or'
+                            'parameters (at least max_episode_length)')
+        if isinstance(worker_factory, WorkerFactory):
+            self._factory = worker_factory
+        else:
+            self._factory = WorkerFactory(
+                max_episode_length=max_episode_length,
+                is_tf_worker=is_tf_worker,
+                seed=seed,
+                n_workers=n_workers,
+                worker_class=worker_class,
+                worker_args=worker_args)
+
+        self._agents = self._factory.prepare_worker_messages(agents)
+        self._envs = self._factory.prepare_worker_messages(
             envs, preprocess=copy.deepcopy)
         self._workers = [
-            worker_factory(i) for i in range(worker_factory.n_workers)
+            self._factory(i) for i in range(self._factory.n_workers)
         ]
         for worker, agent, env in zip(self._workers, self._agents, self._envs):
             worker.update_agent(agent)
@@ -64,7 +108,7 @@ class LocalSampler(Sampler):
             Sampler: An instance of `cls`.
 
         """
-        return cls(worker_factory, agents, envs)
+        return cls(agents, envs, worker_factory=worker_factory)
 
     def _update_workers(self, agent_update, env_update):
         """Apply updates to the workers.

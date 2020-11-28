@@ -10,7 +10,7 @@ import tensorflow as tf
 # yapf: disable
 from garage.envs import GymEnv, normalize
 from garage.np.baselines import LinearFeatureBaseline
-from garage.sampler import LocalSampler, WorkerFactory
+from garage.sampler import LocalSampler
 from garage.tf.algos import PPO
 from garage.tf.baselines import ContinuousMLPBaseline, GaussianMLPBaseline
 from garage.tf.policies import (CategoricalMLPPolicy, GaussianGRUPolicy,
@@ -41,12 +41,11 @@ class TestPPO(TfGraphTestCase):
             env_spec=self.env.spec,
             hidden_sizes=(32, 32),
         )
-        worker_factory = WorkerFactory(
+        self.sampler = LocalSampler(
+            agents=self.policy,
+            envs=self.env,
             max_episode_length=self.env.spec.max_episode_length,
             is_tf_worker=True)
-        self.sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                        agents=self.policy,
-                                                        envs=self.env)
 
     @pytest.mark.mujoco
     def test_ppo_pendulum(self):
@@ -175,12 +174,11 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
                 env_spec=env.spec,
                 hidden_sizes=(32, 32),
             )
-            worker_factory = WorkerFactory(
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
                 max_episode_length=env.spec.max_episode_length,
                 is_tf_worker=True)
-            sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                       agents=policy,
-                                                       envs=env)
             algo = PPO(
                 env_spec=env.spec,
                 policy=policy,
@@ -215,12 +213,11 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
                 env_spec=env.spec,
                 hidden_sizes=(32, 32),
             )
-            worker_factory = WorkerFactory(
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
                 max_episode_length=env.spec.max_episode_length,
                 is_tf_worker=True)
-            sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                       agents=policy,
-                                                       envs=env)
             algo = PPO(
                 env_spec=env.spec,
                 policy=policy,
@@ -258,12 +255,11 @@ class TestPPOPendulumLSTM(TfGraphTestCase):
                 env_spec=env.spec,
                 hidden_sizes=(32, 32),
             )
-            worker_factory = WorkerFactory(
+            sampler = LocalSampler(
+                agents=lstm_policy,
+                envs=env,
                 max_episode_length=env.spec.max_episode_length,
                 is_tf_worker=True)
-            sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                       agents=lstm_policy,
-                                                       envs=env)
             algo = PPO(
                 env_spec=env.spec,
                 policy=lstm_policy,
@@ -299,12 +295,11 @@ class TestPPOPendulumGRU(TfGraphTestCase):
                 env_spec=env.spec,
                 hidden_sizes=(32, 32),
             )
-            worker_factory = WorkerFactory(
+            sampler = LocalSampler(
+                agents=gru_policy,
+                envs=env,
                 max_episode_length=env.spec.max_episode_length,
                 is_tf_worker=True)
-            sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                       agents=gru_policy,
-                                                       envs=env)
             algo = PPO(
                 env_spec=env.spec,
                 policy=gru_policy,

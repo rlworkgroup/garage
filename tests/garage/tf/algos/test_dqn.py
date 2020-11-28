@@ -12,7 +12,7 @@ from garage.envs import GymEnv
 from garage.experiment import deterministic
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
-from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf.algos import DQN
 from garage.tf.policies import DiscreteQFArgmaxPolicy
 from garage.tf.q_functions import DiscreteMLPQFunction
@@ -43,12 +43,12 @@ class TestDQN(TfGraphTestCase):
                 max_epsilon=1.0,
                 min_epsilon=0.02,
                 decay_ratio=0.1)
-            worker_factory = WorkerFactory(
+            sampler = LocalSampler(
+                agents=epilson_greedy_policy,
+                envs=env,
                 max_episode_length=env.spec.max_episode_length,
                 is_tf_worker=True,
                 worker_class=FragmentWorker)
-            sampler = LocalSampler.from_worker_factory(
-                worker_factory, agents=epilson_greedy_policy, envs=env)
             algo = DQN(env_spec=env.spec,
                        policy=policy,
                        qf=qf,
@@ -91,12 +91,12 @@ class TestDQN(TfGraphTestCase):
                 max_epsilon=1.0,
                 min_epsilon=0.02,
                 decay_ratio=0.1)
-            worker_factory = WorkerFactory(
+            sampler = LocalSampler(
+                agents=epilson_greedy_policy,
+                envs=env,
                 max_episode_length=env.spec.max_episode_length,
                 is_tf_worker=True,
                 worker_class=FragmentWorker)
-            sampler = LocalSampler.from_worker_factory(
-                worker_factory, agents=epilson_greedy_policy, envs=env)
             algo = DQN(env_spec=env.spec,
                        policy=policy,
                        qf=qf,
@@ -139,12 +139,12 @@ class TestDQN(TfGraphTestCase):
                 max_epsilon=1.0,
                 min_epsilon=0.02,
                 decay_ratio=0.1)
-            worker_factory = WorkerFactory(
+            sampler = LocalSampler(
+                agents=epilson_greedy_policy,
+                envs=env,
                 max_episode_length=env.spec.max_episode_length,
                 is_tf_worker=True,
                 worker_class=FragmentWorker)
-            sampler = LocalSampler.from_worker_factory(
-                worker_factory, agents=epilson_greedy_policy, envs=env)
             algo = DQN(env_spec=env.spec,
                        policy=policy,
                        qf=qf,
@@ -187,12 +187,12 @@ class TestDQN(TfGraphTestCase):
                 max_epsilon=1.0,
                 min_epsilon=0.02,
                 decay_ratio=0.1)
-            worker_factory = WorkerFactory(
+            sampler = LocalSampler(
+                agents=epilson_greedy_policy,
+                envs=env,
                 max_episode_length=env.spec.max_episode_length,
                 is_tf_worker=True,
                 worker_class=FragmentWorker)
-            sampler = LocalSampler.from_worker_factory(
-                worker_factory, agents=epilson_greedy_policy, envs=env)
             algo = DQN(env_spec=env.spec,
                        policy=policy,
                        qf=qf,

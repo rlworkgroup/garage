@@ -6,7 +6,7 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import GymEnv, normalize
-from garage.sampler import LocalSampler, WorkerFactory
+from garage.sampler import LocalSampler
 from garage.tf.algos import NPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.policies import GaussianMLPPolicy
@@ -31,12 +31,11 @@ class TestNPO(TfGraphTestCase):
             env_spec=self.env.spec,
             hidden_sizes=(32, 32),
         )
-        worker_factory = WorkerFactory(
+        self.sampler = LocalSampler(
+            agents=self.policy,
+            envs=self.env,
             max_episode_length=self.env.spec.max_episode_length,
             is_tf_worker=True)
-        self.sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                        agents=self.policy,
-                                                        envs=self.env)
 
     @pytest.mark.flaky
     @pytest.mark.mujoco

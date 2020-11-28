@@ -4,7 +4,7 @@ import torch
 
 from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic, SetTaskSampler
-from garage.sampler import LocalSampler, WorkerFactory
+from garage.sampler import LocalSampler
 from garage.torch.algos import MAMLPPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -49,11 +49,10 @@ class TestMAMLPPO:
         )
         self.value_function = GaussianMLPValueFunction(env_spec=self.env.spec,
                                                        hidden_sizes=(32, 32))
-        worker_factory = WorkerFactory(
+        self.sampler = LocalSampler(
+            agents=self.policy,
+            envs=self.env,
             max_episode_length=self.env.spec.max_episode_length)
-        self.sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                        agents=self.policy,
-                                                        envs=self.env)
 
     def teardown_method(self):
         """Teardown method which is called after every test."""

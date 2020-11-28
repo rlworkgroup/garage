@@ -8,7 +8,7 @@ from garage.envs import GymEnv, MultiEnvWrapper
 from garage.envs.multi_env_wrapper import round_robin_strategy
 from garage.experiment import deterministic
 from garage.replay_buffer import PathBuffer
-from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch import global_device, set_gpu_mode
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
@@ -155,13 +155,10 @@ def test_mtsac_inverted_double_pendulum():
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
     num_tasks = 2
     buffer_batch_size = 128
-    worker_factory = WorkerFactory(
-        max_episode_length=env.spec.max_episode_length,
-        worker_class=FragmentWorker,
-    )
-    sampler = LocalSampler.from_worker_factory(worker_factory,
-                                               agents=policy,
-                                               envs=env)
+    sampler = LocalSampler(agents=policy,
+                           envs=env,
+                           max_episode_length=env.spec.max_episode_length,
+                           worker_class=FragmentWorker)
     mtsac = MTSAC(policy=policy,
                   qf1=qf1,
                   qf2=qf2,
@@ -270,13 +267,10 @@ def test_fixed_alpha():
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
     num_tasks = 2
     buffer_batch_size = 128
-    worker_factory = WorkerFactory(
-        max_episode_length=env.spec.max_episode_length,
-        worker_class=FragmentWorker,
-    )
-    sampler = LocalSampler.from_worker_factory(worker_factory,
-                                               agents=policy,
-                                               envs=env)
+    sampler = LocalSampler(agents=policy,
+                           envs=env,
+                           max_episode_length=env.spec.max_episode_length,
+                           worker_class=FragmentWorker)
     mtsac = MTSAC(policy=policy,
                   qf1=qf1,
                   qf2=qf2,

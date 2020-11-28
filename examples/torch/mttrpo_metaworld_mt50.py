@@ -11,7 +11,7 @@ from garage.envs import MultiEnvWrapper, normalize
 from garage.envs.multi_env_wrapper import round_robin_strategy
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import MetaWorldTaskSampler
-from garage.sampler import RaySampler, WorkerFactory
+from garage.sampler import RaySampler
 from garage.torch.algos import TRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -64,11 +64,10 @@ def mttrpo_metaworld_mt50(ctxt, seed, epochs, batch_size, n_workers, n_tasks):
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
-    worker_factory = WorkerFactory(
-        n_workers=n_workers, max_episode_length=env.spec.max_episode_length)
-    sampler = RaySampler.from_worker_factory(worker_factory,
-                                             agents=policy,
-                                             envs=env)
+    sampler = RaySampler(agents=policy,
+                         envs=env,
+                         max_episode_length=env.spec.max_episode_length,
+                         n_workers=n_workers)
 
     algo = TRPO(env_spec=env.spec,
                 policy=policy,

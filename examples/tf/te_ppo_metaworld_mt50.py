@@ -11,7 +11,7 @@ from garage.envs.multi_env_wrapper import MultiEnvWrapper, round_robin_strategy
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import MetaWorldTaskSampler
 from garage.np.baselines import LinearMultiFeatureBaseline
-from garage.sampler import LocalSampler, WorkerFactory
+from garage.sampler import LocalSampler
 from garage.tf.algos import TEPPO
 from garage.tf.algos.te import TaskEmbeddingWorker
 from garage.tf.embeddings import GaussianMLPEncoder
@@ -109,13 +109,11 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task, n_tasks):
         baseline = LinearMultiFeatureBaseline(
             env_spec=env.spec, features=['observations', 'tasks', 'latents'])
 
-        worker_factory = WorkerFactory(
-            max_episode_length=env.spec.max_episode_length,
-            is_tf_worker=True,
-            worker_class=TaskEmbeddingWorker)
-        sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                   agents=policy,
-                                                   envs=env)
+        sampler = LocalSampler(agents=policy,
+                               envs=env,
+                               max_episode_length=env.spec.max_episode_length,
+                               is_tf_worker=True,
+                               worker_class=TaskEmbeddingWorker)
 
         algo = TEPPO(env_spec=env.spec,
                      policy=policy,

@@ -14,7 +14,7 @@ from garage.envs import normalize
 from garage.experiment import deterministic
 from garage.experiment.task_sampler import MetaWorldTaskSampler
 from garage.replay_buffer import PathBuffer
-from garage.sampler import FragmentWorker, LocalSampler, WorkerFactory
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch import set_gpu_mode
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
@@ -87,10 +87,12 @@ def mtsac_metaworld_mt50(ctxt=None,
 
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
 
-    worker_factory = WorkerFactory(
+    sampler = LocalSampler(
+        agents=policy,
+        envs=mt50_train_envs,
+        max_episode_length=env.spec.max_episode_length,
         # 1 sampler worker for each environment
         n_workers=50,
-        max_episode_length=env.spec.max_episode_length,
         worker_class=FragmentWorker,
         # increasing n_envs increases the vectorization of a sampler worker
         # which improves runtime performance, but you will need to adjust this
@@ -100,9 +102,6 @@ def mtsac_metaworld_mt50(ctxt=None,
         # users want to be able to run multiple seeds on 1 machine, so I have
         # reduced this to n_envs = 2 for 2 copies in the meantime.
         worker_args=dict(n_envs=2))
-    sampler = LocalSampler.from_worker_factory(worker_factory,
-                                               agents=policy,
-                                               envs=mt50_train_envs)
 
     batch_size = int(env.spec.max_episode_length * n_tasks)
     num_evaluation_points = 500

@@ -6,7 +6,7 @@ import pytest
 from garage.envs import MetaWorldSetTaskEnv, normalize, PointEnv
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
-from garage.sampler import LocalSampler, WorkerFactory
+from garage.sampler import LocalSampler
 from garage.torch import set_gpu_mode
 from garage.torch.algos import PEARL
 from garage.torch.algos.pearl import PEARLWorker
@@ -88,13 +88,12 @@ class TestPEARL:
             env_spec=augmented_env,
             hidden_sizes=[net_size, net_size, net_size])
 
-        worker_factory = WorkerFactory(
+        sampler = LocalSampler(
+            agents=None,
+            envs=env[0](),
             max_episode_length=env[0]().spec.max_episode_length,
             n_workers=1,
             worker_class=PEARLWorker)
-        sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                   agents=None,
-                                                   envs=env[0]())
 
         pearl = PEARL(
             env=env,

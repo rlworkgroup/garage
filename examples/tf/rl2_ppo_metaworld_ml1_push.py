@@ -11,7 +11,7 @@ from garage.experiment import (MetaEvaluator, MetaWorldTaskSampler,
                                SetTaskSampler)
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
-from garage.sampler import LocalSampler, WorkerFactory
+from garage.sampler import LocalSampler
 from garage.tf.algos import RL2PPO
 from garage.tf.algos.rl2 import RL2Env, RL2Worker
 from garage.tf.policies import GaussianGRUPolicy
@@ -62,15 +62,14 @@ def rl2_ppo_metaworld_ml1_push(ctxt, seed, meta_batch_size, n_epochs,
         baseline = LinearFeatureBaseline(env_spec=env_spec)
 
         envs = task_sampler.sample(meta_batch_size)
-        worker_factory = WorkerFactory(
+        sampler = LocalSampler(
+            agents=policy,
+            envs=envs,
             max_episode_length=env_spec.max_episode_length,
             is_tf_worker=True,
             n_workers=meta_batch_size,
             worker_class=RL2Worker,
             worker_args=dict(n_episodes_per_trial=episode_per_task))
-        sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                   agents=policy,
-                                                   envs=envs)
 
         algo = RL2PPO(meta_batch_size=meta_batch_size,
                       task_sampler=task_sampler,

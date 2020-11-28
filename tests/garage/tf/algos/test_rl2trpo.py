@@ -8,7 +8,7 @@ import pytest
 from garage.envs import GymEnv, normalize
 from garage.experiment import task_sampler
 from garage.np.baselines import LinearFeatureBaseline
-from garage.sampler import LocalSampler, WorkerFactory
+from garage.sampler import LocalSampler
 from garage.tf.algos import RL2TRPO
 from garage.tf.algos.rl2 import RL2Env, RL2Worker
 from garage.tf.optimizers import (ConjugateGradientOptimizer,
@@ -58,15 +58,13 @@ class TestRL2TRPO(TfGraphTestCase):
                                         hidden_dim=64,
                                         state_include_action=False)
         self.baseline = LinearFeatureBaseline(env_spec=self.env_spec)
-        worker_factory = WorkerFactory(
+        self.sampler = LocalSampler(
+            agents=self.policy,
+            envs=self.tasks.sample(self.meta_batch_size),
             max_episode_length=self.env_spec.max_episode_length,
             is_tf_worker=True,
             n_workers=self.meta_batch_size,
             worker_class=RL2Worker)
-        self.sampler = LocalSampler.from_worker_factory(
-            worker_factory,
-            agents=self.policy,
-            envs=self.tasks.sample(self.meta_batch_size))
 
     def test_rl2_trpo_pendulum(self):
         with TFTrainer(snapshot_config, sess=self.sess) as trainer:

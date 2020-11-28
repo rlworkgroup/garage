@@ -3,7 +3,7 @@ import pytest
 from garage.envs import GymEnv
 from garage.experiment import deterministic
 from garage.np.baselines import LinearFeatureBaseline
-from garage.sampler import LocalSampler, WorkerFactory
+from garage.sampler import LocalSampler
 from garage.tf.algos import ERWR
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.trainer import TFTrainer
@@ -27,12 +27,11 @@ class TestERWR(TfGraphTestCase):
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            worker_factory = WorkerFactory(
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
                 max_episode_length=env.spec.max_episode_length,
                 is_tf_worker=True)
-            sampler = LocalSampler.from_worker_factory(worker_factory,
-                                                       agents=policy,
-                                                       envs=env)
 
             algo = ERWR(env_spec=env.spec,
                         policy=policy,
