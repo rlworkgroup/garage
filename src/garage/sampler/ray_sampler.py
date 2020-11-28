@@ -58,6 +58,8 @@ class RaySampler(Sampler):
             worker_class=DefaultWorker,
             worker_args=None):
         # pylint: disable=super-init-not-called
+        if not ray.is_initialized():
+            ray.init(log_to_driver=False, ignore_reinit_error=True)
         if worker_factory is None and max_episode_length is None:
             raise TypeError('Must construct a sampler from WorkerFactory or'
                             'parameters (at least max_episode_length)')
@@ -71,8 +73,6 @@ class RaySampler(Sampler):
                 n_workers=n_workers,
                 worker_class=worker_class,
                 worker_args=worker_args)
-        if not ray.is_initialized():
-            ray.init(log_to_driver=False, ignore_reinit_error=True)
         self._sampler_worker = ray.remote(SamplerWorker)
         self._agents = agents
         self._envs = self._worker_factory.prepare_worker_messages(envs)
@@ -298,6 +298,28 @@ class RaySampler(Sampler):
         for worker in self._all_workers.values():
             worker.shutdown.remote()
         ray.shutdown()
+
+    def __getstate__(self):
+        """Get the pickle state.
+
+        Returns:
+            dict: The pickled state.
+
+        """
+        return dict(factory=self._worker_factory,
+                    agents=self._agents,
+                    envs=self._envs)
+
+    def __setstate__(self, state):
+        """Unpickle the state.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
+        self.__init__(state['agents'],
+                      state['envs'],
+                      worker_factory=state['factory'])
 
 
 class SamplerWorker:
