@@ -138,7 +138,9 @@ def test_init_with_env_updates(ray_local_session_fixture):
     assert sum(episodes.lengths) >= 160
 
 
-def test_init_without_worker_factory():
+def test_init_without_worker_factory(ray_local_session_fixture):
+    del ray_local_session_fixture
+    assert ray.is_initialized()
     max_episode_length = 16
     env = PointEnv()
     policy = FixedPolicy(env.spec,
