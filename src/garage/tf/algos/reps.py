@@ -10,7 +10,6 @@ import tensorflow as tf
 from garage import _Default, log_performance, make_optimizer
 from garage.np import pad_batch_array
 from garage.np.algos import RLAlgorithm
-from garage.sampler import RaySampler
 from garage.tf import (compile_function, flatten_inputs, graph_inputs,
                        new_tensor)
 from garage.tf.optimizers import LBFGSOptimizer
@@ -34,6 +33,7 @@ class REPS(RLAlgorithm):  # noqa: D416
         env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.StochasticPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
+        sampler (garage.sampler.Sampler): Sampler.
         scope (str): Scope for identifying the algorithm.
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
@@ -64,6 +64,7 @@ class REPS(RLAlgorithm):  # noqa: D416
                  env_spec,
                  policy,
                  baseline,
+                 sampler,
                  discount=0.99,
                  gae_lambda=1,
                  center_adv=True,
@@ -112,7 +113,7 @@ class REPS(RLAlgorithm):  # noqa: D416
         self._l2_reg_loss = float(l2_reg_loss)
 
         self._episode_reward_mean = collections.deque(maxlen=100)
-        self.sampler_cls = RaySampler
+        self.sampler = sampler
 
         self._init_opt()
 

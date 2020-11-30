@@ -8,6 +8,7 @@ import torch
 from garage import wrap_experiment
 from garage.envs import GymEnv
 from garage.experiment.deterministic import set_seed
+from garage.sampler import RaySampler
 from garage.torch.algos import PPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -40,9 +41,14 @@ def ppo_pendulum(ctxt=None, seed=1):
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
+    sampler = RaySampler(agents=policy,
+                         envs=env,
+                         max_episode_length=env.spec.max_episode_length)
+
     algo = PPO(env_spec=env.spec,
                policy=policy,
                value_function=value_function,
+               sampler=sampler,
                discount=0.99,
                center_adv=False)
 

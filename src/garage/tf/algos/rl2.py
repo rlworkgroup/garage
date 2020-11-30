@@ -320,6 +320,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         self._meta_batch_size = meta_batch_size
         self._task_sampler = task_sampler
         self._meta_evaluator = meta_evaluator
+        self.sampler = self._inner_algo.sampler
 
     def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.

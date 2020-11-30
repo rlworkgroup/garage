@@ -58,11 +58,22 @@ def rl2_trpo_halfcheetah(ctxt, seed, max_episode_length, meta_batch_size,
 
         baseline = LinearFeatureBaseline(env_spec=env_spec)
 
+        envs = tasks.sample(meta_batch_size)
+        sampler = LocalSampler(
+            agents=policy,
+            envs=envs,
+            max_episode_length=env_spec.max_episode_length,
+            is_tf_worker=True,
+            n_workers=meta_batch_size,
+            worker_class=RL2Worker,
+            worker_args=dict(n_episodes_per_trial=episode_per_task))
+
         algo = RL2TRPO(meta_batch_size=meta_batch_size,
                        task_sampler=tasks,
                        env_spec=env_spec,
                        policy=policy,
                        baseline=baseline,
+                       sampler=sampler,
                        episodes_per_trial=episode_per_task,
                        discount=0.99,
                        max_kl_step=0.01,
@@ -70,12 +81,7 @@ def rl2_trpo_halfcheetah(ctxt, seed, max_episode_length, meta_batch_size,
                        optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
                            base_eps=1e-5)))
 
-        trainer.setup(algo,
-                      tasks.sample(meta_batch_size),
-                      sampler_cls=LocalSampler,
-                      n_workers=meta_batch_size,
-                      worker_class=RL2Worker,
-                      worker_args=dict(n_episodes_per_trial=episode_per_task))
+        trainer.setup(algo, envs)
 
         trainer.train(n_epochs=n_epochs,
                       batch_size=episode_per_task * max_episode_length *

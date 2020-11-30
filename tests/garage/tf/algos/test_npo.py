@@ -31,6 +31,11 @@ class TestNPO(TfGraphTestCase):
             env_spec=self.env.spec,
             hidden_sizes=(32, 32),
         )
+        self.sampler = LocalSampler(
+            agents=self.policy,
+            envs=self.env,
+            max_episode_length=self.env.spec.max_episode_length,
+            is_tf_worker=True)
 
     @pytest.mark.flaky
     @pytest.mark.mujoco
@@ -40,10 +45,11 @@ class TestNPO(TfGraphTestCase):
             algo = NPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
+                       sampler=self.sampler,
                        discount=0.99,
                        gae_lambda=0.98,
                        policy_ent_coeff=0.0)
-            trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+            trainer.setup(algo, self.env)
             last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 20
 
@@ -55,6 +61,7 @@ class TestNPO(TfGraphTestCase):
                 env_spec=self.env.spec,
                 policy=self.policy,
                 baseline=self.baseline,
+                sampler=self.sampler,
                 pg_loss='random pg_loss',
             )
 
@@ -66,6 +73,7 @@ class TestNPO(TfGraphTestCase):
                 env_spec=self.env.spec,
                 policy=self.policy,
                 baseline=self.baseline,
+                sampler=self.sampler,
                 entropy_method=None,
             )
 
@@ -77,6 +85,7 @@ class TestNPO(TfGraphTestCase):
                 env_spec=self.env.spec,
                 policy=self.policy,
                 baseline=self.baseline,
+                sampler=self.sampler,
                 entropy_method='max',
                 center_adv=True,
             )
@@ -89,6 +98,7 @@ class TestNPO(TfGraphTestCase):
                 env_spec=self.env.spec,
                 policy=self.policy,
                 baseline=self.baseline,
+                sampler=self.sampler,
                 entropy_method='max',
                 stop_entropy_gradient=False,
             )
@@ -101,6 +111,7 @@ class TestNPO(TfGraphTestCase):
                 env_spec=self.env.spec,
                 policy=self.policy,
                 baseline=self.baseline,
+                sampler=self.sampler,
                 entropy_method='no_entropy',
                 policy_ent_coeff=0.02,
             )

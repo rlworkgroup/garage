@@ -14,7 +14,7 @@ from garage.envs import normalize
 from garage.experiment import deterministic
 from garage.experiment.task_sampler import MetaWorldTaskSampler
 from garage.replay_buffer import PathBuffer
-from garage.sampler import LocalSampler
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch import set_gpu_mode
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
@@ -83,6 +83,22 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed, _gpu, n_tasks, timesteps):
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
     meta_batch_size = 10
 
+    sampler = LocalSampler(
+        agents=policy,
+        envs=mt10_train_envs,
+        max_episode_length=env.spec.max_episode_length,
+        # 1 sampler worker for each environment
+        n_workers=meta_batch_size,
+        worker_class=FragmentWorker,
+        # increasing n_envs increases the vectorization of a sampler worker
+        # which improves runtime performance, but you will need to adjust this
+        # depending on your memory constraints. For reference, each worker by
+        # default uses n_envs=8. Each environment is approximately ~50mb large
+        # so creating 50 envs with 8 copies comes out to 20gb of memory. Many
+        # users want to be able to run multiple seeds on 1 machine, so I have
+        # reduced this to n_envs = 2 for 2 copies in the meantime.
+        worker_args=dict(n_envs=2))
+
     batch_size = int(env.spec.max_episode_length * meta_batch_size)
     num_evaluation_points = 500
     epochs = timesteps // batch_size
@@ -91,6 +107,7 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed, _gpu, n_tasks, timesteps):
     mtsac = MTSAC(policy=policy,
                   qf1=qf1,
                   qf2=qf2,
+                  sampler=sampler,
                   gradient_steps_per_itr=env.spec.max_episode_length,
                   eval_env=mt10_test_envs,
                   env_spec=env.spec,
@@ -104,20 +121,7 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed, _gpu, n_tasks, timesteps):
     if _gpu is not None:
         set_gpu_mode(True, _gpu)
     mtsac.to()
-    trainer.setup(
-        algo=mtsac,
-        env=mt10_train_envs,
-        sampler_cls=LocalSampler,
-        # 1 sampler worker for each environment
-        n_workers=meta_batch_size,
-        # increasing n_envs increases the vectorization of a sampler worker
-        # which improves runtime performance, but you will need to adjust this
-        # depending on your memory constraints. For reference, each worker by
-        # default uses n_envs=8. Each environment is approximately ~50mb large
-        # so creating 10 envs with 8 copies comes out to 20gb of memory. Many
-        # users want to be able to run multiple seeds on 1 machine, so I have
-        # reduced this to n_envs = 2 for 2 copies in the meantime.
-        worker_args=dict(n_envs=2))
+    trainer.setup(algo=mtsac, env=mt10_train_envs)
     trainer.train(n_epochs=epochs, batch_size=batch_size)
 
 

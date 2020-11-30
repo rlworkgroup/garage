@@ -58,6 +58,13 @@ class TestRL2TRPO(TfGraphTestCase):
                                         hidden_dim=64,
                                         state_include_action=False)
         self.baseline = LinearFeatureBaseline(env_spec=self.env_spec)
+        self.sampler = LocalSampler(
+            agents=self.policy,
+            envs=self.tasks.sample(self.meta_batch_size),
+            max_episode_length=self.env_spec.max_episode_length,
+            is_tf_worker=True,
+            n_workers=self.meta_batch_size,
+            worker_class=RL2Worker)
 
     def test_rl2_trpo_pendulum(self):
         with TFTrainer(snapshot_config, sess=self.sess) as trainer:
@@ -67,6 +74,7 @@ class TestRL2TRPO(TfGraphTestCase):
                 env_spec=self.env_spec,
                 policy=self.policy,
                 baseline=self.baseline,
+                sampler=self.sampler,
                 episodes_per_trial=self.episode_per_task,
                 discount=0.99,
                 max_kl_step=0.01,
@@ -74,11 +82,7 @@ class TestRL2TRPO(TfGraphTestCase):
                 optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
                     base_eps=1e-5)))
 
-            trainer.setup(algo,
-                          self.tasks.sample(self.meta_batch_size),
-                          sampler_cls=LocalSampler,
-                          n_workers=self.meta_batch_size,
-                          worker_class=RL2Worker)
+            trainer.setup(algo, self.tasks.sample(self.meta_batch_size))
 
             last_avg_ret = trainer.train(n_epochs=1,
                                          batch_size=self.episode_per_task *
@@ -93,6 +97,7 @@ class TestRL2TRPO(TfGraphTestCase):
                            env_spec=self.env_spec,
                            policy=self.policy,
                            baseline=self.baseline,
+                           sampler=self.sampler,
                            kl_constraint='hard',
                            episodes_per_trial=self.episode_per_task,
                            discount=0.99,
@@ -107,6 +112,7 @@ class TestRL2TRPO(TfGraphTestCase):
                            env_spec=self.env_spec,
                            policy=self.policy,
                            baseline=self.baseline,
+                           sampler=self.sampler,
                            kl_constraint='soft',
                            episodes_per_trial=self.episode_per_task,
                            discount=0.99,
@@ -122,6 +128,7 @@ class TestRL2TRPO(TfGraphTestCase):
                         env_spec=self.env_spec,
                         policy=self.policy,
                         baseline=self.baseline,
+                        sampler=self.sampler,
                         kl_constraint='xyz',
                         episodes_per_trial=self.episode_per_task,
                         discount=0.99,

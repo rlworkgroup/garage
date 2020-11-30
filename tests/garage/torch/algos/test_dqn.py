@@ -12,7 +12,7 @@ from garage.experiment import SnapshotConfig
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
-from garage.sampler import LocalSampler
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch import np_to_torch
 from garage.torch.algos import DQN
 from garage.torch.policies import DiscreteQFArgmaxPolicy
@@ -42,11 +42,16 @@ def setup():
                                              max_epsilon=1.0,
                                              min_epsilon=0.01,
                                              decay_ratio=0.4)
+    sampler = LocalSampler(agents=exploration_policy,
+                           envs=env,
+                           max_episode_length=env.spec.max_episode_length,
+                           worker_class=FragmentWorker)
     algo = DQN(env_spec=env.spec,
                policy=policy,
                qf=qf,
                exploration_policy=exploration_policy,
                replay_buffer=replay_buffer,
+               sampler=sampler,
                steps_per_epoch=steps_per_epoch,
                qf_lr=5e-5,
                double_q=False,
@@ -68,7 +73,7 @@ def test_dqn_cartpole(setup):
 
     trainer = Trainer(config)
     algo, env, _, n_epochs, batch_size = setup
-    trainer.setup(algo, env, sampler_cls=LocalSampler)
+    trainer.setup(algo, env)
     last_avg_return = trainer.train(n_epochs=n_epochs, batch_size=batch_size)
     assert last_avg_return > 10
     env.close()
@@ -82,7 +87,7 @@ def test_dqn_loss(setup):
     algo, env, buff, _, batch_size = setup
 
     trainer = Trainer(snapshot_config)
-    trainer.setup(algo, env, sampler_cls=LocalSampler)
+    trainer.setup(algo, env)
 
     paths = trainer.obtain_episodes(0, batch_size=batch_size)
     buff.add_episode_batch(paths)
@@ -126,7 +131,7 @@ def test_double_dqn_loss(setup):
 
     algo._double_q = True
     trainer = Trainer(snapshot_config)
-    trainer.setup(algo, env, sampler_cls=LocalSampler)
+    trainer.setup(algo, env)
 
     paths = trainer.obtain_episodes(0, batch_size=batch_size)
     buff.add_episode_batch(paths)

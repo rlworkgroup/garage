@@ -109,9 +109,16 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task, n_tasks):
         baseline = LinearMultiFeatureBaseline(
             env_spec=env.spec, features=['observations', 'tasks', 'latents'])
 
+        sampler = LocalSampler(agents=policy,
+                               envs=env,
+                               max_episode_length=env.spec.max_episode_length,
+                               is_tf_worker=True,
+                               worker_class=TaskEmbeddingWorker)
+
         algo = TEPPO(env_spec=env.spec,
                      policy=policy,
                      baseline=baseline,
+                     sampler=sampler,
                      inference=inference,
                      discount=0.99,
                      lr_clip_range=0.2,
@@ -131,11 +138,7 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task, n_tasks):
                      center_adv=True,
                      stop_ce_gradient=True)
 
-        trainer.setup(algo,
-                      env,
-                      sampler_cls=LocalSampler,
-                      sampler_args=None,
-                      worker_class=TaskEmbeddingWorker)
+        trainer.setup(algo, env)
         trainer.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
 
 

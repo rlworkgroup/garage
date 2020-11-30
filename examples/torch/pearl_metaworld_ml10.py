@@ -112,6 +112,12 @@ def pearl_metaworld_ml10(ctxt=None,
     inner_policy = TanhGaussianMLPPolicy(
         env_spec=augmented_env, hidden_sizes=[net_size, net_size, net_size])
 
+    sampler = LocalSampler(agents=None,
+                           envs=env[0](),
+                           max_episode_length=env[0]().spec.max_episode_length,
+                           n_workers=1,
+                           worker_class=PEARLWorker)
+
     pearl = PEARL(
         env=env,
         policy_class=ContextConditionedPolicy,
@@ -119,6 +125,7 @@ def pearl_metaworld_ml10(ctxt=None,
         inner_policy=inner_policy,
         qf=qf,
         vf=vf,
+        sampler=sampler,
         num_train_tasks=num_train_tasks,
         latent_dim=latent_size,
         encoder_hidden_sizes=encoder_hidden_sizes,
@@ -139,11 +146,7 @@ def pearl_metaworld_ml10(ctxt=None,
     if use_gpu:
         pearl.to()
 
-    trainer.setup(algo=pearl,
-                  env=env[0](),
-                  sampler_cls=LocalSampler,
-                  n_workers=1,
-                  worker_class=PEARLWorker)
+    trainer.setup(algo=pearl, env=env[0]())
 
     trainer.train(n_epochs=num_epochs, batch_size=batch_size)
 

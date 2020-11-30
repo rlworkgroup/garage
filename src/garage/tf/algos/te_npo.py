@@ -12,7 +12,6 @@ from garage.experiment import deterministic
 from garage.np import (discount_cumsum, explained_variance_1d, pad_batch_array,
                        rrse, sliding_window)
 from garage.np.algos import RLAlgorithm
-from garage.sampler import LocalSampler
 from garage.tf import (center_advs, compile_function, compute_advantages,
                        concat_tensor_list, discounted_returns, flatten_inputs,
                        graph_inputs, pad_tensor_dict, positive_advs,
@@ -34,6 +33,7 @@ class TENPO(RLAlgorithm):
         env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.TaskEmbeddingPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
+        sampler (garage.sampler.Sampler): Sampler.
         scope (str): Scope for identifying the algorithm.
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
@@ -80,6 +80,7 @@ class TENPO(RLAlgorithm):
                  env_spec,
                  policy,
                  baseline,
+                 sampler,
                  scope=None,
                  discount=0.99,
                  gae_lambda=1,
@@ -153,7 +154,7 @@ class TENPO(RLAlgorithm):
         self._infer_network = None
         self._old_infer_network = None
 
-        self.sampler_cls = LocalSampler
+        self.sampler = sampler
 
         self._init_opt()
 

@@ -51,13 +51,18 @@ def trpo_pendulum_ray_sampler(ctxt=None, seed=1):
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
+    sampler = RaySampler(agents=policy,
+                         envs=env,
+                         max_episode_length=env.spec.max_episode_length)
+
     algo = TRPO(env_spec=env.spec,
                 policy=policy,
                 value_function=value_function,
+                sampler=sampler,
                 discount=0.99,
                 center_adv=False)
 
-    trainer.setup(algo, env, sampler_cls=RaySampler)
+    trainer.setup(algo, env)
     trainer.train(n_epochs=100, batch_size=1024)
 
 

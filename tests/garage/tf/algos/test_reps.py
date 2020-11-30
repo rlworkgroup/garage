@@ -27,12 +27,19 @@ class TestREPS(TfGraphTestCase):
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True)
+
             algo = REPS(env_spec=env.spec,
                         policy=policy,
                         baseline=baseline,
+                        sampler=sampler,
                         discount=0.99)
 
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.setup(algo, env)
 
             last_avg_ret = trainer.train(n_epochs=10, batch_size=4000)
             assert last_avg_ret > 5

@@ -10,7 +10,6 @@ import torch
 from garage import (_Default, EpisodeBatch, log_multitask_performance,
                     make_optimizer)
 from garage.np import discount_cumsum
-from garage.sampler import RaySampler
 from garage.torch import update_module_params
 from garage.torch.optimizers import (ConjugateGradientOptimizer,
                                      DifferentiableSGD)
@@ -26,6 +25,7 @@ class MAML:
             computing loss.
         env (Environment): An environment.
         policy (garage.torch.policies.Policy): Policy.
+        sampler (garage.sampler.Sampler): Sampler.
         task_sampler (garage.experiment.TaskSampler): Task sampler.
         meta_optimizer (Union[torch.optim.Optimizer, tuple]):
             Type of optimizer.
@@ -46,6 +46,7 @@ class MAML:
                  inner_algo,
                  env,
                  policy,
+                 sampler,
                  task_sampler,
                  meta_optimizer,
                  meta_batch_size=40,
@@ -54,7 +55,7 @@ class MAML:
                  num_grad_updates=1,
                  meta_evaluator=None,
                  evaluate_every_n_epochs=1):
-        self.sampler_cls = RaySampler
+        self.sampler = sampler
 
         self.max_episode_length = inner_algo.max_episode_length
 

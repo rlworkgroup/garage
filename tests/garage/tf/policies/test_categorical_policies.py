@@ -11,8 +11,7 @@ from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
 from garage.tf.optimizers import (ConjugateGradientOptimizer,
                                   FiniteDifferenceHVP)
-from garage.tf.policies import (CategoricalGRUPolicy,
-                                CategoricalLSTMPolicy,
+from garage.tf.policies import (CategoricalGRUPolicy, CategoricalLSTMPolicy,
                                 CategoricalMLPPolicy)
 from garage.trainer import TFTrainer
 
@@ -34,10 +33,17 @@ class TestCategoricalPolicies(TfGraphTestCase):
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True)
+
             algo = TRPO(
                 env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
+                sampler=sampler,
                 discount=0.99,
                 max_kl_step=0.01,
                 optimizer=ConjugateGradientOptimizer,
@@ -45,7 +51,7 @@ class TestCategoricalPolicies(TfGraphTestCase):
                     base_eps=1e-5)),
             )
 
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.setup(algo, env)
             trainer.train(n_epochs=1, batch_size=4000)
 
             env.close()

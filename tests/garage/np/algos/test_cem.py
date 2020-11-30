@@ -23,12 +23,19 @@ class TestCEM(TfGraphTestCase):
 
             n_samples = 10
 
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True)
+
             algo = CEM(env_spec=env.spec,
                        policy=policy,
+                       sampler=sampler,
                        best_frac=0.1,
                        n_samples=n_samples)
 
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.setup(algo, env)
             rtn = trainer.train(n_epochs=10, batch_size=2048)
             assert rtn > 40
 

@@ -143,10 +143,17 @@ class TestTE(TfGraphTestCase):
 
     def test_te_ppo(self):
         with TFTrainer(snapshot_config, sess=self.sess) as trainer:
+            sampler = LocalSampler(
+                agents=self.policy,
+                envs=self.env,
+                max_episode_length=self.env.spec.max_episode_length,
+                is_tf_worker=True,
+                worker_class=TaskEmbeddingWorker)
             algo = TEPPO(env_spec=self.env.spec,
                          policy=self.policy,
                          baseline=self.baseline,
                          inference=self.inference,
+                         sampler=sampler,
                          discount=0.99,
                          lr_clip_range=0.2,
                          policy_ent_coeff=self.policy_ent_coeff,
@@ -164,9 +171,5 @@ class TestTE(TfGraphTestCase):
                          center_adv=True,
                          stop_ce_gradient=True)
 
-            trainer.setup(algo,
-                          self.env,
-                          sampler_cls=LocalSampler,
-                          sampler_args=None,
-                          worker_class=TaskEmbeddingWorker)
+            trainer.setup(algo, self.env)
             trainer.train(n_epochs=1, batch_size=self.batch_size, plot=False)

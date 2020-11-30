@@ -10,7 +10,6 @@ import torch.nn.functional as F
 from garage import log_performance
 from garage.np import discount_cumsum
 from garage.np.algos import RLAlgorithm
-from garage.sampler import RaySampler
 from garage.torch import compute_advantages, filter_valids
 from garage.torch.optimizers import OptimizerWrapper
 
@@ -25,6 +24,7 @@ class VPG(RLAlgorithm):
         policy (garage.torch.policies.Policy): Policy.
         value_function (garage.torch.value_functions.ValueFunction): The value
             function.
+        sampler (garage.sampler.Sampler): Sampler.
         policy_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer
             for policy.
         vf_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer for
@@ -58,6 +58,7 @@ class VPG(RLAlgorithm):
         env_spec,
         policy,
         value_function,
+        sampler,
         policy_optimizer=None,
         vf_optimizer=None,
         num_train_per_epoch=1,
@@ -91,7 +92,7 @@ class VPG(RLAlgorithm):
                                           stop_entropy_gradient,
                                           policy_ent_coeff)
         self._episode_reward_mean = collections.deque(maxlen=100)
-        self.sampler_cls = RaySampler
+        self.sampler = sampler
 
         if policy_optimizer:
             self._policy_optimizer = policy_optimizer

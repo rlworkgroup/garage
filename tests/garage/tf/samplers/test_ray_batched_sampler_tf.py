@@ -56,6 +56,6 @@ class TestRaySamplerTF():
         assert ray.is_initialized()
         workers = WorkerFactory(
             seed=100, max_episode_length=self.algo.max_episode_length)
-        sampler1 = RaySampler(workers, self.policy, self.env)
+        sampler1 = RaySampler(self.policy, self.env, worker_factory=workers)
         sampler1.start_worker()
         sampler1.shutdown_worker()

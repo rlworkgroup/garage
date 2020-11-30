@@ -36,14 +36,18 @@ class TestTRPO:
     def test_trpo_pendulum(self):
         """Test TRPO with Pendulum environment."""
         deterministic.set_seed(0)
-
+        sampler = LocalSampler(
+            agents=self.policy,
+            envs=self.env,
+            max_episode_length=self.env.spec.max_episode_length)
         trainer = Trainer(snapshot_config)
         algo = TRPO(env_spec=self.env.spec,
                     policy=self.policy,
                     value_function=self.value_function,
+                    sampler=sampler,
                     discount=0.99,
                     gae_lambda=0.98)
 
-        trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+        trainer.setup(algo, self.env)
         last_avg_ret = trainer.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 0

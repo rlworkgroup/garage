@@ -34,6 +34,7 @@ class MTSAC(SAC):
             collected by the sampler.
         env_spec (EnvSpec): The env_spec attribute of the environment that the
             agent is being trained in.
+        sampler (garage.sampler.Sampler): Sampler.
         num_tasks (int): The number of tasks being learned.
         max_episode_length_eval (int or None): Maximum length of episodes used
             for off-policy evaluation. If None, defaults to
@@ -82,6 +83,7 @@ class MTSAC(SAC):
         qf2,
         replay_buffer,
         env_spec,
+        sampler,
         *,
         num_tasks,
         eval_env,
@@ -108,6 +110,7 @@ class MTSAC(SAC):
             qf1=qf1,
             qf2=qf2,
             replay_buffer=replay_buffer,
+            sampler=sampler,
             env_spec=env_spec,
             max_episode_length_eval=max_episode_length_eval,
             gradient_steps_per_itr=gradient_steps_per_itr,

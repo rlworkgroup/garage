@@ -10,6 +10,7 @@ from garage.envs import GymEnv
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import HERReplayBuffer
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf.algos import DDPG
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
@@ -56,6 +57,12 @@ def her_ddpg_fetchreach(ctxt=None, seed=1):
                                         reward_fn=env.compute_reward,
                                         env_spec=env.spec)
 
+        sampler = LocalSampler(agents=exploration_policy,
+                               envs=env,
+                               max_episode_length=env.spec.max_episode_length,
+                               is_tf_worker=True,
+                               worker_class=FragmentWorker)
+
         ddpg = DDPG(
             env_spec=env.spec,
             policy=policy,
@@ -63,6 +70,7 @@ def her_ddpg_fetchreach(ctxt=None, seed=1):
             qf_lr=1e-3,
             qf=qf,
             replay_buffer=replay_buffer,
+            sampler=sampler,
             target_update_tau=0.01,
             steps_per_epoch=50,
             n_train_steps=40,

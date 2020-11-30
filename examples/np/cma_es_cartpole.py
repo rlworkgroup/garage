@@ -12,6 +12,7 @@ from garage import wrap_experiment
 from garage.envs import GymEnv
 from garage.experiment.deterministic import set_seed
 from garage.np.algos import CMAES
+from garage.sampler import LocalSampler
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.trainer import TFTrainer
 
@@ -37,7 +38,15 @@ def cma_es_cartpole(ctxt=None, seed=1):
 
         n_samples = 20
 
-        algo = CMAES(env_spec=env.spec, policy=policy, n_samples=n_samples)
+        sampler = LocalSampler(agents=policy,
+                               envs=env,
+                               max_episode_length=env.spec.max_episode_length,
+                               is_tf_worker=True)
+
+        algo = CMAES(env_spec=env.spec,
+                     policy=policy,
+                     sampler=sampler,
+                     n_samples=n_samples)
 
         trainer.setup(algo, env)
         trainer.train(n_epochs=100, batch_size=1000)

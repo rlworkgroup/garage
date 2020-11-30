@@ -203,3 +203,27 @@ def test_pickle():
     assert np.var(goals) > 0
     sampler2.shutdown_worker()
     env.close()
+
+
+@pytest.mark.timeout(10)
+def test_init_without_worker_factory():
+    max_episode_length = 16
+    env = PointEnv()
+    policy = FixedPolicy(env.spec,
+                         scripted_actions=[
+                             env.action_space.sample()
+                             for _ in range(max_episode_length)
+                         ])
+    sampler = MultiprocessingSampler(agents=policy,
+                                     envs=env,
+                                     seed=100,
+                                     max_episode_length=max_episode_length)
+    worker_factory = WorkerFactory(seed=100,
+                                   max_episode_length=max_episode_length)
+    assert sampler._factory._seed == worker_factory._seed
+    assert (sampler._factory._max_episode_length ==
+            worker_factory._max_episode_length)
+    with pytest.raises(TypeError, match='Must construct a sampler from'):
+        MultiprocessingSampler(agents=policy, envs=env)
+    sampler.shutdown_worker()
+    env.close()

@@ -18,13 +18,14 @@ class SimpleCEM:
     Args:
         env_spec (EnvSpec): Environment specification.
         policy (Policy): Action policy.
+        sampler (garage.sampler.Sampler): Sampler.
 
     """
-    sampler_cls = LocalSampler
 
-    def __init__(self, env_spec, policy):
+    def __init__(self, env_spec, policy, sampler):
         self.env_spec = env_spec
         self.policy = policy
+        self.sampler = sampler
         self.max_episode_length = env_spec.max_episode_length
         self._discount = 0.99
         self._extra_std = 1
@@ -117,7 +118,11 @@ def tutorial_cem(ctxt=None):
     with TFTrainer(ctxt) as trainer:
         env = GymEnv('CartPole-v1')
         policy = CategoricalMLPPolicy(env.spec)
-        algo = SimpleCEM(env.spec, policy)
+        sampler = LocalSampler(agents=policy,
+                               envs=env,
+                               max_episode_length=env.spec.max_episode_length,
+                               is_tf_worker=True)
+        algo = SimpleCEM(env.spec, policy, sampler)
         trainer.setup(algo, env)
         trainer.train(n_epochs=100, batch_size=1000)
 

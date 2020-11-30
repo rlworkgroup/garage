@@ -61,11 +61,22 @@ def rl2_ppo_metaworld_ml1_push(ctxt, seed, meta_batch_size, n_epochs,
 
         baseline = LinearFeatureBaseline(env_spec=env_spec)
 
+        envs = task_sampler.sample(meta_batch_size)
+        sampler = LocalSampler(
+            agents=policy,
+            envs=envs,
+            max_episode_length=env_spec.max_episode_length,
+            is_tf_worker=True,
+            n_workers=meta_batch_size,
+            worker_class=RL2Worker,
+            worker_args=dict(n_episodes_per_trial=episode_per_task))
+
         algo = RL2PPO(meta_batch_size=meta_batch_size,
                       task_sampler=task_sampler,
                       env_spec=env_spec,
                       policy=policy,
                       baseline=baseline,
+                      sampler=sampler,
                       discount=0.99,
                       gae_lambda=0.95,
                       lr_clip_range=0.2,
@@ -78,12 +89,7 @@ def rl2_ppo_metaworld_ml1_push(ctxt, seed, meta_batch_size, n_epochs,
                       meta_evaluator=meta_evaluator,
                       episodes_per_trial=episode_per_task)
 
-        trainer.setup(algo,
-                      task_sampler.sample(meta_batch_size),
-                      sampler_cls=LocalSampler,
-                      n_workers=meta_batch_size,
-                      worker_class=RL2Worker,
-                      worker_args=dict(n_episodes_per_trial=episode_per_task))
+        trainer.setup(algo, envs)
 
         trainer.train(n_epochs=n_epochs,
                       batch_size=episode_per_task *

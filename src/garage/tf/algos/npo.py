@@ -10,7 +10,6 @@ import tensorflow as tf
 from garage import log_performance, make_optimizer
 from garage.np import explained_variance_1d, pad_batch_array
 from garage.np.algos import RLAlgorithm
-from garage.sampler import RaySampler
 from garage.tf import (center_advs, compile_function, compute_advantages,
                        discounted_returns, flatten_inputs, graph_inputs,
                        positive_advs)
@@ -26,6 +25,7 @@ class NPO(RLAlgorithm):
         env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.StochasticPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
+        sampler (garage.sampler.Sampler): Sampler.
         scope (str): Scope for identifying the algorithm.
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
@@ -81,6 +81,7 @@ class NPO(RLAlgorithm):
                  env_spec,
                  policy,
                  baseline,
+                 sampler,
                  scope=None,
                  discount=0.99,
                  gae_lambda=1,
@@ -141,7 +142,8 @@ class NPO(RLAlgorithm):
         self._old_policy_network = None
 
         self._episode_reward_mean = collections.deque(maxlen=100)
-        self.sampler_cls = RaySampler
+
+        self.sampler = sampler
 
         self._init_opt()
 

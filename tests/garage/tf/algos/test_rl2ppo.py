@@ -57,14 +57,30 @@ class TestRL2PPO(TfGraphTestCase):
                                         hidden_dim=64,
                                         state_include_action=False)
         self.baseline = LinearFeatureBaseline(env_spec=self.env_spec)
+        self.sampler = LocalSampler(
+            agents=self.policy,
+            envs=self.tasks.sample(self.meta_batch_size),
+            max_episode_length=self.env_spec.max_episode_length,
+            is_tf_worker=True,
+            n_workers=self.meta_batch_size,
+            worker_class=RL2Worker)
 
     def test_rl2_ppo_pendulum(self):
         with TFTrainer(snapshot_config, sess=self.sess) as trainer:
+            sampler = LocalSampler(
+                agents=self.policy,
+                envs=self.tasks.sample(self.meta_batch_size),
+                max_episode_length=self.env_spec.max_episode_length,
+                is_tf_worker=True,
+                n_workers=self.meta_batch_size,
+                worker_class=RL2Worker,
+                worker_args=dict(n_episodes_per_trial=self.episode_per_task))
             algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                           task_sampler=self.tasks,
                           env_spec=self.env_spec,
                           policy=self.policy,
                           baseline=self.baseline,
+                          sampler=sampler,
                           discount=0.99,
                           gae_lambda=0.95,
                           lr_clip_range=0.2,
@@ -74,13 +90,7 @@ class TestRL2PPO(TfGraphTestCase):
                           center_adv=False,
                           episodes_per_trial=self.episode_per_task)
 
-            trainer.setup(
-                algo,
-                self.tasks.sample(self.meta_batch_size),
-                sampler_cls=LocalSampler,
-                n_workers=self.meta_batch_size,
-                worker_class=RL2Worker,
-                worker_args=dict(n_episodes_per_trial=self.episode_per_task))
+            trainer.setup(algo, self.tasks.sample(self.meta_batch_size))
 
             last_avg_ret = trainer.train(n_epochs=1,
                                          batch_size=self.episode_per_task *
@@ -100,6 +110,7 @@ class TestRL2PPO(TfGraphTestCase):
                           env_spec=self.env_spec,
                           policy=self.policy,
                           baseline=self.baseline,
+                          sampler=self.sampler,
                           discount=0.99,
                           gae_lambda=0.95,
                           lr_clip_range=0.2,
@@ -115,11 +126,7 @@ class TestRL2PPO(TfGraphTestCase):
                           meta_evaluator=meta_evaluator,
                           n_epochs_per_eval=10)
 
-            trainer.setup(algo,
-                          self.tasks.sample(self.meta_batch_size),
-                          sampler_cls=LocalSampler,
-                          n_workers=self.meta_batch_size,
-                          worker_class=RL2Worker)
+            trainer.setup(algo, self.tasks.sample(self.meta_batch_size))
 
             last_avg_ret = trainer.train(n_epochs=1,
                                          batch_size=self.episode_per_task *
@@ -134,6 +141,7 @@ class TestRL2PPO(TfGraphTestCase):
                           env_spec=self.env_spec,
                           policy=self.policy,
                           baseline=self.baseline,
+                          sampler=self.sampler,
                           discount=0.99,
                           gae_lambda=0.95,
                           lr_clip_range=0.2,
@@ -161,6 +169,7 @@ class TestRL2PPO(TfGraphTestCase):
                           env_spec=self.env_spec,
                           policy=self.policy,
                           baseline=self.baseline,
+                          sampler=self.sampler,
                           discount=0.99,
                           gae_lambda=0.95,
                           lr_clip_range=0.2,
@@ -188,11 +197,18 @@ class TestRL2PPO(TfGraphTestCase):
     def test_rl2_ppo_pendulum_wrong_worker(self):
         with TFTrainer(snapshot_config, sess=self.sess) as trainer:
             with pytest.raises(ValueError):
+                sampler = LocalSampler(
+                    agents=self.policy,
+                    envs=self.tasks.sample(self.meta_batch_size),
+                    max_episode_length=self.env_spec.max_episode_length,
+                    is_tf_worker=True,
+                    n_workers=self.meta_batch_size)
                 algo = RL2PPO(meta_batch_size=self.meta_batch_size,
                               task_sampler=self.tasks,
                               env_spec=self.env_spec,
                               policy=self.policy,
                               baseline=self.baseline,
+                              sampler=sampler,
                               discount=0.99,
                               gae_lambda=0.95,
                               lr_clip_range=0.2,
@@ -206,10 +222,7 @@ class TestRL2PPO(TfGraphTestCase):
                               center_adv=False,
                               episodes_per_trial=self.episode_per_task)
 
-                trainer.setup(algo,
-                              self.tasks.sample(self.meta_batch_size),
-                              sampler_cls=LocalSampler,
-                              n_workers=self.meta_batch_size)
+                trainer.setup(algo, self.tasks.sample(self.meta_batch_size))
 
                 trainer.train(n_epochs=10,
                               batch_size=self.episode_per_task *

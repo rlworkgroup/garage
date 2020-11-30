@@ -5,8 +5,10 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import GymEnv, normalize
+from garage.experiment.deterministic import get_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf.algos import DDPG
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
@@ -34,6 +36,12 @@ class TestDDPG(TfGraphTestCase):
                                         hidden_sizes=[64, 64],
                                         hidden_nonlinearity=tf.nn.relu)
             replay_buffer = PathBuffer(capacity_in_transitions=int(1e5))
+            sampler = LocalSampler(
+                agents=exploration_policy,
+                envs=env,
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True,
+                worker_class=FragmentWorker)
             algo = DDPG(
                 env_spec=env.spec,
                 policy=policy,
@@ -41,6 +49,7 @@ class TestDDPG(TfGraphTestCase):
                 qf_lr=1e-3,
                 qf=qf,
                 replay_buffer=replay_buffer,
+                sampler=sampler,
                 steps_per_epoch=20,
                 target_update_tau=1e-2,
                 n_train_steps=50,
@@ -74,7 +83,12 @@ class TestDDPG(TfGraphTestCase):
                                         hidden_sizes=[64, 64],
                                         hidden_nonlinearity=tf.nn.relu)
             replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
-
+            sampler = LocalSampler(
+                agents=exploration_policy,
+                envs=env,
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True,
+                worker_class=FragmentWorker)
             algo = DDPG(
                 env_spec=env.spec,
                 policy=policy,
@@ -82,6 +96,7 @@ class TestDDPG(TfGraphTestCase):
                 qf_lr=1e-3,
                 qf=qf,
                 replay_buffer=replay_buffer,
+                sampler=sampler,
                 steps_per_epoch=20,
                 target_update_tau=1e-2,
                 n_train_steps=50,
@@ -115,6 +130,12 @@ class TestDDPG(TfGraphTestCase):
                                         hidden_sizes=[64, 64],
                                         hidden_nonlinearity=tf.nn.relu)
             replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
+            sampler = LocalSampler(
+                agents=exploration_policy,
+                envs=env,
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True,
+                worker_class=FragmentWorker)
             algo = DDPG(
                 env_spec=env.spec,
                 policy=policy,
@@ -122,6 +143,7 @@ class TestDDPG(TfGraphTestCase):
                 qf_lr=1e-3,
                 qf=qf,
                 replay_buffer=replay_buffer,
+                sampler=sampler,
                 steps_per_epoch=20,
                 target_update_tau=1e-2,
                 n_train_steps=50,

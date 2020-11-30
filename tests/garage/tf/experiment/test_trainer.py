@@ -5,7 +5,7 @@ import tensorflow as tf
 from garage.envs import GymEnv
 from garage.experiment import deterministic
 from garage.np.baselines import LinearFeatureBaseline
-from garage.sampler import LocalSampler, MultiprocessingSampler, RaySampler
+from garage.sampler import LocalSampler, RaySampler
 from garage.tf.algos import VPG
 from garage.tf.plotter import Plotter
 from garage.tf.policies import CategoricalMLPPolicy
@@ -37,9 +37,16 @@ class TestTrainer(TfGraphTestCase):
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True)
+
             algo = VPG(env_spec=env.spec,
                        policy=policy,
                        baseline=baseline,
+                       sampler=sampler,
                        discount=0.99,
                        optimizer_args=dict(learning_rate=0.01, ))
 
@@ -64,9 +71,16 @@ class TestTrainer(TfGraphTestCase):
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True)
+
             algo = VPG(env_spec=env.spec,
                        policy=policy,
                        baseline=baseline,
+                       sampler=sampler,
                        discount=0.99,
                        optimizer_args=dict(learning_rate=0.01, ))
 
@@ -86,26 +100,6 @@ class TestTrainer(TfGraphTestCase):
             with TFTrainer(snapshot_config) as trainer:
                 trainer.save(0)
 
-    def test_make_sampler_local_sampler(self):
-        with TFTrainer(snapshot_config) as trainer:
-            env = GymEnv('CartPole-v1')
-
-            policy = CategoricalMLPPolicy(name='policy',
-                                          env_spec=env.spec,
-                                          hidden_sizes=(8, 8))
-
-            baseline = LinearFeatureBaseline(env_spec=env.spec)
-
-            algo = VPG(env_spec=env.spec,
-                       policy=policy,
-                       baseline=baseline,
-                       discount=0.99,
-                       optimizer_args=dict(learning_rate=0.01, ))
-
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
-            assert isinstance(trainer._sampler, LocalSampler)
-            trainer.train(n_epochs=1, batch_size=10)
-
     def test_make_sampler_ray_sampler(self, ray_session_fixture):
         del ray_session_fixture
         assert ray.is_initialized()
@@ -118,12 +112,19 @@ class TestTrainer(TfGraphTestCase):
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+            sampler = RaySampler(
+                agents=policy,
+                envs=env,
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True)
+
             algo = VPG(env_spec=env.spec,
                        policy=policy,
                        baseline=baseline,
+                       sampler=sampler,
                        discount=0.99,
                        optimizer_args=dict(learning_rate=0.01, ))
 
-            trainer.setup(algo, env, sampler_cls=RaySampler)
+            trainer.setup(algo, env)
             assert isinstance(trainer._sampler, RaySampler)
             trainer.train(n_epochs=1, batch_size=10)

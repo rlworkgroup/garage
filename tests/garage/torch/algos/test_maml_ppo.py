@@ -49,6 +49,10 @@ class TestMAMLPPO:
         )
         self.value_function = GaussianMLPValueFunction(env_spec=self.env.spec,
                                                        hidden_sizes=(32, 32))
+        self.sampler = LocalSampler(
+            agents=self.policy,
+            envs=self.env,
+            max_episode_length=self.env.spec.max_episode_length)
 
     def teardown_method(self):
         """Teardown method which is called after every test."""
@@ -64,6 +68,7 @@ class TestMAMLPPO:
         trainer = Trainer(snapshot_config)
         algo = MAMLPPO(env=self.env,
                        policy=self.policy,
+                       sampler=self.sampler,
                        task_sampler=self.task_sampler,
                        value_function=self.value_function,
                        meta_batch_size=5,
@@ -72,7 +77,7 @@ class TestMAMLPPO:
                        inner_lr=0.1,
                        num_grad_updates=1)
 
-        trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+        trainer.setup(algo, self.env)
         last_avg_ret = trainer.train(n_epochs=10,
                                      batch_size=episodes_per_task *
                                      max_episode_length)

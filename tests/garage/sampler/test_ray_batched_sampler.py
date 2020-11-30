@@ -136,3 +136,26 @@ def test_init_with_env_updates(ray_local_session_fixture):
                                              envs=tasks.sample(n_workers))
     episodes = sampler.obtain_samples(0, 160, policy)
     assert sum(episodes.lengths) >= 160
+
+
+def test_init_without_worker_factory(ray_local_session_fixture):
+    del ray_local_session_fixture
+    assert ray.is_initialized()
+    max_episode_length = 16
+    env = PointEnv()
+    policy = FixedPolicy(env.spec,
+                         scripted_actions=[
+                             env.action_space.sample()
+                             for _ in range(max_episode_length)
+                         ])
+    sampler = RaySampler(agents=policy,
+                         envs=env,
+                         seed=100,
+                         max_episode_length=max_episode_length)
+    worker_factory = WorkerFactory(seed=100,
+                                   max_episode_length=max_episode_length)
+    assert sampler._worker_factory._seed == worker_factory._seed
+    assert (sampler._worker_factory._max_episode_length ==
+            worker_factory._max_episode_length)
+    with pytest.raises(TypeError, match='Must construct a sampler from'):
+        RaySampler(agents=policy, envs=env)

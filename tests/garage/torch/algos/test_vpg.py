@@ -47,11 +47,16 @@ class TestVPG:
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=torch.tanh,
                                          output_nonlinearity=None)
+        self._sampler = LocalSampler(
+            agents=self._policy,
+            envs=self._env,
+            max_episode_length=self._env.spec.max_episode_length)
         self._params = {
             'env_spec': self._env.spec,
             'policy': self._policy,
             'value_function':
             GaussianMLPValueFunction(env_spec=self._env.spec),
+            'sampler': self._sampler,
             'discount': 0.99,
         }
 
@@ -66,7 +71,7 @@ class TestVPG:
         self._params['use_softplus_entropy'] = True
 
         algo = VPG(**self._params)
-        self._trainer.setup(algo, self._env, sampler_cls=LocalSampler)
+        self._trainer.setup(algo, self._env)
         last_avg_ret = self._trainer.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 0
 
@@ -78,7 +83,7 @@ class TestVPG:
         self._params['entropy_method'] = 'max'
 
         algo = VPG(**self._params)
-        self._trainer.setup(algo, self._env, sampler_cls=LocalSampler)
+        self._trainer.setup(algo, self._env)
         last_avg_ret = self._trainer.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 0
 
@@ -88,7 +93,7 @@ class TestVPG:
         self._params['entropy_method'] = 'regularized'
 
         algo = VPG(**self._params)
-        self._trainer.setup(algo, self._env, sampler_cls=LocalSampler)
+        self._trainer.setup(algo, self._env)
         last_avg_ret = self._trainer.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 0
 

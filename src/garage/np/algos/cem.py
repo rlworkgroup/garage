@@ -6,7 +6,6 @@ import numpy as np
 
 from garage import log_performance
 from garage.np.algos.rl_algorithm import RLAlgorithm
-from garage.sampler import RaySampler
 
 
 class CEM(RLAlgorithm):
@@ -24,6 +23,7 @@ class CEM(RLAlgorithm):
     Args:
         env_spec (EnvSpec): Environment specification.
         policy (garage.np.policies.Policy): Action policy.
+        sampler (garage.sampler.Sampler): Sampler.
         n_samples (int): Number of policies sampled in one epoch.
         discount (float): Environment reward discount.
         best_frac (float): The best fraction.
@@ -36,6 +36,7 @@ class CEM(RLAlgorithm):
     def __init__(self,
                  env_spec,
                  policy,
+                 sampler,
                  n_samples,
                  discount=0.99,
                  init_std=1,
@@ -45,7 +46,7 @@ class CEM(RLAlgorithm):
         self.policy = policy
         self.max_episode_length = env_spec.max_episode_length
 
-        self.sampler_cls = RaySampler
+        self.sampler = sampler
 
         self._best_frac = best_frac
         self._init_std = init_std

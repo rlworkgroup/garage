@@ -44,16 +44,19 @@ def trpo_swimmer_ray_sampler(ctxt=None, seed=1):
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+        sampler = RaySampler(agents=policy,
+                             envs=env,
+                             max_episode_length=env.spec.max_episode_length,
+                             is_tf_worker=True)
+
         algo = TRPO(env_spec=env.spec,
                     policy=policy,
                     baseline=baseline,
+                    sampler=sampler,
                     discount=0.99,
                     max_kl_step=0.01)
 
-        trainer.setup(algo,
-                      env,
-                      sampler_cls=RaySampler,
-                      sampler_args={'seed': seed})
+        trainer.setup(algo, env)
         trainer.train(n_epochs=40, batch_size=4000)
 
 

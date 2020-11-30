@@ -16,7 +16,7 @@ from garage import wrap_experiment
 from garage.envs import normalize
 from garage.experiment import deterministic, MetaWorldTaskSampler
 from garage.replay_buffer import PathBuffer
-from garage.sampler import LocalSampler
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch import set_gpu_mode
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
@@ -73,6 +73,12 @@ def mtsac_metaworld_mt1_pick_place(ctxt=None, *, seed, timesteps, _gpu):
                                  hidden_nonlinearity=F.relu)
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
 
+    sampler = LocalSampler(agents=policy,
+                           envs=train_envs,
+                           max_episode_length=env.spec.max_episode_length,
+                           n_workers=n_tasks,
+                           worker_class=FragmentWorker)
+
     batch_size = int(env.spec.max_episode_length * n_tasks)
     num_evaluation_points = 500
     epochs = timesteps // batch_size
@@ -81,6 +87,7 @@ def mtsac_metaworld_mt1_pick_place(ctxt=None, *, seed, timesteps, _gpu):
     mtsac = MTSAC(policy=policy,
                   qf1=qf1,
                   qf2=qf2,
+                  sampler=sampler,
                   gradient_steps_per_itr=150,
                   eval_env=test_envs,
                   env_spec=env.spec,
@@ -94,10 +101,7 @@ def mtsac_metaworld_mt1_pick_place(ctxt=None, *, seed, timesteps, _gpu):
     if _gpu is not None:
         set_gpu_mode(True, _gpu)
     mtsac.to()
-    trainer.setup(algo=mtsac,
-                  env=train_envs,
-                  sampler_cls=LocalSampler,
-                  n_workers=n_tasks)
+    trainer.setup(algo=mtsac, env=train_envs)
     trainer.train(n_epochs=epochs, batch_size=batch_size)
 
 

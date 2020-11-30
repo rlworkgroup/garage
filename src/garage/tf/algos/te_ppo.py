@@ -13,6 +13,7 @@ class TEPPO(TENPO):
         env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.TaskEmbeddingPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
+        sampler (garage.sampler.Sampler): Sampler.
         scope (str): Scope for identifying the algorithm.
             Must be specified if running multiple algorithms
             simultaneously, each using different environments
@@ -59,6 +60,7 @@ class TEPPO(TENPO):
                  env_spec,
                  policy,
                  baseline,
+                 sampler,
                  scope=None,
                  discount=0.99,
                  gae_lambda=0.98,
@@ -90,6 +92,7 @@ class TEPPO(TENPO):
         super().__init__(env_spec=env_spec,
                          policy=policy,
                          baseline=baseline,
+                         sampler=sampler,
                          scope=scope,
                          discount=discount,
                          gae_lambda=gae_lambda,

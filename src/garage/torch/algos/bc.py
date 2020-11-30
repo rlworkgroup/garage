@@ -10,7 +10,7 @@ from garage import (_Default, log_performance, make_optimizer,
                     obtain_evaluation_episodes, TimeStepBatch)
 from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.np.policies import Policy
-from garage.sampler import RaySampler
+from garage.sampler import Sampler
 from garage.torch import np_to_torch
 
 # yapf: enable
@@ -29,6 +29,8 @@ class BC(RLAlgorithm):
         source (Policy or Generator[TimeStepBatch]): Expert to clone. If a
             policy is passed, will set `.policy` to source and use the trainer
             to sample from the policy.
+        sampler (garage.sampler.Sampler): Sampler. If source is a policy, a
+            sampler is required for sampling.
         policy_optimizer (torch.optim.Optimizer): Optimizer to be used to
             optimize the policy.
         policy_lr (float): Learning rate of the policy optimizer.
@@ -53,6 +55,7 @@ class BC(RLAlgorithm):
         *,
         batch_size,
         source=None,
+        sampler=None,
         policy_optimizer=torch.optim.Adam,
         policy_lr=_Default(1e-3),
         loss='log_prob',
@@ -80,11 +83,12 @@ class BC(RLAlgorithm):
         self.exploration_policy = None
         self.policy = None
         self.max_episode_length = env_spec.max_episode_length
-        self.sampler_cls = None
+        self.sampler = sampler
         if isinstance(self._source, Policy):
             self.exploration_policy = self._source
-            self.sampler_cls = RaySampler
             self._source = source
+            if not isinstance(self.sampler, Sampler):
+                raise TypeError('Source is a policy. Missing a sampler.')
         else:
             self._source = itertools.cycle(iter(source))
 

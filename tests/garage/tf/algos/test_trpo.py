@@ -14,10 +14,8 @@ from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
 from garage.tf.baselines import GaussianCNNBaseline, GaussianMLPBaseline
 from garage.tf.optimizers import FiniteDifferenceHVP
-from garage.tf.policies import (CategoricalCNNPolicy,
-                                CategoricalGRUPolicy,
-                                CategoricalLSTMPolicy,
-                                GaussianMLPPolicy)
+from garage.tf.policies import (CategoricalCNNPolicy, CategoricalGRUPolicy,
+                                CategoricalLSTMPolicy, GaussianMLPPolicy)
 from garage.trainer import TFTrainer
 
 from tests.fixtures import snapshot_config, TfGraphTestCase
@@ -41,6 +39,11 @@ class TestTRPO(TfGraphTestCase):
             env_spec=self.env.spec,
             hidden_sizes=(32, 32),
         )
+        self.sampler = LocalSampler(
+            agents=self.policy,
+            envs=self.env,
+            max_episode_length=self.env.spec.max_episode_length,
+            is_tf_worker=True)
 
     @pytest.mark.mujoco_long
     def test_trpo_pendulum(self):
@@ -49,10 +52,11 @@ class TestTRPO(TfGraphTestCase):
             algo = TRPO(env_spec=self.env.spec,
                         policy=self.policy,
                         baseline=self.baseline,
+                        sampler=self.sampler,
                         discount=0.99,
                         gae_lambda=0.98,
                         policy_ent_coeff=0.0)
-            trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+            trainer.setup(algo, self.env)
             last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
@@ -64,6 +68,7 @@ class TestTRPO(TfGraphTestCase):
                 env_spec=self.env.spec,
                 policy=self.policy,
                 baseline=self.baseline,
+                sampler=self.sampler,
                 discount=0.99,
                 gae_lambda=0.98,
                 policy_ent_coeff=0.0,
@@ -77,11 +82,12 @@ class TestTRPO(TfGraphTestCase):
             algo = TRPO(env_spec=self.env.spec,
                         policy=self.policy,
                         baseline=self.baseline,
+                        sampler=self.sampler,
                         discount=0.99,
                         gae_lambda=0.98,
                         policy_ent_coeff=0.0,
                         kl_constraint='soft')
-            trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+            trainer.setup(algo, self.env)
             last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 45
 
@@ -94,16 +100,23 @@ class TestTRPO(TfGraphTestCase):
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True)
+
             algo = TRPO(env_spec=env.spec,
                         policy=policy,
                         baseline=baseline,
+                        sampler=sampler,
                         discount=0.99,
                         max_kl_step=0.01,
                         optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
                             base_eps=1e-5)))
 
             snapshotter.snapshot_dir = './'
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.setup(algo, env)
             last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 60
 
@@ -119,15 +132,22 @@ class TestTRPO(TfGraphTestCase):
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True)
+
             algo = TRPO(env_spec=env.spec,
                         policy=policy,
                         baseline=baseline,
+                        sampler=sampler,
                         discount=0.99,
                         max_kl_step=0.01,
                         optimizer_args=dict(hvp_approach=FiniteDifferenceHVP(
                             base_eps=1e-5)))
 
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.setup(algo, env)
             last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
@@ -159,15 +179,22 @@ class TestTRPOCNNCubeCrash(TfGraphTestCase):
                                            hidden_sizes=(32, 32),
                                            use_trust_region=True)
 
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True)
+
             algo = TRPO(env_spec=env.spec,
                         policy=policy,
                         baseline=baseline,
+                        sampler=sampler,
                         discount=0.99,
                         gae_lambda=0.98,
                         max_kl_step=0.01,
                         policy_ent_coeff=0.0)
 
-            trainer.setup(algo, env, sampler_cls=LocalSampler)
+            trainer.setup(algo, env)
             last_avg_ret = trainer.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > -1.5
 

@@ -41,6 +41,7 @@ class PEARL(MetaRLAlgorithm):
         inner_policy (garage.torch.policies.Policy): Policy.
         qf (torch.nn.Module): Q-function.
         vf (torch.nn.Module): Value function.
+        sampler (garage.sampler.Sampler): Sampler.
         num_train_tasks (int): Number of tasks for training.
         num_test_tasks (int or None): Number of tasks for testing.
         latent_dim (int): Size of latent context vector.
@@ -96,6 +97,7 @@ class PEARL(MetaRLAlgorithm):
             inner_policy,
             qf,
             vf,
+            sampler,
             *,  # Mostly numbers after here.
             num_train_tasks,
             num_test_tasks=None,
@@ -163,6 +165,8 @@ class PEARL(MetaRLAlgorithm):
         self._task_idx = None
         self._single_env = env[0]()
         self.max_episode_length = self._single_env.spec.max_episode_length
+
+        self.sampler = sampler
 
         self._is_resuming = False
 

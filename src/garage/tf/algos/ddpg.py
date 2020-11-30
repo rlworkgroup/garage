@@ -7,7 +7,6 @@ import tensorflow as tf
 from garage import (_Default, log_performance, make_optimizer,
                     obtain_evaluation_episodes)
 from garage.np.algos import RLAlgorithm
-from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf import compile_function, get_target_ops
 
 # yapf: enable
@@ -30,6 +29,7 @@ class DDPG(RLAlgorithm):
         policy (Policy): Policy.
         qf (object): The q value network.
         replay_buffer (ReplayBuffer): Replay buffer.
+        sampler (garage.sampler.Sampler): Sampler.
         steps_per_epoch (int): Number of train_once calls per epoch.
         n_train_steps (int): Training steps.
         buffer_batch_size (int): Batch size of replay buffer.
@@ -66,6 +66,7 @@ class DDPG(RLAlgorithm):
             policy,
             qf,
             replay_buffer,
+            sampler,
             *,  # Everything after this is numbers.
             steps_per_epoch=20,
             n_train_steps=50,
@@ -127,8 +128,7 @@ class DDPG(RLAlgorithm):
         self.policy = policy
         self.exploration_policy = exploration_policy
 
-        self.sampler_cls = LocalSampler
-        self.worker_cls = FragmentWorker
+        self.sampler = sampler
 
         self._init_opt()
 

@@ -8,7 +8,7 @@ from garage.envs import GymEnv, MultiEnvWrapper
 from garage.envs.multi_env_wrapper import round_robin_strategy
 from garage.experiment import deterministic
 from garage.replay_buffer import PathBuffer
-from garage.sampler import LocalSampler
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch import global_device, set_gpu_mode
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
@@ -52,6 +52,7 @@ def test_mtsac_get_log_alpha(monkeypatch):
     mtsac = MTSAC(policy=policy,
                   qf1=qf1,
                   qf2=qf2,
+                  sampler=None,
                   gradient_steps_per_itr=150,
                   eval_env=[env],
                   env_spec=env.spec,
@@ -105,6 +106,7 @@ def test_mtsac_get_log_alpha_incorrect_num_tasks(monkeypatch):
     mtsac = MTSAC(policy=policy,
                   qf1=qf1,
                   qf2=qf2,
+                  sampler=None,
                   gradient_steps_per_itr=150,
                   eval_env=[env],
                   env_spec=env.spec,
@@ -153,9 +155,14 @@ def test_mtsac_inverted_double_pendulum():
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
     num_tasks = 2
     buffer_batch_size = 128
+    sampler = LocalSampler(agents=policy,
+                           envs=env,
+                           max_episode_length=env.spec.max_episode_length,
+                           worker_class=FragmentWorker)
     mtsac = MTSAC(policy=policy,
                   qf1=qf1,
                   qf2=qf2,
+                  sampler=sampler,
                   gradient_steps_per_itr=100,
                   eval_env=[test_envs],
                   env_spec=env.spec,
@@ -166,7 +173,7 @@ def test_mtsac_inverted_double_pendulum():
                   target_update_tau=5e-3,
                   discount=0.99,
                   buffer_batch_size=buffer_batch_size)
-    trainer.setup(mtsac, env, sampler_cls=LocalSampler)
+    trainer.setup(mtsac, env)
     ret = trainer.train(n_epochs=8, batch_size=128, plot=False)
     assert ret > 0
 
@@ -205,6 +212,7 @@ def test_to():
     mtsac = MTSAC(policy=policy,
                   qf1=qf1,
                   qf2=qf2,
+                  sampler=None,
                   gradient_steps_per_itr=150,
                   eval_env=[env],
                   env_spec=env.spec,
@@ -259,9 +267,14 @@ def test_fixed_alpha():
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
     num_tasks = 2
     buffer_batch_size = 128
+    sampler = LocalSampler(agents=policy,
+                           envs=env,
+                           max_episode_length=env.spec.max_episode_length,
+                           worker_class=FragmentWorker)
     mtsac = MTSAC(policy=policy,
                   qf1=qf1,
                   qf2=qf2,
+                  sampler=sampler,
                   gradient_steps_per_itr=100,
                   eval_env=[test_envs],
                   env_spec=env.spec,
@@ -280,7 +293,7 @@ def test_fixed_alpha():
     mtsac.to()
     assert torch.allclose(torch.Tensor([0.5] * num_tasks),
                           mtsac._log_alpha.to('cpu'))
-    trainer.setup(mtsac, env, sampler_cls=LocalSampler)
+    trainer.setup(mtsac, env)
     trainer.train(n_epochs=1, batch_size=128, plot=False)
     assert torch.allclose(torch.Tensor([0.5] * num_tasks),
                           mtsac._log_alpha.to('cpu'))

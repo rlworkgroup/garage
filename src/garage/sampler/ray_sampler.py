@@ -11,28 +11,69 @@ import itertools
 
 import click
 import cloudpickle
+import psutil
 import ray
 
 from garage import EpisodeBatch
+from garage.experiment.deterministic import get_seed
+from garage.sampler.default_worker import DefaultWorker
 from garage.sampler.sampler import Sampler
+from garage.sampler.worker_factory import WorkerFactory
 
 
 class RaySampler(Sampler):
     """Samples episodes in a data-parallel fashion using a Ray cluster.
 
+    The sampler need to be created either from a worker factory or from
+    parameters which can construct a worker factory. See the __init__ method
+    of WorkerFactory for the detail of these parameters.
+
     Args:
-        worker_factory (WorkerFactory): Used for worker behavior.
         agents (list[Policy]): Agents to distribute across workers.
         envs (list[Environment]): Environments to distribute across workers.
+        worker_factory (WorkerFactory): Used for worker behavior. Either this
+            param or params after this are required to construct a sampler.
+        max_episode_length(int): Params used to construct a worker factory.
+            The maximum length episodes which will be sampled.
+        is_tf_worker (bool): Whether it is workers for TFTrainer.
+        seed(int): The seed to use to initialize random number generators.
+        n_workers(int): The number of workers to use.
+        worker_class(type): Class of the workers. Instances should implement
+            the Worker interface.
+        worker_args (dict or None): Additional arguments that should be passed
+            to the worker.
 
     """
 
-    def __init__(self, worker_factory, agents, envs):
+    def __init__(
+            self,
+            agents,
+            envs,
+            *,  # After this require passing by keyword.
+            worker_factory=None,
+            max_episode_length=None,
+            is_tf_worker=False,
+            seed=get_seed(),
+            n_workers=psutil.cpu_count(logical=False),
+            worker_class=DefaultWorker,
+            worker_args=None):
         # pylint: disable=super-init-not-called
         if not ray.is_initialized():
             ray.init(log_to_driver=False, ignore_reinit_error=True)
+        if worker_factory is None and max_episode_length is None:
+            raise TypeError('Must construct a sampler from WorkerFactory or'
+                            'parameters (at least max_episode_length)')
+        if isinstance(worker_factory, WorkerFactory):
+            self._worker_factory = worker_factory
+        else:
+            self._worker_factory = WorkerFactory(
+                max_episode_length=max_episode_length,
+                is_tf_worker=is_tf_worker,
+                seed=seed,
+                n_workers=n_workers,
+                worker_class=worker_class,
+                worker_args=worker_args)
         self._sampler_worker = ray.remote(SamplerWorker)
-        self._worker_factory = worker_factory
         self._agents = agents
         self._envs = self._worker_factory.prepare_worker_messages(envs)
         self._all_workers = defaultdict(None)
@@ -62,7 +103,7 @@ class RaySampler(Sampler):
             Sampler: An instance of `cls`.
 
         """
-        return cls(worker_factory, agents, envs)
+        return cls(agents, envs, worker_factory=worker_factory)
 
     def start_worker(self):
         """Initialize a new ray worker."""
@@ -257,6 +298,28 @@ class RaySampler(Sampler):
         for worker in self._all_workers.values():
             worker.shutdown.remote()
         ray.shutdown()
+
+    def __getstate__(self):
+        """Get the pickle state.
+
+        Returns:
+            dict: The pickled state.
+
+        """
+        return dict(factory=self._worker_factory,
+                    agents=self._agents,
+                    envs=self._envs)
+
+    def __setstate__(self, state):
+        """Unpickle the state.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
+        self.__init__(state['agents'],
+                      state['envs'],
+                      worker_factory=state['factory'])
 
 
 class SamplerWorker:

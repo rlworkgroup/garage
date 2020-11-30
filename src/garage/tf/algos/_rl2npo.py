@@ -16,6 +16,7 @@ class RL2NPO(NPO):
         env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.StochasticPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
+        sampler (garage.sampler.Sampler): Sampler.
         scope (str): Scope for identifying the algorithm.
             Must be specified if running multiple algorithms
             simultaneously, each using different environments

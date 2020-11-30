@@ -88,6 +88,13 @@ class TestPEARL:
             env_spec=augmented_env,
             hidden_sizes=[net_size, net_size, net_size])
 
+        sampler = LocalSampler(
+            agents=None,
+            envs=env[0](),
+            max_episode_length=env[0]().spec.max_episode_length,
+            n_workers=1,
+            worker_class=PEARLWorker)
+
         pearl = PEARL(
             env=env,
             policy_class=ContextConditionedPolicy,
@@ -95,6 +102,7 @@ class TestPEARL:
             inner_policy=inner_policy,
             qf=qf,
             vf=vf,
+            sampler=sampler,
             num_train_tasks=params['num_train_tasks'],
             latent_dim=params['latent_size'],
             encoder_hidden_sizes=params['encoder_hidden_sizes'],
@@ -117,11 +125,7 @@ class TestPEARL:
             pearl.to()
 
         trainer = Trainer(snapshot_config)
-        trainer.setup(algo=pearl,
-                      env=env[0](),
-                      sampler_cls=LocalSampler,
-                      n_workers=1,
-                      worker_class=PEARLWorker)
+        trainer.setup(algo=pearl, env=env[0]())
 
         trainer.train(n_epochs=params['num_epochs'],
                       batch_size=params['batch_size'])
@@ -151,6 +155,7 @@ class TestPEARL:
                       inner_policy=inner_policy,
                       qf=qf,
                       vf=vf,
+                      sampler=None,
                       num_train_tasks=5,
                       num_test_tasks=5,
                       latent_dim=5,

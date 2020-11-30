@@ -5,6 +5,7 @@ from garage.envs import normalize, PointEnv
 from garage.envs.multi_env_wrapper import MultiEnvWrapper
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import RaySampler
 from garage.tf.algos import TRPO
 from garage.tf.policies import GaussianMLPPolicy
 from garage.trainer import TFTrainer
@@ -31,9 +32,15 @@ def multi_env_trpo(ctxt=None, seed=1):
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+        sampler = RaySampler(agents=policy,
+                             envs=env,
+                             max_episode_length=env.spec.max_episode_length,
+                             is_tf_worker=True)
+
         algo = TRPO(env_spec=env.spec,
                     policy=policy,
                     baseline=baseline,
+                    sampler=sampler,
                     discount=0.99,
                     gae_lambda=0.95,
                     lr_clip_range=0.2,

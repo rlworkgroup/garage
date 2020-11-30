@@ -11,6 +11,7 @@ from garage import wrap_experiment
 from garage.envs import GymEnv
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import RaySampler
 from garage.tf.algos import VPG
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.trainer import TFTrainer
@@ -37,9 +38,15 @@ def vpg_cartpole(ctxt=None, seed=1):
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+        sampler = RaySampler(agents=policy,
+                             envs=env,
+                             max_episode_length=env.spec.max_episode_length,
+                             is_tf_worker=True)
+
         algo = VPG(env_spec=env.spec,
                    policy=policy,
                    baseline=baseline,
+                   sampler=sampler,
                    discount=0.99,
                    optimizer_args=dict(learning_rate=0.01, ))
 

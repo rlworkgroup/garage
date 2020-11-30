@@ -15,6 +15,7 @@ from garage.envs import GymEnv
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddGaussianNoise
 from garage.replay_buffer import PathBuffer
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf.algos import TD3
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
@@ -66,6 +67,12 @@ def td3_pendulum(ctxt=None, seed=1):
 
         replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
 
+        sampler = LocalSampler(agents=exploration_policy,
+                               envs=env,
+                               max_episode_length=env.spec.max_episode_length,
+                               is_tf_worker=True,
+                               worker_class=FragmentWorker)
+
         td3 = TD3(env_spec=env.spec,
                   policy=policy,
                   policy_lr=1e-4,
@@ -73,6 +80,7 @@ def td3_pendulum(ctxt=None, seed=1):
                   qf=qf,
                   qf2=qf2,
                   replay_buffer=replay_buffer,
+                  sampler=sampler,
                   target_update_tau=1e-2,
                   steps_per_epoch=steps_per_epoch,
                   n_train_steps=1,

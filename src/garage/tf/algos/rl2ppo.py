@@ -14,6 +14,7 @@ class RL2PPO(RL2):
         env_spec (EnvSpec): Environment specification.
         policy (garage.tf.policies.StochasticPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
+        sampler (garage.sampler.Sampler): Sampler.
         episodes_per_trial (int): Used to calculate the max episode length for
             the inner algorithm.
         scope (str): Scope for identifying the algorithm.
@@ -62,6 +63,7 @@ class RL2PPO(RL2):
                  env_spec,
                  policy,
                  baseline,
+                 sampler,
                  episodes_per_trial,
                  scope=None,
                  discount=0.99,
@@ -87,6 +89,7 @@ class RL2PPO(RL2):
                          env_spec=env_spec,
                          policy=policy,
                          baseline=baseline,
+                         sampler=sampler,
                          episodes_per_trial=episodes_per_trial,
                          scope=scope,
                          discount=discount,

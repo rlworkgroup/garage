@@ -7,6 +7,7 @@ from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch.algos import DDPG
 from garage.torch.policies import DeterministicMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
@@ -39,10 +40,16 @@ class TestDDPG:
 
         replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
 
+        sampler = LocalSampler(agents=exploration_policy,
+                               envs=env,
+                               max_episode_length=env.spec.max_episode_length,
+                               worker_class=FragmentWorker)
+
         algo = DDPG(env_spec=env.spec,
                     policy=policy,
                     qf=qf,
                     replay_buffer=replay_buffer,
+                    sampler=sampler,
                     steps_per_epoch=20,
                     n_train_steps=50,
                     min_buffer_size=int(1e4),
@@ -81,10 +88,16 @@ class TestDDPG:
 
         replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
 
+        sampler = LocalSampler(agents=exploration_policy,
+                               envs=env,
+                               max_episode_length=env.spec.max_episode_length,
+                               worker_class=FragmentWorker)
+
         algo = DDPG(env_spec=env.spec,
                     policy=policy,
                     qf=qf,
                     replay_buffer=replay_buffer,
+                    sampler=sampler,
                     steps_per_epoch=20,
                     n_train_steps=50,
                     min_buffer_size=int(1e4),

@@ -71,10 +71,14 @@ class TestMAMLVPG:
         meta_evaluator = MetaEvaluator(test_task_sampler=task_sampler,
                                        n_test_tasks=1,
                                        n_test_episodes=10)
-
+        sampler = LocalSampler(
+            agents=self.policy,
+            envs=self.env,
+            max_episode_length=self.env.spec.max_episode_length)
         trainer = Trainer(snapshot_config)
         algo = MAMLVPG(env=self.env,
                        policy=self.policy,
+                       sampler=sampler,
                        task_sampler=self.task_sampler,
                        value_function=self.value_function,
                        meta_batch_size=5,
@@ -84,7 +88,7 @@ class TestMAMLVPG:
                        num_grad_updates=1,
                        meta_evaluator=meta_evaluator)
 
-        trainer.setup(algo, self.env, sampler_cls=LocalSampler)
+        trainer.setup(algo, self.env)
         last_avg_ret = trainer.train(n_epochs=10,
                                      batch_size=episodes_per_task *
                                      max_episode_length)

@@ -19,6 +19,7 @@ from garage.envs.wrappers.stack_frames import StackFrames
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf.algos import DQN
 from garage.tf.policies import DiscreteQFArgmaxPolicy
 from garage.tf.q_functions import DiscreteCNNQFunction
@@ -83,11 +84,18 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
                                                  min_epsilon=0.02,
                                                  decay_ratio=0.1)
 
+        sampler = LocalSampler(agents=exploration_policy,
+                               envs=env,
+                               max_episode_length=env.spec.max_episode_length,
+                               is_tf_worker=True,
+                               worker_class=FragmentWorker)
+
         algo = DQN(env_spec=env.spec,
                    policy=policy,
                    qf=qf,
                    exploration_policy=exploration_policy,
                    replay_buffer=replay_buffer,
+                   sampler=sampler,
                    qf_lr=1e-4,
                    discount=0.99,
                    min_buffer_size=int(1e4),
