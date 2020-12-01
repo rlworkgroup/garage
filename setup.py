@@ -40,6 +40,9 @@ EXTRAS['gym'] = [
 
 EXTRAS['mujoco'] = [
     'mujoco-py>=2.0,<=2.0.2.8',
+    # Currently gym is not compatible with mujoco 2.0 because of poor
+    # performance. So here we just install imageio to meet the dependency
+    # requirement of gym's mujoco extra.
     'imageio',
 ]
 
