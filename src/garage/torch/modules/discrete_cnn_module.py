@@ -1,7 +1,7 @@
-"""Discrete CNN Module."""
-import torch
+"""Discrete CNN Q Function."""
 from torch import nn
 
+from garage import InOutSpec
 from garage.torch.modules import CNNModule, MLPModule
 
 
@@ -14,9 +14,13 @@ class DiscreteCNNModule(nn.Module):
     of discrete outputs.
 
     Args:
-        input_shape (tuple[int]): Shape of the input. Based on 'NCHW' data
-            format: [batch_size, channel, height, width].
-        output_dim (int): Output dimension of the fully-connected layer.
+        spec (garage.InOutSpec): Specification of inputs and outputs.
+            The input should be in 'NCHW' format: [batch_size, channel, height,
+            width]. Will print a warning if the channel size is not 1 or 3.
+            The output space will be flattened.
+        image_format (str): Either 'NCHW' or 'NHWC'. Should match the input
+            specification. Gym uses NHWC by default, but PyTorch uses NCHW by
+            default.
         kernel_sizes (tuple[int]): Dimension of the conv filters.
             For example, (3, 5) means there are two convolutional layers.
             The filter for first layer is of dimension (3 x 3)
@@ -63,12 +67,12 @@ class DiscreteCNNModule(nn.Module):
             of output dense layer(s). The function should return a
             torch.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
-        is_image (bool): If true, the inputs are normalized by dividing by 255.
     """
 
     def __init__(self,
-                 input_shape,
-                 output_dim,
+                 spec,
+                 image_format,
+                 *,
                  kernel_sizes,
                  hidden_channels,
                  strides,
@@ -85,13 +89,13 @@ class DiscreteCNNModule(nn.Module):
                  output_nonlinearity=None,
                  output_w_init=nn.init.xavier_uniform_,
                  output_b_init=nn.init.zeros_,
-                 layer_normalization=False,
-                 is_image=True):
+                 layer_normalization=False):
 
         super().__init__()
 
-        input_var = torch.zeros(input_shape)
-        cnn_module = CNNModule(input_var=input_var,
+        cnn_spec = InOutSpec(input_space=spec.input_space, output_space=None)
+        cnn_module = CNNModule(spec=cnn_spec,
+                               image_format=image_format,
                                kernel_sizes=kernel_sizes,
                                strides=strides,
                                hidden_w_init=hidden_w_init,
@@ -103,13 +107,10 @@ class DiscreteCNNModule(nn.Module):
                                max_pool=max_pool,
                                layer_normalization=layer_normalization,
                                pool_shape=pool_shape,
-                               pool_stride=pool_stride,
-                               is_image=is_image)
+                               pool_stride=pool_stride)
+        flat_dim = cnn_module.spec.output_space.flat_dim
 
-        with torch.no_grad():
-            cnn_out = cnn_module(input_var)
-        flat_dim = torch.flatten(cnn_out, start_dim=1).shape[1]
-
+        output_dim = spec.output_space.flat_dim
         mlp_module = MLPModule(flat_dim,
                                output_dim,
                                hidden_sizes,
