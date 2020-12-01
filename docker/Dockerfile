@@ -97,7 +97,7 @@ RUN python -m virtualenv $VIRTUAL_ENV
 ENV PATH "$VIRTUAL_ENV/bin:$PATH"
 
 # Prevent pip from complaining about available upgrades inside virtualenv
-RUN pip install --upgrade pip setuptools wheel && \
+RUN pip install "pip<20.3" && pip install --upgrade setuptools wheel && \
   rm -r $HOME/.cache/pip
 
 # We need a MuJoCo key to install mujoco_py
