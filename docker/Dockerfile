@@ -178,7 +178,7 @@ RUN git init && \
   rm -r $HOME/.cache/pip
 
 # Install deps (but not the code)
-RUN pip install --upgrade pip setuptools wheel && \
+RUN pip install "pip<=20.2.4" && pip install --upgrade setuptools wheel && \
   pip install .[all,dev] && \
   rm $MJKEY_PATH && \
   rm -r $HOME/.cache/pip
