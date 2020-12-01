@@ -139,7 +139,7 @@ def dqn_atari(ctxt=None,
     env = Resize(env, 84, 84)
     env = ClipReward(env)
     env = StackFrames(env, 4, axis=0)
-    env = GymEnv(env, max_episode_length=max_episode_length)
+    env = GymEnv(env, max_episode_length=max_episode_length, is_image=True)
     set_seed(seed)
     trainer = Trainer(ctxt)
 
@@ -152,13 +152,13 @@ def dqn_atari(ctxt=None,
 
     qf = DiscreteCNNQFunction(
         env_spec=env.spec,
+        image_format='NCHW',
         hidden_channels=hyperparams['hidden_channels'],
         kernel_sizes=hyperparams['kernel_sizes'],
         strides=hyperparams['strides'],
         hidden_w_init=(
             lambda x: torch.nn.init.orthogonal_(x, gain=np.sqrt(2))),
-        hidden_sizes=hyperparams['hidden_sizes'],
-        is_image=True)
+        hidden_sizes=hyperparams['hidden_sizes'])
 
     policy = DiscreteQFArgmaxPolicy(env_spec=env.spec, qf=qf)
     exploration_policy = EpsilonGreedyPolicy(

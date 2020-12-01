@@ -2,12 +2,13 @@
 import torch
 from torch import nn
 
+from garage import InOutSpec
 from garage.torch.modules import DiscreteCNNModule
 
 
 # pytorch v1.6 issue, see https://github.com/pytorch/pytorch/issues/42305
 # pylint: disable=abstract-method
-class DiscreteCNNQFunction(DiscreteCNNModule):
+class DiscreteCNNQFunction(nn.Module):
     """Discrete CNN Q Function.
 
     A Q network that estimates Q values of all possible discrete actions.
@@ -16,6 +17,9 @@ class DiscreteCNNQFunction(DiscreteCNNModule):
 
     Args:
         env_spec (EnvSpec): Environment specification.
+        image_format (str): Either 'NCHW' or 'NHWC'. Should match the input
+            specification. Gym uses NHWC by default, but PyTorch uses NCHW by
+            default.
         kernel_sizes (tuple[int]): Dimension of the conv filters.
             For example, (3, 5) means there are two convolutional layers.
             The filter for first layer is of dimension (3 x 3)
@@ -62,11 +66,12 @@ class DiscreteCNNQFunction(DiscreteCNNModule):
             of output dense layer(s). The function should return a
             torch.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
-        is_image (bool): If true, the inputs are normalized by dividing by 255.
     """
 
     def __init__(self,
                  env_spec,
+                 image_format,
+                 *,
                  kernel_sizes,
                  hidden_channels,
                  strides,
@@ -83,32 +88,32 @@ class DiscreteCNNQFunction(DiscreteCNNModule):
                  output_nonlinearity=None,
                  output_w_init=nn.init.xavier_uniform_,
                  output_b_init=nn.init.zeros_,
-                 layer_normalization=False,
-                 is_image=True):
+                 layer_normalization=False):
+        super().__init__()
 
         self._env_spec = env_spec
-        input_shape = (1, ) + env_spec.observation_space.shape
-        output_dim = env_spec.action_space.flat_dim
-        super().__init__(input_shape=input_shape,
-                         output_dim=output_dim,
-                         kernel_sizes=kernel_sizes,
-                         strides=strides,
-                         hidden_sizes=hidden_sizes,
-                         hidden_channels=hidden_channels,
-                         cnn_hidden_nonlinearity=cnn_hidden_nonlinearity,
-                         mlp_hidden_nonlinearity=mlp_hidden_nonlinearity,
-                         hidden_w_init=hidden_w_init,
-                         hidden_b_init=hidden_b_init,
-                         paddings=paddings,
-                         padding_mode=padding_mode,
-                         max_pool=max_pool,
-                         pool_shape=pool_shape,
-                         pool_stride=pool_stride,
-                         output_nonlinearity=output_nonlinearity,
-                         output_w_init=output_w_init,
-                         output_b_init=output_b_init,
-                         layer_normalization=layer_normalization,
-                         is_image=is_image)
+
+        self._cnn_module = DiscreteCNNModule(
+            spec=InOutSpec(input_space=env_spec.observation_space,
+                           output_space=env_spec.action_space),
+            image_format=image_format,
+            kernel_sizes=kernel_sizes,
+            hidden_channels=hidden_channels,
+            strides=strides,
+            hidden_sizes=hidden_sizes,
+            cnn_hidden_nonlinearity=cnn_hidden_nonlinearity,
+            mlp_hidden_nonlinearity=mlp_hidden_nonlinearity,
+            hidden_w_init=hidden_w_init,
+            hidden_b_init=hidden_b_init,
+            paddings=paddings,
+            padding_mode=padding_mode,
+            max_pool=max_pool,
+            pool_shape=pool_shape,
+            pool_stride=pool_stride,
+            output_nonlinearity=output_nonlinearity,
+            output_w_init=output_w_init,
+            output_b_init=output_b_init,
+            layer_normalization=layer_normalization)
 
     # pylint: disable=arguments-differ
     def forward(self, observations):
@@ -120,10 +125,7 @@ class DiscreteCNNQFunction(DiscreteCNNModule):
         Returns:
             torch.Tensor: Output value
         """
-        if observations.shape != self._env_spec.observation_space.shape:
-            # avoid using observation_space.unflatten_n
-            # to support tensors on GPUs
-            obs_shape = ((len(observations), ) +
-                         self._env_spec.observation_space.shape)
-            observations = observations.reshape(obs_shape)
-        return super().forward(observations)
+        # We're given flattened observations.
+        observations = observations.reshape(
+            -1, *self._env_spec.observation_space.shape)
+        return self._cnn_module(observations)

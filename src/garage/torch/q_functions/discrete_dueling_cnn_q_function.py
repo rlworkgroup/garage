@@ -2,12 +2,13 @@
 import torch
 from torch import nn
 
-from garage.torch.modules import DiscreteDuelingCNNModule
+from garage import InOutSpec
+from garage.torch.modules import CNNModule, MLPModule
 
 
 # pytorch v1.6 issue, see https://github.com/pytorch/pytorch/issues/42305
 # pylint: disable=abstract-method
-class DiscreteDuelingCNNQFunction(DiscreteDuelingCNNModule):
+class DiscreteDuelingCNNQFunction(nn.Module):
     """Discrete Dueling CNN Q Function.
 
     A dueling Q network that estimates Q values of all possible discrete
@@ -17,6 +18,9 @@ class DiscreteDuelingCNNQFunction(DiscreteDuelingCNNModule):
 
     Args:
         env_spec (EnvSpec): Environment specification.
+        image_format (str): Either 'NCHW' or 'NHWC'. Should match the input
+            specification. Gym uses NHWC by default, but PyTorch uses NCHW by
+            default.
         kernel_sizes (tuple[int]): Dimension of the conv filters.
             For example, (3, 5) means there are two convolutional layers.
             The filter for first layer is of dimension (3 x 3)
@@ -63,11 +67,12 @@ class DiscreteDuelingCNNQFunction(DiscreteDuelingCNNModule):
             of output dense layer(s). The function should return a
             torch.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
-        is_image (bool): If true, the inputs are normalized by dividing by 255.
     """
 
     def __init__(self,
                  env_spec,
+                 image_format,
+                 *,
                  kernel_sizes,
                  hidden_channels,
                  strides,
@@ -84,32 +89,56 @@ class DiscreteDuelingCNNQFunction(DiscreteDuelingCNNModule):
                  output_nonlinearity=None,
                  output_w_init=nn.init.xavier_uniform_,
                  output_b_init=nn.init.zeros_,
-                 layer_normalization=False,
-                 is_image=True):
+                 layer_normalization=False):
+        super().__init__()
 
         self._env_spec = env_spec
-        input_shape = (1, ) + env_spec.observation_space.shape
-        output_dim = env_spec.action_space.flat_dim
-        super().__init__(input_shape=input_shape,
-                         output_dim=output_dim,
-                         kernel_sizes=kernel_sizes,
-                         strides=strides,
-                         hidden_sizes=hidden_sizes,
-                         hidden_channels=hidden_channels,
-                         cnn_hidden_nonlinearity=cnn_hidden_nonlinearity,
-                         mlp_hidden_nonlinearity=mlp_hidden_nonlinearity,
-                         hidden_w_init=hidden_w_init,
-                         hidden_b_init=hidden_b_init,
-                         paddings=paddings,
-                         padding_mode=padding_mode,
-                         max_pool=max_pool,
-                         pool_shape=pool_shape,
-                         pool_stride=pool_stride,
-                         output_nonlinearity=output_nonlinearity,
-                         output_w_init=output_w_init,
-                         output_b_init=output_b_init,
-                         layer_normalization=layer_normalization,
-                         is_image=is_image)
+        cnn_spec = InOutSpec(input_space=env_spec.observation_space,
+                             output_space=None)
+
+        cnn_module = CNNModule(spec=cnn_spec,
+                               image_format=image_format,
+                               kernel_sizes=kernel_sizes,
+                               strides=strides,
+                               hidden_w_init=hidden_w_init,
+                               hidden_b_init=hidden_b_init,
+                               hidden_channels=hidden_channels,
+                               hidden_nonlinearity=cnn_hidden_nonlinearity,
+                               paddings=paddings,
+                               padding_mode=padding_mode,
+                               max_pool=max_pool,
+                               layer_normalization=layer_normalization,
+                               pool_shape=pool_shape,
+                               pool_stride=pool_stride)
+
+        # CNNModule computes output dimensionality
+        flat_dim = cnn_module.spec.output_space.flat_dim
+
+        self._val = MLPModule(flat_dim,
+                              1,
+                              hidden_sizes,
+                              hidden_nonlinearity=mlp_hidden_nonlinearity,
+                              hidden_w_init=hidden_w_init,
+                              hidden_b_init=hidden_b_init,
+                              output_nonlinearity=output_nonlinearity,
+                              output_w_init=output_w_init,
+                              output_b_init=output_b_init,
+                              layer_normalization=layer_normalization)
+        self._act = MLPModule(flat_dim,
+                              env_spec.action_space.flat_dim,
+                              hidden_sizes,
+                              hidden_nonlinearity=mlp_hidden_nonlinearity,
+                              hidden_w_init=hidden_w_init,
+                              hidden_b_init=hidden_b_init,
+                              output_nonlinearity=output_nonlinearity,
+                              output_w_init=output_w_init,
+                              output_b_init=output_b_init,
+                              layer_normalization=layer_normalization)
+        if mlp_hidden_nonlinearity is None:
+            self._module = nn.Sequential(cnn_module, nn.Flatten())
+        else:
+            self._module = nn.Sequential(cnn_module, mlp_hidden_nonlinearity(),
+                                         nn.Flatten())
 
     # pylint: disable=arguments-differ
     def forward(self, observations):
@@ -121,10 +150,11 @@ class DiscreteDuelingCNNQFunction(DiscreteDuelingCNNModule):
         Returns:
             torch.Tensor: Output value
         """
-        if observations.shape != self._env_spec.observation_space.shape:
-            # avoid using observation_space.unflatten_n
-            # to support tensors on GPUs
-            obs_shape = ((len(observations), ) +
-                         self._env_spec.observation_space.shape)
-            observations = observations.reshape(obs_shape)
-        return super().forward(observations)
+        # We're given flattened observations.
+        observations = observations.reshape(
+            -1, *self._env_spec.observation_space.shape)
+        out = self._module(observations)
+        val = self._val(out)
+        act = self._act(out)
+        act = act - act.mean(1).unsqueeze(1)
+        return val + act

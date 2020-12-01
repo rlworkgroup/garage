@@ -1,21 +1,36 @@
 """CNN Module."""
-import copy
+import warnings
 
+import akro
+import numpy as np
 import torch
 from torch import nn
 
-from garage.torch import flatten_to_single_vector, NonLinearity
+from garage import InOutSpec
+from garage.torch import (expand_var, NonLinearity, output_height_2d,
+                          output_width_2d)
 
 
 # pytorch v1.6 issue, see https://github.com/pytorch/pytorch/issues/42305
 # pylint: disable=abstract-method
-# pylint: disable=unused-argument
 class CNNModule(nn.Module):
     """Convolutional neural network (CNN) model in pytorch.
 
     Args:
-        input_var (pytorch.tensor): Input tensor of the model.
-            Based on 'NCHW' data format: [batch_size, channel, height, width].
+        spec (garage.InOutSpec): Specification of inputs and outputs.
+            The input should be in 'NCHW' format: [batch_size, channel, height,
+            width]. Will print a warning if the channel size is not 1 or 3.
+            If output_space is specified, then a final linear layer will be
+            inserted to map to that dimensionality.
+            If output_space is None, it will be filled in with the computed
+            output space.
+        image_format (str): Either 'NCHW' or 'NHWC'. Should match the input
+            specification. Gym uses NHWC by default, but PyTorch uses NCHW by
+            default.
+        hidden_channels (tuple[int]): Number of output channels for CNN.
+            For example, (3, 32) means there are two convolutional layers.
+            The filter for the first conv layer outputs 3 channels
+            and the second one outputs 32 channels.
         kernel_sizes (tuple[int]): Dimension of the conv filters.
             For example, (3, 5) means there are two convolutional layers.
             The filter for first layer is of dimension (3 x 3)
@@ -23,25 +38,18 @@ class CNNModule(nn.Module):
         strides (tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
-        hidden_channels (tuple[int]): Number of output channels for CNN.
-            For example, (3, 32) means there are two convolutional layers.
-            The filter for the first conv layer outputs 3 channels
-            and the second one outputs 32 channels.
-        hidden_nonlinearity (callable or torch.nn.Module):
-            Activation function for intermediate dense layer(s).
-            It should return a torch.Tensor. Set it to None to maintain a
-            linear activation.
-        hidden_w_init (callable): Initializer function for the weight
-            of intermediate dense layer(s). The function should return a
-            torch.Tensor.
-        hidden_b_init (callable): Initializer function for the bias
-            of intermediate dense layer(s). The function should return a
-            torch.Tensor.
         paddings (tuple[int]): Amount of zero-padding added to both sides of
             the input of a conv layer.
         padding_mode (str): The type of padding algorithm to use, i.e.
             'constant', 'reflect', 'replicate' or 'circular' and
             by default is 'zeros'.
+        hidden_nonlinearity (callable or torch.nn.Module):
+            Activation function for intermediate dense layer(s).
+            It should return a torch.Tensor. Set it to None to maintain a
+            linear activation.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            torch.Tensor.
         max_pool (bool): Bool for using max-pooling or not.
         pool_shape (tuple[int]): Dimension of the pooling layer(s). For
             example, (2, 2) means that all pooling layers are of the same
@@ -50,174 +58,188 @@ class CNNModule(nn.Module):
             example, (2, 2) means that all the pooling layers have
             strides (2, 2).
         layer_normalization (bool): Bool for using layer normalization or not.
-        n_layers (int): number of convolutional layer.
-        is_image (bool): Whether observations are images or not.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            torch.Tensor.
+
+    Raises:
+        ValueError: If spec or other arguments are inconsistent.
+
     """
 
-    def __init__(self,
-                 input_var,
-                 hidden_channels,
-                 kernel_sizes,
-                 strides,
-                 hidden_nonlinearity=nn.ReLU,
-                 hidden_w_init=nn.init.xavier_uniform_,
-                 hidden_b_init=nn.init.zeros_,
-                 paddings=0,
-                 padding_mode='zeros',
-                 max_pool=False,
-                 pool_shape=None,
-                 pool_stride=1,
-                 layer_normalization=False,
-                 n_layers=None,
-                 is_image=True):
-        if len(strides) != len(hidden_channels):
-            raise ValueError('Strides and hidden_channels must have the same'
-                             ' number of dimensions')
+    def __init__(
+            self,
+            spec,
+            image_format,
+            hidden_channels,
+            *,  # Many things after this are ints or tuples of ints.
+            kernel_sizes,
+            strides,
+            paddings=0,
+            padding_mode='zeros',
+            hidden_nonlinearity=nn.ReLU,
+            hidden_w_init=nn.init.xavier_uniform_,
+            hidden_b_init=nn.init.zeros_,
+            max_pool=False,
+            pool_shape=None,
+            pool_stride=1,
+            layer_normalization=False):
         super().__init__()
-        self._hidden_channels = hidden_channels
-        self._kernel_sizes = kernel_sizes
-        self._strides = strides
-        self._hidden_nonlinearity = hidden_nonlinearity
-        self._hidden_w_init = hidden_w_init
-        self._hidden_b_init = hidden_b_init
-        self._paddings = paddings
-        self._padding_mode = padding_mode
-        self._max_pool = max_pool
-        self._pool_shape = pool_shape
-        self._pool_stride = pool_stride
-        self._layer_normalization = layer_normalization
-        self._is_image = is_image
+        assert len(hidden_channels) > 0
+        # PyTorch forces us to use NCHW internally.
+        in_channels, height, width = _check_spec(spec, image_format)
+        self._format = image_format
+        kernel_sizes = expand_var('kernel_sizes', kernel_sizes,
+                                  len(hidden_channels), 'hidden_channels')
+        strides = expand_var('strides', strides, len(hidden_channels),
+                             'hidden_channels')
+        paddings = expand_var('paddings', paddings, len(hidden_channels),
+                              'hidden_channels')
+        pool_shape = expand_var('pool_shape', pool_shape, len(hidden_channels),
+                                'hidden_channels')
+        pool_stride = expand_var('pool_stride', pool_stride,
+                                 len(hidden_channels), 'hidden_channels')
 
-        self._cnn_layers = nn.ModuleList()
-        self._in_channel = input_var.shape[1]  # read in N, C, H, W
-        self._CNNCell()
+        self._cnn_layers = nn.Sequential()
 
-    @classmethod
-    def _check_parameter_for_output_layer(cls, var, n_layers):
-        """Check input parameters for conv layer are valid.
+        # In case there are no hidden channels, handle output case.
+        out_channels = in_channels
+        for i, out_channels in enumerate(hidden_channels):
+            conv_layer = nn.Conv2d(in_channels=in_channels,
+                                   out_channels=out_channels,
+                                   kernel_size=kernel_sizes[i],
+                                   stride=strides[i],
+                                   padding=paddings[i],
+                                   padding_mode=padding_mode)
+            height = output_height_2d(conv_layer, height)
+            width = output_width_2d(conv_layer, width)
+            hidden_w_init(conv_layer.weight)
+            hidden_b_init(conv_layer.bias)
+            self._cnn_layers.add_module(f'conv_{i}', conv_layer)
 
-        Args:
-            var (any): variable to be checked
-            n_layers (int): number of layers
+            if layer_normalization:
+                self._cnn_layers.add_module(
+                    f'layer_norm_{i}',
+                    nn.LayerNorm((out_channels, height, width)))
 
-        Returns:
-            list: list of variables (length of n_layers)
+            if hidden_nonlinearity:
+                self._cnn_layers.add_module(f'non_linearity_{i}',
+                                            NonLinearity(hidden_nonlinearity))
 
-        Raises:
-            ValueError: if the variable is a list but length of the variable
-                is not equal to n_layers
+            if max_pool:
+                pool = nn.MaxPool2d(kernel_size=pool_shape[i],
+                                    stride=pool_stride[i])
+                height = output_height_2d(pool, height)
+                width = output_width_2d(pool, width)
+                self._cnn_layers.add_module(f'max_pooling_{i}', pool)
 
-        """
-        if isinstance(var, (list, tuple)):
-            if len(var) == 1:
-                return list(var) * n_layers
-            if len(var) == n_layers:
-                return var
-            msg = ('{} should be either an integer or a collection of length '
-                   'n_layers ({}), but got {} instead.')
-            raise ValueError(msg.format(str(var), n_layers, var))
-        return [copy.deepcopy(var) for _ in range(n_layers)]
+            in_channels = out_channels
+
+        output_dims = out_channels * height * width
+
+        if spec.output_space is None:
+            final_spec = InOutSpec(
+                spec.input_space,
+                akro.Box(low=-np.inf, high=np.inf, shape=(output_dims, )))
+            self._final_layer = None
+        else:
+            final_spec = spec
+            # Checked at start of __init__
+            self._final_layer = nn.Linear(output_dims,
+                                          spec.output_space.shape[0])
+
+        self.spec = final_spec
 
     # pylint: disable=arguments-differ
-    def forward(self, input_val):
+    def forward(self, x):
         """Forward method.
 
         Args:
-            input_val (torch.Tensor): Input values with (N, C, H, W)
-                shape.
+            x (torch.Tensor): Input values. Should match image_format
+                specified at construction (either NCHW or NCWH).
 
         Returns:
             List[torch.Tensor]: Output values
 
         """
-        if self._is_image:
-            input_val = torch.div(input_val, 255.0)
-        x = input_val
+        # Transform single values into batch, if necessary.
+        if len(x.shape) == 3:
+            x = x.unsqueeze(0)
+        # This should be the single place in torch that image normalization
+        # happens
+        if isinstance(self.spec.input_space, akro.Image):
+            x = torch.div(x, 255.0)
+        assert len(x.shape) == 4
+        if self._format == 'NHWC':
+            # Convert to internal NCHW format
+            x = x.permute((0, 3, 1, 2))
         for layer in self._cnn_layers:
             x = layer(x)
-        x = flatten_to_single_vector(x)
+        if self._format == 'NHWC':
+            # Convert back to NHWC (just in case)
+            x = x.permute((0, 2, 3, 1))
+        # Remove non-batch dimensions
+        x = x.reshape(x.shape[0], -1)
+        # Apply final linearity, if it was requested.
+        if self._final_layer is not None:
+            x = self._final_layer(x)
         return x
 
-    def _CNNCell(self):
-        """Helper function for initializing convolutional layer(s)."""
-        prev_channel = self._in_channel
-        for index, (channel, kernel_size, stride) in enumerate(
-                zip(self._hidden_channels, self._kernel_sizes, self._strides)):
-            hidden_layers = nn.Sequential()
 
-            if isinstance(self._paddings, (list, tuple)):
-                padding = self._paddings[index]
-            elif isinstance(self._paddings, int):
-                padding = self._paddings
-
-            # conv 2D layer
-            conv_layer = _conv(in_channels=prev_channel,
-                               out_channels=channel,
-                               kernel_size=kernel_size,
-                               stride=stride,
-                               padding=padding)
-            self._hidden_w_init(conv_layer.weight)
-            self._hidden_b_init(conv_layer.bias)
-            hidden_layers.add_module('conv_{}'.format(index), conv_layer)
-
-            # layer normalization
-            if self._layer_normalization:
-                hidden_layers.add_module('layer_normalization',
-                                         nn.LayerNorm(channel))
-
-            # non-linear function
-            if self._hidden_nonlinearity:
-                hidden_layers.add_module(
-                    'non_linearity', NonLinearity(self._hidden_nonlinearity))
-
-            # max-pooling
-            if self._max_pool:
-                hidden_layers.add_module(
-                    'max_pooling',
-                    nn.MaxPool2d(kernel_size=self._pool_shape,
-                                 stride=self._pool_stride))
-
-            self._cnn_layers.append(hidden_layers)
-            prev_channel = channel
-
-
-def _conv(in_channels,
-          out_channels,
-          kernel_size,
-          stride=1,
-          padding=0,
-          padding_mode='zeros',
-          dilation=1,
-          bias=True):
-    """Helper function for performing convolution.
+def _check_spec(spec, image_format):
+    """Check that an InOutSpec is suitable for a CNNModule.
 
     Args:
-        in_channels (int):
-            Number of channels in the input image
-        out_channels (int):
-            Number of channels produced by the convolution
-        kernel_size (int or tuple):
-            Size of the convolving kernel
-        stride (int or tuple): Stride of the convolution.
-            Default: 1
-        padding (int or tuple): Zero-padding added to both sides
-            of the input. Default: 0
-        padding_mode (string): 'zeros', 'reflect', 'replicate'
-            or 'circular'. Default: 'zeros'
-        dilation (int or tuple): Spacing between kernel elements.
-            Default: 1
-        bias (bool): If True, adds a learnable bias to the output.
-            Default: True
+        spec (garage.InOutSpec): Specification of inputs and outputs.  The
+            input should be in 'NCHW' format: [batch_size, channel, height,
+            width].  Will print a warning if the channel size is not 1 or 3.
+            If output_space is specified, then a final linear layer will be
+            inserted to map to that dimensionality.  If output_space is None,
+            it will be filled in with the computed output space.
+        image_format (str): Either 'NCHW' or 'NHWC'. Should match the input
+            specification. Gym uses NHWC by default, but PyTorch uses NCHW by
+            default.
 
     Returns:
-        torch.Tensor: The output of the 2D convolution.
+        tuple[int, int, int]: The input channels, height, and width.
+
+    Raises:
+        ValueError: If spec isn't suitable for a CNNModule.
 
     """
-    return nn.Conv2d(in_channels=in_channels,
-                     out_channels=out_channels,
-                     kernel_size=kernel_size,
-                     stride=stride,
-                     padding=padding,
-                     padding_mode=padding_mode,
-                     dilation=dilation,
-                     bias=bias)
+    # pylint: disable=no-else-raise
+    input_space = spec.input_space
+    output_space = spec.output_space
+    # Don't use isinstance, since akro.Space is guaranteed to inherit from
+    # gym.Space
+    if getattr(input_space, 'shape', None) is None:
+        raise ValueError(
+            f'input_space to CNNModule is {input_space}, but should be an '
+            f'akro.Box or akro.Image')
+    elif len(input_space.shape) != 3:
+        raise ValueError(
+            f'Input to CNNModule is {input_space}, but should have three '
+            f'dimensions.')
+    if (output_space is not None and not (hasattr(output_space, 'shape')
+                                          and len(output_space.shape) == 1)):
+        raise ValueError(
+            f'output_space to CNNModule is {output_space}, but should be '
+            f'an akro.Box with a single dimension or None')
+    if image_format == 'NCHW':
+        in_channels = spec.input_space.shape[0]
+        height = spec.input_space.shape[1]
+        width = spec.input_space.shape[2]
+    elif image_format == 'NHWC':
+        height = spec.input_space.shape[0]
+        width = spec.input_space.shape[1]
+        in_channels = spec.input_space.shape[2]
+    else:
+        raise ValueError(
+            f'image_format has value {image_format!r}, but must be either '
+            f"'NCHW' or 'NHWC'")
+    if in_channels not in (1, 3):
+        warnings.warn(
+            f'CNNModule input has {in_channels} channels, but '
+            f'1 or 3 channels are typical. Consider changing the CNN '
+            f'image_format.')
+    return in_channels, height, width
