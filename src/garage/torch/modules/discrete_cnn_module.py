@@ -1,8 +1,9 @@
 """Discrete CNN Q Function."""
+from dowel import tabular
 import torch
 from torch import nn
 
-from garage.torch.modules import CNNModule, MLPModule
+from garage.torch.modules import CNNModule, MLPModule, NoisyMLPModule
 
 
 # pytorch v1.6 issue, see https://github.com/pytorch/pytorch/issues/42305
@@ -31,6 +32,15 @@ class DiscreteCNNModule(nn.Module):
         hidden_sizes (list[int]): Output dimension of dense layer(s) for
             the MLP for mean. For example, (32, 32) means the MLP consists
             of two hidden layers, each with 32 hidden units.
+        dueling (bool): Whether to use a dueling architecture for the
+            fully-connected layer.
+        noisy (bool): Whether to use parameter noise for the fully-connected
+            layers. If True, hidden_w_init, hidden_b_init, output_w_init, and
+            output_b_init are ignored.
+        noisy_sigma (float): Level of scaling to apply to the parameter noise.
+            This is ignored if noisy is set to False.
+        std_noise (float): Standard deviation of the gaussian parameters noise.
+            This is ignored if noisy is set to False.
         mlp_hidden_nonlinearity (callable): Activation function for
             intermediate dense layer(s) in the MLP. It should return
             a torch.Tensor. Set it to None to maintain a linear activation.
@@ -73,11 +83,15 @@ class DiscreteCNNModule(nn.Module):
                  hidden_channels,
                  strides,
                  hidden_sizes=(32, 32),
+                 dueling=False,
                  cnn_hidden_nonlinearity=nn.ReLU,
                  mlp_hidden_nonlinearity=nn.ReLU,
                  hidden_w_init=nn.init.xavier_uniform_,
                  hidden_b_init=nn.init.zeros_,
                  paddings=0,
+                 noisy=True,
+                 noisy_sigma=0.5,
+                 std_noise=1.,
                  padding_mode='zeros',
                  max_pool=False,
                  pool_shape=None,
@@ -89,6 +103,10 @@ class DiscreteCNNModule(nn.Module):
                  is_image=True):
 
         super().__init__()
+
+        self._dueling = dueling
+        self._noisy = noisy
+        self._noisy_layers = None
 
         input_var = torch.zeros(input_shape)
         cnn_module = CNNModule(input_var=input_var,
@@ -109,22 +127,90 @@ class DiscreteCNNModule(nn.Module):
         with torch.no_grad():
             cnn_out = cnn_module(input_var)
         flat_dim = torch.flatten(cnn_out, start_dim=1).shape[1]
-        mlp_module = MLPModule(flat_dim,
-                               output_dim,
-                               hidden_sizes,
-                               hidden_nonlinearity=mlp_hidden_nonlinearity,
-                               hidden_w_init=hidden_w_init,
-                               hidden_b_init=hidden_b_init,
-                               output_nonlinearity=output_nonlinearity,
-                               output_w_init=output_w_init,
-                               output_b_init=output_b_init,
-                               layer_normalization=layer_normalization)
 
-        if mlp_hidden_nonlinearity is None:
-            self._module = nn.Sequential(cnn_module, nn.Flatten(), mlp_module)
+        if dueling:
+            if noisy:
+                self._val = NoisyMLPModule(
+                    flat_dim,
+                    1,
+                    hidden_sizes,
+                    sigma_naught=noisy_sigma,
+                    std_noise=std_noise,
+                    hidden_nonlinearity=mlp_hidden_nonlinearity,
+                    output_nonlinearity=output_nonlinearity)
+                self._act = NoisyMLPModule(
+                    flat_dim,
+                    output_dim,
+                    hidden_sizes,
+                    sigma_naught=noisy_sigma,
+                    std_noise=std_noise,
+                    hidden_nonlinearity=mlp_hidden_nonlinearity,
+                    output_nonlinearity=output_nonlinearity)
+                self._noisy_layers = [self._val, self._act]
+            else:
+                self._val = MLPModule(
+                    flat_dim,
+                    1,
+                    hidden_sizes,
+                    hidden_nonlinearity=mlp_hidden_nonlinearity,
+                    hidden_w_init=hidden_w_init,
+                    hidden_b_init=hidden_b_init,
+                    output_nonlinearity=output_nonlinearity,
+                    output_w_init=output_w_init,
+                    output_b_init=output_b_init,
+                    layer_normalization=layer_normalization)
+
+                self._act = MLPModule(
+                    flat_dim,
+                    output_dim,
+                    hidden_sizes,
+                    hidden_nonlinearity=mlp_hidden_nonlinearity,
+                    hidden_w_init=hidden_w_init,
+                    hidden_b_init=hidden_b_init,
+                    output_nonlinearity=output_nonlinearity,
+                    output_w_init=output_w_init,
+                    output_b_init=output_b_init,
+                    layer_normalization=layer_normalization)
+
+            if mlp_hidden_nonlinearity is None:
+                self._module = nn.Sequential(cnn_module, nn.Flatten())
+            else:
+                self._module = nn.Sequential(cnn_module,
+                                             mlp_hidden_nonlinearity(),
+                                             nn.Flatten())
+
         else:
-            self._module = nn.Sequential(cnn_module, mlp_hidden_nonlinearity(),
-                                         nn.Flatten(), mlp_module)
+            mlp_module = None
+            if noisy:
+                mlp_module = NoisyMLPModule(
+                    flat_dim,
+                    output_dim,
+                    hidden_sizes,
+                    sigma_naught=noisy_sigma,
+                    std_noise=std_noise,
+                    hidden_nonlinearity=mlp_hidden_nonlinearity,
+                    output_nonlinearity=output_nonlinearity)
+                self._noisy_layers = [mlp_module]
+            else:
+                mlp_module = MLPModule(
+                    flat_dim,
+                    output_dim,
+                    hidden_sizes,
+                    hidden_nonlinearity=mlp_hidden_nonlinearity,
+                    hidden_w_init=hidden_w_init,
+                    hidden_b_init=hidden_b_init,
+                    output_nonlinearity=output_nonlinearity,
+                    output_w_init=output_w_init,
+                    output_b_init=output_b_init,
+                    layer_normalization=layer_normalization)
+
+            if mlp_hidden_nonlinearity is None:
+                self._module = nn.Sequential(cnn_module, nn.Flatten(),
+                                             mlp_module)
+            else:
+                self._module = nn.Sequential(cnn_module,
+                                             mlp_hidden_nonlinearity(),
+                                             nn.Flatten(), mlp_module)
 
     def forward(self, inputs):
         """Forward method.
@@ -137,4 +223,29 @@ class DiscreteCNNModule(nn.Module):
             torch.Tensor: Output tensor of shape :math:`(N, output_dim)`.
 
         """
+        if self._dueling:
+            out = self._module(inputs)
+            val = self._val(out)
+            act = self._act(out)
+            act = act - act.mean(1).unsqueeze(1)
+            return val + act
+
         return self._module(inputs)
+
+    def log_noise(self, key):
+        """Log sigma levels for noisy layers.
+
+        Args:
+            key (str): Prefix to use for logging.
+
+        """
+        if self._noisy:
+            layer_num = 0
+            for layer in self._noisy_layers:
+                for name, param in layer.named_parameters():
+                    if name.endswith('weight_sigma'):
+                        layer_num += 1
+                        sigma_mean = float(
+                            (param**2).mean().sqrt().data.cpu().numpy())
+                        tabular.record(key + '_layer_' + str(layer_num),
+                                       sigma_mean)

@@ -65,6 +65,73 @@ def test_output_values(output_dim, kernel_sizes, hidden_channels, strides,
     assert torch.all(torch.eq(output.detach(), module(obs).detach()))
 
 
+@pytest.mark.parametrize(
+    'output_dim, kernel_sizes, hidden_channels, strides, paddings', [
+        (1, (1, ), (32, ), (1, ), (0, )),
+        (2, (3, ), (32, ), (1, ), (0, )),
+        (5, (3, ), (32, ), (2, ), (0, )),
+        (5, (5, ), (12, ), (1, ), (2, )),
+        (5, (1, 1), (32, 64), (1, 1), (0, 0)),
+        (10, (3, 3), (32, 64), (1, 1), (0, 0)),
+        (10, (3, 3), (32, 64), (2, 2), (0, 0)),
+    ])
+def test_dueling_output_values(output_dim, kernel_sizes, hidden_channels,
+                               strides, paddings):
+
+    batch_size = 64
+    input_width = 32
+    input_height = 32
+    in_channel = 3
+    input_shape = (batch_size, in_channel, input_height, input_width)
+    obs = torch.rand(input_shape)
+
+    module = DiscreteCNNModule(input_shape=input_shape,
+                               output_dim=output_dim,
+                               hidden_channels=hidden_channels,
+                               hidden_sizes=hidden_channels,
+                               kernel_sizes=kernel_sizes,
+                               strides=strides,
+                               paddings=paddings,
+                               padding_mode='zeros',
+                               dueling=True,
+                               hidden_w_init=nn.init.ones_,
+                               output_w_init=nn.init.ones_,
+                               is_image=False)
+
+    cnn = CNNModule(input_var=obs,
+                    hidden_channels=hidden_channels,
+                    kernel_sizes=kernel_sizes,
+                    strides=strides,
+                    paddings=paddings,
+                    padding_mode='zeros',
+                    hidden_w_init=nn.init.ones_,
+                    is_image=False)
+    flat_dim = torch.flatten(cnn(obs).detach(), start_dim=1).shape[1]
+
+    mlp_adv = MLPModule(
+        flat_dim,
+        output_dim,
+        hidden_channels,
+        hidden_w_init=nn.init.ones_,
+        output_w_init=nn.init.ones_,
+    )
+
+    mlp_val = MLPModule(
+        flat_dim,
+        1,
+        hidden_channels,
+        hidden_w_init=nn.init.ones_,
+        output_w_init=nn.init.ones_,
+    )
+
+    cnn_out = cnn(obs)
+    val = mlp_val(torch.flatten(cnn_out, start_dim=1))
+    adv = mlp_adv(torch.flatten(cnn_out, start_dim=1))
+    output = val + (adv - adv.mean(1).unsqueeze(1))
+
+    assert torch.all(torch.eq(output.detach(), module(obs).detach()))
+
+
 @pytest.mark.parametrize('output_dim, hidden_channels, kernel_sizes, strides',
                          [(1, (32, ), (1, ), (1, ))])
 def test_without_nonlinearity(output_dim, hidden_channels, kernel_sizes,

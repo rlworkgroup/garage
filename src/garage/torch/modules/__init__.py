@@ -10,6 +10,7 @@ from garage.torch.modules.gaussian_mlp_module import (
 from garage.torch.modules.gaussian_mlp_module import GaussianMLPModule
 from garage.torch.modules.mlp_module import MLPModule
 from garage.torch.modules.multi_headed_mlp_module import MultiHeadedMLPModule
+from garage.torch.modules.noisy_mlp_module import NoisyMLPModule
 # DiscreteCNNModule must go after MLPModule
 from garage.torch.modules.discrete_cnn_module import DiscreteCNNModule
 # yapf: enable
@@ -20,6 +21,7 @@ __all__ = [
     'DiscreteCNNModule',
     'MLPModule',
     'MultiHeadedMLPModule',
+    'NoisyMLPModule',
     'GaussianMLPModule',
     'GaussianMLPIndependentStdModule',
     'GaussianMLPTwoHeadedModule',

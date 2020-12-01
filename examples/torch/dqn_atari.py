@@ -31,7 +31,7 @@ from garage.torch.policies import DiscreteQFArgmaxPolicy
 from garage.torch.q_functions import DiscreteCNNQFunction
 from garage.trainer import Trainer
 
-hyperparams = dict(n_epochs=500,
+hyperparams = dict(n_epochs=1000,
                    steps_per_epoch=20,
                    sampler_batch_size=500,
                    lr=1e-4,
@@ -41,6 +41,10 @@ hyperparams = dict(n_epochs=500,
                    target_update_freq=2,
                    buffer_batch_size=32,
                    max_epsilon=1.0,
+                   double=True,
+                   dueling=False,
+                   noisy=True,
+                   noisy_sigma=0.5,
                    min_epsilon=0.01,
                    decay_ratio=0.1,
                    buffer_size=int(1e4),
@@ -104,7 +108,7 @@ def main(env=None,
 
 
 # pylint: disable=unused-argument
-@wrap_experiment(snapshot_mode='gap_overwrite', snapshot_gap=30)
+@wrap_experiment(snapshot_mode='gap_overwrite', snapshot_gap=50)
 def dqn_atari(ctxt=None,
               env=None,
               seed=24,
@@ -155,19 +159,25 @@ def dqn_atari(ctxt=None,
         hidden_channels=hyperparams['hidden_channels'],
         kernel_sizes=hyperparams['kernel_sizes'],
         strides=hyperparams['strides'],
+        dueling=hyperparams['dueling'],
+        noisy=hyperparams['noisy'],
+        noisy_sigma=hyperparams['noisy_sigma'],
         hidden_w_init=(
             lambda x: torch.nn.init.orthogonal_(x, gain=np.sqrt(2))),
         hidden_sizes=hyperparams['hidden_sizes'],
         is_image=True)
 
     policy = DiscreteQFArgmaxPolicy(env_spec=env.spec, qf=qf)
-    exploration_policy = EpsilonGreedyPolicy(
-        env_spec=env.spec,
-        policy=policy,
-        total_timesteps=num_timesteps,
-        max_epsilon=hyperparams['max_epsilon'],
-        min_epsilon=hyperparams['min_epsilon'],
-        decay_ratio=hyperparams['decay_ratio'])
+
+    exploration_policy = policy
+    if not hyperparams['noisy']:
+        exploration_policy = EpsilonGreedyPolicy(
+            env_spec=env.spec,
+            policy=policy,
+            total_timesteps=num_timesteps,
+            max_epsilon=hyperparams['max_epsilon'],
+            min_epsilon=hyperparams['min_epsilon'],
+            decay_ratio=hyperparams['decay_ratio'])
 
     sampler = LocalSampler(agents=exploration_policy,
                            envs=env,
@@ -183,6 +193,7 @@ def dqn_atari(ctxt=None,
                sampler=sampler,
                steps_per_epoch=steps_per_epoch,
                qf_lr=hyperparams['lr'],
+               double_q=hyperparams['double'],
                clip_gradient=hyperparams['clip_gradient'],
                discount=hyperparams['discount'],
                min_buffer_size=hyperparams['min_buffer_size'],

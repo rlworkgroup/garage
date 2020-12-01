@@ -7,6 +7,8 @@ import torch.nn as nn
 from garage.torch import NonLinearity
 
 
+# pytorch v1.6 issue, see https://github.com/pytorch/pytorch/issues/42305
+# pylint: disable=abstract-method
 class MultiHeadedMLPModule(nn.Module):
     """MultiHeadedMLPModule Model.
 
@@ -70,8 +72,6 @@ class MultiHeadedMLPModule(nn.Module):
             'output_b_inits', output_b_inits, n_heads)
         output_nonlinearities = self._check_parameter_for_output_layer(
             'output_nonlinearities', output_nonlinearities, n_heads)
-
-        self._layers = nn.ModuleList()
 
         prev_size = input_dim
         for size in hidden_sizes:
