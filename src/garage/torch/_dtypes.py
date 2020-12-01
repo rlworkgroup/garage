@@ -54,7 +54,7 @@ class ObservationBatch(torch.Tensor):
     order: ObservationOrder
     lengths: torch.Tensor = None
 
-    def __init__(self, observations, order, lengths):
+    def __init__(self, observations, order, lengths=None):
         """Check that lengths is consistent with the rest of the fields.
 
         Raises:

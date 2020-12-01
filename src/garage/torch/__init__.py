@@ -11,7 +11,8 @@ from garage.torch._functions import (as_torch_dict, compute_advantages,
                                      pad_to_last, prefer_gpu,
                                      product_of_gaussians, set_gpu_mode,
                                      soft_update_model, state_dict_to,
-                                     torch_to_np, update_module_params)
+                                     torch_to_np, update_module_params,
+                                     list_to_tensor)
 
 # yapf: enable
 __all__ = [
@@ -23,6 +24,7 @@ __all__ = [
     'flatten_batch',
     'flatten_to_single_vector',
     'global_device',
+    'list_to_tensor',
     'np_to_torch',
     'ObservationBatch',
     'observation_batch_to_packed_sequence',
