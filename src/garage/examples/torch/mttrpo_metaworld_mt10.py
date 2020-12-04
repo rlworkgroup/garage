@@ -11,7 +11,7 @@ from garage.envs import MultiEnvWrapper, normalize
 from garage.envs.multi_env_wrapper import round_robin_strategy
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import MetaWorldTaskSampler
-from garage.sampler import RaySampler
+from garage.sampler import RaySampler, LocalSampler
 from garage.torch.algos import TRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -21,10 +21,10 @@ from garage.trainer import Trainer
 @click.command()
 @click.option('--seed', default=1)
 @click.option('--epochs', default=500)
-@click.option('--batch_size', default=1024)
-@click.option('--n_workers', default=psutil.cpu_count(logical=False))
+@click.option('--batch_size', default=5000)
+@click.option('--n_workers', default=10)
 @click.option('--n_tasks', default=10)
-@wrap_experiment(snapshot_mode='all')
+@wrap_experiment(snapshot_mode='none')
 def mttrpo_metaworld_mt10(ctxt, seed, epochs, batch_size, n_workers, n_tasks):
     """Set up environment and algorithm and run the task.
 
@@ -64,7 +64,7 @@ def mttrpo_metaworld_mt10(ctxt, seed, epochs, batch_size, n_workers, n_tasks):
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
-    sampler = RaySampler(agents=policy,
+    sampler = LocalSampler(agents=policy,
                          envs=env,
                          max_episode_length=env.spec.max_episode_length,
                          n_workers=n_workers)
@@ -78,7 +78,7 @@ def mttrpo_metaworld_mt10(ctxt, seed, epochs, batch_size, n_workers, n_tasks):
 
     trainer = Trainer(ctxt)
     trainer.setup(algo, env)
-    trainer.train(n_epochs=epochs, batch_size=batch_size)
+    trainer.train(n_epochs=epochs, batch_size=5000)
 
 
 mttrpo_metaworld_mt10()

@@ -75,7 +75,7 @@ run-dev: CONTAINER_NAME ?= ''
 run-dev: user ?= $$USER
 run-dev: ensure-data-path-exists build-dev
 	docker run \
-		-it \
+		-i \
 		--rm \
 		-v $(DATA_PATH)/$(CONTAINER_NAME):/home/$(user)/code/garage/data \
 		-e MJKEY="$$(cat $(MJKEY_PATH))" \

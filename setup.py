@@ -24,8 +24,8 @@ REQUIRED = [
     'setproctitle>=1.0',
     'tensorflow>=1.14',
     'tensorflow-probability>=0.11.0',
-    'torch>=1.0.0,!=1.5.0,<1.8.0',
-    'torchvision>=0.2.1,<=0.8.2',
+    'torch==1.7.1',
+    'torchvision>=0.2.1',
 ]
 
 if sys.version_info < (3, 7):
@@ -64,7 +64,7 @@ EXTRAS['dev'] = [
     'flake8',
     'flake8-docstrings>=1.5.0',
     'flake8-import-order',
-    f'metaworld @ https://{GARAGE_GH_TOKEN}@api.github.com/repos/rlworkgroup/metaworld/tarball/0875192baaa91c43523708f55866d98eaf3facaf',  # noqa: E501
+    f'metaworld @ https://{GARAGE_GH_TOKEN}@api.github.com/repos/rlworkgroup/metaworld/tarball/076154b12536e4bd0c05ee212d6a8f3ca46b6f6b',  # noqa: E501
     'isort>=4.3.21,<5.0.0',
     'pep8-naming==0.7.0',
     'pre-commit',
@@ -82,6 +82,7 @@ EXTRAS['dev'] = [
     'sphinx_rtd_theme',
     'sphinxcontrib-bibtex',
     'yapf==0.30.0',
+    'google-cloud-storage'
 ]  # yapf: disable
 
 with open('README.md') as f:

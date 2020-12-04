@@ -22,10 +22,10 @@ from garage.trainer import Trainer
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--epochs', default=300)
+@click.option('--epochs', default=1000)
 @click.option('--rollouts_per_task', default=10)
 @click.option('--meta_batch_size', default=20)
-@wrap_experiment(snapshot_mode='all')
+@wrap_experiment(snapshot_mode='none', name_parameters='passed')
 def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
                                  meta_batch_size):
     """Set up environment and algorithm and run the task.
@@ -43,7 +43,7 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
     """
     set_seed(seed)
 
-    ml1 = metaworld.ML1('push-v1')
+    ml1 = metaworld.ML1('push-v2')
     tasks = MetaWorldTaskSampler(ml1, 'train')
     env = tasks.sample(1)[0]()
     test_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
@@ -51,13 +51,13 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
-        hidden_sizes=(100, 100),
+        hidden_sizes=(256, 256),
         hidden_nonlinearity=torch.tanh,
         output_nonlinearity=None,
     )
 
     value_function = GaussianMLPValueFunction(env_spec=env.spec,
-                                              hidden_sizes=[32, 32],
+                                              hidden_sizes=[128, 128],
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
@@ -81,7 +81,10 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
                     gae_lambda=1.,
                     inner_lr=0.1,
                     num_grad_updates=1,
-                    meta_evaluator=meta_evaluator)
+                    meta_evaluator=meta_evaluator,
+                    entropy_method='max',
+                    entropy=0.01,
+                    stop_entropy_gradient=True,)
 
     trainer.setup(algo, env)
     trainer.train(n_epochs=epochs,

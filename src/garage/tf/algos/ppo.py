@@ -71,7 +71,8 @@ class PPO(NPO):
                  use_neg_logli_entropy=False,
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
-                 name='PPO'):
+                 name='PPO',
+                 multitask=False):
         if optimizer is None:
             optimizer = FirstOrderOptimizer
             if optimizer_args is None:
@@ -96,4 +97,5 @@ class PPO(NPO):
                          use_neg_logli_entropy=use_neg_logli_entropy,
                          stop_entropy_gradient=stop_entropy_gradient,
                          entropy_method=entropy_method,
-                         name=name)
+                         name=name,
+                         multitask=multitask)
