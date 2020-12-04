@@ -115,6 +115,22 @@ class TestNPO(TfGraphTestCase):
                 entropy_method='no_entropy',
                 policy_ent_coeff=0.02,
             )
+    
+    @pytest.mark.mujoco
+    def test_npo_with_invalid_max_episode_length(self):
+        """Test NPO with invalid max_episode_length."""
+        with pytest.raises(ValueError):
+            env = normalize(
+            GymEnv('InvertedDoublePendulum-v2', max_episode_length=None))
+            NPO(
+                env_spec=env.spec,
+                policy=self.policy,
+                baseline=self.baseline,
+                sampler=self.sampler,
+                discount=0.99,
+                gae_lambda=0.98,
+                policy_ent_coeff=0.0
+            )
 
     def teardown_method(self):
         self.env.close()
