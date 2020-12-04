@@ -7,7 +7,7 @@ import numpy as np
 import scipy.stats
 import tensorflow as tf
 
-from garage import InOutSpec, log_performance
+from garage import InOutSpec, log_performance, log_multitask_performance
 from garage.experiment import deterministic
 from garage.np import (discount_cumsum, explained_variance_1d, pad_batch_array,
                        rrse, sliding_window)
@@ -221,7 +221,7 @@ class TENPO(RLAlgorithm):
             numpy.float64: Average return.
 
         """
-        undiscounted_returns = log_performance(itr,
+        undiscounted_returns = log_multitask_performance(itr,
                                                episodes,
                                                discount=self._discount)
 
@@ -877,9 +877,12 @@ class TENPO(RLAlgorithm):
         for t in range(self.policy.task_space.flat_dim):
             lengths = path_lengths[task_indices == t]
             completed = lengths < self.max_episode_length
-            pct_completed = np.mean(completed)
+            pct_completed = (np.mean(completed) if completed.size > 0
+                else 0)
+            mean_lengths = (np.mean(lengths) if lengths.size > 0
+                else 0)
             tabular.record('Tasks/EpisodeLength/t={}'.format(t),
-                           np.mean(lengths))
+                           mean_lengths)
             tabular.record('Tasks/TerminationRate/t={}'.format(t),
                            pct_completed)
             tabular.record('Tasks/Entropy/t={}'.format(t), task_ents[t])

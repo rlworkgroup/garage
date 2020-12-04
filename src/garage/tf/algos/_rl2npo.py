@@ -94,7 +94,9 @@ class RL2NPO(NPO):
         tabular.record('{}/KL'.format(self.policy.name), policy_kl)
         pol_ent = self._f_policy_entropy(*policy_opt_input_values)
         tabular.record('{}/Entropy'.format(self.policy.name), np.mean(pol_ent))
-
+        pol_std = self._f_policy_stddev(*policy_opt_input_values)
+        std = np.mean(pol_std)
+        tabular.record('{}/StandardDeviation'.format(self.policy.name), std)
         ev = explained_variance_1d(baselines, returns, episodes.valids)
         tabular.record('{}/ExplainedVariance'.format(self._baseline.name), ev)
         self._old_policy.parameters = self.policy.parameters

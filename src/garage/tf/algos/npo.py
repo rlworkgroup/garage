@@ -7,7 +7,7 @@ from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
 
-from garage import log_performance, make_optimizer
+from garage import log_performance, log_multitask_performance, make_optimizer
 from garage.np import explained_variance_1d, pad_batch_array
 from garage.np.algos import RLAlgorithm
 from garage.tf import (center_advs, compile_function, compute_advantages,
@@ -98,7 +98,9 @@ class NPO(RLAlgorithm):
                  use_neg_logli_entropy=False,
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
-                 name='NPO'):
+                 name='NPO',
+                 multitask=False):
+        self._multitask = multitask
         self.policy = policy
         self._scope = scope
         self.max_episode_length = env_spec.max_episode_length
@@ -138,6 +140,7 @@ class NPO(RLAlgorithm):
         self._f_returns = None
         self._f_policy_kl = None
         self._f_policy_entropy = None
+        self._f_policy_stddev = None
         self._policy_network = None
         self._old_policy_network = None
 
@@ -174,9 +177,11 @@ class NPO(RLAlgorithm):
         last_return = None
 
         for _ in trainer.step_epochs():
-            trainer.step_episode = trainer.obtain_episodes(trainer.step_itr)
-            last_return = self._train_once(trainer.step_itr,
-                                           trainer.step_episode)
+            if not self._multitask:
+                trainer.step_path = trainer.obtain_episodes(trainer.step_itr)
+            else:
+                trainer.step_path = self.obtain_exact_trajectories(trainer)
+            last_return = self._train_once(trainer.step_itr, trainer.step_path)
             trainer.step_itr += 1
 
         return last_return
@@ -201,9 +206,14 @@ class NPO(RLAlgorithm):
                                     self.max_episode_length)
 
         # -- Stage: Run and calculate performance of the algorithm
-        undiscounted_returns = log_performance(itr,
-                                               episodes,
-                                               discount=self._discount)
+        if not self._multitask:
+            undiscounted_returns = log_performance(itr,
+                                                episodes,
+                                                discount=self._discount)
+        else:
+            undiscounted_returns = log_multitask_performance(itr,
+                                                             episodes,
+                                                             discount=self._discount)
         self._episode_reward_mean.extend(undiscounted_returns)
         tabular.record('Extras/EpisodeRewardMean',
                        np.mean(self._episode_reward_mean))
@@ -243,6 +253,9 @@ class NPO(RLAlgorithm):
         pol_ent = self._f_policy_entropy(*policy_opt_input_values)
         ent = np.sum(pol_ent) / np.sum(episodes.lengths)
         tabular.record('{}/Entropy'.format(self.policy.name), ent)
+        pol_std = self._f_policy_stddev(*policy_opt_input_values)
+        std = np.sum(pol_std) / np.sum(episodes.lengths)
+        tabular.record('{}/StandardDeviation'.format(self.policy.name), std)
         tabular.record('{}/Perplexity'.format(self.policy.name), np.exp(ent))
         returns = self._fit_baseline_with_data(episodes, baselines)
 
@@ -424,7 +437,6 @@ class NPO(RLAlgorithm):
 
         """
         pol_dist = self._policy_network.dist
-
         with tf.name_scope('policy_entropy'):
             if self._use_neg_logli_entropy:
                 policy_entropy = -pol_dist.log_prob(i.action_var,
@@ -438,11 +450,13 @@ class NPO(RLAlgorithm):
 
             if self._stop_entropy_gradient:
                 policy_entropy = tf.stop_gradient(policy_entropy)
-
         # dense form, match the shape of advantage
         policy_entropy = tf.reshape(policy_entropy,
                                     [-1, self.max_episode_length])
-
+        policy_std = tf.reshape(pol_dist.stddev(),
+                                    [-1, self.max_episode_length])
+        self._f_policy_stddev = compile_function(
+            flatten_inputs(self._policy_opt_inputs), policy_std)
         self._f_policy_entropy = compile_function(
             flatten_inputs(self._policy_opt_inputs), policy_entropy)
 
@@ -578,6 +592,7 @@ class NPO(RLAlgorithm):
         del data['_name_scope']
         del data['_policy_opt_inputs']
         del data['_f_policy_entropy']
+        del data['_f_policy_stddev']
         del data['_f_policy_kl']
         del data['_f_rewards']
         del data['_f_returns']
@@ -595,3 +610,23 @@ class NPO(RLAlgorithm):
         self.__dict__ = state
         self._name_scope = tf.name_scope(self._name)
         self._init_opt()
+
+    def obtain_exact_trajectories(self, trainer):
+        """Obtain an exact amount of trajs from each env being sampled from.
+
+        Args:
+            trainer (Trainer): Experiment trainer, which rovides services
+                such as snapshotting and sampler control.
+
+        Returns:
+            episodes (EpisodeBatch): Batch of episodes.
+        """
+        episodes_per_trajectory = trainer._train_args.batch_size
+        agent_update = self.policy.get_param_values()
+        sampler = trainer._sampler
+        episodes = sampler.obtain_exact_episodes(
+                              episodes_per_trajectory,
+                              agent_update,
+                              env_update=None)
+        trainer._stats.total_env_steps += sum(episodes.lengths)
+        return episodes
