@@ -102,6 +102,8 @@ class NPO(RLAlgorithm):
         self.policy = policy
         self._scope = scope
         self.max_episode_length = env_spec.max_episode_length
+        if self.max_episode_length == None:
+            raise ValueError("max_episode_length must not be None")
         self._env_spec = env_spec
         self._baseline = baseline
         self._discount = discount
