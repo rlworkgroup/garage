@@ -64,7 +64,7 @@ EXTRAS['dev'] = [
     'flake8',
     'flake8-docstrings>=1.5.0',
     'flake8-import-order',
-    f'metaworld @ https://{GARAGE_GH_TOKEN}@api.github.com/repos/rlworkgroup/metaworld/tarball/0875192baaa91c43523708f55866d98eaf3facaf',  # noqa: E501
+    f'metaworld @ https://{GARAGE_GH_TOKEN}@api.github.com/repos/rlworkgroup/metaworld/tarball/efe42217450a38d0f44e9917e1e5c48e3a847773',  # noqa: E501
     'isort>=4.3.21,<5.0.0',
     'pep8-naming==0.7.0',
     'pre-commit',
@@ -82,6 +82,7 @@ EXTRAS['dev'] = [
     'sphinx_rtd_theme',
     'sphinxcontrib-bibtex',
     'yapf==0.30.0',
+    'google-cloud-storage'
 ]  # yapf: disable
 
 with open('README.md') as f:

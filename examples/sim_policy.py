@@ -5,6 +5,7 @@ import sys
 
 import cloudpickle
 import tensorflow as tf
+from garage.torch import prefer_gpu
 
 from garage import rollout
 
@@ -51,7 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('file', type=str, help='path to the snapshot file')
     parser.add_argument('--max_episode_length',
                         type=int,
-                        default=1000,
+                        default=500,
                         help='Max length of episode')
     args = parser.parse_args()
 
@@ -60,13 +61,13 @@ if __name__ == '__main__':
     # with tf.compat.v1.Session():
     #     [rest of the code]
     with tf.compat.v1.Session() as sess:
-        data = cloudpickle.load(args.file)
+        with open(args.file, 'rb') as f:
+            data = cloudpickle.load(f)
+        prefer_gpu()
         policy = data['algo'].policy
         env = data['env']
         while True:
             path = rollout(env,
                            policy,
-                           max_episode_length=args.max_episode_length,
+                           max_episode_length=500,
                            animated=True)
-            if not query_yes_no('Continue simulation?'):
-                break

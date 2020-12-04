@@ -8,8 +8,8 @@ import numpy as np
 import torch
 
 from garage import (_Default, EpisodeBatch, log_multitask_performance,
-                    make_optimizer)
-from garage.np import discount_cumsum
+                    make_optimizer,)
+from garage.np import discount_cumsum, explained_variance_1d
 from garage.torch import update_module_params
 from garage.torch.optimizers import (ConjugateGradientOptimizer,
                                      DifferentiableSGD)
@@ -63,8 +63,7 @@ class MAML:
         self._policy = policy
         self._env = env
         self._task_sampler = task_sampler
-        self._value_function = copy.deepcopy(inner_algo._value_function)
-        self._initial_vf_state = self._value_function.state_dict()
+        self._value_function = inner_algo._value_function
         self._num_grad_updates = num_grad_updates
         self._meta_batch_size = meta_batch_size
         self._inner_algo = inner_algo
@@ -134,13 +133,25 @@ class MAML:
                                                all_params,
                                                set_grad=False)
 
+        baselines_list = []
+        returns = []
+        for task in all_samples:
+            for rollout in task:
+                baselines_list.append(rollout.baselines[rollout.valids.bool()])
+                returns.append([r['returns'] for r in rollout.paths])
+        baselines = torch.cat(baselines_list).numpy().flatten()
+        ev = explained_variance_1d(baselines, np.array(returns).flatten())
+
         with torch.no_grad():
             policy_entropy = self._compute_policy_entropy(
+                [task_samples[0] for task_samples in all_samples])
+            stddev = self._compute_policy_stddev(
                 [task_samples[0] for task_samples in all_samples])
             average_return = self._log_performance(
                 itr, all_samples, meta_objective.item(), loss_after.item(),
                 kl_before.item(), kl_after.item(),
-                policy_entropy.mean().item())
+                policy_entropy.mean().item(),
+                stddev.mean().item(), ev)
 
         if self._meta_evaluator and itr % self._evaluate_every_n_epochs == 0:
             self._meta_evaluator.evaluate(self)
@@ -160,22 +171,11 @@ class MAML:
                 (float).
 
         """
-        # MAML resets a value function to its initial state before training.
-        self._value_function.load_state_dict(self._initial_vf_state)
 
         obs = np.concatenate([path['observations'] for path in paths], axis=0)
         returns = np.concatenate([path['returns'] for path in paths])
         obs = torch.Tensor(obs)
         returns = torch.Tensor(returns)
-
-        vf_loss = self._value_function.compute_loss(obs, returns)
-        # pylint: disable=protected-access
-        self._inner_algo._vf_optimizer.zero_grad()
-        vf_loss.backward()
-        # pylint: disable=protected-access
-        self._inner_algo._vf_optimizer.step()
-
-        return vf_loss
 
     def _obtain_samples(self, trainer):
         """Obtain samples for each task before and after the fast-adaptation.
@@ -342,6 +342,22 @@ class MAML:
         entropies = self._inner_algo._compute_policy_entropy(obs)
         return entropies.mean()
 
+    def _compute_policy_stddev(self, task_samples):
+        """Compute policy stddev.
+
+        Args:
+            task_samples (list[_MAMLEpisodeBatch]): Samples data for
+                one task.
+
+        Returns:
+            torch.Tensor: Computed entropy value.
+
+        """
+        obs = torch.stack([samples.observations for samples in task_samples])
+        # pylint: disable=protected-access
+        stddev = self._inner_algo._compute_policy_stddev(obs)
+        return stddev.mean()
+
     @property
     def policy(self):
         """Current policy of the inner algorithm.
@@ -379,21 +395,20 @@ class MAML:
             path['returns'] = discount_cumsum(
                 path['rewards'], self._inner_algo.discount).copy()
 
-        self._train_value_function(paths)
+        self._value_function.fit(paths)
 
         obs = torch.Tensor(episodes.padded_observations)
         actions = torch.Tensor(episodes.padded_actions)
         rewards = torch.Tensor(episodes.padded_rewards)
         valids = torch.Tensor(episodes.lengths).int()
-        with torch.no_grad():
-            # pylint: disable=protected-access
-            baselines = self._inner_algo._value_function(obs)
+        baselines = self._value_function(paths)
 
         return _MAMLEpisodeBatch(paths, obs, actions, rewards, valids,
                                  baselines)
 
     def _log_performance(self, itr, all_samples, loss_before, loss_after,
-                         kl_before, kl, policy_entropy):
+                         kl_before, kl, policy_entropy, stddev,
+                         explained_variance):
         """Evaluate performance of this batch.
 
         Args:
@@ -436,6 +451,9 @@ class MAML:
             tabular.record('KLBefore', kl_before)
             tabular.record('KLAfter', kl)
             tabular.record('Entropy', policy_entropy)
+            tabular.record('StandardDeviation', stddev)
+        tabular.record(f'{self._value_function.name}/ExplainedVariance',
+                       explained_variance)
 
         return np.mean(rtns)
 

@@ -2,6 +2,7 @@
 """This is an example to train MAML-TRPO on ML1 Push environment."""
 # pylint: disable=no-value-for-parameter
 # yapf: disable
+import copy
 import click
 import metaworld
 import torch
@@ -12,22 +13,20 @@ from garage.experiment import (MetaEvaluator, MetaWorldTaskSampler,
                                SetTaskSampler)
 from garage.experiment.deterministic import set_seed
 from garage.sampler import RaySampler
-from garage.torch.algos import MAMLTRPO
+from garage.torch.algos import MAMLPPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
 from garage.trainer import Trainer
 
 # yapf: enable
-
-
 @click.command()
-@click.option('--seed', default=1)
-@click.option('--epochs', default=1000)
-@click.option('--rollouts_per_task', default=10)
-@click.option('--meta_batch_size', default=20)
-@wrap_experiment(snapshot_mode='none', name_parameters='passed')
-def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
-                                 meta_batch_size):
+@click.option('--env-name', type=str)
+@click.option('--seed', type=int, default=1)
+@click.option('--epochs', type=int, default=1000)
+@click.option('--rollouts_per_task', type=int, default=10)
+@click.option('--meta_batch_size', type=int, default=20)
+@wrap_experiment(snapshot_mode='gap', name_parameters='passed', snapshot_gap=50)
+def maml_ppo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, meta_batch_size):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -43,11 +42,11 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
     """
     set_seed(seed)
 
-    ml1 = metaworld.ML1('push-v2')
-    tasks = MetaWorldTaskSampler(ml1, 'train')
+    mt1 = metaworld.MT1(env_name)
+    tasks = MetaWorldTaskSampler(mt1, 'train', add_env_onehot=True)
+    test_sampler = copy.deepcopy(tasks)
+
     env = tasks.sample(1)[0]()
-    test_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
-                                  env=MetaWorldSetTaskEnv(ml1, 'test'))
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
@@ -62,7 +61,7 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
                                               output_nonlinearity=None)
 
     meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
-                                   n_test_tasks=1,
+                                   n_test_tasks=10,
                                    n_exploration_eps=rollouts_per_task)
 
     sampler = RaySampler(agents=policy,
@@ -71,7 +70,7 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
                          n_workers=meta_batch_size)
 
     trainer = Trainer(ctxt)
-    algo = MAMLTRPO(env=env,
+    algo = MAMLPPO(env=env,
                     policy=policy,
                     sampler=sampler,
                     task_sampler=tasks,
@@ -80,15 +79,17 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
                     discount=0.99,
                     gae_lambda=1.,
                     inner_lr=0.1,
+                    outer_lr=5e-4,
                     num_grad_updates=1,
                     meta_evaluator=meta_evaluator,
                     entropy_method='max',
-                    entropy=0.01,
-                    stop_entropy_gradient=True,)
+                    policy_ent_coeff=0.01,
+                    stop_entropy_gradient=True,
+                    center_adv=False)
 
     trainer.setup(algo, env)
     trainer.train(n_epochs=epochs,
                   batch_size=rollouts_per_task * env.spec.max_episode_length)
 
 
-maml_trpo_metaworld_ml1_push()
+maml_ppo_metaworld_mt1()
