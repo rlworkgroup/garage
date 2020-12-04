@@ -11,9 +11,9 @@ from garage import (_Default, EpisodeBatch, log_multitask_performance,
                     make_optimizer)
 from garage.np import discount_cumsum
 from garage.torch import update_module_params
+from garage.torch._functions import np_to_torch
 from garage.torch.optimizers import (ConjugateGradientOptimizer,
                                      DifferentiableSGD)
-from garage.torch._functions import np_to_torch
 
 # yapf: enable
 

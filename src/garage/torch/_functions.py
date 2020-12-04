@@ -25,18 +25,16 @@ _GPU_ID = 0
 
 
 def zero_optim_grads(optim, set_to_none=True):
-    """ Sets the gradient of all optimized
-        tensors to None
+    """Sets the gradient of all optimized tensors to None.
 
-        This is an optimization alternative to
-        calling `optimizer.zero_grad()`
+    This is an optimization alternative to calling `optimizer.zero_grad()`
 
-        Args:
-            optim (torch.nn.Optimizer): The optimizer instance
-                to zero parameter gradients.
-            set_to_none (bool): Set gradients to None
-                instead of calling `zero_grad()`which
-                sets to 0.
+    Args:
+        optim (torch.nn.Optimizer): The optimizer instance to zero parameter
+            gradients.
+        set_to_none (bool): Set gradients to None instead of calling
+            `zero_grad()`which sets to 0.
+
     """
     if not set_to_none:
         optim.zero_grad()
@@ -167,7 +165,6 @@ def np_to_torch(array):
         torch.Tensor: float tensor on the global device.
 
     """
-
     tensor = torch.from_numpy(array)
 
     if tensor.dtype != torch.float32:
@@ -177,7 +174,7 @@ def np_to_torch(array):
 
 
 def list_to_tensor(data):
-    """Convert a list to a PyTorch tensor
+    """Convert a list to a PyTorch tensor.
 
     Args:
         data (list): Data to convert to tensor
@@ -185,7 +182,6 @@ def list_to_tensor(data):
     Returns:
         torch.Tensor: A float tensor
     """
-
     return torch.as_tensor(data, dtype=torch.float32, device=global_device())
 
 

@@ -71,6 +71,7 @@ class CNNModule(nn.Module):
                  pool_shape=None,
                  pool_stride=1,
                  layer_normalization=False,
+                 n_layers=None,
                  is_image=True,
                  enable_cudnn_benchmarks=True):
         if len(strides) != len(hidden_channels):

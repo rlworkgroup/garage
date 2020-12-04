@@ -16,9 +16,9 @@ from garage.np.algos import MetaRLAlgorithm
 from garage.replay_buffer import PathBuffer
 from garage.sampler import DefaultWorker
 from garage.torch import global_device
+from garage.torch._functions import np_to_torch
 from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import ContextConditionedPolicy
-from garage.torch._functions import np_to_torch
 
 
 class PEARL(MetaRLAlgorithm):

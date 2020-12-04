@@ -5,9 +5,8 @@ import akro
 import numpy as np
 import torch
 
-from garage.torch import global_device
+from garage.torch._functions import list_to_tensor, np_to_torch
 from garage.torch.policies.policy import Policy
-from garage.torch._functions import np_to_torch, list_to_tensor
 
 
 class StochasticPolicy(Policy, abc.ABC):
@@ -90,8 +89,8 @@ class StochasticPolicy(Policy, abc.ABC):
             observations = self._env_spec.observation_space.unflatten_n(
                 observations)
         with torch.no_grad():
-            if isinstance(observation, np.ndarray):
-                observation = np_to_torch(observation)
+            if isinstance(observations, np.ndarray):
+                observations = np_to_torch(observations)
             if not isinstance(observations, torch.Tensor):
                 observations = list_to_tensor(observations)
 
@@ -104,7 +103,7 @@ class StochasticPolicy(Policy, abc.ABC):
             }
 
     # pylint: disable=arguments-differ
-    @ abc.abstractmethod
+    @abc.abstractmethod
     def forward(self, observations):
         """Compute the action distributions from the observations.
 
