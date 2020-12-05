@@ -102,8 +102,6 @@ class NPO(RLAlgorithm):
         self.policy = policy
         self._scope = scope
         self.max_episode_length = env_spec.max_episode_length
-        if self.max_episode_length == None:
-            raise ValueError("max_episode_length must not be None")
         self._env_spec = env_spec
         self._baseline = baseline
         self._discount = discount
@@ -130,6 +128,9 @@ class NPO(RLAlgorithm):
 
         if pg_loss not in ['vanilla', 'surrogate', 'surrogate_clip']:
             raise ValueError('Invalid pg_loss')
+
+        if self.max_episode_length == None:
+            raise ValueError('max_episode_length must not be None')
 
         self._optimizer = make_optimizer(optimizer, **optimizer_args)
         self._lr_clip_range = float(lr_clip_range)
