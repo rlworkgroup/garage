@@ -247,7 +247,17 @@ def log_performance(itr, batch, discount, prefix='Evaluation'):
     undiscounted_returns = []
     termination = []
     success = []
+    rewards = []
+    grasp_success = []
+    near_object = []
+    episode_mean_grasp_reward = []
+    episode_max_grasp_reward = []
+    episode_min_grasp_reward = []
+    episode_mean_in_place_reward = []
+    episode_max_in_place_reward = []
+    episode_min_in_place_reward = []
     for eps in batch.split():
+        rewards.append(eps.rewards)
         returns.append(discount_cumsum(eps.rewards, discount))
         undiscounted_returns.append(sum(eps.rewards))
         termination.append(
@@ -256,13 +266,30 @@ def log_performance(itr, batch, discount, prefix='Evaluation'):
                     for step_type in eps.step_types)))
         if 'success' in eps.env_infos:
             success.append(float(eps.env_infos['success'].any()))
+        if 'grasp_success' in eps.env_infos:
+            grasp_success.append(float(eps.env_infos['grasp_success'].any()))
+        if 'near_object' in eps.env_infos:
+            near_object.append(float(eps.env_infos['near_object'].any()))
+        if 'grasp_reward' in eps.env_infos:
+            episode_mean_grasp_reward.append(
+                np.mean(eps.env_infos['grasp_reward']))
+            episode_max_grasp_reward.append(max(eps.env_infos['grasp_reward']))
+            episode_min_grasp_reward.append(min(eps.env_infos['grasp_reward']))
+        if 'in_place_reward' in eps.env_infos:
+            episode_mean_in_place_reward.append(
+                np.mean(eps.env_infos['in_place_reward']))
+            episode_max_in_place_reward.append(
+                max(eps.env_infos['in_place_reward']))
+            episode_min_in_place_reward.append(
+                min(eps.env_infos['in_place_reward']))
 
     average_discounted_return = np.mean([rtn[0] for rtn in returns])
 
     with tabular.prefix(prefix + '/'):
         tabular.record('Iteration', itr)
         tabular.record('NumEpisodes', len(returns))
-
+        tabular.record('MinReward', np.min(rewards))
+        tabular.record('MaxReward', np.max(rewards))
         tabular.record('AverageDiscountedReturn', average_discounted_return)
         tabular.record('AverageReturn', np.mean(undiscounted_returns))
         tabular.record('StdReturn', np.std(undiscounted_returns))
@@ -271,5 +298,23 @@ def log_performance(itr, batch, discount, prefix='Evaluation'):
         tabular.record('TerminationRate', np.mean(termination))
         if success:
             tabular.record('SuccessRate', np.mean(success))
+        if grasp_success:
+            tabular.record('GraspSuccessRate', np.mean(grasp_success))
+        if near_object:
+            tabular.record('NearObject', np.mean(near_object))
+        if episode_mean_grasp_reward:
+            tabular.record('EpisodeMeanGraspReward',
+                           np.mean(episode_mean_grasp_reward))
+            tabular.record('EpisodeMeanMaxGraspReward',
+                           np.mean(episode_max_grasp_reward))
+            tabular.record('EpisodeMeanMinGraspReward',
+                           np.mean(episode_min_grasp_reward))
+        if episode_mean_in_place_reward:
+            tabular.record('EpisodeMeanInPlaceReward',
+                           np.mean(episode_mean_in_place_reward))
+            tabular.record('EpisodeMeanMaxInPlaceReward',
+                           np.mean(episode_max_in_place_reward))
+            tabular.record('EpisodeMeanMinInPlaceReward',
+                           np.mean(episode_min_in_place_reward))
 
     return undiscounted_returns

@@ -19,23 +19,23 @@ from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.trainer import TFTrainer
 from garage.experiment.deterministic import set_seed
-from garage.sampler import LocalSampler
+from garage.sampler import LocalSampler, RaySampler
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.policies import GaussianMLPPolicy
 from garage.tf.optimizers import FirstOrderOptimizer
 
-import pip
-package = f'metaworld @ https://git@api.github.com/repos/rlworkgroup/metaworld/tarball/new-reward-functions'
-pip.main(['install', '--upgrade', package])
+# import pip
+# package = f'metaworld @ https://git@api.github.com/repos/rlworkgroup/metaworld/tarball/new-reward-functions'
+# pip.main(['install', '--upgrade', package])
 
 @click.command()
-@click.option('--env-name', type=str, default='peg-insert-side-v2')
+@click.option('--env-name', type=str, default='push-v2')
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
 @click.option('--entropy', type=float, default=0.01)
 @click.option('--use_softplus_entropy', type=bool, default=False)
 @click.option('--extra_tags', type=str, default='none')
-@wrap_experiment(log_dir="./", name_parameters='all', snapshot_mode='gap', snapshot_gap=25)
+@wrap_experiment(name_parameters='all', snapshot_mode='gap', snapshot_gap=25)
 def ppo_metaworld(
     ctxt=None,
     env_name=None,
@@ -91,6 +91,15 @@ def ppo_metaworld(
             use_trust_region=True,
         )
 
+        sampler= RaySampler(agents=policy,
+                            envs=env,
+                            max_episode_length=env.spec.max_episode_length,
+                            is_tf_worker=True)
+        # sampler = LocalSampler(agents=policy,
+        #                        envs=env,
+        #                        max_episode_length=env.spec.max_episode_length,
+        #                        is_tf_worker=True)
+
         # NOTE: make sure when setting entropy_method to 'max', set
         # center_adv to False and turn off policy gradient. See
         # tf.algos.NPO for detailed documentation.
@@ -111,6 +120,7 @@ def ppo_metaworld(
             policy_ent_coeff=entropy,
             center_adv=False,
             use_softplus_entropy=use_softplus_entropy,
+            sampler=sampler
         )
 
         trainer.setup(algo, env)
