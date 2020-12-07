@@ -138,20 +138,18 @@ reinforcement learning.
 In the above section, we set up an algorithm, but never actually explored the
 environment at all, as can be seen by `TotalEnvSteps` always being zero.
 
-In order to collect samples from the environment, we can set the `sampler_cls`
-and `policy` fields on our algorithm, and call `trainer.obtain_samples()`. We'll
-also need to seed the random number generators used for the experiment.
+In order to collect samples from the environment, we need to construct a
+`sampler` and set it a field in our algorithm. Then we can call
+`trainer.obtain_samples()` to get samples. We'll also need to seed the random
+number generators used for the experiment.
 
 ```py
-from garage.samplers import LocalSampler
-
 class SimpleVPG:
 
-    sampler_cls = LocalSampler
-
-    def __init__(self, env_spec, policy):
+    def __init__(self, env_spec, policy, sampler):
         self.env_spec = env_spec
         self.policy = policy
+        self.sampler = sampler
         self.max_episode_length = 200
 
     def train(self, trainer):
@@ -162,6 +160,7 @@ from garage import wrap_experiment
 from garage.envs import PointEnv
 from garage.experiment import Trainer
 from garage.experiment.deterministic import set_seed
+from garage.samplers import LocalSampler
 from garage.torch.policies import GaussianMLPPolicy
 
 @wrap_experiment
@@ -170,7 +169,8 @@ def debug_my_algorithm(ctxt):
     trainer = Trainer(ctxt)
     env = PointEnv()
     policy = GaussianMLPPolicy(env.spec)
-    algo = SimpleVPG(policy)
+    sampler = LocalSampler(agents=policy, envs=env, max_episode_length=200)
+    algo = SimpleVPG(env.spec, policy, sampler)
     trainer.setup(algo, env)
     trainer.train(n_epochs=500, batch_size=4000)
 
@@ -198,11 +198,10 @@ from garage.np import discount_cumsum
 
 class SimpleVPG:
 
-    sampler_cls = LocalSampler
-
-    def __init__(self, env_spec, policy):
+    def __init__(self, env_spec, policy, sampler):
         self.env_spec = env_spec
         self.policy = policy
+        self.sampler = sampler
         self.max_episode_length = 200
         self._discount = 0.99
         self._policy_opt = torch.optim.Adam(self.policy.parameters(), lr=1e-3)
@@ -307,7 +306,8 @@ def tutorial_vpg(ctxt=None):
     trainer = Trainer(ctxt)
     env = GymEnv('LunarLanderContinuous-v2')
     policy = GaussianMLPPolicy(env.spec)
-    algo = SimpleVPG(env.spec, policy)
+    sampler = LocalSampler(agents=policy, envs=env, max_episode_length=200)
+    algo = SimpleVPG(env.spec, policy, sampler)
     trainer.setup(algo, env)
     trainer.train(n_epochs=500, batch_size=4000, plot=True)
 ...
@@ -332,7 +332,11 @@ def tutorial_vpg(ctxt=None):
     with TFTrainer(ctxt) as trainer:
         env = PointEnv()
         policy = GaussianMLPPolicy(env.spec)
-        algo = SimpleVPG(env.spec, policy)
+        sampler = LocalSampler(agents=policy,
+                               envs=env,
+                               max_episode_length=200.
+                               is_tf_worker=True)
+        algo = SimpleVPG(env.spec, policy, sampler)
         trainer.setup(algo, env)
         trainer.train(n_epochs=500, batch_size=4000)
 ...
@@ -347,11 +351,10 @@ import tensorflow as tf
 
 class SimpleVPG:
 
-    sampler_cls = LocalSampler
-
-    def __init__(self, env_spec, policy):
+    def __init__(self, env_spec, policy, sampler):
         self.env_spec = env_spec
         self.policy = policy
+        self.sampler = sampler
         self.max_episode_length = 200
         self._discount = 0.99
         self.init_opt()
@@ -496,7 +499,11 @@ def tutorial_cem(ctxt=None):
     with TFTrainer(ctxt) as trainer:
         env = GymEnv('CartPole-v1')
         policy = CategoricalMLPPolicy(env.spec)
-        algo = SimpleCEM(env.spec, policy)
+        sampler = LocalSampler(agents=policy,
+                               envs=env,
+                               max_episode_length=200,
+                               is_tf_worker=True)
+        algo = SimpleCEM(env.spec, policy, sampler)
         trainer.setup(algo, env)
         trainer.train(n_epochs=100, batch_size=1000)
 ```
@@ -511,11 +518,11 @@ from garage.np import discount_cumsum
 from garage.sampler import LocalSampler
 
 class SimpleCEM:
-    sampler_cls = LocalSampler
 
-    def __init__(self, env_spec, policy):
+    def __init__(self, env_spec, policy, sampler):
         self.env_spec = env_spec
         self.policy = policy
+        self.sampler = sampler
         self.max_episode_length = 200
         self._discount = 0.99
         self._extra_std = 1

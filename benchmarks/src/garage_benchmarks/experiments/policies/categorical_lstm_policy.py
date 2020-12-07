@@ -5,6 +5,7 @@ from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import RaySampler
 from garage.tf.algos import PPO
 from garage.tf.policies import CategoricalLSTMPolicy
 from garage.trainer import TFTrainer
@@ -35,10 +36,16 @@ def categorical_lstm_policy(ctxt, env_id, seed):
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+        sampler = RaySampler(agents=policy,
+                             envs=env,
+                             max_episode_length=env.spec.max_episode_length,
+                             is_tf_worker=True)
+
         algo = PPO(
             env_spec=env.spec,
             policy=policy,
             baseline=baseline,
+            sampler=sampler,
             discount=0.99,
             gae_lambda=0.95,
             lr_clip_range=0.2,
@@ -50,5 +57,5 @@ def categorical_lstm_policy(ctxt, env_id, seed):
             ),
         )
 
-        trainer.setup(algo, env, sampler_args=dict(n_envs=12))
+        trainer.setup(algo, env)
         trainer.train(n_epochs=488, batch_size=2048)

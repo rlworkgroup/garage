@@ -23,7 +23,15 @@ sampler will run workers in the same process.
 from garage.sampler import LocalSampler, DefaultWorker
 
     ...
-    trainer.setup(algo, env, sampler_cls=LocalSampler, worker_class=DefaultWorker)
+    sampler = LocalSampler(agents=policy,
+                           envs=env,
+                           # below is the params for constructing worker factory
+                           max_episode_length=env.spec.max_episode_length,
+                           worker_cls=DefaultWorker)
+
+    algo = TRPO(...
+                sampler=sampler,
+                ...)
     ...
 ```
 
@@ -47,12 +55,12 @@ environments simulated in one step), just set `n_envs` in `worker_args`.
 from garage.sampler import LocalSampler, VecWorker
 
     ...
-    trainer.setup(
-        algo=algo,
-        env=env,
-        worker_class=VecWorker,
-        worker_args=dict(n_envs=12)
-    )
+    sampler = LocalSampler(agents=policy,
+                           envs=env,
+                           # below is the params for constructing worker factory
+                           max_episode_length=env.spec.max_episode_length,
+                           worker_class=VecWorker,
+                           worker_args=dict(n_envs=12))
     ...
 ```
 
@@ -76,13 +84,12 @@ on the local machine.
 from garage.sampler import RaySampler, VecWorker
 
     ...
-    trainer.setup(
-        algo=algo,
-        env=env,
-        sampler_cls=RaySampler,
-        worker_class=VecWorker,
-        worker_args=dict(n_envs=12)
-    )
+    sampler = RaySampler(agents=policy,
+                         envs=env,
+                         # below is the params for constructing worker factory
+                         max_episode_length=env.spec.max_episode_length,
+                         worker_class=VecWorker,
+                         worker_args=dict(n_envs=12))
     ...
 ```
 
@@ -123,6 +130,7 @@ def trpo_pendulum(ctxt=None, seed=1):
     algo = TRPO(env_spec=env.spec,
                 policy=policy,
                 value_function=value_function,
+                sampler=sampler,
                 discount=0.99,
                 center_adv=False)
 

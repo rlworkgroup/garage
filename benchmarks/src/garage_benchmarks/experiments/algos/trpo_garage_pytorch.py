@@ -4,6 +4,7 @@ import torch
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic
+from garage.sampler import LocalSampler
 from garage.torch.algos import TRPO as PyTorch_TRPO
 from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -47,9 +48,14 @@ def trpo_garage_pytorch(ctxt, env_id, seed):
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
+    sampler = LocalSampler(agents=policy,
+                           envs=env,
+                           max_episode_length=env.spec.max_episode_length)
+
     algo = PyTorch_TRPO(env_spec=env.spec,
                         policy=policy,
                         value_function=value_function,
+                        sampler=sampler,
                         discount=hyper_parameters['discount'],
                         gae_lambda=hyper_parameters['gae_lambda'])
 

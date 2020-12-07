@@ -4,6 +4,7 @@ import tensorflow as tf
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic
+from garage.sampler import RaySampler
 from garage.tf.algos import PPO
 from garage.tf.baselines import ContinuousMLPBaseline
 from garage.tf.policies import GaussianLSTMPolicy
@@ -12,7 +13,6 @@ from garage.trainer import TFTrainer
 hyper_params = {
     'policy_hidden_sizes': 32,
     'hidden_nonlinearity': tf.nn.tanh,
-    'n_envs': 8,
     'n_epochs': 20,
     'n_exploration_steps': 2048,
     'discount': 0.99,
@@ -51,9 +51,15 @@ def continuous_mlp_baseline(ctxt, env_id, seed):
             hidden_sizes=(64, 64),
         )
 
+        sampler = RaySampler(agents=policy,
+                             envs=env,
+                             max_episode_length=env.spec.max_episode_length,
+                             is_tf_worker=True)
+
         algo = PPO(env_spec=env.spec,
                    policy=policy,
                    baseline=baseline,
+                   sampler=sampler,
                    discount=hyper_params['discount'],
                    gae_lambda=hyper_params['gae_lambda'],
                    lr_clip_range=hyper_params['lr_clip_range'],
@@ -67,8 +73,6 @@ def continuous_mlp_baseline(ctxt, env_id, seed):
                    center_adv=hyper_params['center_adv'],
                    stop_entropy_gradient=True)
 
-        trainer.setup(algo,
-                      env,
-                      sampler_args=dict(n_envs=hyper_params['n_envs']))
+        trainer.setup(algo, env)
         trainer.train(n_epochs=hyper_params['n_epochs'],
                       batch_size=hyper_params['n_exploration_steps'])

@@ -6,6 +6,7 @@ from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf.algos import DDPG
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
@@ -62,10 +63,17 @@ def continuous_mlp_q_function(ctxt, env_id, seed):
         replay_buffer = PathBuffer(
             capacity_in_transitions=hyper_params['replay_buffer_size'])
 
+        sampler = LocalSampler(agents=exploration_policy,
+                               envs=env,
+                               max_episode_length=env.spec.max_episode_length,
+                               is_tf_worker=True,
+                               worker_class=FragmentWorker)
+
         ddpg = DDPG(env_spec=env.spec,
                     policy=policy,
                     qf=qf,
                     replay_buffer=replay_buffer,
+                    sampler=sampler,
                     steps_per_epoch=hyper_params['steps_per_epoch'],
                     policy_lr=hyper_params['policy_lr'],
                     qf_lr=hyper_params['qf_lr'],
@@ -77,6 +85,6 @@ def continuous_mlp_q_function(ctxt, env_id, seed):
                     policy_optimizer=tf.compat.v1.train.AdamOptimizer,
                     qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
-        trainer.setup(ddpg, env, sampler_args=dict(n_envs=12))
+        trainer.setup(ddpg, env)
         trainer.train(n_epochs=hyper_params['n_epochs'],
                       batch_size=hyper_params['n_exploration_steps'])

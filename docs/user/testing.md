@@ -117,9 +117,16 @@ class TestVPG(...):
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
+                max_episode_length=env.spec.max_episode_length.
+                is_tf_worker=True)
+
             algo = VPG(env_spec=env.spec,
                        policy=policy,
                        baseline=baseline,
+                       sampler=sampler,
                        discount=0.99,
                        optimizer_args=dict(learning_rate=0.01, ))
 

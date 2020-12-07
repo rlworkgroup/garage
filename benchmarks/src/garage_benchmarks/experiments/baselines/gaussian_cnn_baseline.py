@@ -2,6 +2,7 @@
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic
+from garage.sampler import RaySampler
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.policies import CategoricalCNNPolicy
@@ -53,10 +54,16 @@ def gaussian_cnn_baseline(ctxt, env_id, seed):
             hidden_sizes=params['hidden_sizes'],
             use_trust_region=params['use_trust_region'])
 
+        sampler = RaySampler(agents=policy,
+                             envs=env,
+                             max_episode_length=env.spec.max_episode_length,
+                             is_tf_worker=True)
+
         algo = PPO(
             env_spec=env.spec,
             policy=policy,
             baseline=baseline,
+            sampler=sampler,
             discount=0.99,
             gae_lambda=0.95,
             lr_clip_range=0.2,

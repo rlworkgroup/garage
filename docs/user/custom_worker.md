@@ -7,7 +7,7 @@ we will implement a custom worker to meet the requirements of the RL2 algorithm
 resets the RNN policy state at the beginning of a trail.
 ```
 
-## `Worker` interface and `DefaultWorker`
+## Worker interface and DefaultWorker
 
 In Garage, all `Worker`s need to implement the [`Worker` interface](https://garage.readthedocs.io/en/latest/_autoapi/garage/sampler/index.html#garage.sampler.Worker).
 Garage provides a [`DefaultWorker`](https://garage.readthedocs.io/en/latest/_autoapi/garage/sampler/index.html#garage.sampler.DefaultWorker)

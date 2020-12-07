@@ -8,7 +8,7 @@ Garage uses an environment API based on the very popular OpenAI Gym interface. T
 :code:`akro` to describe input and output spaces, which are an extension of the :code:`gym.Space` API.
 
 If you have an OpenAI Gym compatible environment, you can wrap it in :code:`garage.envs.GymEnv` to use it with
-garage. You can also provide its environment name id (see the example below), and let `:code:`GymEnv` creates
+garage. You can also provide its environment name id (see the example below), and let :code:`GymEnv` creates
 the environment for you.
 
 .. code-block:: python
@@ -175,6 +175,7 @@ stub mode):
     from garage.envs import normalize
     from garage.experiment.deterministic import set_seed
     from garage.np.baselines import LinearFeatureBaseline
+    from garage.sampler import LocalSampler
     from garage.tf.algos import TRPO
     from garage.tf.policies import CategoricalMLPPolicy
     from garage.trainer import TFTrainer
@@ -192,9 +193,16 @@ stub mode):
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+            sampler = LocalSampler(
+                agents=policy,
+                envs=env,
+                max_episode_length=env.spec.max_episode_length,
+                is_tf_worker=True)
+
             algo = TRPO(env_spec=env.spec,
                         policy=policy,
                         baseline=baseline,
+                        sampler=sampler,
                         discount=0.99,
                         max_kl_step=0.01)
 
