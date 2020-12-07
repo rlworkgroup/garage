@@ -8,11 +8,12 @@ from garage.experiment import deterministic
 from garage.np.exploration_policies import AddGaussianNoise
 from garage.np.policies import UniformRandomPolicy
 from garage.replay_buffer import PathBuffer
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch import prefer_gpu
 from garage.torch.algos import TD3
 from garage.torch.policies import DeterministicMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 
 hyper_parameters = {
     'policy_lr': 1e-3,
@@ -50,63 +51,69 @@ def td3_garage_pytorch(ctxt, env_id, seed):
     """
     deterministic.set_seed(seed)
 
-    with TFTrainer(ctxt) as trainer:
-        num_timesteps = hyper_parameters['n_epochs'] * hyper_parameters[
-            'steps_per_epoch'] * hyper_parameters['batch_size']
-        env = normalize(GymEnv(env_id))
+    trainer = Trainer(ctxt)
 
-        policy = DeterministicMLPPolicy(
-            env_spec=env.spec,
-            hidden_sizes=hyper_parameters['policy_hidden_sizes'],
-            hidden_nonlinearity=F.relu,
-            output_nonlinearity=torch.tanh)
+    num_timesteps = hyper_parameters['n_epochs'] * hyper_parameters[
+        'steps_per_epoch'] * hyper_parameters['batch_size']
+    env = normalize(GymEnv(env_id))
 
-        exploration_policy = AddGaussianNoise(
-            env.spec,
-            policy,
-            total_timesteps=num_timesteps,
-            max_sigma=hyper_parameters['sigma'],
-            min_sigma=hyper_parameters['sigma'])
+    policy = DeterministicMLPPolicy(
+        env_spec=env.spec,
+        hidden_sizes=hyper_parameters['policy_hidden_sizes'],
+        hidden_nonlinearity=F.relu,
+        output_nonlinearity=torch.tanh)
 
-        uniform_random_policy = UniformRandomPolicy(env.spec)
+    exploration_policy = AddGaussianNoise(env.spec,
+                                          policy,
+                                          total_timesteps=num_timesteps,
+                                          max_sigma=hyper_parameters['sigma'],
+                                          min_sigma=hyper_parameters['sigma'])
 
-        qf1 = ContinuousMLPQFunction(
-            env_spec=env.spec,
-            hidden_sizes=hyper_parameters['qf_hidden_sizes'],
-            hidden_nonlinearity=F.relu)
+    uniform_random_policy = UniformRandomPolicy(env.spec)
 
-        qf2 = ContinuousMLPQFunction(
-            env_spec=env.spec,
-            hidden_sizes=hyper_parameters['qf_hidden_sizes'],
-            hidden_nonlinearity=F.relu)
+    qf1 = ContinuousMLPQFunction(
+        env_spec=env.spec,
+        hidden_sizes=hyper_parameters['qf_hidden_sizes'],
+        hidden_nonlinearity=F.relu)
 
-        replay_buffer = PathBuffer(
-            capacity_in_transitions=hyper_parameters['replay_buffer_size'])
+    qf2 = ContinuousMLPQFunction(
+        env_spec=env.spec,
+        hidden_sizes=hyper_parameters['qf_hidden_sizes'],
+        hidden_nonlinearity=F.relu)
 
-        td3 = TD3(env_spec=env.spec,
-                  policy=policy,
-                  qf1=qf1,
-                  qf2=qf2,
-                  exploration_policy=exploration_policy,
-                  uniform_random_policy=uniform_random_policy,
-                  replay_buffer=replay_buffer,
-                  steps_per_epoch=hyper_parameters['steps_per_epoch'],
-                  policy_lr=hyper_parameters['policy_lr'],
-                  qf_lr=hyper_parameters['qf_lr'],
-                  target_update_tau=hyper_parameters['target_update_tau'],
-                  discount=hyper_parameters['discount'],
-                  grad_steps_per_env_step=hyper_parameters[
-                      'grad_steps_per_env_step'],
-                  start_steps=hyper_parameters['start_steps'],
-                  min_buffer_size=hyper_parameters['min_buffer_size'],
-                  buffer_batch_size=hyper_parameters['buffer_batch_size'],
-                  policy_optimizer=torch.optim.Adam,
-                  qf_optimizer=torch.optim.Adam,
-                  policy_noise_clip=hyper_parameters['policy_noise_clip'],
-                  policy_noise=hyper_parameters['policy_noise'])
+    replay_buffer = PathBuffer(
+        capacity_in_transitions=hyper_parameters['replay_buffer_size'])
 
-        prefer_gpu()
-        td3.to()
-        trainer.setup(td3, env)
-        trainer.train(n_epochs=hyper_parameters['n_epochs'],
-                      batch_size=hyper_parameters['batch_size'])
+    sampler = LocalSampler(agents=exploration_policy,
+                           envs=env,
+                           max_episode_length=env.spec.max_episode_length,
+                           worker_class=FragmentWorker)
+
+    td3 = TD3(
+        env_spec=env.spec,
+        policy=policy,
+        qf1=qf1,
+        qf2=qf2,
+        sampler=sampler,
+        exploration_policy=exploration_policy,
+        uniform_random_policy=uniform_random_policy,
+        replay_buffer=replay_buffer,
+        steps_per_epoch=hyper_parameters['steps_per_epoch'],
+        policy_lr=hyper_parameters['policy_lr'],
+        qf_lr=hyper_parameters['qf_lr'],
+        target_update_tau=hyper_parameters['target_update_tau'],
+        discount=hyper_parameters['discount'],
+        grad_steps_per_env_step=hyper_parameters['grad_steps_per_env_step'],
+        start_steps=hyper_parameters['start_steps'],
+        min_buffer_size=hyper_parameters['min_buffer_size'],
+        buffer_batch_size=hyper_parameters['buffer_batch_size'],
+        policy_optimizer=torch.optim.Adam,
+        qf_optimizer=torch.optim.Adam,
+        policy_noise_clip=hyper_parameters['policy_noise_clip'],
+        policy_noise=hyper_parameters['policy_noise'])
+
+    prefer_gpu()
+    td3.to()
+    trainer.setup(td3, env)
+    trainer.train(n_epochs=hyper_parameters['n_epochs'],
+                  batch_size=hyper_parameters['batch_size'])

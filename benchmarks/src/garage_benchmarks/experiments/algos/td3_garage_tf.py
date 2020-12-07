@@ -6,6 +6,7 @@ from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic
 from garage.np.exploration_policies import AddGaussianNoise
 from garage.replay_buffer import PathBuffer
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf.algos import TD3
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
@@ -79,11 +80,18 @@ def td3_garage_tf(ctxt, env_id, seed):
         replay_buffer = PathBuffer(
             capacity_in_transitions=hyper_parameters['replay_buffer_size'])
 
+        sampler = LocalSampler(agents=exploration_policy,
+                               envs=env,
+                               max_episode_length=env.spec.max_episode_length,
+                               is_tf_worker=True,
+                               worker_class=FragmentWorker)
+
         td3 = TD3(env.spec,
                   policy=policy,
                   qf=qf,
                   qf2=qf2,
                   replay_buffer=replay_buffer,
+                  sampler=sampler,
                   steps_per_epoch=hyper_parameters['steps_per_epoch'],
                   policy_lr=hyper_parameters['policy_lr'],
                   qf_lr=hyper_parameters['qf_lr'],

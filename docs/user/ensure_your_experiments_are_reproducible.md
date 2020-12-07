@@ -22,6 +22,7 @@ def experiment(ctxt=None, seed):
     # Initialize algorithm dependencies (policy, Q-functions,
     # replay buffers, etc.)
     policy = ...
+    sampler = ...
     algo = ...
 
     trainer.setup(algo=algo, env=env)
@@ -82,8 +83,7 @@ algorithm, logger, and snapshotter.
 
 To setup the `Trainer` use the function
 `Trainer.setup(algo, env, ...)`. It takes your algorithm and environment as
-required parameters. You can also control the sampling process you would like
-to use by specifying information such as the `sampler_cls`, `worker_cls`, etc.
+required parameters.
 Lastly, to trigger the training process of your experiment, use the function
 `Trainer.train(n_epochs, batch_size, ...)`. The required parameter
 `n_epochs` is used for specifying the number of training epochs that your

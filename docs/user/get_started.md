@@ -111,12 +111,16 @@ They are organized in the [github repository](https://github.com/rlworkgroup/gar
 
 Note: clickable links represents the directory of algorithms.
 
-A simple pytorch example to import `TRPO` algorithm, as well as, the policy `GaussianMLPPolicy` and value function `GaussianMLPValueFunction` in garage is shown below:
+A simple pytorch example to import `TRPO` algorithm, as well as, the policy
+`GaussianMLPPolicy`, value function `GaussianMLPValueFunction` and sampler
+`LocalSampler` in garage is shown below:
+
 ```py
 import gym
 import torch
 
 from garage.envs import GarageEnv, normalize
+from garage.sampler import LocalSampler
 from garage.torch.algos import TRPO as PyTorch_TRPO
 from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -135,11 +139,15 @@ def trpo_garage_pytorch():
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
+    sampler = LocalSampler(agents=policy,
+                           envs=env,
+                           max_episode_length=env.spec.max_episode_length)
+
     algo = PyTorch_TRPO(
         env_spec=env.spec,
         policy=policy,
         value_function=value_function,
-        max_episode_length=100,
+        sampler=sampler,
         discount=0.99,
         gae_lambda=0.97)
 
@@ -157,48 +165,10 @@ In garage, experiments are run using the "experiment launcher" `wrap_experiment`
 from garage import wrap_experiment
 ```
 
-Moreover, objects, such as `trainer`, `environment`, `policy` e.t.c are commonly used when constructing experiments in garage.
+Moreover, objects, such as `trainer`, `environment`, `policy`, `sampler` e.t.c are commonly used when constructing experiments in garage.
 
-```py
-import gym
-import torch
-
-from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
-from garage.experiment import deterministic, LocalRunner
-from garage.torch.algos import TRPO as PyTorch_TRPO
-from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
-from garage.torch.value_functions import GaussianMLPValueFunction
-
-@wrap_experiment
-def trpo_garage_pytorch(ctxt, env_id, seed):
-    deterministic.set_seed(seed)
-
-    runner = LocalRunner(ctxt)
-
-    env = GarageEnv(normalize(gym.make(env_id)))
-
-    policy = PyTorch_GMP(env.spec,
-                         hidden_sizes=[32, 32],
-                         hidden_nonlinearity=torch.tanh,
-                         output_nonlinearity=None)
-
-    value_function = GaussianMLPValueFunction(env_spec=env.spec,
-                                              hidden_sizes=(32, 32),
-                                              hidden_nonlinearity=torch.tanh,
-                                              output_nonlinearity=None)
-
-    algo = PyTorch_TRPO(
-        env_spec=env.spec,
-        policy=policy,
-        value_function=value_function,
-        max_episode_length=100,
-        discount=0.99,
-        gae_lambda=0.97)
-
-    runner.setup(algo, env)
-    runner.train(n_epochs=999,
-                 batch_size=1024)
+```eval_rst
+.. literalinclude:: ../../benchmarks/src/garage_benchmarks/experiments/algos/trpo_garage_pytorch.py
 ```
 
 [This page](https://garage.readthedocs.io/en/latest/user/experiments.html) will give you more insight into running experiments.
@@ -239,6 +209,7 @@ Experiment results will, by default, output to the same directory as the garage 
 During an experiment, garage extensively use `logger` from [`Dowel`](https://github.com/rlworkgroup/dowel) for logging outputs to StdOutput, and/ or TextOutput, and/or CsvOutput. For details, you can check [this](https://github.com/rlworkgroup/dowel/blob/master/src/dowel/logger.py).
 
 ## Open Source Support
+
 Since October 2018, garage is active in the open-source community contributing to RL researches and developments. Any [contributions](https://garage.readthedocs.io/en/latest/user/preparing_a_pr.html) from the community is more than welcomed.
 
 ## Resources

@@ -4,6 +4,7 @@ import tensorflow as tf
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic
+from garage.sampler import RaySampler
 from garage.tf.algos import PPO as TF_PPO
 from garage.tf.baselines import GaussianMLPBaseline as TF_GMB
 from garage.tf.optimizers import FirstOrderOptimizer
@@ -52,9 +53,15 @@ def ppo_garage_tf(ctxt, env_id, seed):
             ),
         )
 
+        sampler = RaySampler(agents=policy,
+                             envs=env,
+                             max_episode_length=env.spec.max_episode_length,
+                             is_tf_worker=True)
+
         algo = TF_PPO(env_spec=env.spec,
                       policy=policy,
                       baseline=baseline,
+                      sampler=sampler,
                       discount=0.99,
                       gae_lambda=0.95,
                       center_adv=True,

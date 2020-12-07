@@ -32,6 +32,7 @@ env = snapshot['env']  # We assume env is the same
 
 # Setup new experiment
 from garage import wrap_experiment
+from garage.sampler import LocalSampler
 from garage.torch.algos import BC
 from garage.torch.policies import GaussianMLPPolicy
 from garage.trainer import Trainer
@@ -41,11 +42,14 @@ def bc_with_pretrained_expert(ctxt=None):
     trainer = Trainer(ctxt)
     policy = GaussianMLPPolicy(env.spec, [8, 8])
     batch_size = 1000
+    sampler = LocalSampler(agents=expert,
+                           envs=env,
+                           max_episode_length=env.spec.max_episode_length)
     algo = BC(env.spec,
               policy,
               batch_size=batch_size,
               source=expert,
-              max_path_length=200,
+              sampler=sampler,
               policy_lr=1e-2,
               loss='log_prob')
     trainer.setup(algo, env)
@@ -87,6 +91,7 @@ from garage.experiment import Snapshotter  # Add this import!
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.tf.algos import DQN
 from garage.tf.policies import DiscreteQFArgmaxPolicy
 from garage.trainer import TFTrainer
@@ -143,15 +148,21 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_episode_length=500):
                                                  min_epsilon=0.02,
                                                  decay_ratio=0.1)
 
+        sampler = LocalSampler(agents=exploration_policy,
+                               envs=env,
+                               max_episode_length=env.spec.max_episode_length,
+                               is_tf_worker=True,
+                               worker_class=FragmentWorker)
+
         algo = DQN(env_spec=env.spec,
                    policy=policy,
                    qf=qf,
                    exploration_policy=exploration_policy,
                    replay_buffer=replay_buffer,
+                   sampler=sampler,
                    qf_lr=1e-4,
                    discount=0.99,
                    min_buffer_size=int(1e4),
-                   max_episode_length=max_episode_length,
                    double_q=False,
                    n_train_steps=500,
                    steps_per_epoch=steps_per_epoch,

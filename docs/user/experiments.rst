@@ -19,9 +19,10 @@ experiment.
 Within the decorated experiment function, experiment launchers then construct
 the important objects involved in running an experiment, such as the following:
 
- - The :code:`Trainer`, which sets up important state (such as a TensorFlow Session) for running the algorithm in the experiment.
+ - The :code:`trainer`, which sets up important state (such as a TensorFlow Session) for running the algorithm in the experiment.
  - The :code:`environment` object, which is the environment in which reinforcement learning is being done.
  - The :code:`policy` object, which is trained to optimize for maximal reward in the :code:`environment`.
+ - The :code:`sampler` object, which make samples for the :code:`algorithm` when training.
  - The :code:`algorithm`, which trains the :code:`policy`.
 
 Finally, the launcher calls :code:`trainer.setup` and :code:`trainer.train` which co-ordinate running the algorithm.
@@ -29,61 +30,7 @@ Finally, the launcher calls :code:`trainer.setup` and :code:`trainer.train` whic
 The garage repository contains several example experiment launchers. A fairly
 simple one, :code:`examples/tf/trpo_cartpole.py`, is also pasted below:
 
-.. testcode::
-
-  from garage import wrap_experiment
-  from garage.envs import GymEnv
-  from garage.experiment.deterministic import set_seed
-  from garage.np.baselines import LinearFeatureBaseline
-  from garage.sampler import RaySampler
-  from garage.tf.algos import TRPO
-  from garage.tf.policies import CategoricalMLPPolicy
-  from garage.trainer import TFTrainer
-
-
-  @wrap_experiment
-  def trpo_cartpole(ctxt=None, seed=1):
-      """Train TRPO with CartPole-v1 environment.
-
-      Args:
-          ctxt (garage.experiment.ExperimentContext): The experiment
-              configuration used by Trainer to create the snapshotter.
-          seed (int): Used to seed the random number generator to produce
-              determinism.
-
-      """
-      set_seed(seed)
-      with TFTrainer(ctxt) as trainer:
-          env = GymEnv('CartPole-v1')
-
-          policy = CategoricalMLPPolicy(name='policy',
-                                        env_spec=env.spec,
-                                        hidden_sizes=(32, 32))
-
-          baseline = LinearFeatureBaseline(env_spec=env.spec)
-
-          sampler = RaySampler(agents=policy,
-                               envs=env,
-                               max_episode_length=env.spec.max_episode_length,
-                               is_tf_worker=True)
-
-          algo = TRPO(env_spec=env.spec,
-                      policy=policy,
-                      baseline=baseline,
-                      sampler=sampler,
-                      discount=0.99,
-                      max_kl_step=0.01)
-
-          trainer.setup(algo, env)
-          trainer.train(n_epochs=100, batch_size=4000)
-
-
-  trpo_cartpole()
-
-.. testoutput::
-   :hide:
-
-   ...
+.. literalinclude:: ../../examples/tf/trpo_cartpole.py
 
 Running the above should produce output like:
 

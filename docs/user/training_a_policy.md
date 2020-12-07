@@ -57,7 +57,9 @@ Construct your policy and choose an algorithm to train it. Here, we use
 like [this](implement_algo). The policy should be compatible with the
 environment's observations and action space (CNN for image observations,
 discrete policy for discrete action spaces, etc). The action space of
-`CartPole-V1` is discrete so we choose a discrete policy here.
+`CartPole-V1` is discrete so we choose a discrete policy here. Besides, as an
+on policy algorithm, we need a sampler to make samples. Here we use the basic
+`LocalSampler`.
 
 ```py
 policy = CategoricalMLPPolicy(name='policy',
@@ -66,6 +68,11 @@ policy = CategoricalMLPPolicy(name='policy',
 
 baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+sampler = LocalSampler(agents=policy,
+                       envs=env,
+                       max_episode_length=env.spec.max_episode_length,
+                       is_tf_worker=True)
+
 algo = TRPO(env_spec=env.spec,
             policy=policy,
             baseline=baseline,
@@ -73,7 +80,7 @@ algo = TRPO(env_spec=env.spec,
             max_kl_step=0.01)
 ```
 
-### Tell `Trainer` How to Train the Policy
+### Tell the Trainer How to Train the Policy
 
 The final step is calling `trainer.setup` and `trainer.train` to co-ordinate
 training the policy.
@@ -92,8 +99,9 @@ my_first_experiment()
 my_first_experiment(seed=3)  # changes the seed to 3
 ```
 
-Often these will appear at the end of your launcher script, but your experiment
-functions are regular Python functions, and can be imported anywhere.
+Usually these will appear at the end of your launcher script, but your
+experiment functions are regular Python functions, and can be imported
+anywhere.
 
 See below for a full example.
 
@@ -104,48 +112,8 @@ In the above steps, we construct the required components to train a
 experiment function. You can find the full example in [`examples/tf/trpo_cartpole.py`](https://github.com/rlworkgroup/garage/blob/master/examples/tf/trpo_cartpole.py),
 which is also pasted below:
 
-```py
-from garage import wrap_experiment
-from garage.envs import GymEnv
-from garage.experiment.deterministic import set_seed
-from garage.np.baselines import LinearFeatureBaseline
-from garage.tf.algos import TRPO
-from garage.tf.policies import CategoricalMLPPolicy
-from garage.trainer import TFTrainer
-
-
-@wrap_experiment
-def trpo_cartpole(ctxt=None, seed=1):
-    """Train TRPO with CartPole-v1 environment.
-
-    Args:
-        ctxt (gExperimentContext): The experiment configuration used by
-            Trainer to create the snapshotter.
-        seed (int): Used to seed the random number generator to produce
-            determinism.
-
-    """
-    set_seed(seed)
-    with TFTrainer(ctxt) as trainer:
-        env = GymEnv('CartPole-v1')
-
-        policy = CategoricalMLPPolicy(name='policy',
-                                      env_spec=env.spec,
-                                      hidden_sizes=(32, 32))
-
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
-
-        algo = TRPO(env_spec=env.spec,
-                    policy=policy,
-                    baseline=baseline,
-                    discount=0.99,
-                    max_kl_step=0.01)
-
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=100, batch_size=4000)
-
-
-trpo_cartpole()
+```eval_rst
+.. literalinclude:: ../../examples/tf/trpo_cartpole.py
 ```
 
 Running the above should produce output like:

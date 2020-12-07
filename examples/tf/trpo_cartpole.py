@@ -11,7 +11,7 @@ from garage import wrap_experiment
 from garage.envs import GymEnv
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
-from garage.sampler import RaySampler
+from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.trainer import TFTrainer
@@ -38,10 +38,10 @@ def trpo_cartpole(ctxt=None, seed=1):
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        sampler = RaySampler(agents=policy,
-                             envs=env,
-                             max_episode_length=env.spec.max_episode_length,
-                             is_tf_worker=True)
+        sampler = LocalSampler(agents=policy,
+                               envs=env,
+                               max_episode_length=env.spec.max_episode_length,
+                               is_tf_worker=True)
 
         algo = TRPO(env_spec=env.spec,
                     policy=policy,

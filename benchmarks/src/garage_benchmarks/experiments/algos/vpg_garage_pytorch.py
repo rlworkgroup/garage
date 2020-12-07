@@ -4,6 +4,7 @@ import torch
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic
+from garage.sampler import RaySampler
 from garage.torch.algos import VPG as PyTorch_VPG
 from garage.torch.optimizers import OptimizerWrapper
 from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
@@ -57,9 +58,14 @@ def vpg_garage_pytorch(ctxt, env_id, seed):
                                     max_optimization_epochs=10,
                                     minibatch_size=64)
 
+    sampler = RaySampler(agents=policy,
+                         envs=env,
+                         max_episode_length=env.spec.max_episode_length)
+
     algo = PyTorch_VPG(env_spec=env.spec,
                        policy=policy,
                        value_function=value_function,
+                       sampler=sampler,
                        policy_optimizer=policy_optimizer,
                        vf_optimizer=vf_optimizer,
                        discount=hyper_parameters['discount'],

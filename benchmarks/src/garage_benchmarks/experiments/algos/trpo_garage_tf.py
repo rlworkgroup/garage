@@ -5,6 +5,7 @@ from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import RaySampler
 from garage.tf.algos import TRPO
 from garage.tf.policies import GaussianMLPPolicy
 from garage.trainer import TFTrainer
@@ -45,9 +46,15 @@ def trpo_garage_tf(ctxt, env_id, seed):
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+        sampler = RaySampler(agents=policy,
+                             envs=env,
+                             max_episode_length=env.spec.max_episode_length,
+                             is_tf_worker=True)
+
         algo = TRPO(env_spec=env.spec,
                     policy=policy,
                     baseline=baseline,
+                    sampler=sampler,
                     discount=hyper_parameters['discount'],
                     gae_lambda=hyper_parameters['gae_lambda'],
                     max_kl_step=hyper_parameters['max_kl'])

@@ -40,34 +40,76 @@ on a single CPU. `VecWorker` can compute a batch of actions from a policy
 regarding multiple environments to reduce of overhead of sampling (e.g. feeding
 forward a neural network).
 
-## Setup Sampler and Worker for a Trainer
+## Construct a Sampler
 
-Setup the sampler and worker for a `Trainer` is easy. Just passing
-`sampler_cls` and `worker_class` to `trainer.setup()`. The number of workers in
-the sampler can be set by the parameter `n_workers`.
+A sampler can be constructed either from a worker factory (the class that can
+construct workers), or from parameters directly.
 
-For `VecWorker`, you can set the level of vectorization (i.e. the number of
-environments simulated in one step) by setting `n_envs` in `worker_args`.
+### From a Worker Factory
+
+```py
+from garage.sampler import LocalSampler, WorkerFactory
+
+env = ...
+policy = ...
+worker_factory = WorkerFactory(max_episode_length=100,
+                               is_tf_worker=True,
+                               n_workers=4)
+sampler = LocalSampler.from_worker_factory(worker_factory=worker_factory,
+                                           agents=policy,
+                                           envs=env)
+...
+```
+
+In the above example, we firstly construct a worker factory, which will
+construct 4 workers for the sampler. And the max length of episodes collected
+by these workers will be 100. Noted that for policies with TensorFLow
+framework, we need to set `is_tf_worker` to be `True`. Here we don't choose
+a type of worker explicitly, so it will construct `DefaultWorker` by default.
+
+With the worker factory, then we construct a `LocalSampler` with policies and
+environments that will be used in sampling.
+
+### From parameters
+
+Sometimes we want to construct a sampler directly.
 
 ```py
 from garage.sampler import RaySampler, VecWorker
 
-...
-trainer.setup(
-    algo=algo,
-    env=env,
-    sampler_cls=RaySampler,
-    n_workers=4,
-    worker_class=VecWorker,
-    worker_args=dict(n_envs=12)
-)
-...
+env = ...
+policy = ...
+sampler = RaySampler(agents=policy,
+                     envs=env,
+                     # params below are for worker
+                     max_episode_length=100,
+                     is_tf_worker=True,
+                     n_workers=4.
+                     worker_class=VecWorker,
+                     worker_args=dict(n_envs=12))
 ```
 
-In the above example, we choose `RaySampler` and `VecWorker`, set the number
-of workers to 4, and set the level of vectorization to 12. With this
-configuration, sampling will run in 4 CPUs in parallel and each worker will
-sample 12 actions in one step.
+In this example, we construct a `RaySampler` directly, and the sampler will
+construct 4 `VecWorker` when sampling. Besides, we set the level of
+vectorization (i.e. the number of environments simulated in one step) to 12 by
+setting `n_envs` in `worker_args` for the `VecWorker`.
+
+## Setup Sampler for a Trainer
+
+When we construct the sampler in the launcher. We just need to pass it to the
+algorithm object. The algorithm will have a field named `sampler` to save the
+sampler. Then the trainer will be able to use the sampler for sampling.
+
+```py
+
+env = ...
+sampler = ...
+algo = TRPO(...
+            sampler=sampler,
+            ...)
+trainer.setup(algo=algo, env=env)
+
+```
 
 ----
 
