@@ -157,8 +157,10 @@ class Trainer:
         self._env = env
 
         self._seed = get_seed()
-        # pylint: disable=protected-access
-        self._sampler = self._algo._sampler
+
+        if hasattr(self._algo, '_sampler'):
+            # pylint: disable=protected-access
+            self._sampler = self._algo._sampler
 
         self._has_setup = True
 
@@ -206,9 +208,9 @@ class Trainer:
 
         """
         if self._sampler is None:
-            raise ValueError('trainer was not initialized with `sampler_cls`. '
-                             'Either provide `sampler_cls` to trainer.setup, '
-                             ' or set `algo.sampler_cls`.')
+            raise ValueError('trainer was not initialized with `sampler`. '
+                             'the algo should have a `_sampler` field when'
+                             '`setup()` is called')
         if batch_size is None and self._train_args.batch_size is None:
             raise ValueError(
                 'trainer was not initialized with `batch_size`. '
