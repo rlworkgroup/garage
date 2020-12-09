@@ -154,7 +154,7 @@ class TENPO(RLAlgorithm):
         self._infer_network = None
         self._old_infer_network = None
 
-        self.sampler = sampler
+        self._sampler = sampler
 
         self._init_opt()
 

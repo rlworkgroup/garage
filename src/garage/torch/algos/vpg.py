@@ -92,7 +92,7 @@ class VPG(RLAlgorithm):
                                           stop_entropy_gradient,
                                           policy_ent_coeff)
         self._episode_reward_mean = collections.deque(maxlen=100)
-        self.sampler = sampler
+        self._sampler = sampler
 
         if policy_optimizer:
             self._policy_optimizer = policy_optimizer

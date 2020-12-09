@@ -143,7 +143,7 @@ class NPO(RLAlgorithm):
 
         self._episode_reward_mean = collections.deque(maxlen=100)
 
-        self.sampler = sampler
+        self._sampler = sampler
 
         self._init_opt()
 

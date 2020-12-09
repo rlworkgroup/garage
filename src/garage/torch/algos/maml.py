@@ -55,7 +55,7 @@ class MAML:
                  num_grad_updates=1,
                  meta_evaluator=None,
                  evaluate_every_n_epochs=1):
-        self.sampler = sampler
+        self._sampler = sampler
 
         self.max_episode_length = inner_algo.max_episode_length
 

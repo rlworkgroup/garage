@@ -157,7 +157,8 @@ class Trainer:
         self._env = env
 
         self._seed = get_seed()
-        self._sampler = self._algo.sampler
+        # pylint: disable=protected-access
+        self._sampler = self._algo._sampler
 
         self._has_setup = True
 

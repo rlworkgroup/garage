@@ -25,7 +25,7 @@ class SimpleCEM:
     def __init__(self, env_spec, policy, sampler):
         self.env_spec = env_spec
         self.policy = policy
-        self.sampler = sampler
+        self._sampler = sampler
         self.max_episode_length = env_spec.max_episode_length
         self._discount = 0.99
         self._extra_std = 1

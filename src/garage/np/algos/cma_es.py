@@ -36,7 +36,7 @@ class CMAES(RLAlgorithm):
                  sigma0=1.):
         self.policy = policy
         self.max_episode_length = env_spec.max_episode_length
-        self.sampler = sampler
+        self._sampler = sampler
 
         self._env_spec = env_spec
         self._discount = discount

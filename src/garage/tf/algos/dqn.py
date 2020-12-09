@@ -100,7 +100,7 @@ class DQN(RLAlgorithm):
         self.policy = policy
         self.exploration_policy = exploration_policy
 
-        self.sampler = sampler
+        self._sampler = sampler
 
         self._init_opt()
 

@@ -136,7 +136,7 @@ class DDPG(RLAlgorithm):
                                             module=self._qf,
                                             lr=qf_lr)
         self._eval_env = None
-        self.sampler = sampler
+        self._sampler = sampler
 
     def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.

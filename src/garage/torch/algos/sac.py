@@ -141,7 +141,7 @@ class SAC(RLAlgorithm):
         self.env_spec = env_spec
         self.replay_buffer = replay_buffer
 
-        self.sampler = sampler
+        self._sampler = sampler
 
         self._reward_scale = reward_scale
         # use 2 target q networks

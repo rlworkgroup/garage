@@ -124,7 +124,7 @@ class DQN(RLAlgorithm):
                                             lr=qf_lr)
         self._eval_env = eval_env
 
-        self.sampler = sampler
+        self._sampler = sampler
 
     def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.
