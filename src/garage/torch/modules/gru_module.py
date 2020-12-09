@@ -73,7 +73,7 @@ class GRUModule(nn.Module):
         for seq in range(input_val.size(1)):
             hn = self._gru_cell(input_val[:, seq, :], hn)
             outs.append(hn)
-        out = outs[-1].squeeze()
+        out = outs[-1].squeeze(dim=1)
         out = self._layers(out)
         outs = torch.stack(outs)
         return out
