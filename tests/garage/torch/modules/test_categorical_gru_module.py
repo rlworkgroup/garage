@@ -30,4 +30,4 @@ class TestCategoricalGRUModule:
     def test_output_normalized(self, output_dim):
         model = CategoricalGRUModule(input_dim=self.feature_shape, output_dim=output_dim, hidden_dim=1)
         dist = model(self.input)
-        return np.isclose(dist.probs.squeeze().sum().detach().numpy(), 1)
+        assert np.isclose(dist.probs.squeeze().sum().detach().numpy(), 1)
