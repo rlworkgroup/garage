@@ -145,12 +145,9 @@ class Trainer:
             policy weights can be loaded before setup().
 
         Args:
-            algo (RLAlgorithm): An algorithm instance.
+            algo (RLAlgorithm): An algorithm instance. If this algo want to use
+                samplers, it should have a `_sampler` field.
             env (Environment): An environment instance.
-
-        Raises:
-            ValueError: If sampler_cls is passed and the algorithm doesn't
-                contain a `max_episode_length` field.
 
         """
         self._algo = algo
