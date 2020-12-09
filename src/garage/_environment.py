@@ -470,6 +470,7 @@ class Wrapper(Environment):
         Args:
             seed (int): The seed value to set
         """
+        self._env.seed()
 
     def close(self):
         """Close the wrapped env."""
