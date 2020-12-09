@@ -190,6 +190,9 @@ class DMControlEnv(Environment):
         Args:
             seed (int): The seed value to set
         """
+        # pylint: disable=protected-access
+        self._env._task._random = np.random.RandomState(seed)
+        self.action_space.seed(seed)
 
     def close(self):
         """Close the environment."""
