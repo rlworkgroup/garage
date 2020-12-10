@@ -82,6 +82,7 @@ EXTRAS['dev'] = [
     'sphinx_rtd_theme',
     'sphinxcontrib-bibtex',
     'yapf==0.30.0',
+    'google-cloud-storage'
 ]  # yapf: disable
 
 with open('README.md') as f:
