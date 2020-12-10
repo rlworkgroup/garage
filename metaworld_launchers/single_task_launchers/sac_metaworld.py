@@ -17,21 +17,17 @@ from garage.envs import GymEnv
 from garage.experiment import deterministic
 from garage.trainer import Trainer
 from garage.replay_buffer import PathBuffer
-from garage.sampler import LocalSampler
+from garage.sampler import LocalSampler, FragmentWorker
 from garage.torch import set_gpu_mode
 from garage.torch.algos import SAC
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
 
-import pip
-package = f'metaworld @ https://git@api.github.com/repos/rlworkgroup/metaworld/tarball/new-reward-functions'
-pip.main(['install', '--upgrade', package])
-
 @click.command()
-@click.option('--env_name', type=str, default="peg-insert-side-v2")
+@click.option('--env_name', type=str, default="basketball-v2")
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
 @click.option('--gpu', type=int, default=0)
-@wrap_experiment(log_dir="./", snapshot_mode='gap', snapshot_gap=50, name_parameters='all')
+@wrap_experiment(snapshot_mode='gap', snapshot_gap=50, name_parameters='all')
 def sac_metaworld_new_reward_function(
         ctxt=None,
         env_name=None,
@@ -86,6 +82,11 @@ def sac_metaworld_new_reward_function(
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
     batch_size = 50
 
+    sampler = LocalSampler(agents=policy,
+                           envs=env,
+                           max_episode_length=env.spec.max_episode_length,
+                           worker_class=FragmentWorker)
+
     sac = SAC(env_spec=env.spec,
               policy=policy,
               qf1=qf1,
@@ -99,12 +100,13 @@ def sac_metaworld_new_reward_function(
               buffer_batch_size=256,
               reward_scale=float(reward_scale),
               steps_per_epoch=750,
-              num_evaluation_episodes=10)
+              num_evaluation_episodes=10,
+              sampler=sampler)
 
     if gpu is not None:
         set_gpu_mode(True, gpu)
     sac.to()
-    runner.setup(algo=sac, env=env, sampler_cls=LocalSampler, sampler_args={"seed": seed, "n_envs": 2})
+    runner.setup(algo=sac, env=env)
     runner.train(n_epochs=250, batch_size=batch_size)
 
 
