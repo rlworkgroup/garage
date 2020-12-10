@@ -170,7 +170,3 @@ def test_deterministic_on_policy_sampling_dm_env():
     assert np.array_equal(episodes1.observations, episodes2.observations)
     assert np.array_equal(episodes1.next_observations,
                           episodes2.next_observations)
-
-
-if __name__ == '__main__':
-    test_deterministic_on_policy_sampling_dm_env()
