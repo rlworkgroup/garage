@@ -11,12 +11,12 @@ home = expanduser("~")
 if not os.path.exists(f'{home}/metaworld-runs-v2'):
     os.makedirs(f'{home}/metaworld-runs-v2')
 
-volume = Mount(f"{home}/code/garage/data", "{home}/metaworld-runs-v2/", type='bind')
+volume = Mount(f"{home}/code/garage/data", f"{home}/metaworld-runs-v2/", type='bind')
 
 # names = [INSERT ENV NAMES HERE AS A LIST]
 names = ['door-open-v2']
 
-data = open(f'{home}/mjkey.txt', 'r').read()
+data = open(f'{home}/.mujoco/mjkey.txt', 'r').read()
 
 environment_vars = [f"MJKEY={data}", "QT_X11_NO_MITSHM=1", "DISPLAY="]
 
