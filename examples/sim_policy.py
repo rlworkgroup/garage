@@ -5,6 +5,7 @@ import sys
 
 import cloudpickle
 import tensorflow as tf
+from garage.torch import prefer_gpu
 
 from garage import rollout
 
@@ -62,6 +63,7 @@ if __name__ == '__main__':
     with tf.compat.v1.Session() as sess:
         with open(args.file, 'rb') as f:
             data = cloudpickle.load(f)
+        prefer_gpu()
         policy = data['algo'].policy
         env = data['env']
         while True:
