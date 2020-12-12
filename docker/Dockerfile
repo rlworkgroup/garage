@@ -195,6 +195,9 @@ RUN cd benchmarks && python setup.py sdist && \
     cp dist/*.tar.gz dist/benchmarks.tar.gz && \
     pip install dist/benchmarks.tar.gz
 
+RUN pip uninstall metaworld --yes
+RUN pip install https://github.com/rlworkgroup/metaworld/archive/new-reward-functions.zip
+
 ENTRYPOINT ["docker/entrypoint-headless.sh"]
 
 # Nvidia target ################################################################

@@ -80,12 +80,19 @@ def sac_metaworld_new_reward_function(
                                  hidden_nonlinearity=F.relu)
 
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
-    batch_size = 50
+    batch_size = max_path_length
+    num_evaluation_points = 500
+    timesteps = int(1e7)
+    epochs = timesteps // batch_size
+    epoch_cycles = epochs // num_evaluation_points
+    epochs = epochs // epoch_cycles
 
     sampler = LocalSampler(agents=policy,
                            envs=env,
                            max_episode_length=env.spec.max_episode_length,
-                           worker_class=FragmentWorker)
+                           n_workers=1,
+                           worker_class=FragmentWorker,
+                           worker_args=dict(n_envs=2))
 
     sac = SAC(env_spec=env.spec,
               policy=policy,
@@ -99,7 +106,7 @@ def sac_metaworld_new_reward_function(
               discount=0.99,
               buffer_batch_size=256,
               reward_scale=float(reward_scale),
-              steps_per_epoch=750,
+              steps_per_epoch=epoch_cycles,
               num_evaluation_episodes=10,
               sampler=sampler)
 
@@ -107,7 +114,7 @@ def sac_metaworld_new_reward_function(
         set_gpu_mode(True, gpu)
     sac.to()
     runner.setup(algo=sac, env=env)
-    runner.train(n_epochs=250, batch_size=batch_size)
+    runner.train(n_epochs=num_evaluation_points, batch_size=batch_size)
 
 
 sac_metaworld_new_reward_function()
