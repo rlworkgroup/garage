@@ -54,14 +54,17 @@ class ObservationBatch(torch.Tensor):
     order: ObservationOrder
     lengths: torch.Tensor = None
 
-    def __init__(self, observations, order, lengths=None):
+    def __new__(cls, observations, order, lengths=None):
         """Check that lengths is consistent with the rest of the fields.
 
         Raises:
             ValueError: If lengths is not consistent with another field.
 
+        Returns:
+            ObservationBatch: A new observation batch.
+
         """
-        super().__init__(observations)
+        self = super().__new__(cls, observations)
         self.order = order
         self.lengths = lengths
         if self.order == ObservationOrder.EPISODES:
@@ -86,6 +89,7 @@ class ObservationBatch(torch.Tensor):
             raise ValueError(
                 f'lengths has value {self.lengths}, but must be None '
                 f'when order == {self.order}')
+        return self
 
 
 def observation_batch_to_packed_sequence(observations):
