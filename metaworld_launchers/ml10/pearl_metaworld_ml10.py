@@ -84,6 +84,11 @@ def pearl_metaworld_ml10(ctxt=None,
         use_gpu (bool): Whether or not to use GPU for training.
 
     """
+    num_evaluation_points = 250
+    timesteps=int(20e6)
+    epochs = timesteps // batch_size
+    epoch_cycles = epochs // num_evaluation_points
+    epochs = epochs // epoch_cycles
     set_seed(seed)
     encoder_hidden_sizes = (encoder_hidden_size, encoder_hidden_size,
                             encoder_hidden_size)
@@ -131,7 +136,7 @@ def pearl_metaworld_ml10(ctxt=None,
         encoder_hidden_sizes=encoder_hidden_sizes,
         test_env_sampler=test_env_sampler,
         meta_batch_size=meta_batch_size,
-        num_steps_per_epoch=num_steps_per_epoch,
+        num_steps_per_epoch=epoch_cycles,
         num_initial_steps=num_initial_steps,
         num_tasks_sample=num_tasks_sample,
         num_steps_prior=num_steps_prior,
@@ -148,7 +153,7 @@ def pearl_metaworld_ml10(ctxt=None,
 
     trainer.setup(algo=pearl, env=env[0]())
 
-    trainer.train(n_epochs=num_epochs, batch_size=batch_size)
+    trainer.train(n_epochs=epochs, batch_size=batch_size)
 
 
 pearl_metaworld_ml10()

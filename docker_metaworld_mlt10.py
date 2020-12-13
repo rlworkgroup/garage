@@ -6,7 +6,7 @@ import numpy as np
 import argparse
 
 parser = argparse.ArgumentParser(description='launch ml10 experiments')
-parser.add_argument('algo', metavar='a', type=str, help='algorithm that will be launched')
+parser.add_argument('algo', metavar='a', type=str, default="mtsac", help='algorithm that will be launched')
 args = parser.parse_args()
 algo = args.algo
 
@@ -23,17 +23,11 @@ environment_vars = [f"MJKEY={mjkey}", "QT_X11_NO_MITSHM=1", "DISPLAY="]
 device_requests = [DeviceRequest(count=-1, capabilities=[['gpu']])]
 
 
-if algo=='rl2':
-    container = 'rlworkgroup/garage-headless'
-    run_cmd = f'python metaworld_launchers/ml10/rl2_ppo_metaworld_ml10.py'
-elif algo=='pearl':
+if algo=='mtsac':
     container = 'rlworkgroup/garage-nvidia'
-    run_cmd = f'python metaworld_launchers/ml10/pearl_metaworld_ml10.py'
-elif algo=='maml':
-    container = 'rlworkgroup/garage-headless'
-    run_cmd = f'python metaworld_launchers/ml10/maml_trpo_metaworld_ml10.py'
+    run_cmd = f'python metaworld_launchers/mt10/mtsac_metaworld_mt10.py'
 else:
-    raise ValueError("algorithm passed needs to be in {'rl2', 'pearl', 'maml'}")
+    raise ValueError("algorithm passed needs to be in {'mtsac'}")
 
 seeds = np.random.randint(10000,size=(1,))
 for seed in seeds:

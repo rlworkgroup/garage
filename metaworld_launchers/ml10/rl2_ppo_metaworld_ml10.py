@@ -23,7 +23,7 @@ from garage.trainer import TFTrainer
 @click.command()
 @click.option('--seed', default=1)
 @click.option('--meta_batch_size', default=10)
-@click.option('--n_epochs', default=10)
+@click.option('--n_epochs', default=400)
 @click.option('--episode_per_task', default=10)
 @wrap_experiment
 def rl2_ppo_metaworld_ml10(ctxt, seed, meta_batch_size, n_epochs,
