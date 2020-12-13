@@ -25,12 +25,9 @@ import metaworld
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--epochs', default=4000)
-@click.option('--episodes_per_task', default=10)
-@click.option('--meta_batch_size', default=20)
 @wrap_experiment(snapshot_mode='gap', snapshot_gap=16, name_parameters='passed')
-def maml_trpo_metaworld_ml10(ctxt, seed, epochs, episodes_per_task,
-                             meta_batch_size):
+def maml_trpo_metaworld_ml10(ctxt, seed, epochs=4000, episodes_per_task=10,
+                             meta_batch_size=20):
     """Set up environment and algorithm and run the task.
 
     Args:
