@@ -34,7 +34,7 @@ jobs:
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
       - name: Build Docker container
         env:
-          DOCKER_TAG: ${{ DOCKER_TAG_BASE }}-${{ matrix.branch }}
+          DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
         run: |
           docker build . \
             -f docker/Dockerfile \
@@ -44,7 +44,7 @@ jobs:
             --cache-from="docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
       - name: Push to cache (GitHub Package Registry)
         env:
-          DOCKER_TAG: ${{ DOCKER_TAG_BASE }}-${{ matrix.branch }}
+          DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
         run: |
           docker tag "${DOCKER_TAG}" "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
           docker push "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
