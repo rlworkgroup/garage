@@ -25,7 +25,6 @@ jobs:
         branch: [master, release-2020.06]
 
     steps:
-      - name: Create Docker Tag
       - name: Docker info
         run: docker version
       - uses: actions/checkout@v2
