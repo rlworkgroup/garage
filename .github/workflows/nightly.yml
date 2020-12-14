@@ -24,7 +24,7 @@ jobs:
       matrix:
         branch: [master, release-2020.06]
     env:
-      DOCKER_TAG: ${DOCKER_TAG_BASE}-${{ matrix.branch }}
+      DOCKER_TAG: ${{ DOCKER_TAG_BASE }}-${{ matrix.branch }}
 
     steps:
       - name: Docker info
