@@ -57,8 +57,6 @@ jobs:
     strategy:
       matrix:
         branch: [master, release-2020.06]
-    env:
-      DOCKER_TAG: ${DOCKER_TAG_BASE}-${{ matrix.branch }}
 
     steps:
     - uses: actions/checkout@v2
@@ -67,10 +65,16 @@ jobs:
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
     - name: Pull from cache (GitHub Package Registry)
+      env:
+        DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
       run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Tag docker image
+      env:
+        DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
       run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Doctest
+      env:
+        DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
       run: |
         docker run \
           -e MJKEY \
@@ -88,8 +92,6 @@ jobs:
     strategy:
       matrix:
         branch: [master, release-2020.06]
-    env:
-      DOCKER_TAG: ${DOCKER_TAG_BASE}-${{ matrix.branch }}
 
     steps:
     - uses: actions/checkout@v2
@@ -98,10 +100,16 @@ jobs:
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
     - name: Pull from cache (GitHub Package Registry)
+      env:
+        DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
       run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Tag docker image
+      env:
+        DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
       run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Normal tests
+      env:
+        DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
       run: |
         ci_env="$(bash <(curl -s https://codecov.io/env))" &&
         docker run \
@@ -135,8 +143,6 @@ jobs:
     strategy:
       matrix:
         branch: [master, release-2020.06]
-    env:
-      DOCKER_TAG: ${DOCKER_TAG_BASE}-${{ matrix.branch }}
 
     steps:
     - uses: actions/checkout@v2
@@ -145,10 +151,16 @@ jobs:
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
     - name: Pull from cache (GitHub Package Registry)
+      env:
+        DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
       run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Tag docker image
+      env:
+        DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
       run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Large tests
+      env:
+        DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
       run: |
         ci_env="$(bash <(curl -s https://codecov.io/env))" &&
         docker run \
@@ -181,8 +193,6 @@ jobs:
     strategy:
       matrix:
         branch: [master, release-2020.06]
-    env:
-      DOCKER_TAG: ${DOCKER_TAG_BASE}-${{ matrix.branch }}
 
     steps:
     - uses: actions/checkout@v2
@@ -191,10 +201,16 @@ jobs:
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
     - name: Pull from cache (GitHub Package Registry)
+      env:
+        DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
       run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Tag docker image
+      env:
+        DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
       run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: MuJoCo tests
+      env:
+        DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
       run: |
         ci_env="$(bash <(curl -s https://codecov.io/env))" &&
         docker run \
@@ -226,8 +242,6 @@ jobs:
     strategy:
       matrix:
         branch: [master, release-2020.06]
-    env:
-      DOCKER_TAG: ${DOCKER_TAG_BASE}-${{ matrix.branch }}
 
     steps:
     - uses: actions/checkout@v2
@@ -236,10 +250,16 @@ jobs:
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
     - name: Pull from cache (GitHub Package Registry)
+      env:
+        DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
       run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Tag docker image
+      env:
+        DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
       run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Large MuJoCo tests
+      env:
+        DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
       run: |
         ci_env="$(bash <(curl -s https://codecov.io/env))" &&
         docker run \
@@ -271,8 +291,6 @@ jobs:
     strategy:
       matrix:
         branch: [master, release-2020.06]
-    env:
-      DOCKER_TAG: ${DOCKER_TAG_BASE}-${{ matrix.branch }}
 
     steps:
       - uses: actions/checkout@v2
@@ -281,10 +299,16 @@ jobs:
       - name: Login to GitHub Package Registry
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
       - name: Pull from cache (GitHub Package Registry)
+        env:
+          DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
         run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
       - name: Tag docker image
+        env:
+          DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
         run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
       - name: Nightly tests
+        env:
+          DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
         run: |
           ci_env="$(bash <(curl -s https://codecov.io/env))" &&
           docker run \
@@ -305,8 +329,6 @@ jobs:
     strategy:
       matrix:
         branch: [master, release-2020.06]
-    env:
-      DOCKER_TAG: ${DOCKER_TAG_BASE}-${{ matrix.branch }}
 
     steps:
       - uses: actions/checkout@v2
@@ -315,10 +337,16 @@ jobs:
       - name: Login to GitHub Package Registry
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
       - name: Pull from cache (GitHub Package Registry)
+        env:
+          DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
         run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
       - name: Tag docker image
+        env:
+          DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
         run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
       - name: Verify Conda
+        env:
+          DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
         run: |
           docker run \
           -e TRAVIS_COMMIT_RANGE \
@@ -352,8 +380,6 @@ jobs:
     strategy:
       matrix:
         branch: [master, release-2020.06]
-    env:
-      DOCKER_TAG: ${DOCKER_TAG_BASE}-${{ matrix.branch }}
 
     steps:
       - uses: actions/checkout@v2
@@ -362,10 +388,16 @@ jobs:
       - name: Login to GitHub Package Registry
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
       - name: Pull from cache (GitHub Package Registry)
+        env:
+          DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
         run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
       - name: Tag docker image
+        env:
+          DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
         run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
       - name: Verify Pipenv
+        env:
+          DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
         run: |
           docker run \
           -e TRAVIS_COMMIT_RANGE \
@@ -395,13 +427,13 @@ jobs:
     strategy:
       matrix:
         branch: [master, release-2020.06]
-    env:
-      DOCKER_TAG: ${DOCKER_TAG_BASE}-${{ matrix.branch }}
 
     steps:
       - uses: actions/delete-package-versions@v1
+        env:
+          DOCKER_TAG: ${{ env.DOCKER_TAG_BASE }}-${{ matrix.branch }}
         with:
           owner: ${{ env.OWNER }}
           repo: ${{ env.DOCKER_CACHE_REPO }}
-          package-name: ${{ env.DOCKER_TAG }}
+          package-name: ${{ DOCKER_TAG }}
           token: ${{ secrets.CI_REGISTRY_TOKEN }}
