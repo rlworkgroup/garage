@@ -435,5 +435,5 @@ jobs:
         with:
           owner: ${{ env.OWNER }}
           repo: ${{ env.DOCKER_CACHE_REPO }}
-          package-name: ${{ DOCKER_TAG }}
+          package-name: ${{ env.DOCKER_TAG }}
           token: ${{ secrets.CI_REGISTRY_TOKEN }}
