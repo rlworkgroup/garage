@@ -10,8 +10,11 @@ env:
   MJKEY: ${{ secrets.MJKEY }}
 
 on:
-  schedule:
-    - cron: '0 9 * * *'
+#  schedule:
+#    - cron: '0 9 * * *'
+  pull_request:
+    branches:
+      - master
 
 jobs:
   build_docker_container:
