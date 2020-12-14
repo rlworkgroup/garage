@@ -26,7 +26,7 @@ jobs:
 
     steps:
       - name: Create Docker Tag
-        run: DOCKER_TAG=${{ DOCKER_TAG_BASE }}-${{ matrix.branch }}
+        run: DOCKER_TAG="${DOCKER_TAG_BASE}-${{ matrix.branch }}"
       - name: Docker info
         run: docker version
       - uses: actions/checkout@v2
