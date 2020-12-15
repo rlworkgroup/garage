@@ -60,9 +60,11 @@ repos:
       - id: detect-private-key               # Checks for the existence of private keys.
       - id: double-quote-string-fixer        # This hook replaces double quoted strings with single quoted strings.
       - id: end-of-file-fixer                # Makes sure files end in a newline and only a newline.
+        exclude: docs/bibtex.json            # auto-generated file, but version controlled for use in readthedocs
       - id: forbid-new-submodules            # Prevent addition of new git submodules.
       - id: mixed-line-ending                # Replaces or checks mixed line ending.
       - id: pretty-format-json               # Checks that all your JSON files have keys that are sorted and indented.
+        exclude: docs/bibtex.json            # auto-generated file, but version controlled for use in readthedocs
       - id: trailing-whitespace              # Trims trailing whitespace.
 
   - repo: https://gitlab.com/pycqa/flake8

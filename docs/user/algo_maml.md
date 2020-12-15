@@ -76,7 +76,7 @@ evaluate_every_n_epochs=1
 ## References
 
 ```eval_rst
-.. bibliography:: references.bib
+.. bibliography::
    :style: unsrt
    :filter: docname in docnames
 ```
