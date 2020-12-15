@@ -13,7 +13,7 @@ The important Docker related `make` targets are:
 - `run-dev`: builds and runs the Docker image with your copy of garage source
  installed. This builds the `garage-dev` target in Dockerfile and the
  resulting image is tagged as `rlworkgroup/garage-dev`
-- `run-dev-nvidia`: same as `run-dev` with CUDA 10.1 and cuDNN 7.6 for taking
+- `run-dev-nvidia`: same as `run-dev` with CUDA 11.0 and cuDNN 8.0 for taking
  advantage of NVIDIA GPUs and also supports environment visualization. The
  build target is `garage-dev-nvidia` and the resulting image is tagged as
  `rlworkgroup/garage-dev-nvidia`
@@ -81,8 +81,8 @@ make run-dev BUILD_ARGS="--build-arg MY_VAR=123" RUN_ARGS="-e MY_VAR=123"
 Additional to the prerequisites for the `garage` image, make sure to have:
 
 - [Install the latest NVIDIA driver](https://tecadmin.net/install-latest-nvidia-drivers-ubuntu/),
-  tested on nvidia driver version 440.100. CUDA 10.1 requires a minimum of
-  version 418.39. If you need a different CUDA version, see
+  tested on nvidia driver version 455.45.01. CUDA 11.0 requires a minimum of
+  version 450.36.06. If you need a different CUDA version, see
   [Using a different CUDA version](#using-a-different-cuda-version)
 - [Install nvidia-container-runtime](https://github.com/NVIDIA/nvidia-container-runtime#installation)
 
@@ -120,14 +120,14 @@ make run-dev-nvidia GPUS="device=0,2" ...
 
 ### Using a different CUDA version
 
-The `garage-nvidia` Docker image uses `nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04`
-as the parent image which requires NVIDIA driver version 418.39+. If you need
+The `garage-nvidia` Docker image uses `nvidia/cuda:11.0-cudnn8-runtime-ubuntu18.04`
+as the parent image which requires NVIDIA driver version 450.36.06+. If you need
 to use garage with a different CUDA version, you might be able to build the
 `garage-nvidia` image from scratch using a different parent image using the
 variable `PARENT_IMAGE`.
 
 ```bash
-make run-dev-nvidia PARENT_IMAGE="nvidia/cuda:11.1-cudnn8-runtime-ubuntu18.04" ...
+make run-dev-nvidia PARENT_IMAGE="nvidia/cuda:11.0-cudnn8-runtime-ubuntu18.04" ...
 ```
 
 You can find the required parent images at [NVIDIA CUDA's DockerHub](https://hub.docker.com/r/nvidia/cuda/tags)

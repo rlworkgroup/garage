@@ -173,7 +173,7 @@ build-dev: assert-docker-version docker/Dockerfile
 		${BUILD_ARGS} .
 
 build-dev-nvidia: TAG ?= rlworkgroup/garage-dev-nvidia:latest
-build-dev-nvidia: PARENT_IMAGE ?= nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04
+build-dev-nvidia: PARENT_IMAGE ?= nvidia/cuda:11.0-cudnn8-runtime-ubuntu18.04
 build-dev-nvidia: assert-docker-version docker/Dockerfile
 	docker build \
 		-f docker/Dockerfile \

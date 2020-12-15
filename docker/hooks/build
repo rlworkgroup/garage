@@ -24,6 +24,6 @@ elif [[ "$DOCKER_REPO" = *"rlworkgroup/garage-nvidia" ]]; then
 		--build-arg BUILDKIT_INLINE_CACHE=1 \
 		--target garage-nvidia \
 		-t "$IMAGE_NAME" \
-		--build-arg PARENT_IMAGE="nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04" \
+		--build-arg PARENT_IMAGE="nvidia/cuda:11.0-cudnn8-runtime-ubuntu18.04" \
 		..
 fi
