@@ -201,6 +201,11 @@ class MAML:
             for j in range(self._num_grad_updates + 1):
                 episodes = trainer.obtain_episodes(trainer.step_itr,
                                                    env_update=env_up)
+                task_name_counts = collections.defaultdict(int)
+                for task_name in episodes.env_infos['task_name']:
+                    task_name_counts[task_name] += 1
+                for (task_name, count) in task_name_counts.items():
+                    tabular.record(f'TaskNameSampleCounts/{task_name}', count)
                 batch_samples = self._process_samples(episodes)
                 all_samples[i].append(batch_samples)
 
