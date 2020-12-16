@@ -49,8 +49,9 @@ class SimpleCNNModelWithMaxPooling(Model):
                  hidden_nonlinearity=None,
                  hidden_w_init=None,
                  hidden_b_init=None):
-        del hidden_nonlinearity, hidden_w_init, hidden_b_init, input_dim
+        del hidden_nonlinearity, hidden_w_init, hidden_b_init
         super().__init__(name)
+        self.input_dim = input_dim
         self.filters = filters
         self.strides = strides
         self.padding = padding
@@ -72,8 +73,8 @@ class SimpleCNNModelWithMaxPooling(Model):
 
         """
         del name
-        height_size = obs_input.get_shape().as_list()[1]
-        width_size = obs_input.get_shape().as_list()[2]
+        height_size = self.input_dim[0]
+        width_size = self.input_dim[1]
         for filter_iter, stride in zip(self.filters, self.strides):
             if self.padding == 'SAME':
                 height_size = int((height_size + stride - 1) / stride)
