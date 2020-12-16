@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """This is an example to train MAML-VPG on HalfCheetahDirEnv environment."""
 # pylint: disable=no-value-for-parameter
+from copy import deepcopy
+
 import click
 import torch
 
@@ -9,7 +11,7 @@ from garage.envs import GymEnv, normalize
 from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import MetaEvaluator
 from garage.experiment.deterministic import set_seed
-from garage.experiment.task_sampler import SetTaskSampler
+from garage.experiment.task_sampler import SetTaskSampler, EnvPoolSampler
 from garage.sampler import RaySampler
 from garage.torch.algos import MAMLPPO
 from garage.torch.policies import GaussianMLPPolicy
@@ -43,6 +45,10 @@ def maml_ppo_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
     env = normalize(GymEnv(HalfCheetahDirEnv(),
                            max_episode_length=max_episode_length),
                     expected_action_scale=10.)
+    forward_env = deepcopy(env)
+    backward_env = deepcopy(env)
+    forward_env.set_task({'direction': 1.})
+    backward_env.set_task({'direction': -1.})
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
@@ -61,8 +67,9 @@ def maml_ppo_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
         wrapper=lambda env, _: normalize(GymEnv(
             env, max_episode_length=max_episode_length),
                                          expected_action_scale=10.))
+    test_task_sampler = EnvPoolSampler([forward_env, backward_env])
 
-    meta_evaluator = MetaEvaluator(test_task_sampler=task_sampler,
+    meta_evaluator = MetaEvaluator(test_task_sampler=test_task_sampler,
                                    n_test_tasks=2,
                                    n_test_episodes=10)
 

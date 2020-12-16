@@ -71,7 +71,7 @@ class HalfCheetahDirEnv(HalfCheetahEnvMetaBase):
         reward = forward_reward - ctrl_cost
         done = False
         if self._task['direction'] == 1.:
-            task_name = 'fowrad'
+            task_name = 'forward'
         elif self._task['direction'] == -1.:
             task_name = 'backward'
         else:
