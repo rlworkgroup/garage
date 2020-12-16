@@ -83,11 +83,11 @@ class BC(RLAlgorithm):
         self.exploration_policy = None
         self.policy = None
         self.max_episode_length = env_spec.max_episode_length
-        self.sampler = sampler
+        self._sampler = sampler
         if isinstance(self._source, Policy):
             self.exploration_policy = self._source
             self._source = source
-            if not isinstance(self.sampler, Sampler):
+            if not isinstance(self._sampler, Sampler):
                 raise TypeError('Source is a policy. Missing a sampler.')
         else:
             self._source = itertools.cycle(iter(source))

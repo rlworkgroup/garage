@@ -113,7 +113,7 @@ class REPS(RLAlgorithm):  # noqa: D416
         self._l2_reg_loss = float(l2_reg_loss)
 
         self._episode_reward_mean = collections.deque(maxlen=100)
-        self.sampler = sampler
+        self._sampler = sampler
 
         self._init_opt()
 

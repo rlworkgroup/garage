@@ -143,7 +143,7 @@ class TD3(RLAlgorithm):
         self._eval_env = None
         self.exploration_policy = exploration_policy
         self._uniform_random_policy = uniform_random_policy
-        self.sampler = sampler
+        self._sampler = sampler
 
         self._replay_buffer = replay_buffer
         self.policy = policy

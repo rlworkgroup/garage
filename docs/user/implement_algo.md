@@ -149,7 +149,7 @@ class SimpleVPG:
     def __init__(self, env_spec, policy, sampler):
         self.env_spec = env_spec
         self.policy = policy
-        self.sampler = sampler
+        self._sampler = sampler
         self.max_episode_length = 200
 
     def train(self, trainer):
@@ -201,7 +201,7 @@ class SimpleVPG:
     def __init__(self, env_spec, policy, sampler):
         self.env_spec = env_spec
         self.policy = policy
-        self.sampler = sampler
+        self._sampler = sampler
         self.max_episode_length = 200
         self._discount = 0.99
         self._policy_opt = torch.optim.Adam(self.policy.parameters(), lr=1e-3)
@@ -354,7 +354,7 @@ class SimpleVPG:
     def __init__(self, env_spec, policy, sampler):
         self.env_spec = env_spec
         self.policy = policy
-        self.sampler = sampler
+        self._sampler = sampler
         self.max_episode_length = 200
         self._discount = 0.99
         self.init_opt()
@@ -522,7 +522,7 @@ class SimpleCEM:
     def __init__(self, env_spec, policy, sampler):
         self.env_spec = env_spec
         self.policy = policy
-        self.sampler = sampler
+        self._sampler = sampler
         self.max_episode_length = 200
         self._discount = 0.99
         self._extra_std = 1

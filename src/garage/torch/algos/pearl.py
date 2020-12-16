@@ -166,7 +166,7 @@ class PEARL(MetaRLAlgorithm):
         self._single_env = env[0]()
         self.max_episode_length = self._single_env.spec.max_episode_length
 
-        self.sampler = sampler
+        self._sampler = sampler
 
         self._is_resuming = False
 

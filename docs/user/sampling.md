@@ -42,46 +42,35 @@ forward a neural network).
 
 ## Construct a Sampler
 
-A sampler can be constructed either from a worker factory (the class that can
-construct workers), or from parameters directly.
-
-### From a Worker Factory
-
-```py
-from garage.sampler import LocalSampler, WorkerFactory
-
-env = ...
-policy = ...
-worker_factory = WorkerFactory(max_episode_length=100,
-                               is_tf_worker=True,
-                               n_workers=4)
-sampler = LocalSampler.from_worker_factory(worker_factory=worker_factory,
-                                           agents=policy,
-                                           envs=env)
-...
-```
-
-In the above example, we firstly construct a worker factory, which will
-construct 4 workers for the sampler. And the max length of episodes collected
-by these workers will be 100. Noted that for policies with TensorFLow
-framework, we need to set `is_tf_worker` to be `True`. Here we don't choose
-a type of worker explicitly, so it will construct `DefaultWorker` by default.
-
-With the worker factory, then we construct a `LocalSampler` with policies and
-environments that will be used in sampling.
+A sampler can be constructed either from parameters directly, or from a worker
+factory (the class that can construct workers).
 
 ### From parameters
 
-Sometimes we want to construct a sampler directly.
+To construct a sampler, we need the following parameters:
+
+- `agents`, the agents/policy we use to make samples.
+
+- `envs`, the environments interacting with policies.
+
+- Parameters for the worker:
+
+  - `max_episode_length`, the maximum length of episodes which will be
+sampled.
+
+  - Other optional parameters defining the properties of workers, such as
+whether a TensorFlow session is needed, the type of workers, the number of
+workers, etc.
 
 ```py
 from garage.sampler import RaySampler, VecWorker
+from garage.tf.policies import GaussianMLPPolicy
 
 env = ...
-policy = ...
+policy = GaussianMLPPolicy(...)
 sampler = RaySampler(agents=policy,
                      envs=env,
-                     # params below are for worker
+                     # params below are for the worker
                      max_episode_length=100,
                      is_tf_worker=True,
                      n_workers=4.
@@ -90,9 +79,36 @@ sampler = RaySampler(agents=policy,
 ```
 
 In this example, we construct a `RaySampler` directly, and the sampler will
-construct 4 `VecWorker` when sampling. Besides, we set the level of
-vectorization (i.e. the number of environments simulated in one step) to 12 by
-setting `n_envs` in `worker_args` for the `VecWorker`.
+construct 4 `VecWorker` when sampling. The maximum length of the episodes
+collected will be 100. Besides, we set the level of vectorization (i.e. the
+number of environments simulated in one step) to 12 by setting `n_envs` in
+`worker_args` for the `VecWorker`.
+
+Noted that as the policy (tf/GaussianMLPPolicy) we use need a TensorFlow
+session, we need to set `is_tf_worker` to be `True`.
+
+### From a Worker Factory
+
+```py
+from garage.sampler import LocalSampler, WorkerFactory
+from garage.torch.policies import GaussianMLPPolicy
+
+env = ...
+policy = GaussianMLPPolicy(...)
+worker_factory = WorkerFactory(max_episode_length=100,
+                               n_workers=4)
+sampler = LocalSampler.from_worker_factory(worker_factory=worker_factory,
+                                           agents=policy,
+                                           envs=env)
+```
+
+In the above example, we firstly construct a worker factory, which will
+construct 4 workers in the sampler. And the max length of episodes collected
+by these workers will be 100. Here we don't choose a type of worker explicitly,
+so it will construct `DefaultWorker` by default.
+
+With the worker factory, then we construct a `LocalSampler` with policies and
+environments that will be used in sampling.
 
 ## Setup Sampler for a Trainer
 

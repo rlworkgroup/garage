@@ -46,7 +46,7 @@ class CEM(RLAlgorithm):
         self.policy = policy
         self.max_episode_length = env_spec.max_episode_length
 
-        self.sampler = sampler
+        self._sampler = sampler
 
         self._best_frac = best_frac
         self._init_std = init_std

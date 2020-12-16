@@ -60,7 +60,6 @@ def test_setup_no_sampler():
     trainer = Trainer(snapshot_config)
 
     class SupervisedAlgo:
-        sampler = None
 
         def train(self, trainer):
             # pylint: disable=undefined-loop-variable
