@@ -1,5 +1,4 @@
 [![Docs](https://readthedocs.org/projects/garage/badge)](http://garage.readthedocs.org/en/latest/)
-[![Build Status](https://travis-ci.com/rlworkgroup/garage.svg?branch=master)](https://travis-ci.com/rlworkgroup/garage)
 ![Garage CI](https://github.com/rlworkgroup/garage/workflows/Garage%20CI/badge.svg?event=schedule)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/rlworkgroup/garage/blob/master/LICENSE)
 [![codecov](https://codecov.io/gh/rlworkgroup/garage/branch/master/graph/badge.svg)](https://codecov.io/gh/rlworkgroup/garage)
@@ -153,14 +152,13 @@ release tag your publication uses.
 
 ## Credits
 
-The original code for garage was adopted from predecessor project called
+The earliest code for garage was adopted from predecessor project called
 [rllab](https://github.com/rll/rllab). The garage project is grateful for the
 contributions of the original rllab authors, and hopes to continue advancing the
-state of reproducibility in RL research in the same spirit.
-
-rllab was developed by Rocky Duan (UC Berkeley/Covariant), Peter Chen
-(UC Berkeley/Covariant), Rein Houthooft (UC Berkeley/Happy Elements), John
-Schulman (UC Berkeley/OpenAI), and Pieter Abbeel (UC Berkeley/Covariant).
+state of reproducibility in RL research in the same spirit. garage has
+previously been supported by the Amazon Research Award "Watch, Practice, Learn,
+Do: Unsupervised Learning of Robust and Composable Robot Motion Skills by Fusing
+Expert Demonstrations with Robot Experience."
 
 ---
 <p align="center" style="align-items:center; display:inline-block">Made with &#10084; &nbsp;at <a href="https://robotics.usc.edu/resl/" target="_blank"><img align="absmiddle" src="https://github.com/rlworkgroup/garage/blob/master/docs/_static/resl_logo.png?raw=true" height="60px"></a> and &nbsp;<a href="https://viterbischool.usc.edu/" target="_blank"><img align="absmiddle" src="https://github.com/rlworkgroup/garage/blob/master/docs/_static/viterbi_logo.png?raw=true" height="30px"></a></p>
