@@ -29,7 +29,7 @@ class ObservationOrder(enum.IntEnum):
     EPISODES = 2
 
 
-@dataclass(init=False)
+@dataclass(init=False, eq=False)
 class ObservationBatch(torch.Tensor):
     r"""The (differentiable) input to all pytorch policies.
 
@@ -91,6 +91,24 @@ class ObservationBatch(torch.Tensor):
                 f'when order == {self.order}')
         return self
 
+    def __repr__(self):
+        return f'{type(self).__name__}({super().__repr__()}, order={self.order!r}, lengths={self.lengths!r})'
+
+    @classmethod
+    def __torch_function__(cls, func, types, args=(), kwargs=None):
+        # print(f"func: {func.__name__}, args: {args!r}, kwargs: {kwargs!r}")
+        if kwargs is None:
+            kwargs = {}
+        result = super().__torch_function__(func, types, args, kwargs)
+        # Fixup ObservationBatch instances returned from methods.
+        # In the future this might preserve order for some methods
+        if isinstance(result, ObservationBatch):
+            if not hasattr(result, 'order'):
+                result.order = ObservationOrder.SHUFFLED
+            if not hasattr(result, 'lengths'):
+                result.lengths = None
+        return result
+
 
 def observation_batch_to_packed_sequence(observations):
     """Turn ObservationBatch into a torch.nn.utils.rnn.PackedSequence.
@@ -128,3 +146,25 @@ def observation_batch_to_packed_sequence(observations):
         start = stop
     pack_sequence = nn.utils.rnn.pack_sequence
     return pack_sequence(sequence, enforce_sorted=False)
+
+
+def is_policy_recurrent(policy, env_spec):
+    """Check if a torch policy is recurrent.
+
+    Args:
+        policy (garage.torch.Policy): Policy that might be recurrent.
+
+    Returns:
+        bool: If policy is recurrent.
+
+    """
+    try:
+        policy.forward(
+            as_tensor([
+                env_spec.observation_space.sample(),
+                env_spec.observation_space.sample()
+            ]))
+    except ShuffledOptimizationNotSupported:
+        return True
+    else:
+        return False

@@ -8,13 +8,12 @@ import torch
 import torch.nn.functional as F
 
 from garage import log_performance
-from garage.np import discount_cumsum
 from garage.np.algos import RLAlgorithm
 from garage.torch import (as_tensor, compute_advantages, filter_valids,
                           global_device, ObservationBatch, ObservationOrder)
-from garage.torch._functions import (np_to_torch, pad_packed_tensor,
+from garage.torch._functions import (discount_cumsum, pad_packed_tensor,
                                      split_packed_tensor)
-from garage.torch.optimizers import MinibatchOptimizer
+from garage.torch.optimizers import MinibatchOptimizer, SingleBatchOptimizer
 
 
 class VPG(RLAlgorithm):
@@ -28,9 +27,9 @@ class VPG(RLAlgorithm):
         value_function (garage.torch.value_functions.ValueFunction): The value
             function.
         sampler (garage.sampler.Sampler): Sampler.
-        policy_optimizer (garage.torch.optimizer.MinibatchOptimizer): Optimizer
+        policy_optimizer (garage.torch.optimizer.Optimizer): Optimizer
             for policy.
-        vf_optimizer (garage.torch.optimizer.MinibatchOptimizer): Optimizer for
+        vf_optimizer (garage.torch.optimizer.Optimizer): Optimizer for
             value function.
         steps_per_epoch (int): Number of train_once calls per epoch.
         discount (float): Discount.
@@ -100,21 +99,29 @@ class VPG(RLAlgorithm):
                                           stop_entropy_gradient,
                                           policy_ent_coeff)
         self._episode_reward_mean = collections.deque(maxlen=100)
-        self.sampler = sampler
+        self._sampler = sampler
+        if recurrent is None:
+            recurrent = is_policy_recurrent(policy)
+        self._recurrent = recurrent
 
         if policy_optimizer:
             self._policy_optimizer = policy_optimizer
+        elif self._recurrent:
+            self._policy_optimizer = EpisodeBatchOptimizer(
+                torch.optim.Adam, policy)
         else:
-            self._policy_optimizer = MinibatchOptimizer(
+            self._policy_optimizer = SingleBatchOptimizer(
                 torch.optim.Adam, policy)
         if vf_optimizer:
             self._vf_optimizer = vf_optimizer
+        elif self._recurrent:
+            self._vf_optimizer = EpisodeBatchOptimizer(torch.optim.Adam,
+                                                       value_function)
         else:
             self._vf_optimizer = MinibatchOptimizer(torch.optim.Adam,
                                                     value_function)
 
         self._old_policy = copy.deepcopy(self.policy)
-        self._recurrent = recurrent
 
     @staticmethod
     def _check_entropy_configuration(entropy_method, center_adv,
@@ -225,7 +232,7 @@ class VPG(RLAlgorithm):
 
         for epoch in trainer.step_epochs():
             for _ in range(self._steps_per_epoch):
-                trainer.step_path = trainer.obtain_episodes(epoch)
+                trainer.step_path = self._sampler.obtain_episodes(epoch)
                 self._train_once(trainer.step_path)
             last_return = np.mean(
                 log_performance(epoch,
@@ -258,8 +265,9 @@ class VPG(RLAlgorithm):
             'actions': actions,
             'rewards': rewards,
             'advantages': advantages,
-            'lengths': lengths
         }
+        if not isinstance(self._policy_optimizer, MinibatchOptimizer):
+            data['lengths'] = lengths
         return self._policy_optimizer.step(data, self._loss_function)
 
     def _train_value_function(self, observations, returns, lengths):
@@ -348,7 +356,8 @@ class VPG(RLAlgorithm):
                 observations, actions)
             objectives += self._policy_ent_coeff * policy_entropies
 
-        return -objectives.mean()
+        loss = -objectives.mean()
+        return loss
 
     def _compute_advantage(self, rewards, lengths, baselines):
         r"""Compute mean value of loss.

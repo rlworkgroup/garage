@@ -10,6 +10,7 @@ import torch.nn.functional as F
 
 from garage.envs import GymEnv, normalize
 from garage.experiment.deterministic import set_seed
+
 from garage.np import discount_cumsum as np_discout_cumsum
 from garage.torch import (as_torch_dict, compute_advantages,
                           flatten_to_single_vector, global_device, pad_to_last,
@@ -130,14 +131,14 @@ def test_state_dict_to():
     assert np.all(
         [moved_state_dict[key].is_cuda for key in moved_state_dict.keys()])
 
+
 def test_discount_cumsum():
     discount = 0.99
-    x = tensor([9.3217, 9.3003, 9.3406, 9.2251, 9.0715, 9.0134, 8.9026,
-                8.6619])
+    x = torch.tensor([5., 10, 20, 100, 0.5, 0.5, 0.5, 0.5, 1000])
     returns = discount_cumsum(x, discount)
     expected = np_discout_cumsum(torch_to_np(x), discount)
     assert returns.shape == (len(x), )
-    assert np.allclose(expected, torch_to_np(returns)
+    assert np.allclose(expected, torch_to_np(returns))
 
 
 class TestTorchAlgoUtils(TfGraphTestCase):

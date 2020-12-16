@@ -111,13 +111,14 @@ def discount_cumsum(x, discount):
                             discount,
                             dtype=torch.float,
                             device=x.device)
-    discount_x[0] = 1.0
+    # discount_x[0] = 1.0
     filter = torch.cumprod(discount_x, dim=0)
-    pad = len(x) - 1
-    # minibatch of 1, with 1 channel
-    filter = filter.reshape(1, 1, -1)
-    returns = F.conv1d(x.reshape(1, 1, -1), filter, stride=1, padding=pad)
-    returns = returns[0, 0, pad:]
+    returns = F.conv1d(x, filter, stride=1)
+    assert returns.shape == (len(x), )
+    from garage.np import discount_cumsum as np_discout_cumsum
+    import numpy as np
+    expected = np_discout_cumsum(torch_to_np(x), discount)
+    assert np.array_equal(expected, torch_to_np(returns))
     return returns
 
 
