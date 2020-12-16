@@ -79,12 +79,12 @@ class ObservationBatch(torch.Tensor):
                     f'lengths has dtype {self.lengths.dtype}, but must have '
                     f'an integer dtype')
             total_size = sum(self.lengths)
-            if self.observations.shape[0] != total_size:
+            if self.shape[0] != total_size:
                 raise ValueError(
                     f'observations has batch size '
                     f'{self.observations.shape[0]}, but must have batch '
                     f'size {total_size} to match lengths')
-            assert self.observations.shape[0] == total_size
+            assert self.shape[0] == total_size
         elif self.lengths is not None:
             raise ValueError(
                 f'lengths has value {self.lengths}, but must be None '

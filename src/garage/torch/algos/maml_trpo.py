@@ -5,7 +5,7 @@ from garage import _Default
 from garage.torch.algos import VPG
 from garage.torch.algos.maml import MAML
 from garage.torch.optimizers import (ConjugateGradientOptimizer,
-                                     OptimizerWrapper)
+                                     MinibatchOptimizer)
 
 
 class MAMLTRPO(MAML):
@@ -71,10 +71,10 @@ class MAMLTRPO(MAML):
                  meta_evaluator=None,
                  evaluate_every_n_epochs=1):
 
-        policy_optimizer = OptimizerWrapper(
+        policy_optimizer = MinibatchOptimizer(
             (torch.optim.Adam, dict(lr=inner_lr)), policy)
-        vf_optimizer = OptimizerWrapper((torch.optim.Adam, dict(lr=inner_lr)),
-                                        value_function)
+        vf_optimizer = MinibatchOptimizer(
+            (torch.optim.Adam, dict(lr=inner_lr)), value_function)
 
         inner_algo = VPG(env.spec,
                          policy,

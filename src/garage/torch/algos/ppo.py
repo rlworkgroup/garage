@@ -2,7 +2,7 @@
 import torch
 
 from garage.torch.algos import VPG
-from garage.torch.optimizers import OptimizerWrapper
+from garage.torch.optimizers import MinibatchOptimizer
 
 
 class PPO(VPG):
@@ -14,9 +14,9 @@ class PPO(VPG):
         value_function (garage.torch.value_functions.ValueFunction): The value
             function.
         sampler (garage.sampler.Sampler): Sampler.
-        policy_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer
+        policy_optimizer (garage.torch.optimizer.MinibatchOptimizer): Optimizer
             for policy.
-        vf_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer for
+        vf_optimizer (garage.torch.optimizer.MinibatchOptimizer): Optimizer for
             value function.
         lr_clip_range (float): The limit on the likelihood ratio between
             policies.
@@ -63,13 +63,13 @@ class PPO(VPG):
                  entropy_method='no_entropy'):
 
         if policy_optimizer is None:
-            policy_optimizer = OptimizerWrapper(
+            policy_optimizer = MinibatchOptimizer(
                 (torch.optim.Adam, dict(lr=2.5e-4)),
                 policy,
                 max_optimization_epochs=10,
                 minibatch_size=64)
         if vf_optimizer is None:
-            vf_optimizer = OptimizerWrapper(
+            vf_optimizer = MinibatchOptimizer(
                 (torch.optim.Adam, dict(lr=2.5e-4)),
                 value_function,
                 max_optimization_epochs=10,

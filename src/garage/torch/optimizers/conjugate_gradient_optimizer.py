@@ -138,12 +138,12 @@ class ConjugateGradientOptimizer(Optimizer):
         self._hvp_reg_coeff = hvp_reg_coeff
         self._accept_violation = accept_violation
 
-    def step(self, f_loss, f_constraint):  # pylint: disable=arguments-differ
+    def step(self, loss_function, constraint_function):  # pylint: disable=arguments-differ
         """Take an optimization step.
 
         Args:
-            f_loss (callable): Function to compute the loss.
-            f_constraint (callable): Function to compute the constraint value.
+            loss_function (callable): Function to compute the loss.
+            constraint_function (callable): Function to compute the constraint value.
 
         """
         # Collect trainable parameters and gradients
@@ -157,7 +157,7 @@ class ConjugateGradientOptimizer(Optimizer):
         flat_loss_grads = torch.cat(grads)
 
         # Build Hessian-vector-product function
-        f_Ax = _build_hessian_vector_product(f_constraint, params,
+        f_Ax = _build_hessian_vector_product(constraint_function, params,
                                              self._hvp_reg_coeff)
 
         # Compute step direction
@@ -177,8 +177,8 @@ class ConjugateGradientOptimizer(Optimizer):
         descent_step = step_size * step_dir
 
         # Update parameters using backtracking line search
-        self._backtracking_line_search(params, descent_step, f_loss,
-                                       f_constraint)
+        self._backtracking_line_search(params, descent_step, loss_function,
+                                       constraint_function)
 
     @property
     def state(self):

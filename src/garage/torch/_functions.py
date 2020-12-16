@@ -106,6 +106,48 @@ def compute_advantages(discount, gae_lambda, max_episode_length, baselines,
     return advantages
 
 
+def discount_cumsum(x, discount):
+    discount_x = torch.full((len(x), ),
+                            discount,
+                            dtype=torch.float,
+                            device=x.device)
+    discount_x[0] = 1.0
+    filter = torch.cumprod(discount_x, dim=0)
+    pad = len(x) - 1
+    # minibatch of 1, with 1 channel
+    filter = filter.reshape(1, 1, -1)
+    returns = F.conv1d(x.reshape(1, 1, -1), filter, stride=1, padding=pad)
+    returns = returns[0, 0, pad:]
+    return returns
+
+
+def split_packed_tensor(t, lengths):
+    """Split a tensor using a sequence of (start, stop) tuples."""
+    start = 0
+    for length in lengths:
+        stop = start + length
+        yield t[start:stop]
+        start = stop
+
+
+def pad_packed_tensor(t, lengths, max_length=None):
+    if max_length is None:
+        max_length = max(lengths)
+    if max(lengths) > max_length:
+        raise ValueError(f'packed tensor contains a sequence of length '
+                         f'{max(lengths)}, but was asked to pad to '
+                         f'length {max_length}')
+    out = torch.zeros((
+        len(lengths),
+        max_length,
+    ) + t.shape[1:],
+                      dtype=t.dtype,
+                      device=t.device)
+    for i, seq in enumerate(split_packed_tensor(t, lengths)):
+        out[i][:len(seq)] = seq
+    return out
+
+
 def pad_to_last(nums, total_length, axis=-1, val=0):
     """Pad val to last in nums in given axis.
 
@@ -381,6 +423,19 @@ def state_dict_to(state_dict, device):
         elif isinstance(param, dict):
             state_dict_to(param, device)
     return state_dict
+
+
+def as_tensor(data):
+    """Convert a list to a PyTorch tensor
+
+    Args:
+        data (list): Data to convert to tensor
+
+    Returns:
+        torch.Tensor: A float tensor
+
+    """
+    return torch.as_tensor(data, dtype=torch.float32, device=global_device())
 
 
 # pylint: disable=W0223

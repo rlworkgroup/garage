@@ -10,9 +10,11 @@ import torch.nn.functional as F
 from garage import log_performance
 from garage.np import discount_cumsum
 from garage.np.algos import RLAlgorithm
-from garage.torch import compute_advantages, filter_valids
-from garage.torch._functions import np_to_torch, zero_optim_grads
-from garage.torch.optimizers import OptimizerWrapper
+from garage.torch import (as_tensor, compute_advantages, filter_valids,
+                          global_device, ObservationBatch, ObservationOrder)
+from garage.torch._functions import (np_to_torch, pad_packed_tensor,
+                                     split_packed_tensor)
+from garage.torch.optimizers import MinibatchOptimizer
 
 
 class VPG(RLAlgorithm):
@@ -26,11 +28,11 @@ class VPG(RLAlgorithm):
         value_function (garage.torch.value_functions.ValueFunction): The value
             function.
         sampler (garage.sampler.Sampler): Sampler.
-        policy_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer
+        policy_optimizer (garage.torch.optimizer.MinibatchOptimizer): Optimizer
             for policy.
-        vf_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer for
+        vf_optimizer (garage.torch.optimizer.MinibatchOptimizer): Optimizer for
             value function.
-        num_train_per_epoch (int): Number of train_once calls per epoch.
+        steps_per_epoch (int): Number of train_once calls per epoch.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -42,6 +44,8 @@ class VPG(RLAlgorithm):
             standardized before shifting.
         policy_ent_coeff (float): The coefficient of the policy entropy.
             Setting it to zero would mean no entropy regularization.
+        use_neg_logli_entropy (bool): Whether to estimate the entropy as the
+            negative log likelihood of the action.
         use_softplus_entropy (bool): Whether to estimate the softmax
             distribution of the entropy to prevent the entropy from being
             negative.
@@ -62,15 +66,17 @@ class VPG(RLAlgorithm):
         sampler,
         policy_optimizer=None,
         vf_optimizer=None,
-        num_train_per_epoch=1,
+        steps_per_epoch=1,
         discount=0.99,
         gae_lambda=1,
         center_adv=True,
         positive_adv=False,
         policy_ent_coeff=0.0,
+        use_neg_logli_entropy=True,
         use_softplus_entropy=False,
-        stop_entropy_gradient=False,
+        stop_entropy_gradient=True,
         entropy_method='no_entropy',
+        recurrent=None,
     ):
         self._discount = discount
         self.policy = policy
@@ -83,8 +89,9 @@ class VPG(RLAlgorithm):
         self._policy_ent_coeff = policy_ent_coeff
         self._use_softplus_entropy = use_softplus_entropy
         self._stop_entropy_gradient = stop_entropy_gradient
+        self._use_neg_logli_entropy = use_neg_logli_entropy
         self._entropy_method = entropy_method
-        self._n_samples = num_train_per_epoch
+        self._steps_per_epoch = steps_per_epoch
         self._env_spec = env_spec
 
         self._maximum_entropy = (entropy_method == 'max')
@@ -93,19 +100,21 @@ class VPG(RLAlgorithm):
                                           stop_entropy_gradient,
                                           policy_ent_coeff)
         self._episode_reward_mean = collections.deque(maxlen=100)
-        self._sampler = sampler
+        self.sampler = sampler
 
         if policy_optimizer:
             self._policy_optimizer = policy_optimizer
         else:
-            self._policy_optimizer = OptimizerWrapper(torch.optim.Adam, policy)
+            self._policy_optimizer = MinibatchOptimizer(
+                torch.optim.Adam, policy)
         if vf_optimizer:
             self._vf_optimizer = vf_optimizer
         else:
-            self._vf_optimizer = OptimizerWrapper(torch.optim.Adam,
-                                                  value_function)
+            self._vf_optimizer = MinibatchOptimizer(torch.optim.Adam,
+                                                    value_function)
 
         self._old_policy = copy.deepcopy(self.policy)
+        self._recurrent = recurrent
 
     @staticmethod
     def _check_entropy_configuration(entropy_method, center_adv,
@@ -134,77 +143,71 @@ class VPG(RLAlgorithm):
         """
         return self._discount
 
-    def _train_once(self, itr, eps):
+    def _train_once(self, eps):
         """Train the algorithm once.
 
         Args:
-            itr (int): Iteration number.
             eps (EpisodeBatch): A batch of collected paths.
 
-        Returns:
-            numpy.float64: Calculated mean value of undiscounted returns.
-
         """
-        obs = np_to_torch(eps.padded_observations)
-        rewards = np_to_torch(eps.padded_rewards)
-        returns = np_to_torch(
-            np.stack([
-                discount_cumsum(reward, self.discount)
-                for reward in eps.padded_rewards
-            ]))
-        valids = eps.lengths
+        # Conver to torch and compute returns, etc.
+        lengths = torch.from_numpy(eps.lengths).to(global_device())
+        obs = ObservationBatch(as_tensor(eps.observations),
+                               order=ObservationOrder.EPISODES,
+                               lengths=lengths)
+        actions = torch.Tensor(eps.actions)
+        rewards = torch.Tensor(eps.rewards)
+        policy_entropies = self._compute_policy_entropy(obs, actions)
+        if self._maximum_entropy:
+            rewards += self._policy_ent_coeff * policy_entropies
+        returns = torch.hstack([
+            discount_cumsum(r, self._discount)
+            for r in split_packed_tensor(rewards, lengths)
+        ])
         with torch.no_grad():
             baselines = self._value_function(obs)
+        advantages = self._compute_advantage(rewards, lengths, baselines)
 
-        if self._maximum_entropy:
-            policy_entropies = self._compute_policy_entropy(obs)
-            rewards += self._policy_ent_coeff * policy_entropies
-
-        obs_flat = np_to_torch(eps.observations)
-        actions_flat = np_to_torch(eps.actions)
-        rewards_flat = np_to_torch(eps.rewards)
-        returns_flat = torch.cat(filter_valids(returns, valids))
-        advs_flat = self._compute_advantage(rewards, valids, baselines)
-
+        # Log before training
         with torch.no_grad():
-            policy_loss_before = self._compute_loss_with_adv(
-                obs_flat, actions_flat, rewards_flat, advs_flat)
-            vf_loss_before = self._value_function.compute_loss(
-                obs_flat, returns_flat)
-            kl_before = self._compute_kl_constraint(obs)
+            policy_loss_before = self._loss_function(obs, actions, rewards,
+                                                     advantages, lengths)
+            vf_loss_before = self._value_function.loss_function(obs, returns)
 
-        self._train(obs_flat, actions_flat, rewards_flat, returns_flat,
-                    advs_flat)
+            with tabular.prefix(self.policy.name):
+                tabular.record('/LossBefore', policy_loss_before.item())
+                tabular.record('/KLBefore',
+                               self._compute_kl_constraint(obs).item())
+                tabular.record('/EntropyBefore',
+                               policy_entropies.mean().item())
 
-        with torch.no_grad():
-            policy_loss_after = self._compute_loss_with_adv(
-                obs_flat, actions_flat, rewards_flat, advs_flat)
-            vf_loss_after = self._value_function.compute_loss(
-                obs_flat, returns_flat)
-            kl_after = self._compute_kl_constraint(obs)
-            policy_entropy = self._compute_policy_entropy(obs)
+            with tabular.prefix(self._value_function.name):
+                tabular.record('/LossBefore', vf_loss_before.item())
 
-        with tabular.prefix(self.policy.name):
-            tabular.record('/LossBefore', policy_loss_before.item())
-            tabular.record('/LossAfter', policy_loss_after.item())
-            tabular.record('/dLoss',
-                           (policy_loss_before - policy_loss_after).item())
-            tabular.record('/KLBefore', kl_before.item())
-            tabular.record('/KL', kl_after.item())
-            tabular.record('/Entropy', policy_entropy.mean().item())
-
-        with tabular.prefix(self._value_function.name):
-            tabular.record('/LossBefore', vf_loss_before.item())
-            tabular.record('/LossAfter', vf_loss_after.item())
-            tabular.record('/dLoss',
-                           vf_loss_before.item() - vf_loss_after.item())
-
+        # Save the current policy state and train
         self._old_policy.load_state_dict(self.policy.state_dict())
+        self._train_policy(obs, actions, rewards, returns, advantages, lengths)
+        self._train_value_function(obs, returns, lengths)
 
-        undiscounted_returns = log_performance(itr,
-                                               eps,
-                                               discount=self._discount)
-        return np.mean(undiscounted_returns)
+        # Log after training
+        with torch.no_grad():
+
+            policy_loss_after = self._loss_function(obs, actions, rewards,
+                                                    advantages, lengths)
+            with tabular.prefix(self.policy.name):
+                tabular.record('/LossAfter', policy_loss_after.item())
+                tabular.record('/dLoss',
+                               (policy_loss_before - policy_loss_after).item())
+                tabular.record('/KL', self._compute_kl_constraint(obs).item())
+                tabular.record(
+                    '/EntropyAfter',
+                    self._compute_policy_entropy(obs, actions).mean().item())
+
+            vf_loss_after = self._value_function.loss_function(obs, returns)
+            with tabular.prefix(self._value_function.name):
+                tabular.record('/vfLossAfter', vf_loss_after.item())
+                tabular.record('/dLoss',
+                               vf_loss_before.item() - vf_loss_after.item())
 
     def train(self, trainer):
         """Obtain samplers and start actual training for each epoch.
@@ -220,83 +223,72 @@ class VPG(RLAlgorithm):
         """
         last_return = None
 
-        for _ in trainer.step_epochs():
-            for _ in range(self._n_samples):
-                eps = trainer.obtain_episodes(trainer.step_itr)
-                last_return = self._train_once(trainer.step_itr, eps)
-                trainer.step_itr += 1
-
+        for epoch in trainer.step_epochs():
+            for _ in range(self._steps_per_epoch):
+                trainer.step_path = trainer.obtain_episodes(epoch)
+                self._train_once(trainer.step_path)
+            last_return = np.mean(
+                log_performance(epoch,
+                                trainer.step_path,
+                                discount=self._discount))
         return last_return
 
-    def _train(self, obs, actions, rewards, returns, advs):
-        r"""Train the policy and value function with minibatch.
-
-        Args:
-            obs (torch.Tensor): Observation from the environment with shape
-                :math:`(N, O*)`.
-            actions (torch.Tensor): Actions fed to the environment with shape
-                :math:`(N, A*)`.
-            rewards (torch.Tensor): Acquired rewards with shape :math:`(N, )`.
-            returns (torch.Tensor): Acquired returns with shape :math:`(N, )`.
-            advs (torch.Tensor): Advantage value at each step with shape
-                :math:`(N, )`.
-
-        """
-        for dataset in self._policy_optimizer.get_minibatch(
-                obs, actions, rewards, advs):
-            self._train_policy(*dataset)
-        for dataset in self._vf_optimizer.get_minibatch(obs, returns):
-            self._train_value_function(*dataset)
-
-    def _train_policy(self, obs, actions, rewards, advantages):
+    def _train_policy(self, observations, actions, rewards, returns,
+                      advantages, lengths):
         r"""Train the policy.
 
         Args:
-            obs (torch.Tensor): Observation from the environment
+            observations (torch.Tensor): Observation from the environment
                 with shape :math:`(N, O*)`.
             actions (torch.Tensor): Actions fed to the environment
                 with shape :math:`(N, A*)`.
             rewards (torch.Tensor): Acquired rewards
                 with shape :math:`(N, )`.
+            returns (torch.Tensor): Acquired returns with shape :math:`(N, )`.
             advantages (torch.Tensor): Advantage value at each step
                 with shape :math:`(N, )`.
+            lengths (torch.Tensor): Lengths of episodes.
 
         Returns:
             torch.Tensor: Calculated mean scalar value of policy loss (float).
 
         """
-        # pylint: disable=protected-access
-        zero_optim_grads(self._policy_optimizer._optimizer)
-        loss = self._compute_loss_with_adv(obs, actions, rewards, advantages)
-        loss.backward()
-        self._policy_optimizer.step()
+        data = {
+            'observations': observations,
+            'actions': actions,
+            'rewards': rewards,
+            'advantages': advantages,
+            'lengths': lengths
+        }
+        return self._policy_optimizer.step(data, self._loss_function)
 
-        return loss
-
-    def _train_value_function(self, obs, returns):
+    def _train_value_function(self, observations, returns, lengths):
         r"""Train the value function.
 
         Args:
-            obs (torch.Tensor): Observation from the environment
+            observations (torch.Tensor): Observation from the environment
                 with shape :math:`(N, O*)`.
             returns (torch.Tensor): Acquired returns
                 with shape :math:`(N, )`.
+            lengths (torch.Tensor): Lengths of episodes.
 
         Returns:
             torch.Tensor: Calculated mean scalar value of value function loss
                 (float).
 
         """
-        # pylint: disable=protected-access
-        zero_optim_grads(self._vf_optimizer._optimizer)
-        loss = self._value_function.compute_loss(obs, returns)
-        loss.backward()
-        self._vf_optimizer.step()
+        data = {
+            'observations': observations,
+            'returns': returns,
+            'lengths': lengths
+        }
+        return self._vf_optimizer.step(data,
+                                       self._value_function.loss_function)
 
-        return loss
-
-    def _compute_loss(self, obs, actions, rewards, valids, baselines):
+    def _compute_loss(self, obs, actions, rewards, lengths, baselines):
         r"""Compute mean value of loss.
+
+        Note that this function is private, but used by MAML.
 
         Notes: P is the maximum episode length (self.max_episode_length)
 
@@ -307,7 +299,7 @@ class VPG(RLAlgorithm):
                 with shape :math:`(N, P, A*)`.
             rewards (torch.Tensor): Acquired rewards
                 with shape :math:`(N, P)`.
-            valids (list[int]): Numbers of valid steps in each episode
+            lengths (list[int]): Numbers of valid steps in each episode
             baselines (torch.Tensor): Value function estimation at each step
                 with shape :math:`(N, P)`.
 
@@ -316,19 +308,24 @@ class VPG(RLAlgorithm):
                 objective (float).
 
         """
-        obs_flat = torch.cat(filter_valids(obs, valids))
-        actions_flat = torch.cat(filter_valids(actions, valids))
-        rewards_flat = torch.cat(filter_valids(rewards, valids))
-        advantages_flat = self._compute_advantage(rewards, valids, baselines)
+        obs_flat = torch.cat(filter_valids(obs, lengths))
+        actions_flat = torch.cat(filter_valids(actions, lengths))
+        rewards_flat = torch.cat(filter_valids(rewards, lengths))
+        advantages_flat = self._compute_advantage(rewards, lengths, baselines)
 
-        return self._compute_loss_with_adv(obs_flat, actions_flat,
-                                           rewards_flat, advantages_flat)
+        return self._loss_function(obs_flat, actions_flat, rewards_flat,
+                                   advantages_flat, lengths)
 
-    def _compute_loss_with_adv(self, obs, actions, rewards, advantages):
+    def _loss_function(self,
+                       observations,
+                       actions,
+                       rewards,
+                       advantages,
+                       lengths=None):
         r"""Compute mean value of loss.
 
         Args:
-            obs (torch.Tensor): Observation from the environment
+            observations (torch.Tensor): Observation from the environment
                 with shape :math:`(N \dot [T], O*)`.
             actions (torch.Tensor): Actions fed to the environment
                 with shape :math:`(N \dot [T], A*)`.
@@ -336,50 +333,56 @@ class VPG(RLAlgorithm):
                 with shape :math:`(N \dot [T], )`.
             advantages (torch.Tensor): Advantage value at each step
                 with shape :math:`(N \dot [T], )`.
+            lengths (torch.Tensor or None): Lengths of episodes, if operating
+                on full episodes.
 
         Returns:
             torch.Tensor: Calculated negative mean scalar value of objective.
 
         """
-        objectives = self._compute_objective(advantages, obs, actions, rewards)
+        objectives = self._compute_objective(advantages, observations, actions,
+                                             rewards)
 
         if self._entropy_regularzied:
-            policy_entropies = self._compute_policy_entropy(obs)
+            policy_entropies = self._compute_policy_entropy(
+                observations, actions)
             objectives += self._policy_ent_coeff * policy_entropies
 
         return -objectives.mean()
 
-    def _compute_advantage(self, rewards, valids, baselines):
+    def _compute_advantage(self, rewards, lengths, baselines):
         r"""Compute mean value of loss.
 
-        Notes: P is the maximum episode length (self.max_episode_length)
-
         Args:
-            rewards (torch.Tensor): Acquired rewards
-                with shape :math:`(N, P)`.
-            valids (list[int]): Numbers of valid steps in each episode
-            baselines (torch.Tensor): Value function estimation at each step
-                with shape :math:`(N, P)`.
+            rewards (torch.Tensor): Packed acquired rewards
+                with shape :math:`(N \bullet [T])`.
+            lengths (list[int]): Numbers of valid steps in each episode
+            baselines (torch.Tensor): Packed value function estimation of
+                returns with shape :math:`(N \bullet [T])`.
 
         Returns:
             torch.Tensor: Calculated advantage values given rewards and
                 baselines with shape :math:`(N \dot [T], )`.
 
         """
-        advantages = compute_advantages(self._discount, self._gae_lambda,
-                                        self.max_episode_length, baselines,
-                                        rewards)
-        advantage_flat = torch.cat(filter_valids(advantages, valids))
+        padded_rewards = pad_packed_tensor(rewards, lengths)
+        padded_baselines = pad_packed_tensor(baselines, lengths)
+        padded_advantages = compute_advantages(self._discount,
+                                               self._gae_lambda,
+                                               self.max_episode_length,
+                                               padded_baselines,
+                                               padded_rewards)
+        advantages = torch.cat(filter_valids(padded_advantages, lengths))
 
         if self._center_adv:
-            means = advantage_flat.mean()
-            variance = advantage_flat.var()
-            advantage_flat = (advantage_flat - means) / (variance + 1e-8)
+            means = advantages.mean()
+            variance = advantages.var()
+            advantages = (advantages - means) / (variance + 1e-8)
 
         if self._positive_adv:
-            advantage_flat -= advantage_flat.min()
+            advantages -= advantages.min()
 
-        return advantage_flat
+        return advantages
 
     def _compute_kl_constraint(self, obs):
         r"""Compute KL divergence.
@@ -408,25 +411,27 @@ class VPG(RLAlgorithm):
 
         return kl_constraint.mean()
 
-    def _compute_policy_entropy(self, obs):
+    def _compute_policy_entropy(self, obs, actions):
         r"""Compute entropy value of probability distribution.
 
         Notes: P is the maximum episode length (self.max_episode_length)
 
         Args:
-            obs (torch.Tensor): Observation from the environment
+            observations (torch.Tensor): Observation from the environment
                 with shape :math:`(N, P, O*)`.
+            actions (torch.Tensor): Actions fed to the environment
+                with shape :math:`(N \dot [T], A*)`.
 
         Returns:
             torch.Tensor: Calculated entropy values given observation
                 with shape :math:`(N, P)`.
 
         """
-        if self._stop_entropy_gradient:
-            with torch.no_grad():
+        with torch.set_grad_enabled(not self._stop_entropy_gradient):
+            if self._use_neg_logli_entropy:
+                policy_entropy = -self.policy(obs)[0].log_prob(actions)
+            else:
                 policy_entropy = self.policy(obs)[0].entropy()
-        else:
-            policy_entropy = self.policy(obs)[0].entropy()
 
         # This prevents entropy from becoming negative for small policy std
         if self._use_softplus_entropy:
