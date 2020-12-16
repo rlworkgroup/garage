@@ -59,7 +59,7 @@ Trust Region Policy Optimization specific for RL<sup>2</sup>.
 ## References
 
 ```eval_rst
-.. bibliography:: references.bib
+.. bibliography::
    :style: unsrt
    :filter: docname in docnames
 ```

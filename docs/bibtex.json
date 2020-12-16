@@ -1,0 +1,57 @@
+{
+    "cited": {
+        "user/algo_bc": [
+            "ho2016model"
+        ],
+        "user/algo_cem": [
+            "rubinstein2004cross"
+        ],
+        "user/algo_ddpg": [
+            "lillicrap2015continuous"
+        ],
+        "user/algo_erwr": [
+            "peters2007reward",
+            "2009koberpolicy"
+        ],
+        "user/algo_maml": [
+            "finn2017modelagnostic"
+        ],
+        "user/algo_mtppo": [
+            "yu2019metaworld",
+            "schulman2017proximal"
+        ],
+        "user/algo_mttrpo": [
+            "schulman2015trust",
+            "yu2019metaworld"
+        ],
+        "user/algo_pearl": [
+            "rakelly2019efficient"
+        ],
+        "user/algo_ppo": [
+            "schulman2017proximal",
+            "levine2018reinforcement"
+        ],
+        "user/algo_rl2": [
+            "duan2016rl"
+        ],
+        "user/algo_sac": [
+            "haarnoja2018soft"
+        ],
+        "user/algo_td3": [
+            "Fujimoto2018AddressingFA"
+        ],
+        "user/algo_trpo": [
+            "schulman2015trust"
+        ],
+        "user/algo_vpg": [
+            "williams1992simple"
+        ],
+        "user/custom_worker": [
+            "duan2016rl"
+        ],
+        "user/implement_algo": [
+            "williams1992simple",
+            "rubinstein2004cross"
+        ]
+    }
+}

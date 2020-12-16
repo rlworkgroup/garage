@@ -40,7 +40,7 @@ Trust Region Policy Optimization, or TRPO, is a policy gradient algorithm that b
 ## References
 
 ```eval_rst
-.. bibliography:: references.bib
+.. bibliography::
    :style: unsrt
    :filter: docname in docnames
 ```

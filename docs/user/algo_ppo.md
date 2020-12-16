@@ -50,7 +50,7 @@ Garage has implementations of PPO with PyTorch and TensorFlow.
 ## References
 
 ```eval_rst
-.. bibliography:: references.bib
+.. bibliography::
    :style: unsrt
    :filter: docname in docnames
 ```

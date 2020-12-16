@@ -54,7 +54,7 @@ num_evaluation_episodes=10
 ## References
 
 ```eval_rst
-.. bibliography:: references.bib
+.. bibliography::
    :style: unsrt
    :filter: docname in docnames
 ```

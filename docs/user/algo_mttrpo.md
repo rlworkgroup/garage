@@ -55,7 +55,7 @@ learn a policy to perform 10 different manipulation tasks.
 ## References
 
 ```eval_rst
-.. bibliography:: references.bib
+.. bibliography::
    :style: unsrt
    :filter: docname in docnames
 ```

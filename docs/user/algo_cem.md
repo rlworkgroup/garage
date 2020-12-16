@@ -38,7 +38,7 @@ n_best top policies in terms of return.
 ## References
 
 ```eval_rst
-.. bibliography:: references.bib
+.. bibliography::
    :style: unsrt
    :filter: docname in docnames
 ```

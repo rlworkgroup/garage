@@ -71,7 +71,7 @@ As with all algorithms in garage, you can take a look at the the examples provid
 ## References
 
 ```eval_rst
-.. bibliography:: references.bib
+.. bibliography::
    :style: unsrt
    :filter: docname in docnames
 ```

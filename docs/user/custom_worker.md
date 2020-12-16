@@ -154,7 +154,7 @@ You can see a full example launcher of PPO with RL2 [here](https://github.com/rl
 ## References
 
 ```eval_rst
-.. bibliography:: references.bib
+.. bibliography::
    :style: unsrt
    :filter: docname in docnames
 ```

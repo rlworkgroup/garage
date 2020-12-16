@@ -49,7 +49,7 @@ This example is to train PPO on Multi-Task 50 (MT50) environment, in which we le
 ## References
 
 ```eval_rst
-.. bibliography:: references.bib
+.. bibliography::
    :style: unsrt
    :filter: docname in docnames
 ```
