@@ -32,7 +32,7 @@ elif algo=='pearl':
     run_cmd = f'python metaworld_launchers/ml10/pearl_metaworld_ml10.py'
 elif algo=='maml':
     container = 'rlworkgroup/garage-headless'
-    run_cmd = f'python metaworld_launchers/ml10/maml_trpo_metaworld_ml10.py'
+    run_cmd = f'python metaworld_launchers/ml10/maml_trpo_metaworld_ml10.py --il 0.5'
     device_requests = []
 else:
     raise ValueError("algorithm passed needs to be in {'rl2', 'pearl', 'maml'}")
