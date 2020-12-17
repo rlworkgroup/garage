@@ -121,6 +121,7 @@ class ContinuousCNNQFunction(CNNMLPMergeModel):
         self._action_dim = self._env_spec.action_space.shape
 
         super().__init__(name=name,
+                         input_dim=self._obs_dim,
                          filters=self._filters,
                          strides=self._strides,
                          hidden_sizes=self._hidden_sizes,

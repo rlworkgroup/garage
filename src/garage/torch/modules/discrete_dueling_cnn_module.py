@@ -137,6 +137,7 @@ class DiscreteDuelingCNNModule(nn.Module):
             self._module = nn.Sequential(cnn_module, mlp_hidden_nonlinearity(),
                                          nn.Flatten())
 
+    # pylint: disable=arguments-differ
     def forward(self, inputs):
         """Forward method.
 

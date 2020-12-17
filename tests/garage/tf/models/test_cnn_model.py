@@ -16,12 +16,11 @@ class TestCNNModel(TfGraphTestCase):
         self.batch_size = 5
         self.input_width = 10
         self.input_height = 10
-        self.obs_input = np.ones(
-            (self.batch_size, self.input_width, self.input_height, 3))
-        # pylint: disable=unsubscriptable-object
-        input_shape = self.obs_input.shape[1:]  # height, width, channel
+        flat_dim = self.input_width * self.input_height * 3
+        self.obs_input = np.ones((self.batch_size, flat_dim))
+        self.input_dim = (self.input_width, self.input_height, 3)
         self._input_ph = tf.compat.v1.placeholder(tf.float32,
-                                                  shape=(None, ) + input_shape,
+                                                  shape=(None, flat_dim),
                                                   name='input')
 
     # yapf: disable
@@ -35,7 +34,8 @@ class TestCNNModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_output_value(self, filters, in_channels, strides):
-        model = CNNModel(filters=filters,
+        model = CNNModel(input_dim=self.input_dim,
+                         filters=filters,
                          strides=strides,
                          name='cnn_model',
                          padding='VALID',
@@ -83,6 +83,7 @@ class TestCNNModel(TfGraphTestCase):
     def test_output_value_max_pooling(self, filters, in_channels, strides,
                                       pool_strides, pool_shapes):
         model = CNNModelWithMaxPooling(
+            input_dim=self.input_dim,
             filters=filters,
             strides=strides,
             name='cnn_model',
@@ -131,7 +132,8 @@ class TestCNNModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_is_pickleable(self, filters, strides):
-        model = CNNModel(filters=filters,
+        model = CNNModel(input_dim=self.input_dim,
+                         filters=filters,
                          strides=strides,
                          name='cnn_model',
                          padding='VALID',

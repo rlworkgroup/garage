@@ -6,6 +6,7 @@ from garage.experiment import deterministic
 
 
 def cnn(input_var,
+        input_dim,
         filters,
         strides,
         name,
@@ -21,6 +22,9 @@ def cnn(input_var,
 
     Args:
         input_var (tf.Tensor): Input tf.Tensor to the CNN.
+        input_dim (Tuple[int, int, int]): Dimensions of unflattened input,
+            which means [in_height, in_width, in_channels]. If the last 3
+            dimensions of input_var is not this shape, it will be reshaped.
         filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
             of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
             are two convolutional layers. The filter for the first layer have 3
@@ -47,6 +51,9 @@ def cnn(input_var,
 
     """
     with tf.compat.v1.variable_scope(name):
+        # unflatten
+        input_var = tf.reshape(input_var, [-1, *input_dim])
+
         h = input_var
         for index, (filter_iter, stride) in enumerate(zip(filters, strides)):
             _stride = [1, stride, stride, 1]
@@ -61,6 +68,7 @@ def cnn(input_var,
 
 
 def cnn_with_max_pooling(input_var,
+                         input_dim,
                          filters,
                          strides,
                          name,
@@ -78,6 +86,9 @@ def cnn_with_max_pooling(input_var,
 
     Args:
         input_var (tf.Tensor): Input tf.Tensor to the CNN.
+        input_dim (Tuple[int, int, int]): Dimensions of unflattened input,
+            which means [in_height, in_width, in_channels]. If the last 3
+            dimensions of input_var is not this shape, it will be reshaped.
         filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
             of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
             are two convolutional layers. The filter for the first layer have 3
@@ -113,6 +124,9 @@ def cnn_with_max_pooling(input_var,
     pool_shapes = [1, pool_shapes[0], pool_shapes[1], 1]
 
     with tf.compat.v1.variable_scope(name):
+        # unflatten
+        input_var = tf.reshape(input_var, [-1, *input_dim])
+
         h = input_var
         for index, (filter_iter, stride) in enumerate(zip(filters, strides)):
             _stride = [1, stride, stride, 1]

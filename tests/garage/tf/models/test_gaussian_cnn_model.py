@@ -19,6 +19,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
         self.input_height = 10
         self.obs = np.full(
             (self.batch_size, self.input_width, self.input_height, 3), 1)
+        self.input_dim = (self.input_width, self.input_height, 3)
         input_shape = self.obs.shape[1:]  # height, width, channel
         self._input_ph = tf.compat.v1.placeholder(tf.float32,
                                                   shape=(None, ) + input_shape,
@@ -38,7 +39,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
                                              in_channels, strides, output_dim,
                                              hidden_sizes):
         mock_normal.return_value = 0.5
-        model = GaussianCNNModel(filters=filters,
+        model = GaussianCNNModel(input_dim=self.input_dim,
+                                 filters=filters,
                                  strides=strides,
                                  padding='VALID',
                                  output_dim=output_dim,
@@ -94,7 +96,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
                               (2, (1, 1)), (3, (2, 2))])
     def test_std_share_network_shapes(self, output_dim, hidden_sizes):
         # should be 2 * output_dim
-        model = GaussianCNNModel(filters=((3, (3, 3)), (6, (3, 3))),
+        model = GaussianCNNModel(input_dim=self.input_dim,
+                                 filters=((3, (3, 3)), (6, (3, 3))),
                                  strides=[1, 1],
                                  padding='SAME',
                                  hidden_sizes=hidden_sizes,
@@ -124,7 +127,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
                                                      strides, output_dim,
                                                      hidden_sizes):
         mock_normal.return_value = 0.5
-        model = GaussianCNNModel(filters=filters,
+        model = GaussianCNNModel(input_dim=self.input_dim,
+                                 filters=filters,
                                  strides=strides,
                                  padding='VALID',
                                  output_dim=output_dim,
@@ -181,7 +185,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_without_std_share_network_shapes(self, output_dim, hidden_sizes):
-        model = GaussianCNNModel(filters=((3, (3, 3)), (6, (3, 3))),
+        model = GaussianCNNModel(input_dim=self.input_dim,
+                                 filters=((3, (3, 3)), (6, (3, 3))),
                                  strides=[1, 1],
                                  padding='SAME',
                                  hidden_sizes=hidden_sizes,
@@ -215,6 +220,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
                                                 output_dim, hidden_sizes):
         mock_normal.return_value = 0.5
         model = GaussianCNNModel(
+            input_dim=self.input_dim,
             filters=filters,
             strides=strides,
             padding='VALID',
@@ -280,6 +286,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
     def test_adaptive_std_output_shape(self, output_dim, hidden_sizes,
                                        std_hidden_sizes):
         model = GaussianCNNModel(
+            input_dim=self.input_dim,
             filters=((3, (3, 3)), (6, (3, 3))),
             strides=[1, 1],
             padding='SAME',
@@ -323,7 +330,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
         mock_normal.return_value = 0.5
         input_var = tf.compat.v1.placeholder(tf.float32,
                                              shape=(None, 10, 10, 3))
-        model = GaussianCNNModel(filters=((3, (3, 3)), (6, (3, 3))),
+        model = GaussianCNNModel(input_dim=self.input_dim,
+                                 filters=((3, (3, 3)), (6, (3, 3))),
                                  strides=[1, 1],
                                  padding='SAME',
                                  hidden_sizes=hidden_sizes,
@@ -359,7 +367,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
         mock_normal.return_value = 0.5
         input_var = tf.compat.v1.placeholder(tf.float32,
                                              shape=(None, 10, 10, 3))
-        model = GaussianCNNModel(filters=((3, (3, 3)), (6, (3, 3))),
+        model = GaussianCNNModel(input_dim=self.input_dim,
+                                 filters=((3, (3, 3)), (6, (3, 3))),
                                  strides=[1, 1],
                                  padding='SAME',
                                  hidden_sizes=hidden_sizes,
@@ -396,7 +405,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
         mock_normal.return_value = 0.5
         input_var = tf.compat.v1.placeholder(tf.float32,
                                              shape=(None, 10, 10, 3))
-        model = GaussianCNNModel(filters=((3, (3, 3)), (6, (3, 3))),
+        model = GaussianCNNModel(input_dim=self.input_dim,
+                                 filters=((3, (3, 3)), (6, (3, 3))),
                                  strides=[1, 1],
                                  padding='SAME',
                                  output_dim=output_dim,
@@ -443,7 +453,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
         in_channels = [3, 3]
         strides = [1, 1]
 
-        model = GaussianCNNModel(filters=filters,
+        model = GaussianCNNModel(input_dim=self.input_dim,
+                                 filters=filters,
                                  strides=strides,
                                  padding='VALID',
                                  output_dim=output_dim,
@@ -499,7 +510,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
         filters = ((3, (3, 3)), (6, (3, 3)))
         strides = [1, 1]
 
-        model = GaussianCNNModel(filters=filters,
+        model = GaussianCNNModel(input_dim=self.input_dim,
+                                 filters=filters,
                                  strides=strides,
                                  padding='VALID',
                                  output_dim=output_dim,
@@ -528,7 +540,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
         filters = ((3, (3, 3)), (6, (3, 3)))
         strides = [1, 1]
 
-        model = GaussianCNNModel(filters=filters,
+        model = GaussianCNNModel(input_dim=self.input_dim,
+                                 filters=filters,
                                  strides=strides,
                                  padding='VALID',
                                  output_dim=output_dim,
@@ -557,7 +570,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
         filters = ((3, (3, 3)), (6, (3, 3)))
         strides = [1, 1]
 
-        model = GaussianCNNModel(filters=filters,
+        model = GaussianCNNModel(input_dim=self.input_dim,
+                                 filters=filters,
                                  strides=strides,
                                  padding='VALID',
                                  output_dim=output_dim,
@@ -587,7 +601,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
         filters = ((3, (3, 3)), (6, (3, 3)))
         strides = [1, 1]
 
-        model = GaussianCNNModel(filters=filters,
+        model = GaussianCNNModel(input_dim=self.input_dim,
+                                 filters=filters,
                                  strides=strides,
                                  padding='VALID',
                                  output_dim=output_dim,
@@ -612,7 +627,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
 
     def test_unknown_std_parameterization(self):
         with pytest.raises(NotImplementedError):
-            _ = GaussianCNNModel(filters=(((3, 3), 3), ((3, 3), 6)),
+            _ = GaussianCNNModel(input_dim=self.input_dim,
+                                 filters=(((3, 3), 3), ((3, 3), 6)),
                                  strides=[1, 1],
                                  padding='SAME',
                                  hidden_sizes=(1, ),

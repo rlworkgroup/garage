@@ -47,7 +47,8 @@ class TestCNNMLPMergeModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_output_value(self, filters, in_channels, strides, hidden_sizes):
-        model = CNNMLPMergeModel(filters=filters,
+        model = CNNMLPMergeModel(input_dim=self.input_shape,
+                                 filters=filters,
                                  strides=strides,
                                  hidden_sizes=hidden_sizes,
                                  action_merge_layer=1,
@@ -120,7 +121,8 @@ class TestCNNMLPMergeModel(TfGraphTestCase):
         ])
     def test_output_value_max_pooling(self, filters, in_channels, strides,
                                       pool_strides, pool_shapes):
-        model = CNNMLPMergeModel(filters=filters,
+        model = CNNMLPMergeModel(input_dim=self.input_shape,
+                                 filters=filters,
                                  strides=strides,
                                  name='cnn_mlp_merge_model2',
                                  padding='VALID',
@@ -197,7 +199,8 @@ class TestCNNMLPMergeModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_is_pickleable(self, filters, strides):
-        model = CNNMLPMergeModel(filters=filters,
+        model = CNNMLPMergeModel(input_dim=self.input_shape,
+                                 filters=filters,
                                  strides=strides,
                                  name='cnn_mlp_merge_model',
                                  padding='VALID',

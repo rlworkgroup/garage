@@ -14,8 +14,9 @@ class GaussianCNNBaselineModel(GaussianCNNModel):
     distribution to the outputs.
 
     Args:
-        input_shape(tuple[int]): Input shape of the model (without the batch
-            dimension).
+        input_dim (Tuple[int, int, int]): Dimensions of unflattened input,
+            which means [in_height, in_width, in_channels]. If the last 3
+            dimensions of input_var is not this shape, it will be reshaped.
         filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
             of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
             are two convolutional layers. The filter for the first layer have 3
@@ -93,7 +94,7 @@ class GaussianCNNBaselineModel(GaussianCNNModel):
     """
 
     def __init__(self,
-                 input_shape,
+                 input_dim,
                  output_dim,
                  filters,
                  strides,
@@ -127,7 +128,8 @@ class GaussianCNNBaselineModel(GaussianCNNModel):
                      seed=deterministic.get_tf_seed_stream()),
                  std_parameterization='exp',
                  layer_normalization=False):
-        super().__init__(output_dim=output_dim,
+        super().__init__(input_dim=input_dim,
+                         output_dim=output_dim,
                          filters=filters,
                          strides=strides,
                          padding=padding,
@@ -156,7 +158,7 @@ class GaussianCNNBaselineModel(GaussianCNNModel):
                          std_parameterization=std_parameterization,
                          layer_normalization=layer_normalization,
                          name=name)
-        self._input_shape = input_shape
+        self._input_shape = input_dim
 
     def network_output_spec(self):
         """Network output spec.
@@ -171,6 +173,7 @@ class GaussianCNNBaselineModel(GaussianCNNModel):
             'y_mean', 'y_std'
         ]
 
+    # pylint: disable=arguments-differ
     def _build(self, state_input, name=None):
         """Build model given input placeholder(s).
 

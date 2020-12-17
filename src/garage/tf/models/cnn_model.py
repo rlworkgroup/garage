@@ -10,6 +10,9 @@ class CNNModel(Model):
     """CNN Model.
 
     Args:
+        input_dim (Tuple[int, int, int]): Dimensions of unflattened input,
+            which means [in_height, in_width, in_channels]. If the last 3
+            dimensions of input_var is not this shape, it will be reshaped.
         filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
             of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
             are two convolutional layers. The filter for the first layer have 3
@@ -34,6 +37,7 @@ class CNNModel(Model):
     """
 
     def __init__(self,
+                 input_dim,
                  filters,
                  strides,
                  padding,
@@ -43,6 +47,7 @@ class CNNModel(Model):
                      seed=deterministic.get_tf_seed_stream()),
                  hidden_b_init=tf.zeros_initializer()):
         super().__init__(name)
+        self._input_dim = input_dim
         self._filters = filters
         self._strides = strides
         self._padding = padding
@@ -66,6 +71,7 @@ class CNNModel(Model):
         """
         del name
         return cnn(input_var=state_input,
+                   input_dim=self._input_dim,
                    filters=self._filters,
                    hidden_nonlinearity=self._hidden_nonlinearity,
                    hidden_w_init=self._hidden_w_init,

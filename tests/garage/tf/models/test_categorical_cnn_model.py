@@ -17,6 +17,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
         batch_size = 5
         input_width = 10
         input_height = 10
+        self._input_dim = (input_width, input_height, 3)
         self._obs_input = np.ones(
             (batch_size, 1, input_width, input_height, 3))
         self._input_shape = (input_width, input_height, 3
@@ -27,7 +28,8 @@ class TestCategoricalMLPModel(TfGraphTestCase):
                                                   name='input')
 
     def test_dist(self):
-        model = CategoricalCNNModel(output_dim=1,
+        model = CategoricalCNNModel(input_dim=self._input_dim,
+                                    output_dim=1,
                                     filters=((5, (3, 3)), ),
                                     strides=(1, ),
                                     padding='VALID')
@@ -35,7 +37,8 @@ class TestCategoricalMLPModel(TfGraphTestCase):
         assert isinstance(dist, tfp.distributions.OneHotCategorical)
 
     def test_instantiate_with_different_name(self):
-        model = CategoricalCNNModel(output_dim=1,
+        model = CategoricalCNNModel(input_dim=self._input_dim,
+                                    output_dim=1,
                                     filters=((5, (3, 3)), ),
                                     strides=(1, ),
                                     padding='VALID')
@@ -54,7 +57,8 @@ class TestCategoricalMLPModel(TfGraphTestCase):
     # yapf: enable
     def test_is_pickleable(self, output_dim, filters, strides, padding,
                            hidden_sizes):
-        model = CategoricalCNNModel(output_dim=output_dim,
+        model = CategoricalCNNModel(input_dim=self._input_dim,
+                                    output_dim=output_dim,
                                     filters=filters,
                                     strides=strides,
                                     padding=padding,

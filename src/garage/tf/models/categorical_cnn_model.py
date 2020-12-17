@@ -20,6 +20,9 @@ class CategoricalCNNModel(Model):
     by a multilayer perceptron (MLP).
 
     Args:
+        input_dim (Tuple[int, int, int]): Dimensions of unflattened input,
+            which means [in_height, in_width, in_channels]. If the last 3
+            dimensions of input_var is not this shape, it will be reshaped.
         output_dim (int): Dimension of the network output.
         filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
             of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
@@ -59,6 +62,7 @@ class CategoricalCNNModel(Model):
     """
 
     def __init__(self,
+                 input_dim,
                  output_dim,
                  filters,
                  strides,
@@ -77,7 +81,8 @@ class CategoricalCNNModel(Model):
                  layer_normalization=False):
         super().__init__(name)
         self._is_image = is_image
-        self._cnn_model = CNNModel(filters=filters,
+        self._cnn_model = CNNModel(input_dim=input_dim,
+                                   filters=filters,
                                    strides=strides,
                                    padding=padding,
                                    hidden_nonlinearity=hidden_nonlinearity,

@@ -14,6 +14,9 @@ class GaussianCNNModel(Model):
     """GaussianCNNModel.
 
     Args:
+        input_dim (Tuple[int, int, int]): Dimensions of unflattened input,
+            which means [in_height, in_width, in_channels]. If the last 3
+            dimensions of input_var is not this shape, it will be reshaped.
         filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
             of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
             are two convolutional layers. The filter for the first layer have 3
@@ -91,6 +94,7 @@ class GaussianCNNModel(Model):
     """
 
     def __init__(self,
+                 input_dim,
                  output_dim,
                  filters,
                  strides,
@@ -126,6 +130,7 @@ class GaussianCNNModel(Model):
                  layer_normalization=False):
         # Network parameters
         super().__init__(name)
+        self._input_dim = input_dim
         self._output_dim = output_dim
         self._filters = filters
         self._strides = strides
@@ -214,6 +219,7 @@ class GaussianCNNModel(Model):
 
                 mean_std_conv = cnn(
                     input_var=state_input,
+                    input_dim=self._input_dim,
                     filters=self._filters,
                     hidden_nonlinearity=self._hidden_nonlinearity,
                     hidden_w_init=self._hidden_w_init,
@@ -242,6 +248,7 @@ class GaussianCNNModel(Model):
                 # separate MLPs for mean and std networks
                 # mean network
                 mean_conv = cnn(input_var=state_input,
+                                input_dim=self._input_dim,
                                 filters=self._filters,
                                 hidden_nonlinearity=self._hidden_nonlinearity,
                                 hidden_w_init=self._hidden_w_init,
@@ -267,6 +274,7 @@ class GaussianCNNModel(Model):
                 if self._adaptive_std:
                     log_std_conv = cnn(
                         input_var=state_input,
+                        input_dim=self._input_dim,
                         filters=self._std_filters,
                         hidden_nonlinearity=self._std_hidden_nonlinearity,
                         hidden_w_init=self._std_hidden_w_init,

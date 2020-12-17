@@ -16,6 +16,9 @@ class CNNMLPMergeModel(Model):
     the MLP accepts the CNN's output and the action as inputs.
 
     Args:
+        input_dim (Tuple[int, int, int]): Dimensions of unflattened input,
+            which means [in_height, in_width, in_channels]. If the last 3
+            dimensions of input_var is not this shape, it will be reshaped.
         filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
             of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
             are two convolutional layers. The filter for the first layer have 3
@@ -76,6 +79,7 @@ class CNNMLPMergeModel(Model):
     """
 
     def __init__(self,
+                 input_dim,
                  filters,
                  strides,
                  hidden_sizes=(256, ),
@@ -103,6 +107,7 @@ class CNNMLPMergeModel(Model):
 
         if not max_pooling:
             self.cnn_model = CNNModel(
+                input_dim=input_dim,
                 filters=filters,
                 hidden_w_init=cnn_hidden_w_init,
                 hidden_b_init=cnn_hidden_b_init,
@@ -111,6 +116,7 @@ class CNNMLPMergeModel(Model):
                 hidden_nonlinearity=cnn_hidden_nonlinearity)
         else:
             self.cnn_model = CNNModelWithMaxPooling(
+                input_dim=input_dim,
                 filters=filters,
                 hidden_w_init=cnn_hidden_w_init,
                 hidden_b_init=cnn_hidden_b_init,

@@ -4,11 +4,8 @@ import akro
 import tensorflow as tf
 
 from garage.experiment import deterministic
-from garage.tf.models import (CNNModel,
-                              CNNModelWithMaxPooling,
-                              MLPDuelingModel,
-                              MLPModel,
-                              Sequential)
+from garage.tf.models import (CNNModel, CNNModelWithMaxPooling,
+                              MLPDuelingModel, MLPModel, Sequential)
 
 # yapf: enable
 
@@ -123,12 +120,14 @@ class DiscreteCNNQFunction(Sequential):
         action_dim = self._env_spec.action_space.flat_dim
 
         if not max_pooling:
-            cnn_model = CNNModel(filters=filters,
+            cnn_model = CNNModel(input_dim=self.obs_dim,
+                                 filters=filters,
                                  strides=strides,
                                  padding=padding,
                                  hidden_nonlinearity=cnn_hidden_nonlinearity)
         else:
             cnn_model = CNNModelWithMaxPooling(
+                input_dim=self.obs_dim,
                 filters=filters,
                 strides=strides,
                 padding=padding,

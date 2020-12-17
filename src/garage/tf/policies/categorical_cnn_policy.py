@@ -104,7 +104,8 @@ class CategoricalCNNPolicy(CategoricalCNNModel, Policy):
 
         is_image = isinstance(self.env_spec.observation_space, akro.Image)
 
-        super().__init__(output_dim=self._action_dim,
+        super().__init__(input_dim=self._obs_dim,
+                         output_dim=self._action_dim,
                          filters=filters,
                          strides=strides,
                          padding=padding,
@@ -123,9 +124,9 @@ class CategoricalCNNPolicy(CategoricalCNNModel, Policy):
 
     def _initialize(self):
         """Initialize policy."""
+        flat_dim = np.prod(self._obs_dim)
         state_input = tf.compat.v1.placeholder(tf.float32,
-                                               shape=(None, None) +
-                                               self._obs_dim)
+                                               shape=(None, None, flat_dim))
         if isinstance(self.env_spec.observation_space, akro.Image):
             augmented_state_input = tf.cast(state_input, tf.float32)
             augmented_state_input /= 255.0
@@ -169,11 +170,9 @@ class CategoricalCNNPolicy(CategoricalCNNModel, Policy):
             dict(numpy.ndarray): Distribution parameters.
 
         """
-        if isinstance(self.env_spec.observation_space, akro.Image) and \
-                len(observations[0].shape) < \
-                len(self.env_spec.observation_space.shape):
-            observations = self.env_spec.observation_space.unflatten_n(
-                observations)
+        if not isinstance(observations[0],
+                          np.ndarray) or len(observations[0].shape) > 1:
+            observations = self.observation_space.flatten_n(observations)
         samples, probs = self._f_prob(np.expand_dims(observations, 1))
         return np.squeeze(samples), dict(prob=np.squeeze(probs, axis=1))
 

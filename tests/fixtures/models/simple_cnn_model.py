@@ -8,6 +8,7 @@ class SimpleCNNModel(Model):
     """Simple CNNModel for testing.
 
     Args:
+        input_dim (Tuple[int, int, int]): Consistent to real CNNModel.
         filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
             of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
             are two convolutional layers. The filter for the first layer have 3
@@ -32,6 +33,7 @@ class SimpleCNNModel(Model):
     """
 
     def __init__(self,
+                 input_dim,
                  filters,
                  strides,
                  padding,
@@ -41,6 +43,7 @@ class SimpleCNNModel(Model):
                  hidden_b_init=None):
         del hidden_nonlinearity, hidden_w_init, hidden_b_init
         super().__init__(name)
+        self.input_dim = input_dim
         self.filters = filters
         self.strides = strides
         self.padding = padding
@@ -60,8 +63,8 @@ class SimpleCNNModel(Model):
 
         """
         del name
-        height_size = obs_input.get_shape().as_list()[1]
-        width_size = obs_input.get_shape().as_list()[2]
+        height_size = self.input_dim[0]
+        width_size = self.input_dim[1]
         for filter_iter, stride in zip(self.filters, self.strides):
             if self.padding == 'SAME':
                 height_size = int((height_size + stride - 1) / stride)
