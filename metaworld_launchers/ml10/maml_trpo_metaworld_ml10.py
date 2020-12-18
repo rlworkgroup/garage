@@ -25,7 +25,7 @@ import metaworld
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--il', default=0.1)
+@click.option('--il', default=0.5)
 @wrap_experiment(snapshot_mode='gap', snapshot_gap=16, name_parameters='passed')
 def maml_trpo_metaworld_ml10(ctxt, seed, il, epochs=4000, episodes_per_task=10,
                              meta_batch_size=20):
@@ -82,7 +82,7 @@ def maml_trpo_metaworld_ml10(ctxt, seed, il, epochs=4000, episodes_per_task=10,
                     inner_lr=il,
                     num_grad_updates=3,
                     meta_evaluator=meta_evaluator,
-                    evaluate_every_n_epochs=8)
+                    evaluate_every_n_epochs=4)
 
     trainer.setup(algo, env)
     trainer.train(n_epochs=epochs,
