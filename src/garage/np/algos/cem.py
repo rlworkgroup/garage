@@ -164,7 +164,7 @@ class CEM(RLAlgorithm):
             self._all_params.clear()
 
         # -- Stage: Generate a new policy for next path sampling
-        self._cur_params = self._sample_params(itr)
+        self._cur_params = self._sample_params(epoch)
         self._all_params.append(self._cur_params.copy())
         self.policy.set_param_values(self._cur_params)
 
