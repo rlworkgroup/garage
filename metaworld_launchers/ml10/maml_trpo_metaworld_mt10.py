@@ -27,16 +27,18 @@ import metaworld
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--il', default=0.5)
+@click.option('--il', default=0.05)
+@click.option('--extra_tags', type=str, default='none')
 @wrap_experiment(snapshot_mode='gap',
                  snapshot_gap=16,
                  name_parameters='passed')
 def maml_trpo_metaworld_ml10(ctxt,
                              seed,
                              il,
-                             epochs=200,
+                             epochs=2000,
+                             extra_tags='',
                              episodes_per_task=10,
-                             meta_batch_size=20):
+                             meta_batch_size=10):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -51,21 +53,23 @@ def maml_trpo_metaworld_ml10(ctxt,
 
     """
     set_seed(seed)
-    ml10 = metaworld.ML10()
+    mt10 = metaworld.MT10()
     tasks = MetaWorldTaskSampler(
-        ml10,
+        mt10,
         'train',
-        wrapper=lambda env, _: normalize(env,
-                                         normalize_reward=True,
-                                         reward_alpha=0.01)
+        add_env_onehot=True,
+        # wrapper=lambda env, _: normalize(env,
+        #                                  normalize_reward=True,
+        #                                  reward_alpha=0.01)
     )
     env = tasks.sample(10)[0]()
-    test_sampler = SetTaskSampler(
-        MetaWorldSetTaskEnv,
-        env=MetaWorldSetTaskEnv(ml10, 'test'),
-        wrapper=lambda e, _: normalize(env,
-                                       normalize_reward=True,
-                                       reward_alpha=0.01)
+    test_sampler = MetaWorldTaskSampler(
+        mt10,
+        'train',
+        add_env_onehot=True,
+        # wrapper=lambda env, _: normalize(env,
+        #                                  normalize_reward=True,
+        #                                  reward_alpha=0.01)
     )
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
@@ -101,7 +105,8 @@ def maml_trpo_metaworld_ml10(ctxt,
                     inner_lr=il,
                     num_grad_updates=3,
                     meta_evaluator=meta_evaluator,
-                    evaluate_every_n_epochs=8)
+                    evaluate_every_n_epochs=8,
+                    max_kl_step=0.05)
 
     trainer.setup(algo, env)
     trainer.train(n_epochs=epochs,

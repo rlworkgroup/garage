@@ -11,7 +11,7 @@ from garage.envs import MultiEnvWrapper, normalize
 from garage.envs.multi_env_wrapper import round_robin_strategy
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import MetaWorldTaskSampler
-from garage.sampler import RaySampler, LocalSampler
+from garage.sampler import RaySampler
 from garage.torch.algos import TRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -20,7 +20,7 @@ from garage.trainer import Trainer
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--epochs', default=500)
+@click.option('--epochs', default=2000)
 @click.option('--batch_size', default=5000)
 @click.option('--n_workers', default=10)
 @click.option('--n_tasks', default=10)
@@ -43,7 +43,7 @@ def mttrpo_metaworld_mt10(ctxt, seed, epochs, batch_size, n_workers, n_tasks):
     mt10 = metaworld.MT10()
     train_task_sampler = MetaWorldTaskSampler(mt10,
                                               'train',
-                                              lambda env, _: normalize(env),
+                                              lambda env, _: normalize(env, normalize_reward=True),
                                               add_env_onehot=True)
     assert n_tasks % 10 == 0
     assert n_tasks <= 500
@@ -64,7 +64,7 @@ def mttrpo_metaworld_mt10(ctxt, seed, epochs, batch_size, n_workers, n_tasks):
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
-    sampler = LocalSampler(agents=policy,
+    sampler = RaySampler(agents=policy,
                          envs=env,
                          max_episode_length=env.spec.max_episode_length,
                          n_workers=n_workers)
@@ -78,7 +78,7 @@ def mttrpo_metaworld_mt10(ctxt, seed, epochs, batch_size, n_workers, n_tasks):
 
     trainer = Trainer(ctxt)
     trainer.setup(algo, env)
-    trainer.train(n_epochs=epochs, batch_size=5000)
+    trainer.train(n_epochs=epochs, batch_size=batch_size)
 
 
 mttrpo_metaworld_mt10()
