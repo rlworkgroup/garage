@@ -32,7 +32,7 @@ import metaworld
 @wrap_experiment(snapshot_mode='gap',
                  snapshot_gap=16,
                  name_parameters='passed')
-def maml_trpo_metaworld_ml10(ctxt,
+def maml_trpo_metaworld_mt10(ctxt,
                              seed,
                              il,
                              epochs=2000,
@@ -58,18 +58,16 @@ def maml_trpo_metaworld_ml10(ctxt,
         mt10,
         'train',
         add_env_onehot=True,
-        # wrapper=lambda env, _: normalize(env,
-        #                                  normalize_reward=True,
-        #                                  reward_alpha=0.01)
+        wrapper=lambda env, _: normalize(env,
+                                         normalize_reward=True,)
     )
     env = tasks.sample(10)[0]()
     test_sampler = MetaWorldTaskSampler(
         mt10,
         'train',
         add_env_onehot=True,
-        # wrapper=lambda env, _: normalize(env,
-        #                                  normalize_reward=True,
-        #                                  reward_alpha=0.01)
+        wrapper=lambda env, _: normalize(env,
+                                         normalize_reward=True,)
     )
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
@@ -113,4 +111,4 @@ def maml_trpo_metaworld_ml10(ctxt,
                   batch_size=episodes_per_task * env.spec.max_episode_length)
 
 
-maml_trpo_metaworld_ml10()
+maml_trpo_metaworld_mt10()

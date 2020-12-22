@@ -33,7 +33,7 @@ device_requests = []
 seeds = np.random.randint(10000,size=(1,))
 for seed in seeds:
     client.containers.run('rlworkgroup/garage-headless',
-                          f'{run_cmd} --seed {seed}',
+                          f'python {run_cmd} --seed {seed}',
                           environment=environment_vars,
                           device_requests=device_requests,
                           mounts=[volume],
