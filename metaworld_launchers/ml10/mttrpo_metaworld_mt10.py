@@ -24,7 +24,7 @@ from garage.trainer import Trainer
 @click.option('--batch_size', default=5000)
 @click.option('--n_workers', default=10)
 @click.option('--n_tasks', default=10)
-@wrap_experiment(snapshot_mode='none')
+@wrap_experiment(snapshot_mode='none', name_parameters='passed')
 def mttrpo_metaworld_mt10(ctxt, seed, epochs, batch_size, n_workers, n_tasks):
     """Set up environment and algorithm and run the task.
 
