@@ -20,7 +20,6 @@ client = docker.from_env()
 volume = Mount(f"{home}/code/garage/data", f"{home}/metaworld-runs-v2/", type='bind')
 mjkey = open(f'{home}/.mujoco/mjkey.txt', 'r').read()
 environment_vars = [f"MJKEY={mjkey}", "QT_X11_NO_MITSHM=1", "DISPLAY="]
-# device_requests = [DeviceRequest(count=-1, capabilities=[['gpu']])]
 device_requests = []
 
 
@@ -38,4 +37,3 @@ for seed in seeds:
                           device_requests=device_requests,
                           mounts=[volume],
                           detach=True)
-    time.sleep(0.1)
