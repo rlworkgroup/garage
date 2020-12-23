@@ -201,7 +201,7 @@ run-headless: CONTAINER_NAME ?= ''
 run-headless: user ?= $$USER
 run-headless: ensure-data-path-exists build-headless
 	docker run \
-		-it \
+		-i \
 		--rm \
 		-v $(DATA_PATH)/$(CONTAINER_NAME):/home/$(user)/code/garage/data \
 		-e MJKEY="$$(cat $(MJKEY_PATH))" \
