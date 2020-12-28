@@ -54,13 +54,13 @@ def mttrpo_metaworld_mt10(ctxt, seed, epochs, batch_size, n_workers, n_tasks):
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
-        hidden_sizes=(64, 64),
+        hidden_sizes=(256, 256),
         hidden_nonlinearity=torch.tanh,
         output_nonlinearity=None,
     )
 
     value_function = GaussianMLPValueFunction(env_spec=env.spec,
-                                              hidden_sizes=(32, 32),
+                                              hidden_sizes=(128, 128),
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
