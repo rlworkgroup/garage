@@ -18,12 +18,14 @@ from garage.torch.value_functions import GaussianMLPValueFunction
 from garage.trainer import Trainer
 
 # yapf: enable
-
-
 @click.command()
-@click.option('--seed', default=1)
+@click.option('--env-name', type=str)
+@click.option('--seed', type=int, default=1)
+@click.option('--epochs', type=int, default=1000)
+@click.option('--rollouts_per_task', type=int, default=10)
+@click.option('--meta_batch_size', type=int, default=20)
 @wrap_experiment(snapshot_mode='gap', name_parameters='passed', snapshot_gap=50)
-def maml_trpo_metaworld_ml1_push(ctxt, seed, ):
+def maml_trpo_metaworld_ml1(ctxt, env_name, seed, epochs, rollouts_per_task, meta_batch_size):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -37,12 +39,9 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, ):
         meta_batch_size (int): Number of tasks sampled per batch.
 
     """
-    epochs=1000
-    rollouts_per_task=10
-    meta_batch_size=20
     set_seed(seed)
 
-    ml1 = metaworld.ML1('push-v2')
+    ml1 = metaworld.ML1(env_name)
     tasks = MetaWorldTaskSampler(ml1, 'train')
     env = tasks.sample(1)[0]()
     test_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
@@ -91,4 +90,4 @@ def maml_trpo_metaworld_ml1_push(ctxt, seed, ):
                   batch_size=rollouts_per_task * env.spec.max_episode_length)
 
 
-maml_trpo_metaworld_ml1_push()
+maml_trpo_metaworld_ml1()
