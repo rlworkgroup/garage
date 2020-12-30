@@ -183,10 +183,6 @@ RUN python3.5 setup.py sdist && \
     cp dist/*.tar.gz dist/garage.tar.gz && \
     pip install dist/garage.tar.gz[all,dev]
 
-RUN cd benchmarks && python3.5 setup.py sdist && \
-    cp dist/*.tar.gz dist/benchmarks.tar.gz && \
-    pip install dist/benchmarks.tar.gz
-
 ENTRYPOINT ["docker/entrypoint-headless.sh"]
 
 # Nvidia target ################################################################
