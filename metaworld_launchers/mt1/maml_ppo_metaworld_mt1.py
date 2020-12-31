@@ -26,7 +26,7 @@ from garage.trainer import Trainer
 @click.option('--rollouts_per_task', type=int, default=10)
 @click.option('--meta_batch_size', type=int, default=20)
 @wrap_experiment(snapshot_mode='gap', name_parameters='passed', snapshot_gap=50)
-def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, meta_batch_size):
+def maml_ppo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, meta_batch_size):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -44,11 +44,9 @@ def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, met
 
     mt1 = metaworld.MT1(env_name)
     tasks = MetaWorldTaskSampler(mt1, 'train', add_env_onehot=True)
-    test_tasks = copy.deepcopy(tasks)
+    test_sampler = copy.deepcopy(tasks)
 
     env = tasks.sample(1)[0]()
-    test_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
-                                  env=test_tasks)
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
