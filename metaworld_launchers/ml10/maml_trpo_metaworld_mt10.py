@@ -4,6 +4,7 @@
 # yapf: disable
 import click
 import torch
+import copy
 
 from garage import wrap_experiment
 from garage.envs import MetaWorldSetTaskEnv
@@ -61,14 +62,9 @@ def maml_trpo_metaworld_mt10(ctxt,
         wrapper=lambda env, _: normalize(env,
                                          normalize_reward=True,)
     )
+    test_sampler = copy.deepcopy(tasks)
     env = tasks.sample(10)[0]()
-    test_sampler = MetaWorldTaskSampler(
-        mt10,
-        'train',
-        add_env_onehot=True,
-        wrapper=lambda env, _: normalize(env,
-                                         normalize_reward=True,)
-    )
+    
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=(128, 128),
