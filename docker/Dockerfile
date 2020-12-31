@@ -109,7 +109,9 @@ RUN pip install --upgrade pip setuptools wheel && \
 # We need a MuJoCo key to install mujoco_py
 # In this step only the presence of the file mjkey.txt is required, so we only
 # create an empty file
-RUN touch $HOME/.mujoco/mjkey.txt
+ENV MJKEY_PATH $HOME/.mujoco/mjkey.txt
+RUN touch $MJKEY_PATH
+
 
 COPY --chown=$user:$user docker/entrypoint-runtime.sh $HOME/code/garage/docker/entrypoint-runtime.sh
 ENTRYPOINT ["code/garage/docker/entrypoint-runtime.sh"]
