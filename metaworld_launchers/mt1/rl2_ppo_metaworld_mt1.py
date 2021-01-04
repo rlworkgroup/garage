@@ -28,7 +28,7 @@ from garage.trainer import TFTrainer
 @click.option('--n_epochs', default=2000)
 @click.option('--episode_per_task', default=10)
 @wrap_experiment(snapshot_mode='gap', snapshot_gap=100, name_parameters='passed')
-def rl2_ppo_metaworld_ml1(ctxt, env_name, seed, meta_batch_size, n_epochs,
+def rl2_ppo_metaworld_mt1(ctxt, env_name, seed, meta_batch_size, n_epochs,
                                episode_per_task):
     """Train RL2 PPO with ML1 environment.
 
@@ -96,4 +96,4 @@ def rl2_ppo_metaworld_ml1(ctxt, env_name, seed, meta_batch_size, n_epochs,
                       env_spec.max_episode_length * meta_batch_size)
 
 
-rl2_ppo_metaworld_ml1()
+rl2_ppo_metaworld_mt1()
