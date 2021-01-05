@@ -23,7 +23,7 @@ from garage.trainer import TFTrainer
 @click.command()
 @click.option('--env-name', type=str)
 @click.option('--seed', default=1)
-@click.option('--meta_batch_size', default=10)
+@click.option('--meta_batch_size', default=5)
 @click.option('--n_epochs', default=2000)
 @click.option('--episode_per_task', default=10)
 @wrap_experiment(snapshot_mode='gap', snapshot_gap=100, name_parameters='passed')

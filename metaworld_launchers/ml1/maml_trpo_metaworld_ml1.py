@@ -21,8 +21,8 @@ from garage.trainer import Trainer
 @click.command()
 @click.option('--env-name', type=str)
 @click.option('--seed', type=int, default=1)
-@click.option('--epochs', type=int, default=1000)
-@click.option('--rollouts_per_task', type=int, default=10)
+@click.option('--epochs', type=int, default=2000)
+@click.option('--rollouts_per_task', type=int, default=5)
 @click.option('--meta_batch_size', type=int, default=20)
 @wrap_experiment(snapshot_mode='gap', name_parameters='passed', snapshot_gap=50)
 def maml_trpo_metaworld_ml1(ctxt, env_name, seed, epochs, rollouts_per_task, meta_batch_size):
@@ -43,7 +43,7 @@ def maml_trpo_metaworld_ml1(ctxt, env_name, seed, epochs, rollouts_per_task, met
 
     ml1 = metaworld.ML1(env_name)
     tasks = MetaWorldTaskSampler(ml1, 'train')
-    env = tasks.sample(1)[0]()
+    env = tasks.sample(meta_batch_size)[0]()
     test_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
                                   env=MetaWorldSetTaskEnv(ml1, 'test'))
 
@@ -78,7 +78,7 @@ def maml_trpo_metaworld_ml1(ctxt, env_name, seed, epochs, rollouts_per_task, met
                     discount=0.99,
                     gae_lambda=1.,
                     inner_lr=0.1,
-                    num_grad_updates=1,
+                    num_grad_updates=2,
                     meta_evaluator=meta_evaluator,
                     entropy_method='max',
                     policy_ent_coeff=0.01,
@@ -87,7 +87,7 @@ def maml_trpo_metaworld_ml1(ctxt, env_name, seed, epochs, rollouts_per_task, met
 
     trainer.setup(algo, env)
     trainer.train(n_epochs=epochs,
-                  batch_size=rollouts_per_task * env.spec.max_episode_length)
+                  batch_size=rollouts_per_task * env.spec.max_episode_length * meta_batch_size)
 
 
 maml_trpo_metaworld_ml1()
