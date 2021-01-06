@@ -78,6 +78,8 @@ class GaussianGRUModel(Model):
                  hidden_state_init_trainable=False,
                  learn_std=True,
                  init_std=1.0,
+                 min_std=None,
+                 max_std=None,
                  std_share_network=False,
                  layer_normalization=False):
         super().__init__(name)
@@ -98,6 +100,8 @@ class GaussianGRUModel(Model):
         self._std_share_network = std_share_network
         # pylint: disable=assignment-from-no-return
         self._init_std_param = np.log(init_std)
+        self._min_std_param = -np.inf if min_std is None else np.log(min_std)
+        self._max_std_param = +np.inf if max_std is None else np.log(max_std)
         self._initialize()
 
     def _initialize(self):
@@ -219,6 +223,15 @@ class GaussianGRUModel(Model):
                     initializer=tf.constant_initializer(self._init_std_param),
                     trainable=self._learn_std,
                     name='log_std_param')
+
+        log_std_var = tf.clip_by_value(log_std_var,
+                                       self._min_std_param,
+                                       self._max_std_param,
+                                       name='clip_log_std_var')
+        step_log_std_var = tf.clip_by_value(step_log_std_var,
+                                            self._min_std_param,
+                                            self._max_std_param,
+                                            name='clip_step_log_std_var')
 
         dist = tfp.distributions.MultivariateNormalDiag(
             loc=mean_var, scale_diag=tf.exp(log_std_var))

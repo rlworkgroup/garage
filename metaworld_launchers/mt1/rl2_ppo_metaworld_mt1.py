@@ -6,6 +6,8 @@ import click
 import metaworld
 import copy
 
+from numpy.core.records import _deprecate_shape_0_as_None
+
 from garage import wrap_experiment
 from garage.envs import MetaWorldSetTaskEnv, normalize
 from garage.experiment import (MetaEvaluator, MetaWorldTaskSampler,
@@ -55,7 +57,11 @@ def rl2_ppo_metaworld_mt1(ctxt, env_name, seed, meta_batch_size, n_epochs,
         policy = GaussianGRUPolicy(name='policy',
                                    hidden_dim=256,
                                    env_spec=env_spec,
-                                   state_include_action=False)
+                                   state_include_action=False,
+                                   std_share_network=True,
+                                   init_std=1.,
+                                   min_std=0.05,
+                                   max_std=2)
 
         meta_evaluator = MetaEvaluator(test_task_sampler=test_task_sampler)
 
@@ -87,7 +93,7 @@ def rl2_ppo_metaworld_mt1(ctxt, env_name, seed, meta_batch_size, n_epochs,
                       policy_ent_coeff=0.02,
                       center_adv=False,
                       meta_evaluator=meta_evaluator,
-                      episodes_per_trial=episode_per_task)
+                      episodes_per_trial=episode_per_task,)
 
         trainer.setup(algo, envs)
 
