@@ -14,6 +14,8 @@ from garage.experiment import (MetaEvaluator, MetaWorldTaskSampler,
                                SetTaskSampler)
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
+from garage.tf.baselines import GaussianMLPBaseline
+from garage.tf.optimizers import FirstOrderOptimizer
 from garage.sampler import RaySampler
 from garage.tf.algos import RL2PPO
 from garage.tf.algos.rl2 import RL2Env, RL2Worker
@@ -29,10 +31,13 @@ from garage.trainer import TFTrainer
 @click.option('--meta_batch_size', default=10)
 @click.option('--n_epochs', default=2000)
 @click.option('--episode_per_task', default=10)
-@wrap_experiment(snapshot_mode='gap', snapshot_gap=100, name_parameters='passed')
+@click.option('--entropy_coefficient', default=5e-3)
+@wrap_experiment(snapshot_mode='gap', snapshot_gap=100, name_parameters='all')
 def rl2_ppo_metaworld_mt1(ctxt, env_name, seed, meta_batch_size, n_epochs,
-                               episode_per_task):
-    """Train RL2 PPO with ML1 environment.
+                               episode_per_task,
+                               entropy_coefficient,
+                               extra_tags="use_neg_logli_entropy=True_std_share_network=True_stddev_clipping"):
+    """Train RL2 PPO with MT1 environment.
 
     Args:
         ctxt (ExperimentContext): The experiment configuration used by
@@ -48,7 +53,7 @@ def rl2_ppo_metaworld_mt1(ctxt, env_name, seed, meta_batch_size, n_epochs,
     ml1 = metaworld.MT1(env_name)
 
     task_sampler = MetaWorldTaskSampler(ml1, 'train',
-                                        lambda env, _: RL2Env(normalize(env, normalize_reward=True, reward_alpha=0.002)))
+                                        lambda env, _: RL2Env(normalize(env, normalize_reward=True)))
     env = task_sampler.sample(1)[0]()
     test_task_sampler = copy.deepcopy(task_sampler)
     env_spec = env.spec
@@ -59,13 +64,22 @@ def rl2_ppo_metaworld_mt1(ctxt, env_name, seed, meta_batch_size, n_epochs,
                                    env_spec=env_spec,
                                    state_include_action=False,
                                    std_share_network=True,
-                                   init_std=1.,
-                                   min_std=0.05,
-                                   max_std=2)
+                                   init_std=0.5,
+                                   max_std=1.5)
 
         meta_evaluator = MetaEvaluator(test_task_sampler=test_task_sampler)
 
-        baseline = LinearFeatureBaseline(env_spec=env_spec)
+        baseline = baseline = GaussianMLPBaseline(
+            env_spec=env.spec,
+            hidden_sizes=(128, 128),
+            use_trust_region=False,
+            optimizer=FirstOrderOptimizer,
+            optimizer_args=dict(
+                batch_size=32,
+                max_optimization_epochs=10,
+                learning_rate=3e-4,
+            ),
+        )
 
         envs = task_sampler.sample(meta_batch_size)
         sampler = RaySampler(
@@ -87,13 +101,15 @@ def rl2_ppo_metaworld_mt1(ctxt, env_name, seed, meta_batch_size, n_epochs,
                       gae_lambda=1,
                       lr_clip_range=0.2,
                       optimizer_args=dict(batch_size=32,
-                                          max_optimization_epochs=10),
+                                          max_optimization_epochs=10,
+                                          learning_rate=5e-4),
                       stop_entropy_gradient=True,
                       entropy_method='max',
-                      policy_ent_coeff=0.02,
+                      policy_ent_coeff=entropy_coefficient,
                       center_adv=False,
                       meta_evaluator=meta_evaluator,
-                      episodes_per_trial=episode_per_task,)
+                      episodes_per_trial=episode_per_task,
+                      use_neg_logli_entropy=True)
 
         trainer.setup(algo, envs)
 

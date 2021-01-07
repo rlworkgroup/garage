@@ -138,6 +138,7 @@ class NPO(RLAlgorithm):
         self._f_returns = None
         self._f_policy_kl = None
         self._f_policy_entropy = None
+        self._f_policy_stddev = None
         self._policy_network = None
         self._old_policy_network = None
 
@@ -242,6 +243,9 @@ class NPO(RLAlgorithm):
         pol_ent = self._f_policy_entropy(*policy_opt_input_values)
         ent = np.sum(pol_ent) / np.sum(episodes.lengths)
         tabular.record('{}/Entropy'.format(self.policy.name), ent)
+        pol_std = self._f_policy_stddev(*policy_opt_input_values)
+        std = np.sum(pol_std) / np.sum(episodes.lengths)
+        tabular.record('{}/StandardDeviation'.format(self.policy.name), std)
         tabular.record('{}/Perplexity'.format(self.policy.name), np.exp(ent))
         returns = self._fit_baseline_with_data(episodes, baselines)
 
@@ -423,7 +427,6 @@ class NPO(RLAlgorithm):
 
         """
         pol_dist = self._policy_network.dist
-
         with tf.name_scope('policy_entropy'):
             if self._use_neg_logli_entropy:
                 policy_entropy = -pol_dist.log_prob(i.action_var,
@@ -437,11 +440,13 @@ class NPO(RLAlgorithm):
 
             if self._stop_entropy_gradient:
                 policy_entropy = tf.stop_gradient(policy_entropy)
-
         # dense form, match the shape of advantage
         policy_entropy = tf.reshape(policy_entropy,
                                     [-1, self.max_episode_length])
-
+        policy_std = tf.reshape(pol_dist.stddev(),
+                                    [-1, self.max_episode_length])
+        self._f_policy_stddev = compile_function(
+            flatten_inputs(self._policy_opt_inputs), policy_std)
         self._f_policy_entropy = compile_function(
             flatten_inputs(self._policy_opt_inputs), policy_entropy)
 
@@ -577,6 +582,7 @@ class NPO(RLAlgorithm):
         del data['_name_scope']
         del data['_policy_opt_inputs']
         del data['_f_policy_entropy']
+        del data['_f_policy_stddev']
         del data['_f_policy_kl']
         del data['_f_rewards']
         del data['_f_returns']
