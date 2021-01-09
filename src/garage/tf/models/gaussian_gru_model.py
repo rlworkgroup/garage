@@ -100,8 +100,13 @@ class GaussianGRUModel(Model):
         self._std_share_network = std_share_network
         # pylint: disable=assignment-from-no-return
         self._init_std_param = np.log(init_std)
-        self._min_std_param = -np.inf if min_std is None else np.log(min_std)
-        self._max_std_param = +np.inf if max_std is None else np.log(max_std)
+        if not ((min_std is None and max_std is None) or
+                (min_std is not None and max_std is not None)):
+            raise ValueError(
+                "You must specify both a min and a max standard deviation or none at all"
+            )
+        self._log_min_std_param = None if min_std is None else np.log(min_std)
+        self._log_max_std_param = None if max_std is None else np.log(max_std)
         self._initialize()
 
     def _initialize(self):
@@ -224,14 +229,16 @@ class GaussianGRUModel(Model):
                     trainable=self._learn_std,
                     name='log_std_param')
 
-        log_std_var = tf.clip_by_value(log_std_var,
-                                       self._min_std_param,
-                                       self._max_std_param,
-                                       name='clip_log_std_var')
-        step_log_std_var = tf.clip_by_value(step_log_std_var,
-                                            self._min_std_param,
-                                            self._max_std_param,
-                                            name='clip_step_log_std_var')
+        with tf.compat.v1.variable_scope('std_limits'):
+            if self._log_max_std_param and self._log_min_std_param:
+                log_std_var, step_log_std_var = (tf.tanh(log_std_var),
+                                                 tf.tanh(step_log_std_var))
+                clip_func = (
+                    lambda std: self._log_min_std_param + 0.5 *
+                    (self._log_max_std_param - self._log_min_std_param) *
+                    (std + 1))
+                log_std_var = clip_func(log_std_var)
+                step_log_std_var = clip_func(step_log_std_var)
 
         dist = tfp.distributions.MultivariateNormalDiag(
             loc=mean_var, scale_diag=tf.exp(log_std_var))

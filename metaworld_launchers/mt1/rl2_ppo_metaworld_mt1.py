@@ -31,12 +31,12 @@ from garage.trainer import TFTrainer
 @click.option('--meta_batch_size', default=10)
 @click.option('--n_epochs', default=2000)
 @click.option('--episode_per_task', default=10)
-@click.option('--entropy_coefficient', default=5e-3)
+@click.option('--entropy_coefficient', default=5e-6)
 @wrap_experiment(snapshot_mode='gap', snapshot_gap=100, name_parameters='all')
 def rl2_ppo_metaworld_mt1(ctxt, env_name, seed, meta_batch_size, n_epochs,
                                episode_per_task,
                                entropy_coefficient,
-                               extra_tags="use_neg_logli_entropy=True_std_share_network=True_stddev_clipping"):
+                               extra_tags="use_neg_logli_entropy=True_std_share_network=True_stddev_clipping=SoftClip"):
     """Train RL2 PPO with MT1 environment.
 
     Args:
@@ -65,7 +65,8 @@ def rl2_ppo_metaworld_mt1(ctxt, env_name, seed, meta_batch_size, n_epochs,
                                    state_include_action=False,
                                    std_share_network=True,
                                    init_std=0.5,
-                                   max_std=1.5)
+                                   max_std=1.2,
+                                   min_std=0.5)
 
         meta_evaluator = MetaEvaluator(test_task_sampler=test_task_sampler)
 
