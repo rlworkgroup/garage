@@ -231,14 +231,32 @@ class GaussianGRUModel(Model):
 
         with tf.compat.v1.variable_scope('std_limits'):
             if self._log_max_std_param and self._log_min_std_param:
-                log_std_var, step_log_std_var = (tf.tanh(log_std_var),
-                                                 tf.tanh(step_log_std_var))
-                clip_func = (
-                    lambda std: self._log_min_std_param + 0.5 *
-                    (self._log_max_std_param - self._log_min_std_param) *
-                    (std + 1))
-                log_std_var = clip_func(log_std_var)
-                step_log_std_var = clip_func(step_log_std_var)
+                # high = tf.stop_gradient(
+                #     tf.convert_to_tensor(self._log_max_std_param,
+                #                          dtype=tf.float32))
+                # low = tf.stop_gradient(
+                #     tf.convert_to_tensor(self._log_min_std_param,
+                #                          dtype=tf.float32))
+                high = self._log_max_std_param
+                low = self._log_min_std_param
+
+                def softclip_exp(x, x_min, x_max, alpha=20):
+
+                    def unit_softclip(x, alpha):
+                        return (1 / alpha) * tf.math.log(
+                            (1 + tf.exp(alpha * x)) / (1 + tf.exp(alpha *
+                                                                  (x - 1))))
+
+                    y_scale = (x_max - x_min)
+                    y_offset = -x_min
+                    x_scale = 1 / (x_max - x_min)
+                    x_offset = x_min
+
+                    return (unit_softclip(
+                        (x - x_offset) * x_scale, alpha) * y_scale) - y_offset
+
+                log_std_var = softclip_exp(log_std_var, low, high)
+                step_log_std_var = softclip_exp(step_log_std_var, low, high)
 
         dist = tfp.distributions.MultivariateNormalDiag(
             loc=mean_var, scale_diag=tf.exp(log_std_var))
