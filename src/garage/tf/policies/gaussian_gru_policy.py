@@ -86,7 +86,8 @@ class GaussianGRUPolicy(GaussianGRUModel, Policy):
                  min_std=None,
                  max_std=None,
                  layer_normalization=False,
-                 state_include_action=True,):
+                 state_include_action=True,
+                 use_sp_clip=False):
         if not isinstance(env_spec.action_space, akro.Box):
             raise ValueError('GaussianGRUPolicy only works with '
                              'akro.Box action space, but not {}'.format(
@@ -139,7 +140,8 @@ class GaussianGRUPolicy(GaussianGRUModel, Policy):
             std_share_network=std_share_network,
             init_std=init_std,
             min_std=min_std,
-            max_std=max_std,)
+            max_std=max_std,
+            use_sp_clip=use_sp_clip)
 
         self._prev_actions = None
         self._prev_hiddens = None

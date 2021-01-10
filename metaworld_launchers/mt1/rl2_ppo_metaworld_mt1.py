@@ -5,8 +5,7 @@
 import click
 import metaworld
 import copy
-
-from numpy.core.records import _deprecate_shape_0_as_None
+import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import MetaWorldSetTaskEnv, normalize
@@ -31,13 +30,17 @@ from garage.trainer import TFTrainer
 @click.option('--meta_batch_size', default=10)
 @click.option('--n_epochs', default=2000)
 @click.option('--episode_per_task', default=10)
-@click.option('--entropy_coefficient', default=5e-5)
+@click.option('--entropy_coefficient', default=5e-4)
+@click.option('--use_sp_clip', type=bool)
+@click.option('--use_share_std_mean_network', type=bool)
 @click.option('--extra_tags', type=str)
 @wrap_experiment(snapshot_mode='gap', snapshot_gap=100, name_parameters='all')
 def rl2_ppo_metaworld_mt1(ctxt, env_name, seed, meta_batch_size, n_epochs,
                                episode_per_task,
                                entropy_coefficient,
-                               extra_tags="no_clip"):
+                               use_sp_clip=False,
+                               use_share_std_mean_network=False,
+                               extra_tags=""):
     """Train RL2 PPO with MT1 environment.
 
     Args:
@@ -64,8 +67,12 @@ def rl2_ppo_metaworld_mt1(ctxt, env_name, seed, meta_batch_size, n_epochs,
                                    hidden_dim=256,
                                    env_spec=env_spec,
                                    state_include_action=False,
-                                   std_share_network=True,
-                                   init_std=1.,)
+                                   std_share_network=use_share_std_mean_network,
+                                   init_std=1.,
+                                   min_std=0.5,
+                                   max_std=1.5,
+                                   output_nonlinearity=tf.nn.tanh,
+                                   use_sp_clip=use_sp_clip)
 
         meta_evaluator = MetaEvaluator(test_task_sampler=test_task_sampler)
 
