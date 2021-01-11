@@ -13,17 +13,17 @@ import gym
 from metaworld.envs.mujoco.env_dict import (ALL_V1_ENVIRONMENTS,
                                             ALL_V2_ENVIRONMENTS)
 import numpy as np
-import tensorflow as tf
+import torch
 
 from garage import wrap_experiment
 from garage.envs import GymEnv, normalize
-from garage.trainer import TFTrainer
+from garage.trainer import Trainer
 from garage.experiment.deterministic import set_seed
 from garage.sampler import LocalSampler, RaySampler
-from garage.tf.algos import PPO
-from garage.tf.baselines import GaussianMLPBaseline
-from garage.tf.policies import GaussianMLPPolicy
-from garage.tf.optimizers import FirstOrderOptimizer
+from garage.torch.algos import PPO
+from garage.torch.value_functions import GaussianMLPValueFunction
+from garage.torch.policies import GaussianMLPPolicy
+from garage.torch.optimizers import OptimizerWrapper
 
 # import pip
 # package = f'metaworld @ https://git@api.github.com/repos/rlworkgroup/metaworld/tarball/new-reward-functions'
@@ -77,56 +77,60 @@ def ppo_metaworld(
     env._freeze_rand_vec = True
     max_path_length = env.max_path_length
     env = normalize(GymEnv(env, max_episode_length=max_path_length), normalize_reward=True)
-    with TFTrainer(snapshot_config=ctxt) as trainer:
-        policy = GaussianMLPPolicy(
-            env_spec=env.spec,
-            hidden_sizes=(128, 128),
-            hidden_nonlinearity=tf.nn.tanh,
-            output_nonlinearity=None,
-        )
+    trainer = Trainer(snapshot_config=ctxt)
+    policy = GaussianMLPPolicy(
+        env_spec=env.spec,
+        hidden_sizes=(128, 128),
+        hidden_nonlinearity=torch.tanh,
+        output_nonlinearity=None,
+    )
 
-        baseline = GaussianMLPBaseline(
-            env_spec=env.spec,
-            hidden_sizes=(128, 128),
-            use_trust_region=True,
-        )
+    baseline = GaussianMLPValueFunction(
+        env_spec=env.spec,
+        hidden_sizes=(128, 128),
+    )
 
-        sampler= RaySampler(agents=policy,
-                            envs=env,
-                            max_episode_length=env.spec.max_episode_length,
-                            is_tf_worker=True)
-        # sampler = LocalSampler(agents=policy,
-        #                        envs=env,
-        #                        max_episode_length=env.spec.max_episode_length,
-        #                        is_tf_worker=True)
+    sampler= RaySampler(agents=policy,
+                        envs=env,
+                        max_episode_length=env.spec.max_episode_length,)
+    # sampler = LocalSampler(agents=policy,
+    #                        envs=env,
+    #                        max_episode_length=env.spec.max_episode_length,
+    #                        is_tf_worker=True)
 
-        # NOTE: make sure when setting entropy_method to 'max', set
-        # center_adv to False and turn off policy gradient. See
-        # tf.algos.NPO for detailed documentation.
-        algo = PPO(
-            env_spec=env.spec,
-            policy=policy,
-            baseline=baseline,
-            discount=0.99,
-            gae_lambda=0.95,
-            lr_clip_range=0.2,
-            optimizer=FirstOrderOptimizer,
-            optimizer_args=dict(
-                learning_rate=5e-4,
-                max_optimization_epochs=64,
-            ),
-            stop_entropy_gradient=stop_entropy_gradient,
-            entropy_method='max',
-            policy_ent_coeff=entropy,
-            center_adv=False,
-            use_softplus_entropy=use_softplus_entropy,
-            sampler=sampler
-        )
+    # NOTE: make sure when setting entropy_method to 'max', set
+    # center_adv to False and turn off policy gradient. See
+    # tf.algos.NPO for detailed documentation.
+    policy_optimizer = OptimizerWrapper(
+                        (torch.optim.Adam, dict(lr=5e-4)),
+                        policy,
+                        max_optimization_epochs=10,
+                        minibatch_size=64)
+    vf_optimizer = OptimizerWrapper(
+                        (torch.optim.Adam, dict(lr=5e-4)),
+                        baseline,
+                        max_optimization_epochs=10,
+                        minibatch_size=64)
+    algo = PPO(
+        env_spec=env.spec,
+        policy=policy,
+        value_function=baseline,
+        discount=0.99,
+        gae_lambda=0.95,
+        stop_entropy_gradient=stop_entropy_gradient,
+        entropy_method='max',
+        policy_ent_coeff=entropy,
+        center_adv=False,
+        use_softplus_entropy=use_softplus_entropy,
+        sampler=sampler,
+        policy_optimizer=policy_optimizer,
+        vf_optimizer=vf_optimizer
+    )
 
-        trainer.setup(algo, env)
-        trainer.train(n_epochs=int(20000000 / (max_path_length * 100)),
-                     batch_size=(max_path_length * 100),
-                     plot=False)
+    trainer.setup(algo, env)
+    trainer.train(n_epochs=int(20000000 / (max_path_length * 100)),
+                    batch_size=(max_path_length * 100),
+                    plot=False)
 
 
 ppo_metaworld()

@@ -63,7 +63,7 @@ if __name__ == '__main__':
     with tf.compat.v1.Session() as sess:
         with open(args.file, 'rb') as f:
             data = cloudpickle.load(f)
-        prefer_gpu()
+        # prefer_gpu()
         policy = data['algo'].policy
         env = data['env']
         while True:
