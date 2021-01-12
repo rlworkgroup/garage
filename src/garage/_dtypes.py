@@ -843,7 +843,7 @@ class EpisodeBatch(TimeStepBatch):
         """
         return {
             key: np.concatenate([
-                np.repeat([val], length, axis=0)
+                np.repeat([v], length, axis=0)
                 for (v, length) in zip(val, self.lengths)
             ])
             for (key, val) in self.episode_infos_by_episode.items()

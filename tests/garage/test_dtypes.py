@@ -75,6 +75,8 @@ def test_new_eps(eps_data):
     assert t.step_types is eps_data['step_types']
     assert t.lengths is eps_data['lengths']
     assert t.episode_infos_by_episode is eps_data['episode_infos']
+    assert (t.episode_infos['task_one_hot'][0].shape ==
+            eps_data['episode_infos']['task_one_hot'][0].shape)
 
 
 def test_lengths_shape_mismatch_eps(eps_data):
