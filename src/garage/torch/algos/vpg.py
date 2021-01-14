@@ -431,6 +431,24 @@ class VPG(RLAlgorithm):
 
         return policy_entropy
 
+    def _compute_policy_stddev(self, obs):
+        r"""Compute stddev value of probability distribution.
+
+        Notes: P is the maximum episode length (self.max_episode_length)
+
+        Args:
+            obs (torch.Tensor): Observation from the environment
+                with shape :math:`(N, P, O*)`.
+
+        Returns:
+            torch.Tensor: Calculated entropy values given observation
+                with shape :math:`(N, P)`.
+
+        """
+        with torch.no_grad():
+            policy_stddev = self.policy(obs)[0].stddev
+        return policy_stddev
+
     def _compute_objective(self, advantages, obs, actions, rewards):
         r"""Compute objective value.
 

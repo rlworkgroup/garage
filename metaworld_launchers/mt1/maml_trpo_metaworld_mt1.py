@@ -25,8 +25,9 @@ from garage.trainer import Trainer
 @click.option('--epochs', type=int, default=1000)
 @click.option('--rollouts_per_task', type=int, default=10)
 @click.option('--meta_batch_size', type=int, default=20)
+@click.option('--entropy_coefficient', default=5e-6, type=float)
 @wrap_experiment(snapshot_mode='gap', name_parameters='passed', snapshot_gap=50)
-def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, meta_batch_size):
+def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, meta_batch_size, entropy_coefficient):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -52,7 +53,9 @@ def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, met
         env_spec=env.spec,
         hidden_sizes=(256, 256),
         hidden_nonlinearity=torch.tanh,
-        output_nonlinearity=None,
+        output_nonlinearity=torch.tanh,
+        min_std=0.5,
+        max_std=1.0,
     )
 
     value_function = GaussianMLPValueFunction(env_spec=env.spec,
@@ -61,8 +64,8 @@ def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, met
                                               output_nonlinearity=None)
 
     meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
-                                   n_test_tasks=10,
-                                   n_exploration_eps=rollouts_per_task)
+                                   n_test_tasks=50,
+                                   n_exploration_eps=2)
 
     sampler = RaySampler(agents=policy,
                          envs=env,
@@ -78,13 +81,13 @@ def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, met
                     meta_batch_size=meta_batch_size,
                     discount=0.99,
                     gae_lambda=1.,
-                    inner_lr=0.1,
+                    inner_lr=0.05,
                     num_grad_updates=1,
                     meta_evaluator=meta_evaluator,
                     entropy_method='max',
-                    policy_ent_coeff=0.01,
+                    policy_ent_coeff=entropy_coefficient,
                     stop_entropy_gradient=True,
-                    center_adv=False)
+                    center_adv=False,)
 
     trainer.setup(algo, env)
     trainer.train(n_epochs=epochs,

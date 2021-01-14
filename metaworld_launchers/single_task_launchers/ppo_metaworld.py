@@ -41,7 +41,7 @@ def ppo_metaworld(
     env_name=None,
     tag='',
     extra_tags='',
-    entropy=0.01,
+    entropy=5e-3,
     stop_entropy_gradient=True,
     use_softplus_entropy=False,
     seed=1,
@@ -83,6 +83,9 @@ def ppo_metaworld(
             hidden_sizes=(128, 128),
             hidden_nonlinearity=tf.nn.tanh,
             output_nonlinearity=None,
+            std_share_network=True,
+            min_std=0.5,
+            max_std=1.5,
         )
 
         baseline = GaussianMLPBaseline(
@@ -113,14 +116,15 @@ def ppo_metaworld(
             optimizer=FirstOrderOptimizer,
             optimizer_args=dict(
                 learning_rate=5e-4,
-                max_optimization_epochs=64,
+                max_optimization_epochs=128,
             ),
             stop_entropy_gradient=stop_entropy_gradient,
             entropy_method='max',
             policy_ent_coeff=entropy,
             center_adv=False,
             use_softplus_entropy=use_softplus_entropy,
-            sampler=sampler
+            sampler=sampler,
+            use_neg_logli_entropy=True
         )
 
         trainer.setup(algo, env)

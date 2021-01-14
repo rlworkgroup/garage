@@ -34,5 +34,9 @@ def copy_local_directory_to_gcs(local_path, bucket, gcs_path):
 copy_local_directory_to_gcs('../../metaworld-runs-v2/local/experiment', mw_bucket, subdir)
 
 while 1:
-    time.sleep(wait_time)
-    copy_local_directory_to_gcs('../../metaworld-runs-v2/local/experiment', mw_bucket, subdir)
+    try:
+        copy_local_directory_to_gcs('../../metaworld-runs-v2/local/experiment', mw_bucket, subdir)
+        
+    except:
+        print("Wasn't able to upload, trying again in 10 seconds.")
+        time.sleep(10)

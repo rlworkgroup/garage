@@ -74,7 +74,8 @@ class MAMLTRPO(MAML):
         policy_optimizer = OptimizerWrapper(
             (torch.optim.Adam, dict(lr=inner_lr)), policy)
         vf_optimizer = OptimizerWrapper((torch.optim.Adam, dict(lr=inner_lr)),
-                                        value_function)
+                                        value_function,
+                                        max_optimization_epochs=1000,)
 
         inner_algo = VPG(env.spec,
                          policy,

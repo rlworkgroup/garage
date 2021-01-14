@@ -8,8 +8,8 @@ import numpy as np
 import torch
 
 from garage import (_Default, EpisodeBatch, log_multitask_performance,
-                    make_optimizer)
-from garage.np import discount_cumsum
+                    make_optimizer,)
+from garage.np import discount_cumsum, explained_variance_1d
 from garage.torch import update_module_params
 from garage.torch.optimizers import (ConjugateGradientOptimizer,
                                      DifferentiableSGD)
@@ -134,13 +134,25 @@ class MAML:
                                                all_params,
                                                set_grad=False)
 
+        baselines_list = []
+        returns = []
+        for task in all_samples:
+            for rollout in task:
+                baselines_list.append(rollout.baselines[rollout.valids.bool()])
+                returns.append([r['returns'] for r in rollout.paths])
+        baselines = torch.cat(baselines_list).numpy().flatten()
+        ev = explained_variance_1d(baselines, np.array(returns).flatten())
+
         with torch.no_grad():
             policy_entropy = self._compute_policy_entropy(
+                [task_samples[0] for task_samples in all_samples])
+            stddev = self._compute_policy_stddev(
                 [task_samples[0] for task_samples in all_samples])
             average_return = self._log_performance(
                 itr, all_samples, meta_objective.item(), loss_after.item(),
                 kl_before.item(), kl_after.item(),
-                policy_entropy.mean().item())
+                policy_entropy.mean().item(),
+                stddev.mean().item(), ev)
 
         if self._meta_evaluator and itr % self._evaluate_every_n_epochs == 0:
             self._meta_evaluator.evaluate(self)
@@ -342,6 +354,22 @@ class MAML:
         entropies = self._inner_algo._compute_policy_entropy(obs)
         return entropies.mean()
 
+    def _compute_policy_stddev(self, task_samples):
+        """Compute policy stddev.
+
+        Args:
+            task_samples (list[_MAMLEpisodeBatch]): Samples data for
+                one task.
+
+        Returns:
+            torch.Tensor: Computed entropy value.
+
+        """
+        obs = torch.stack([samples.observations for samples in task_samples])
+        # pylint: disable=protected-access
+        stddev = self._inner_algo._compute_policy_stddev(obs)
+        return stddev.mean()
+
     @property
     def policy(self):
         """Current policy of the inner algorithm.
@@ -393,7 +421,8 @@ class MAML:
                                  baselines)
 
     def _log_performance(self, itr, all_samples, loss_before, loss_after,
-                         kl_before, kl, policy_entropy):
+                         kl_before, kl, policy_entropy, stddev,
+                         explained_variance):
         """Evaluate performance of this batch.
 
         Args:
@@ -436,6 +465,9 @@ class MAML:
             tabular.record('KLBefore', kl_before)
             tabular.record('KLAfter', kl)
             tabular.record('Entropy', policy_entropy)
+            tabular.record('StandardDeviation', stddev)
+        tabular.record(f'{self._value_function.name}/ExplainedVariance',
+                       explained_variance)
 
         return np.mean(rtns)
 
