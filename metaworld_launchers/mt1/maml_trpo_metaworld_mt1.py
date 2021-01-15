@@ -56,6 +56,7 @@ def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, met
         output_nonlinearity=torch.tanh,
         min_std=0.5,
         max_std=1.0,
+        std_mlp_type='share_mean_std'
     )
 
     value_function = GaussianMLPValueFunction(env_spec=env.spec,

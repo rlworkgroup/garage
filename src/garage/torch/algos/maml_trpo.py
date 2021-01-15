@@ -95,6 +95,7 @@ class MAMLTRPO(MAML):
 
         meta_optimizer = (ConjugateGradientOptimizer,
                           dict(max_constraint_value=max_kl_step))
+        meta_vf_optimizer = (torch.optim.Adam, dict())
 
         super().__init__(inner_algo=inner_algo,
                          env=env,
@@ -102,6 +103,7 @@ class MAMLTRPO(MAML):
                          sampler=sampler,
                          task_sampler=task_sampler,
                          meta_optimizer=meta_optimizer,
+                         meta_vf_optimizer=meta_vf_optimizer,
                          meta_batch_size=meta_batch_size,
                          inner_lr=inner_lr,
                          outer_lr=outer_lr,

@@ -49,6 +49,7 @@ class MAML:
                  sampler,
                  task_sampler,
                  meta_optimizer,
+                 meta_vf_optimizer,
                  meta_batch_size=40,
                  inner_lr=0.1,
                  outer_lr=1e-3,
@@ -63,16 +64,20 @@ class MAML:
         self._policy = policy
         self._env = env
         self._task_sampler = task_sampler
-        self._value_function = copy.deepcopy(inner_algo._value_function)
-        self._initial_vf_state = self._value_function.state_dict()
+        self._value_function = inner_algo._value_function
+        self._old_value_function = copy.deepcopy(self._value_function)
         self._num_grad_updates = num_grad_updates
         self._meta_batch_size = meta_batch_size
         self._inner_algo = inner_algo
         self._inner_optimizer = DifferentiableSGD(self._policy, lr=inner_lr)
+        self._inner_optimizer_vf = DifferentiableSGD(self._value_function,
+                                                     lr=inner_lr)
         self._meta_optimizer = make_optimizer(meta_optimizer,
                                               module=policy,
                                               lr=_Default(outer_lr),
                                               eps=_Default(1e-5))
+        self._meta_vf_optimizer = make_optimizer(meta_vf_optimizer,
+                                                 module=self._value_function,)
         self._evaluate_every_n_epochs = evaluate_every_n_epochs
 
     def train(self, trainer):
@@ -90,13 +95,15 @@ class MAML:
         last_return = None
 
         for _ in trainer.step_epochs():
-            all_samples, all_params = self._obtain_samples(trainer)
-            last_return = self._train_once(trainer, all_samples, all_params)
+            all_samples, all_params, all_params_vf = self._obtain_samples(
+                trainer)
+            last_return = self._train_once(trainer, all_samples, all_params,
+                                           all_params_vf)
             trainer.step_itr += 1
 
         return last_return
 
-    def _train_once(self, trainer, all_samples, all_params):
+    def _train_once(self, trainer, all_samples, all_params, all_params_vf):
         """Train the algorithm once.
 
         Args:
@@ -106,7 +113,10 @@ class MAML:
                 [meta_batch_size * (num_grad_updates + 1)]
             all_params (list[dict]): A list of named parameter dictionaries.
                 Each dictionary contains key value pair of names (str) and
-                parameters (torch.Tensor).
+                parameters (torch.Tensor). For the policy.
+            all_params_vf (list[dict]): A list of named parameter dictionaries.
+                Each dictionary contains key value pair of names (str) and
+                parameters (torch.Tensor). For the VF.
 
         Returns:
             float: Average return.
@@ -119,8 +129,13 @@ class MAML:
                                                 all_params,
                                                 set_grad=False)
 
-        meta_objective = self._compute_meta_loss(all_samples, all_params)
+        meta_vf_objective = self._compute_vf_meta_loss(all_samples,
+                                                       all_params_vf)
+        self._meta_vf_optimizer.zero_grad()
+        meta_vf_objective.backward()
+        self._vf_meta_optimize(all_samples, all_params_vf)
 
+        meta_objective = self._compute_meta_loss(all_samples, all_params)
         self._meta_optimizer.zero_grad()
         meta_objective.backward()
 
@@ -161,33 +176,34 @@ class MAML:
 
         return average_return
 
-    def _train_value_function(self, paths):
-        """Train the value function.
+    # def _train_value_function(self, paths):
+    #     """Train the value function.
 
-        Args:
-            paths (list[dict]): A list of collected paths.
+    #     Args:
+    #         paths (list[dict]): A list of collected paths.
 
-        Returns:
-            torch.Tensor: Calculated mean scalar value of value function loss
-                (float).
+    #     Returns:
+    #         torch.Tensor: Calculated mean scalar value of value function loss
+    #             (float).
 
-        """
-        # MAML resets a value function to its initial state before training.
-        self._value_function.load_state_dict(self._initial_vf_state)
+    #     """
+    #     self._old_value_function_params = dict(self._value_function.named_parameters())
+    #     # MAML resets a value function to its initial state before training.
+    #     meta_vf_objective = self._compute_vf_meta_loss(all_samples, all_params)
 
-        obs = np.concatenate([path['observations'] for path in paths], axis=0)
-        returns = np.concatenate([path['returns'] for path in paths])
-        obs = torch.Tensor(obs)
-        returns = torch.Tensor(returns)
+    #     obs = np.concatenate([path['observations'] for path in paths], axis=0)
+    #     returns = np.concatenate([path['returns'] for path in paths])
+    #     obs = torch.Tensor(obs)
+    #     returns = torch.Tensor(returns)
 
-        vf_loss = self._value_function.compute_loss(obs, returns)
-        # pylint: disable=protected-access
-        self._inner_algo._vf_optimizer.zero_grad()
-        vf_loss.backward()
-        # pylint: disable=protected-access
-        self._inner_algo._vf_optimizer.step()
+    #     vf_loss = self._value_function.compute_loss(obs, returns)
+    #     # pylint: disable=protected-access
+    #     self._inner_algo._vf_optimizer.zero_grad()
+    #     vf_loss.backward()
+    #     # pylint: disable=protected-access
+    #     self._inner_algo._vf_optimizer.step()
 
-        return vf_loss
+    #     return vf_loss
 
     def _obtain_samples(self, trainer):
         """Obtain samples for each task before and after the fast-adaptation.
@@ -206,7 +222,9 @@ class MAML:
         tasks = self._task_sampler.sample(self._meta_batch_size)
         all_samples = [[] for _ in range(len(tasks))]
         all_params = []
-        theta = dict(self._policy.named_parameters())
+        all_params_vf = []
+        old_theta = dict(self._policy.named_parameters())
+        old_theta_vf = dict(self._value_function.named_parameters())
 
         for i, env_up in enumerate(tasks):
 
@@ -221,13 +239,16 @@ class MAML:
                     # A grad need to be kept for the next grad update
                     # Except for the last grad update
                     require_grad = j < self._num_grad_updates - 1
+                    self._adapt_vf(batch_samples, set_grad=require_grad)
                     self._adapt(batch_samples, set_grad=require_grad)
 
             all_params.append(dict(self._policy.named_parameters()))
+            all_params_vf.append(dict(self._value_function.named_parameters()))
             # Restore to pre-updated policy
-            update_module_params(self._policy, theta)
+            update_module_params(self._policy, old_theta)
+            update_module_params(self._value_function, old_theta_vf)
 
-        return all_samples, all_params
+        return all_samples, all_params, all_params_vf
 
     def _adapt(self, batch_samples, set_grad=True):
         """Performs one MAML inner step to update the policy.
@@ -249,6 +270,33 @@ class MAML:
 
         with torch.set_grad_enabled(set_grad):
             self._inner_optimizer.step()
+
+    def _adapt_vf(self, batch_samples, set_grad=True):
+        """Performs one MAML inner step to update the vf.
+
+        Args:
+            batch_samples (_MAMLEpisodeBatch): Samples data for one
+                task and one gradient step.
+            set_grad (bool): if False, update policy parameters in-place.
+                Else, allow taking gradient of functions of updated parameters
+                with respect to pre-updated parameters.
+
+        """
+        obs = torch.Tensor(
+            np.concatenate(
+                [path['observations'] for path in batch_samples.paths],
+                axis=0))
+        returns = torch.Tensor(
+            np.concatenate([path['returns'] for path in batch_samples.paths]))
+        loss = self._value_function.compute_loss(obs, returns)
+        self._inner_optimizer_vf.zero_grad()
+        loss.backward(create_graph=set_grad)
+        with torch.set_grad_enabled(set_grad):
+            self._inner_optimizer_vf.step()
+
+    def _vf_meta_optimize(self, all_samples, all_params):
+        self._meta_vf_optimizer.step(lambda: self._compute_vf_meta_loss(
+            all_samples, all_params, set_grad=False))
 
     def _meta_optimize(self, all_samples, all_params):
         if isinstance(self._meta_optimizer, ConjugateGradientOptimizer):
@@ -295,6 +343,51 @@ class MAML:
 
             update_module_params(self._policy, theta)
             update_module_params(self._old_policy, old_theta)
+
+        return torch.stack(losses).mean()
+
+    def _compute_vf_meta_loss(self, all_samples, all_params, set_grad=True):
+        """Compute loss to meta-optimize.
+
+        Args:
+            all_samples (list[list[_MAMLEpisodeBatch]]): A two
+                dimensional list of _MAMLEpisodeBatch of size
+                [meta_batch_size * (num_grad_updates + 1)]
+            all_params (list[dict]): A list of named parameter dictionaries.
+                Each dictionary contains key value pair of names (str) and
+                parameters (torch.Tensor).
+            set_grad (bool): Whether to enable gradient calculation or not.
+
+        Returns:
+            torch.Tensor: Calculated mean value of loss.
+
+        """
+        # TODO where to get the returns from?
+        theta = dict(self._value_function.named_parameters())
+        old_theta = dict(self._old_value_function.named_parameters())
+
+        losses = []
+        for task_samples, task_params in zip(all_samples, all_params):
+            for i in range(self._num_grad_updates):
+                require_grad = i < self._num_grad_updates - 1 or set_grad
+                self._adapt_vf(task_samples[i], set_grad=require_grad)
+
+            update_module_params(self._old_value_function, task_params)
+            with torch.set_grad_enabled(set_grad):
+                # pylint: disable=protected-access
+                last_update = task_samples[-1]
+                obs = torch.Tensor(
+                    np.concatenate(
+                        [path['observations'] for path in last_update.paths],
+                        axis=0))
+                returns = torch.Tensor(
+                    np.concatenate(
+                        [path['returns'] for path in last_update.paths]))
+                loss = self._value_function.compute_loss(obs, returns)
+            losses.append(loss)
+
+            update_module_params(self._value_function, theta)
+            update_module_params(self._old_value_function, old_theta)
 
         return torch.stack(losses).mean()
 
@@ -406,8 +499,6 @@ class MAML:
         for path in paths:
             path['returns'] = discount_cumsum(
                 path['rewards'], self._inner_algo.discount).copy()
-
-        self._train_value_function(paths)
 
         obs = torch.Tensor(episodes.padded_observations)
         actions = torch.Tensor(episodes.padded_actions)
