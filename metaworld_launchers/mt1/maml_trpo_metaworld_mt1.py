@@ -51,16 +51,16 @@ def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, met
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
-        hidden_sizes=(256, 256),
+        hidden_sizes=(256, 256, 256),
         hidden_nonlinearity=torch.tanh,
         output_nonlinearity=torch.tanh,
         min_std=0.5,
-        max_std=1.0,
+        max_std=1.5,
         std_mlp_type='share_mean_std'
     )
 
     value_function = GaussianMLPValueFunction(env_spec=env.spec,
-                                              hidden_sizes=[128, 128],
+                                              hidden_sizes=[256, 256, 256],
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
@@ -80,7 +80,7 @@ def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, met
                     task_sampler=tasks,
                     value_function=value_function,
                     meta_batch_size=meta_batch_size,
-                    discount=0.99,
+                    discount=0.995,
                     gae_lambda=1.,
                     inner_lr=0.05,
                     num_grad_updates=1,
