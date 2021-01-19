@@ -63,8 +63,7 @@ class MAML:
         self._policy = policy
         self._env = env
         self._task_sampler = task_sampler
-        self._value_function = copy.deepcopy(inner_algo._value_function)
-        self._initial_vf_state = self._value_function.state_dict()
+        self._value_function = inner_algo._value_function
         self._num_grad_updates = num_grad_updates
         self._meta_batch_size = meta_batch_size
         self._inner_algo = inner_algo
@@ -172,22 +171,11 @@ class MAML:
                 (float).
 
         """
-        # MAML resets a value function to its initial state before training.
-        self._value_function.load_state_dict(self._initial_vf_state)
 
         obs = np.concatenate([path['observations'] for path in paths], axis=0)
         returns = np.concatenate([path['returns'] for path in paths])
         obs = torch.Tensor(obs)
         returns = torch.Tensor(returns)
-
-        vf_loss = self._value_function.compute_loss(obs, returns)
-        # pylint: disable=protected-access
-        self._inner_algo._vf_optimizer.zero_grad()
-        vf_loss.backward()
-        # pylint: disable=protected-access
-        self._inner_algo._vf_optimizer.step()
-
-        return vf_loss
 
     def _obtain_samples(self, trainer):
         """Obtain samples for each task before and after the fast-adaptation.
@@ -407,15 +395,13 @@ class MAML:
             path['returns'] = discount_cumsum(
                 path['rewards'], self._inner_algo.discount).copy()
 
-        self._train_value_function(paths)
+        self._value_function.fit(paths)
 
         obs = torch.Tensor(episodes.padded_observations)
         actions = torch.Tensor(episodes.padded_actions)
         rewards = torch.Tensor(episodes.padded_rewards)
         valids = torch.Tensor(episodes.lengths).int()
-        with torch.no_grad():
-            # pylint: disable=protected-access
-            baselines = self._inner_algo._value_function(obs)
+        baselines = self._value_function(paths)
 
         return _MAMLEpisodeBatch(paths, obs, actions, rewards, valids,
                                  baselines)

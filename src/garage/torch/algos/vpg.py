@@ -98,12 +98,7 @@ class VPG(RLAlgorithm):
             self._policy_optimizer = policy_optimizer
         else:
             self._policy_optimizer = OptimizerWrapper(torch.optim.Adam, policy)
-        if vf_optimizer:
-            self._vf_optimizer = vf_optimizer
-        else:
-            self._vf_optimizer = OptimizerWrapper(torch.optim.Adam,
-                                                  value_function)
-
+        self._vf_optimizer = vf_optimizer
         self._old_policy = copy.deepcopy(self.policy)
 
     @staticmethod
