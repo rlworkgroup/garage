@@ -76,8 +76,10 @@ class MAML:
                                               module=policy,
                                               lr=_Default(outer_lr),
                                               eps=_Default(1e-5))
-        self._meta_vf_optimizer = make_optimizer(meta_vf_optimizer,
-                                                 module=self._value_function,)
+        self._meta_vf_optimizer = make_optimizer(
+            meta_vf_optimizer,
+            module=self._value_function,
+        )
         self._evaluate_every_n_epochs = evaluate_every_n_epochs
 
     def train(self, trainer):
@@ -153,10 +155,14 @@ class MAML:
         returns = []
         for task in all_samples:
             for rollout in task:
-                baselines_list.append(rollout.baselines[rollout.valids.bool()])
-                returns.append([r['returns'] for r in rollout.paths])
-        baselines = torch.cat(baselines_list).numpy().flatten()
-        ev = explained_variance_1d(baselines, np.array(returns).flatten())
+                baselines_list.append(rollout.baselines.numpy())
+                returns.append(
+                    discount_cumsum(rollout.rewards.numpy(),
+                                    self._inner_algo.discount))
+        baselines = np.concatenate(baselines_list)
+        returns = np.concatenate(returns)
+        ev = explained_variance_1d(baselines,
+            returns, np.ones(returns.shape))
 
         with torch.no_grad():
             policy_entropy = self._compute_policy_entropy(

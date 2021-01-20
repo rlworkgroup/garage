@@ -22,12 +22,13 @@ from garage.trainer import Trainer
 @click.command()
 @click.option('--env-name', type=str)
 @click.option('--seed', type=int, default=1)
-@click.option('--epochs', type=int, default=1000)
-@click.option('--rollouts_per_task', type=int, default=10)
-@click.option('--meta_batch_size', type=int, default=20)
-@click.option('--entropy_coefficient', default=5e-6, type=float)
+@click.option('--epochs', type=int, default=4000)
+@click.option('--rollouts_per_task', type=int, default=2)
+@click.option('--meta_batch_size', type=int, default=25)
+@click.option('--entropy_coefficient', default=5e-5, type=float)
+@click.option('--inner_lr', default=0.05, type=float)
 @wrap_experiment(snapshot_mode='gap', name_parameters='passed', snapshot_gap=50)
-def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, meta_batch_size, entropy_coefficient):
+def maml_trpo_metaworld_mt1_smaller_network(ctxt, env_name, seed, epochs, rollouts_per_task, meta_batch_size, entropy_coefficient, inner_lr):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -51,7 +52,7 @@ def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, met
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
-        hidden_sizes=(256, 256, 256),
+        hidden_sizes=(128, 128, 64),
         hidden_nonlinearity=torch.tanh,
         output_nonlinearity=torch.tanh,
         min_std=0.5,
@@ -60,7 +61,7 @@ def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, met
     )
 
     value_function = GaussianMLPValueFunction(env_spec=env.spec,
-                                              hidden_sizes=[256, 256, 256],
+                                              hidden_sizes=[128, 128, 64],
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
@@ -82,7 +83,7 @@ def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, met
                     meta_batch_size=meta_batch_size,
                     discount=0.995,
                     gae_lambda=1.,
-                    inner_lr=0.05,
+                    inner_lr=inner_lr,
                     num_grad_updates=1,
                     meta_evaluator=meta_evaluator,
                     entropy_method='max',
@@ -95,4 +96,4 @@ def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, met
                   batch_size=rollouts_per_task * env.spec.max_episode_length)
 
 
-maml_trpo_metaworld_mt1()
+maml_trpo_metaworld_mt1_smaller_network()
