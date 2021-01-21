@@ -19,12 +19,13 @@ from garage.trainer import Trainer
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--epochs', default=300)
-@click.option('--episodes_per_task', default=40)
-@click.option('--meta_batch_size', default=20)
-@wrap_experiment(snapshot_mode='all')
+@click.option('--epochs', default=2000)
+@click.option('--episodes_per_task', default=25)
+@click.option('--meta_batch_size', default=10)
+@click.option('--inner_lr', default=0.05, type=float)
+@wrap_experiment(snapshot_mode='none', name_parameters='passed')
 def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
-                               meta_batch_size):
+                               meta_batch_size, inner_lr):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -39,20 +40,20 @@ def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
 
     """
     set_seed(seed)
-    max_episode_length = 100
+    max_episode_length = 200
     env = normalize(GymEnv(HalfCheetahDirEnv(),
                            max_episode_length=max_episode_length),
                     expected_action_scale=10.)
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
-        hidden_sizes=[64, 64],
+        hidden_sizes=[100, 100],
         hidden_nonlinearity=torch.tanh,
         output_nonlinearity=None,
     )
 
     value_function = GaussianMLPValueFunction(env_spec=env.spec,
-                                              hidden_sizes=[32, 32],
+                                              hidden_sizes=[64, 64],
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
@@ -63,7 +64,7 @@ def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
                                          expected_action_scale=10.))
 
     meta_evaluator = MetaEvaluator(test_task_sampler=task_sampler,
-                                   n_test_tasks=1,
+                                   n_test_tasks=10,
                                    n_test_episodes=10)
 
     trainer = Trainer(ctxt)
@@ -80,7 +81,7 @@ def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
                     meta_batch_size=meta_batch_size,
                     discount=0.99,
                     gae_lambda=1.,
-                    inner_lr=0.1,
+                    inner_lr=inner_lr,
                     num_grad_updates=1,
                     meta_evaluator=meta_evaluator)
 
