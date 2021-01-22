@@ -2,7 +2,8 @@
 import torch
 from torch import nn
 
-from garage.torch.modules import GaussianMLPModule
+from garage.torch.modules import (GaussianMLPModule, 
+    GaussianMLPIndependentStdModule, GaussianMLPTwoHeadedModule)
 from garage.torch.policies.stochastic_policy import StochasticPolicy
 
 
@@ -65,26 +66,68 @@ class GaussianMLPPolicy(StochasticPolicy):
                  max_std=None,
                  std_parameterization='exp',
                  layer_normalization=False,
-                 name='GaussianMLPPolicy'):
+                 name='GaussianMLPPolicy',
+                 std_mlp_type="indepent_param"):
         super().__init__(env_spec, name)
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
-        self._module = GaussianMLPModule(
-            input_dim=self._obs_dim,
-            output_dim=self._action_dim,
-            hidden_sizes=hidden_sizes,
-            hidden_nonlinearity=hidden_nonlinearity,
-            hidden_w_init=hidden_w_init,
-            hidden_b_init=hidden_b_init,
-            output_nonlinearity=output_nonlinearity,
-            output_w_init=output_w_init,
-            output_b_init=output_b_init,
-            learn_std=learn_std,
-            init_std=init_std,
-            min_std=min_std,
-            max_std=max_std,
-            std_parameterization=std_parameterization,
-            layer_normalization=layer_normalization)
+        if not std_mlp_type in set(
+            ['indepent_param', 'share_mean_std', 'independent_mean_std']):
+            raise ValueError(
+                "std_mlp_type must be either 'indepent_param', 'share_mean_std', or 'independent_mean_std'"
+            )
+        if std_mlp_type == 'indepent_param':
+            self._module = GaussianMLPModule(
+                input_dim=self._obs_dim,
+                output_dim=self._action_dim,
+                hidden_sizes=hidden_sizes,
+                hidden_nonlinearity=hidden_nonlinearity,
+                hidden_w_init=hidden_w_init,
+                hidden_b_init=hidden_b_init,
+                output_nonlinearity=output_nonlinearity,
+                output_w_init=output_w_init,
+                output_b_init=output_b_init,
+                learn_std=learn_std,
+                init_std=init_std,
+                min_std=min_std,
+                max_std=max_std,
+                std_parameterization=std_parameterization,
+                layer_normalization=layer_normalization)
+        elif std_mlp_type == 'share_mean_std':
+            self._module = GaussianMLPTwoHeadedModule(
+                input_dim=self._obs_dim,
+                output_dim=self._action_dim,
+                hidden_sizes=hidden_sizes,
+                hidden_nonlinearity=hidden_nonlinearity,
+                hidden_w_init=hidden_w_init,
+                hidden_b_init=hidden_b_init,
+                output_nonlinearity=output_nonlinearity,
+                output_w_init=output_w_init,
+                output_b_init=output_b_init,
+                learn_std=learn_std,
+                init_std=init_std,
+                min_std=min_std,
+                max_std=max_std,
+                std_parameterization=std_parameterization,
+                layer_normalization=layer_normalization)
+        else:
+            self._module = GaussianMLPIndependentStdModule(
+                input_dim=self._obs_dim,
+                output_dim=self._action_dim,
+                hidden_sizes=hidden_sizes,
+                hidden_nonlinearity=hidden_nonlinearity,
+                hidden_w_init=hidden_w_init,
+                hidden_b_init=hidden_b_init,
+                output_nonlinearity=output_nonlinearity,
+                output_w_init=output_w_init,
+                output_b_init=output_b_init,
+                learn_std=learn_std,
+                init_std=init_std,
+                min_std=min_std,
+                max_std=max_std,
+                std_parameterization=std_parameterization,
+                layer_normalization=layer_normalization)
+
 
     def forward(self, observations):
         """Compute the action distributions from the observations.
