@@ -1,5 +1,5 @@
 [![Docs](https://readthedocs.org/projects/garage/badge)](http://garage.readthedocs.org/en/latest/)
-![Garage CI](https://github.com/rlworkgroup/garage/workflows/Garage%20CI/badge.svg?event=schedule)
+[![Garage CI](https://github.com/rlworkgroup/garage/workflows/Garage%20CI/badge.svg?event=schedule)](https://github.com/rlworkgroup/garage/actions?query=workflow%3A%22Garage+CI%22)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/rlworkgroup/garage/blob/master/LICENSE)
 [![codecov](https://codecov.io/gh/rlworkgroup/garage/branch/master/graph/badge.svg)](https://codecov.io/gh/rlworkgroup/garage)
 [![PyPI version](https://badge.fury.io/py/garage.svg)](https://badge.fury.io/py/garage)
@@ -124,8 +124,7 @@ Our testing strategy has three pillars:
 
 | Release | Build Status | Last date of support |
 | ------- | ------------ | -------------------- |
-| [v2020.06](https://github.com/rlworkgroup/garage/releases/tag/v2020.06.0) | [![Build Status](https://travis-ci.com/rlworkgroup/garage.svg?branch=release-2020.06)](https://travis-ci.com/rlworkgroup/garage) | February 28th, 2021 |
-| [v2019.10](https://github.com/rlworkgroup/garage/releases/tag/v2019.10.0) | [![Build Status](https://travis-ci.com/rlworkgroup/garage.svg?branch=release-2019.10)](https://travis-ci.com/rlworkgroup/garage) | October 31st, 2020 |
+| [v2020.06](https://github.com/rlworkgroup/garage/releases/tag/v2020.06.0) | [![Garage CI Release-2020.06](https://github.com/rlworkgroup/garage/workflows/Garage%20CI%20Release-2020.06/badge.svg)](https://github.com/rlworkgroup/garage/actions?query=workflow%3A%22Garage+CI+Release-2020.06%22) | February 28th, 2021 |
 
 Garage releases a new stable version approximately every 4 months, in February,
 June, and October. Maintenance releases have a stable API and dependency tree,
