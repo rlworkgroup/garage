@@ -26,8 +26,9 @@ from garage.trainer import Trainer
 @click.option('--rollouts_per_task', type=int, default=10)
 @click.option('--meta_batch_size', type=int, default=20)
 @click.option('--entropy_coefficient', default=5e-5, type=float)
+@click.option('--inner_lr', default=1e-3, type=float)
 @wrap_experiment(snapshot_mode='gap', name_parameters='passed', snapshot_gap=50)
-def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, meta_batch_size, entropy_coefficient):
+def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, meta_batch_size, entropy_coefficient, inner_lr):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -51,11 +52,11 @@ def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, met
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
-        hidden_sizes=(256, 128, 64),
+        hidden_sizes=(128, 128),
         hidden_nonlinearity=torch.tanh,
         output_nonlinearity=torch.tanh,
         min_std=0.5,
-        max_std=1.0,
+        max_std=1.5,
     )
 
     value_function = LinearFeatureValueFunction(env_spec=env.spec,)
@@ -78,7 +79,7 @@ def maml_trpo_metaworld_mt1(ctxt, env_name, seed, epochs, rollouts_per_task, met
                     meta_batch_size=meta_batch_size,
                     discount=0.99,
                     gae_lambda=1.,
-                    inner_lr=0.05,
+                    inner_lr=inner_lr,
                     num_grad_updates=1,
                     meta_evaluator=meta_evaluator,
                     entropy_method='max',
