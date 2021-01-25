@@ -10,11 +10,7 @@ env:
   MJKEY: ${{ secrets.MJKEY }}
 
 on:
-  schedule:
-    - cron: '0 9 * * *'
   push:
-    branches:
-      - 'release-2020.06'
     tags:
       - 'v2020.06.[0-9]+'
       - 'v2020.06.[0-9]+rc[0-9]'
@@ -32,7 +28,7 @@ jobs:
         run: docker version
       - uses: actions/checkout@v2
         with:
-          ref: release-2020.06
+          fetch-depth: 0
       - name: Login to GitHub Package Registry
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
       - name: Build Docker container
@@ -58,7 +54,7 @@ jobs:
     - uses: actions/checkout@v2
       if: github.event_name == 'pull_request'
       with:
-        ref: release-2020.06
+        fetch-depth: 0
     - name: Login to GitHub Package Registry
       if: github.event_name == 'pull_request'
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
@@ -87,7 +83,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        ref: release-2020.06
+        fetch-depth: 0
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
     - name: Pull from cache (GitHub Package Registry)
@@ -129,7 +125,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        ref: release-2020.06
+        fetch-depth: 0
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
     - name: Pull from cache (GitHub Package Registry)
@@ -170,7 +166,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        ref: release-2020.06
+        fetch-depth: 0
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
     - name: Pull from cache (GitHub Package Registry)
@@ -210,7 +206,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        ref: release-2020.06
+        fetch-depth: 0
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
     - name: Pull from cache (GitHub Package Registry)
@@ -251,7 +247,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: release-2020.06
+          fetch-depth: 0
       - name: Login to GitHub Package Registry
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
       - name: Pull from cache (GitHub Package Registry)
@@ -281,7 +277,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: release-2020.06
+          fetch-depth: 0
       - name: Login to GitHub Package Registry
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
       - name: Pull from cache (GitHub Package Registry)
@@ -324,7 +320,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: release-2020.06
+          fetch-depth: 0
       - name: Login to GitHub Package Registry
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
       - name: Pull from cache (GitHub Package Registry)
@@ -362,7 +358,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: release-2020.06
+          fetch-depth: 0
       - name: Set up Python 3.5
         uses: actions/setup-python@v1
         with:
