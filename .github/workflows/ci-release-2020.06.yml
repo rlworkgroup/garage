@@ -15,12 +15,6 @@ on:
   push:
     branches:
       - 'release-2020.06'
-    tags:
-      - 'v2020.06.[0-9]+'
-      - 'v2020.06.[0-9]+rc[0-9]'
-  pull_request:
-    branches:
-      - 'release-2020.06'
 
 jobs:
   build_docker_container:
