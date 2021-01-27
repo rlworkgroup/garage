@@ -8,6 +8,7 @@ env:
   OWNER: "rlworkgroup"
   DOCKER_CACHE_REPO: "garage-ci"
   MJKEY: ${{ secrets.MJKEY }}
+  CI_USER: rlworkgroupbot
 
 on:
   schedule:
@@ -33,7 +34,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Login to GitHub Package Registry
-        run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
+        run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
       - name: Build Docker container
         run: |
           docker build . \
@@ -60,7 +61,7 @@ jobs:
         fetch-depth: 0
     - name: Login to GitHub Package Registry
       if: github.event_name == 'pull_request'
-      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
+      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
     - name: Pull from cache (GitHub Package Registry)
       if: github.event_name == 'pull_request'
       run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
@@ -88,7 +89,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Login to GitHub Package Registry
-      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
+      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
     - name: Pull from cache (GitHub Package Registry)
       run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Tag docker image
@@ -114,7 +115,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Login to GitHub Package Registry
-      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
+      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
     - name: Pull from cache (GitHub Package Registry)
       run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Tag docker image
@@ -156,7 +157,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Login to GitHub Package Registry
-      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
+      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
     - name: Pull from cache (GitHub Package Registry)
       run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Tag docker image
@@ -197,7 +198,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Login to GitHub Package Registry
-      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
+      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
     - name: Pull from cache (GitHub Package Registry)
       run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Tag docker image
@@ -237,7 +238,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Login to GitHub Package Registry
-      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
+      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
     - name: Pull from cache (GitHub Package Registry)
       run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Tag docker image
@@ -278,7 +279,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Login to GitHub Package Registry
-        run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
+        run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
       - name: Pull from cache (GitHub Package Registry)
         run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
       - name: Tag docker image
@@ -308,7 +309,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Login to GitHub Package Registry
-        run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
+        run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
       - name: Pull from cache (GitHub Package Registry)
         run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
       - name: Tag docker image
@@ -351,7 +352,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Login to GitHub Package Registry
-        run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u gitanshu --password-stdin
+        run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
       - name: Pull from cache (GitHub Package Registry)
         run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
       - name: Tag docker image
