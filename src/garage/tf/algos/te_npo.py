@@ -876,9 +876,12 @@ class TENPO(RLAlgorithm):
         for t in range(self.policy.task_space.flat_dim):
             lengths = path_lengths[task_indices == t]
             completed = lengths < self.max_episode_length
-            pct_completed = np.mean(completed)
+            pct_completed = (np.mean(completed) if completed.size > 0
+                else 0)
+            mean_lengths = (np.mean(lengths) if lengths.size > 0
+                else 0)
             tabular.record('Tasks/EpisodeLength/t={}'.format(t),
-                           np.mean(lengths))
+                           mean_lengths)
             tabular.record('Tasks/TerminationRate/t={}'.format(t),
                            pct_completed)
             tabular.record('Tasks/Entropy/t={}'.format(t), task_ents[t])

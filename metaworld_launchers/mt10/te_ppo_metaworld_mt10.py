@@ -21,11 +21,11 @@ from garage.trainer import TFTrainer
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--n_epochs', default=600)
-@click.option('--batch_size_per_task', default=1024)
-@click.option('--n_tasks', default=10)
+@click.option('--n_epochs', default=2000)
+@click.option('--batch_size_per_task', default=2000)
+@click.option('--entropy', default=2e-2)
 @wrap_experiment
-def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task, n_tasks):
+def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task, entropy):
     """Train Task Embedding PPO with PointEnv.
 
     Args:
@@ -35,9 +35,9 @@ def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task, n_tasks):
             determinism.
         n_epochs (int): Total number of epochs for training.
         batch_size_per_task (int): Batch size of samples for each task.
-        n_tasks (int): Number of tasks to use. Should be a multiple of 10.
 
     """
+    n_tasks = 10
     set_seed(seed)
     mt10 = metaworld.MT10()
     train_task_sampler = MetaWorldTaskSampler(mt10,
@@ -54,15 +54,15 @@ def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task, n_tasks):
     latent_length = 4
     inference_window = 6
     batch_size = batch_size_per_task * len(envs)
-    policy_ent_coeff = 2e-2
-    encoder_ent_coeff = 2e-4
+    policy_ent_coeff = entropy
+    encoder_ent_coeff = entropy
     inference_ce_coeff = 5e-2
     embedding_init_std = 0.1
     embedding_max_std = 0.2
     embedding_min_std = 1e-6
     policy_init_std = 1.0
-    policy_max_std = None
-    policy_min_std = None
+    policy_max_std = 1.5
+    policy_min_std = 0.5
 
     with TFTrainer(snapshot_config=ctxt) as trainer:
 
@@ -132,7 +132,7 @@ def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task, n_tasks):
                          learning_rate=1e-3,
                      ),
                      inference_optimizer_args=dict(
-                         batch_size=32,
+                         batch_size=64,
                          max_optimization_epochs=10,
                      ),
                      center_adv=True,

@@ -16,6 +16,8 @@ from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import LinearFeatureValueFunction
 from garage.trainer import Trainer
 
+import metaworld
+
 # yapf: enable
 @click.command()
 @click.option('--seed', type=int, default=1)

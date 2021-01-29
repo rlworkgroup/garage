@@ -24,11 +24,8 @@ from garage.trainer import Trainer
 
 @click.command()
 @click.option('--seed', 'seed', type=int, default=1)
-# @click.option('--gpu', '_gpu', type=int, default=0)
-# @click.option('--n_tasks', default=10)
-# @click.option('--timesteps', default=20000000)
 @wrap_experiment(snapshot_mode='none', name_parameters="passed")
-def mtsac_metaworld_mt10(ctxt=None, *, seed, _gpu=0, n_tasks=10, timesteps=20000000):
+def mtsac_metaworld_mt10(ctxt=None, *, seed):
     """Train MTSAC with MT10 environment.
 
     Args:
@@ -41,6 +38,9 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed, _gpu=0, n_tasks=10, timesteps=20000
         timesteps (int): Number of timesteps to run.
 
     """
+    _gpu=0
+    n_tasks=10
+    timesteps=20000000
     deterministic.set_seed(seed)
     trainer = Trainer(ctxt)
     mt10 = metaworld.MT10()  # pylint: disable=no-member
@@ -58,7 +58,7 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed, _gpu=0, n_tasks=10, timesteps=20000
 
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
-        hidden_sizes=[400, 400, 400],
+        hidden_sizes=[256, 256],
         hidden_nonlinearity=nn.ReLU,
         output_nonlinearity=None,
         min_std=np.exp(-20.),
@@ -66,22 +66,22 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed, _gpu=0, n_tasks=10, timesteps=20000
     )
 
     qf1 = ContinuousMLPQFunction(env_spec=env.spec,
-                                 hidden_sizes=[400, 400, 400],
+                                 hidden_sizes=[256, 256],
                                  hidden_nonlinearity=F.relu)
 
     qf2 = ContinuousMLPQFunction(env_spec=env.spec,
-                                 hidden_sizes=[400, 400, 400],
+                                 hidden_sizes=[256, 256],
                                  hidden_nonlinearity=F.relu)
 
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
-    meta_batch_size = 10
+    num_tasks = 10
 
     sampler = LocalSampler(
         agents=policy,
         envs=mt10_train_envs,
         max_episode_length=env.spec.max_episode_length,
         # 1 sampler worker for each environment
-        n_workers=meta_batch_size,
+        n_workers=num_tasks,
         worker_class=FragmentWorker,
         # increasing n_envs increases the vectorization of a sampler worker
         # which improves runtime performance, but you will need to adjust this
@@ -92,7 +92,7 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed, _gpu=0, n_tasks=10, timesteps=20000
         # reduced this to n_envs = 2 for 2 copies in the meantime.
         worker_args=dict(n_envs=2))
 
-    batch_size = int(env.spec.max_episode_length * meta_batch_size)
+    batch_size = int(env.spec.max_episode_length * num_tasks)
     num_evaluation_points = 500
     epochs = timesteps // batch_size
     epoch_cycles = epochs // num_evaluation_points
@@ -104,7 +104,7 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed, _gpu=0, n_tasks=10, timesteps=20000
                   gradient_steps_per_itr=env.spec.max_episode_length,
                   eval_env=mt10_test_envs,
                   env_spec=env.spec,
-                  num_tasks=10,
+                  num_tasks=num_tasks,
                   steps_per_epoch=epoch_cycles,
                   replay_buffer=replay_buffer,
                   min_buffer_size=1500,
