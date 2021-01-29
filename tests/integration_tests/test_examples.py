@@ -5,7 +5,7 @@ import subprocess
 
 import pytest
 
-EXAMPLES_ROOT_DIR = pathlib.Path('examples/')
+EXAMPLES_ROOT_DIR = pathlib.Path('src/garage/examples/')
 NON_ALGO_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'torch/resume_training.py',
     EXAMPLES_ROOT_DIR / 'torch/watch_atari.py',

@@ -157,6 +157,45 @@ The full code can be found [here](https://github.com/rlworkgroup/garage/blob/mas
 
 To know more about implementing new algorithms, see [this guide](https://garage.readthedocs.io/en/latest/user/implement_algo.html)
 
+### Running Examples
+
+Garage ships with example files to help you get started. To get a
+list of examples, run:
+
+```
+garage examples
+```
+
+This prints a list of examples along with their fully qualified name, such as:
+
+```
+tf/dqn_cartpole.py (garage.examples.tf.dqn_cartpole.py)
+```
+
+To get the source of an example, run:
+
+```
+garage examples tf/dqn_cartpole.py
+```
+
+This will print the source on your console, which you can write to a file as
+follows:
+
+```
+garage examples tf/dqn_cartpole.py > tf_dqn_cartpole.py
+```
+
+You can also directly run an example by passing the fully qualified name to
+`python -m`, as follows:
+
+```
+python -m garage.examples.tf.dqn_cartpole.py
+```
+
+You can also access the examples for a specific version on GitHub by visiting
+the tag corresponding to that version and then navigating to
+`src/garage/examples`.
+
 ### Running Experiments
 
 In garage, experiments are run using the "experiment launcher" `wrap_experiment`, a decorated Python function, which can be imported directly from the garage package.

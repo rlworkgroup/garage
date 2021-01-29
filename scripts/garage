@@ -5,6 +5,9 @@ import click
 
 from garage import wrap_experiment  # pylint: disable=import-self
 from garage.trainer import TFTrainer
+import importlib_resources
+
+EXAMPLES_PACKAGE = 'garage.examples'
 
 
 @click.group()
@@ -39,6 +42,52 @@ def resume(from_dir, from_epoch, log_dir):
             runner.resume()
 
     run_resume()
+
+
+@cli.command()
+@click.argument('path', required=False)
+def examples(path=None):
+    # pylint: disable=missing-param-doc, missing-type-doc
+    """Show list of examples or source code of an example.
+
+    PATH is the Path to a file inside the examples directory
+
+    If no path is given, this command returns a list of all examples. If a path
+    to a file is specified, it outputs the source code of that example.
+
+    """
+    if path:
+        if importlib_resources.files(EXAMPLES_PACKAGE).joinpath(path).exists():
+            abs_path = importlib_resources.files(EXAMPLES_PACKAGE) / path
+            if abs_path.is_dir():
+                _list_examples(path)
+            else:
+                print(open(abs_path).read())
+    else:
+        _list_examples()
+
+
+def _list_examples(path=''):
+    output_list = []
+    for entry in importlib_resources.files(EXAMPLES_PACKAGE).joinpath(
+            path).iterdir():
+        if entry.name == '__pycache__':
+            pass
+        elif importlib_resources.files(EXAMPLES_PACKAGE).joinpath(
+                entry.name).is_dir():
+            print('#', entry.name)
+            _list_examples(entry.name)
+            print()
+        else:
+            if path == '':
+                rel_path = entry.name
+                dot_path = entry.stem
+            else:
+                rel_path = path + '/' + entry.name
+                dot_path = path + '.' + entry.stem
+            output_str = rel_path + ' (garage.examples.' + dot_path + ')'
+            output_list.append(output_str)
+    print('\n'.join(sorted(output_list)))
 
 
 if __name__ == '__main__':

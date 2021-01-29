@@ -19,7 +19,7 @@ prune docs/_build
 # examples, scripts, etc.
 include Makefile
 graft docker
-graft examples
+graft src/garage/examples
 graft scripts
 
 # ignored files
