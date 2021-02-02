@@ -10,9 +10,9 @@ def launch_experiments(gpu):
         ####################EDIT THESE FIELDS##################
         username = f'avnishnarayan' # your google username
         algorithm = f'task_embeddings'
-        zone = f'us-west1-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
+        zone = f'us-east1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         entropy_str = str(entropy).replace('.', '-')
-        instance_name = f'task-embeddings-entropy-{entropy_str}-{i}'
+        instance_name = f'task-embeddings-named-params-entropy-{entropy_str}-{i}'
         bucket = f'mt10/task-embeddings-tuned'
         branch = 'avnish-new-metaworld-results'
         experiment = f'metaworld_launchers/mt10/te_ppo_metaworld_mt10.py --entropy {entropy}'

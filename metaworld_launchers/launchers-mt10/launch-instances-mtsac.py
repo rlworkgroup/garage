@@ -5,12 +5,12 @@ import click
 @click.command()
 @click.option('--gpu', default=False, type=bool)
 def launch_experiments(gpu):
-    for i in range(6):
+    for i in range(5):
         ####################EDIT THESE FIELDS##################
         username = f'avnishnarayan' # your google username
-        algorithm = f'mttrpo'
-        zone = f'us-west1-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
-        instance_name = f'mttrpo-tuned-entropy-{i}'
+        algorithm = f'mtsac'
+        zone = f'us-central1-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
+        instance_name = f'mtsac-tuned{i}'
         bucket = f'mt10/mtppo-tuned'
         branch = 'avnish-new-metaworld-results'
         experiment = f'metaworld_launchers/mt10/mtsac_metaworld_mt10.py'

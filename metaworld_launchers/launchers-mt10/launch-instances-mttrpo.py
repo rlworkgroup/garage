@@ -5,12 +5,12 @@ import click
 @click.command()
 @click.option('--gpu', default=False, type=bool)
 def launch_experiments(gpu):
-    entropies = [5e-3, 5e-3, 5e-3]
+    entropies = [1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 2e-2]
     for i, entropy in enumerate(entropies):
         ####################EDIT THESE FIELDS##################
         username = f'avnishnarayan' # your google username
         algorithm = f'mttrpo'
-        zone = f'us-west1-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
+        zone = f'us-east1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         entropy_str = str(entropy).replace('.', '-')
         instance_name = f'mttrpo-tuned-entropy-{entropy_str}-{i}'
         bucket = f'mt10/mtppo-tuned'
