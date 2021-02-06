@@ -22,7 +22,7 @@ mjkey = open(f'{home}/.mujoco/mjkey.txt', 'r').read()
 environment_vars = [f"MJKEY={mjkey}", "QT_X11_NO_MITSHM=1", "DISPLAY="]
 device_requests = []
 
-seeds = np.random.randint(10000,size=(1,))
+seeds = np.random.randint(10000,size=(3,))
 for seed in seeds:
     client.containers.run('rlworkgroup/garage-headless',
                           f'python {run_cmd} --seed {seed}',

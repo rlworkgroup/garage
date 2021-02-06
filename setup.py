@@ -64,7 +64,7 @@ EXTRAS['dev'] = [
     'flake8',
     'flake8-docstrings>=1.5.0',
     'flake8-import-order',
-    f'metaworld @ https://{GARAGE_GH_TOKEN}@api.github.com/repos/rlworkgroup/metaworld/tarball/cc47105917bd8dc127ed22c9eed381c0fa012cc8',  # noqa: E501
+    f'metaworld @ https://{GARAGE_GH_TOKEN}@api.github.com/repos/rlworkgroup/metaworld/tarball/39c2153cf3d24d8ce598c1e2579e069e759c7665',  # noqa: E501
     'isort>=4.3.21,<5.0.0',
     'pep8-naming==0.7.0',
     'pre-commit',

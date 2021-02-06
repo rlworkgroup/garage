@@ -33,9 +33,8 @@ from garage.tf.optimizers import FirstOrderOptimizer
 @click.option('--env-name', type=str, default='push-v2')
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
 @click.option('--entropy', type=float, default=0.01)
-@click.option('--use_softplus_entropy', type=bool, default=False)
 @click.option('--extra_tags', type=str, default='none')
-@wrap_experiment(name_parameters='all', snapshot_mode='gap', snapshot_gap=25)
+@wrap_experiment(name_parameters='passed', snapshot_mode='none')
 def ppo_metaworld(
     ctxt=None,
     env_name=None,
@@ -43,7 +42,6 @@ def ppo_metaworld(
     extra_tags='',
     entropy=5e-3,
     stop_entropy_gradient=True,
-    use_softplus_entropy=False,
     seed=1,
 ):
     """Train PPO with Metaworld environments.
@@ -55,6 +53,7 @@ def ppo_metaworld(
             determinism.
 
     """
+    use_softplus_entropy=False
     set_seed(seed)
     special = {
         'push-v1': 'push',
