@@ -10,7 +10,8 @@ from dowel import logger
 import numpy as np
 import torch
 
-from garage import EnvSpec, InOutSpec, StepType, TimeStep
+from garage import (EpisodeBatch, EnvSpec, InOutSpec,
+                    log_multitask_performance, StepType, TimeStep)
 from garage.experiment import MetaEvaluator
 from garage.np.algos import MetaRLAlgorithm
 from garage.replay_buffer import PathBuffer
@@ -95,7 +96,8 @@ class PEARL(MetaRLAlgorithm):
             self,
             env,
             inner_policy,
-            qf,
+            qf1,
+            qf2,
             vf,
             sampler,
             *,  # Mostly numbers after here.
@@ -104,6 +106,7 @@ class PEARL(MetaRLAlgorithm):
             latent_dim,
             encoder_hidden_sizes,
             test_env_sampler,
+            # train_evaluation_sampler,
             policy_class=ContextConditionedPolicy,
             encoder_class=MLPEncoder,
             policy_lr=3E-4,
@@ -134,8 +137,8 @@ class PEARL(MetaRLAlgorithm):
             update_post_train=1):
 
         self._env = env
-        self._qf1 = qf
-        self._qf2 = copy.deepcopy(qf)
+        self._qf1 = qf1
+        self._qf2 = qf2
         self._vf = vf
         self._num_train_tasks = num_train_tasks
         self._latent_dim = latent_dim
@@ -273,8 +276,8 @@ class PEARL(MetaRLAlgorithm):
 
         """
         for _ in trainer.step_epochs():
-            epoch = trainer.step_itr / self._num_steps_per_epoch
-
+            logger.log('Training...')
+            epoch = trainer.step_itr
             # obtain initial set of samples from all train tasks
             if epoch == 0 or self._is_resuming:
                 for idx in range(self._num_train_tasks):
@@ -282,34 +285,43 @@ class PEARL(MetaRLAlgorithm):
                     self._obtain_samples(trainer, epoch,
                                          self._num_initial_steps, np.inf)
                     self._is_resuming = False
+            train_paths = []
+            prior_paths, posterior_paths, extra_paths = [], [], []
 
-            # obtain samples from random tasks
-            for _ in range(self._num_tasks_sample):
-                idx = np.random.randint(self._num_train_tasks)
-                self._task_idx = idx
-                self._context_replay_buffers[idx].clear()
-                # obtain samples with z ~ prior
-                if self._num_steps_prior > 0:
-                    self._obtain_samples(trainer, epoch, self._num_steps_prior,
-                                         np.inf)
-                # obtain samples with z ~ posterior
-                if self._num_steps_posterior > 0:
-                    self._obtain_samples(trainer, epoch,
-                                         self._num_steps_posterior,
-                                         self._update_post_train)
-                # obtain extras samples for RL training but not encoder
-                if self._num_extra_rl_steps_posterior > 0:
-                    self._obtain_samples(trainer,
-                                         epoch,
-                                         self._num_extra_rl_steps_posterior,
-                                         self._update_post_train,
-                                         add_to_enc_buffer=False)
+            for _ in range(self._num_steps_per_epoch):
 
-            logger.log('Training...')
+                # obtain samples from random tasks
+                for _ in range(self._num_tasks_sample):
+                    idx = np.random.randint(self._num_train_tasks)
+                    self._task_idx = idx
+                    self._context_replay_buffers[idx].clear()
+                    # obtain samples with z ~ prior
+                    if self._num_steps_prior > 0:
+                        prior_paths = self._obtain_samples(
+                            trainer, epoch, self._num_steps_prior, np.inf)
+                    # obtain samples with z ~ posterior
+                    if self._num_steps_posterior > 0:
+                        posterior_paths = self._obtain_samples(
+                            trainer, epoch, self._num_steps_posterior,
+                            self._update_post_train)
+                    # obtain extras samples for RL training but not encoder
+                    if self._num_extra_rl_steps_posterior > 0:
+                        extra_paths = self._obtain_samples(
+                            trainer,
+                            epoch,
+                            self._num_extra_rl_steps_posterior,
+                            self._update_post_train,
+                            add_to_enc_buffer=False)
+                train_paths.extend(prior_paths + posterior_paths + extra_paths)
+                self._train_once()
+
+            train_paths = EpisodeBatch.from_list(self._single_env.spec,
+                                                 train_paths)
+            log_multitask_performance(epoch, train_paths, self._discount)
+
             # sample train tasks and optimize networks
-            self._train_once()
-            trainer.step_itr += 1
 
+            trainer.step_itr += 1
             logger.log('Evaluating...')
             # evaluate
             self._policy.reset_belief()
@@ -432,13 +444,13 @@ class PEARL(MetaRLAlgorithm):
                                      self.max_episode_length)
         else:
             num_samples_per_batch = num_samples
-
+        returned_paths = []
         while total_samples < num_samples:
             paths = trainer.obtain_samples(itr, num_samples_per_batch,
                                            self._policy,
                                            self._env[self._task_idx])
             total_samples += sum([len(path['rewards']) for path in paths])
-
+            returned_paths.extend(paths)
             for path in paths:
                 p = {
                     'observations':
@@ -463,6 +475,7 @@ class PEARL(MetaRLAlgorithm):
             if update_posterior_rate != np.inf:
                 context = self._sample_context(self._task_idx)
                 self._policy.infer_posterior(context)
+        return returned_paths
 
     def _sample_data(self, indices):
         """Sample batch of training data from a list of tasks.
