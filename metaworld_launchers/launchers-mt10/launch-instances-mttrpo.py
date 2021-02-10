@@ -1,20 +1,21 @@
 import subprocess
 import os
 import click
+import time
 
 @click.command()
 @click.option('--gpu', default=False, type=bool)
 def launch_experiments(gpu):
-    entropies = [1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 2e-2]
+    entropies = [5e-3] * 3
     for i, entropy in enumerate(entropies):
         ####################EDIT THESE FIELDS##################
         username = f'avnishnarayan' # your google username
         algorithm = f'mttrpo'
         zone = f'us-east1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         entropy_str = str(entropy).replace('.', '-')
-        instance_name = f'mttrpo-tuned-entropy-{entropy_str}-{i}'
-        bucket = f'mt10/mtppo-tuned'
-        branch = 'avnish-new-metaworld-results'
+        instance_name = f'v1-mttrpo-tuned-entropy-{entropy_str}-{i}'
+        bucket = f'mt10/round2/mttrpo/v1'
+        branch = 'avnish-old-metaworld-results'
         experiment = f'metaworld_launchers/mt10/mttrpo_metaworld_mt10.py --entropy {entropy}'
         ######################################################
 
@@ -53,7 +54,8 @@ def launch_experiments(gpu):
 
         with open(f'launchers/launch-experiment-{i}.sh', mode='w') as f:
             f.write(script)
-
+        if i % 3 and i != 0:
+            time.sleep(500)
         subprocess.Popen([launch_command], shell=True)
         print(launch_command)
 

@@ -24,7 +24,7 @@ from garage.trainer import TFTrainer
 @click.option('--n_epochs', default=2000)
 @click.option('--batch_size_per_task', default=2000)
 @click.option('--entropy', default=2e-2)
-@wrap_experiment(snapshot_mode='gap', snapshot_gap=100, name_parameters='passed')
+@wrap_experiment(snapshot_mode='none', name_parameters='passed')
 def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task, entropy):
     """Train Task Embedding PPO with PointEnv.
 

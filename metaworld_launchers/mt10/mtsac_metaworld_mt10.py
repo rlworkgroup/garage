@@ -58,7 +58,7 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed):
 
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
-        hidden_sizes=[256, 256],
+        hidden_sizes=[400, 400],
         hidden_nonlinearity=nn.ReLU,
         output_nonlinearity=None,
         min_std=np.exp(-20.),
@@ -66,11 +66,11 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed):
     )
 
     qf1 = ContinuousMLPQFunction(env_spec=env.spec,
-                                 hidden_sizes=[256, 256],
+                                 hidden_sizes=[400, 400],
                                  hidden_nonlinearity=F.relu)
 
     qf2 = ContinuousMLPQFunction(env_spec=env.spec,
-                                 hidden_sizes=[256, 256],
+                                 hidden_sizes=[400, 400],
                                  hidden_nonlinearity=F.relu)
 
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )

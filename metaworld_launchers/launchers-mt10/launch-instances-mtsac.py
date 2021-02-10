@@ -1,18 +1,19 @@
 import subprocess
 import os
 import click
+import time
 
 @click.command()
-@click.option('--gpu', default=False, type=bool)
+@click.option('--gpu', default=True, type=bool)
 def launch_experiments(gpu):
     for i in range(5):
         ####################EDIT THESE FIELDS##################
         username = f'avnishnarayan' # your google username
         algorithm = f'mtsac'
         zone = f'us-central1-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
-        instance_name = f'mtsac-tuned{i}'
-        bucket = f'mt10/mtppo-tuned'
-        branch = 'avnish-new-metaworld-results'
+        instance_name = f'v1-mtsac-tuned{i}'
+        bucket = f'mt10/round2/mtsac/v1'
+        branch = 'avnish-old-metaworld-results'
         experiment = f'metaworld_launchers/mt10/mtsac_metaworld_mt10.py'
         ######################################################
 
@@ -51,7 +52,8 @@ def launch_experiments(gpu):
 
         with open(f'launchers/launch-experiment-{i}.sh', mode='w') as f:
             f.write(script)
-
+        if i % 3:
+            time.sleep(500)
         subprocess.Popen([launch_command], shell=True)
         print(launch_command)
 
