@@ -26,12 +26,10 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 @click.command()
 @click.option('--env_name', type=str, default="basketball-v2")
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
-@click.option('--gpu', type=int, default=0)
-@wrap_experiment(snapshot_mode='gap', snapshot_gap=50, name_parameters='all')
+@wrap_experiment(snapshot_mode='none', name_parameters='all')
 def sac_metaworld_new_reward_function(
         ctxt=None,
         env_name=None,
-        gpu=None,
         reward_scale=1,
         tag='',
         seed=1):
@@ -42,7 +40,8 @@ def sac_metaworld_new_reward_function(
             configuration used by LocalRunner to create the snapshotter.
 
     """
-    # torch.set_num_threads(1)
+    num_threads_to_use = int(np.floor(torch.get_num_threads() / 3))
+    torch.set_num_threads(num_threads_to_use)
     not_in_mw = 'the env_name specified is not a metaworld environment'
     assert env_name in ALL_V2_ENVIRONMENTS or env_name in ALL_V1_ENVIRONMENTS, not_in_mw
     deterministic.set_seed(seed)
@@ -110,9 +109,6 @@ def sac_metaworld_new_reward_function(
               num_evaluation_episodes=10,
               sampler=sampler)
 
-    if gpu is not None:
-        set_gpu_mode(True, gpu)
-    sac.to()
     runner.setup(algo=sac, env=env)
     runner.train(n_epochs=num_evaluation_points, batch_size=batch_size)
 

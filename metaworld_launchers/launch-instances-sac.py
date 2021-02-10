@@ -62,10 +62,10 @@ def launch_experiments(gpu):
         username = f'avnishnarayan' # your google username
         algorithm = f'ppo'
         zone = f'us-west1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
-        instance_name = f'ppo-metaworld-{env_name}'
-        bucket = f'ppo/{env_name}'
+        instance_name = f'sac-metaworld-{env_name}'
+        bucket = f'sac/{env_name}'
         branch = 'avnish-new-metaworld-results-st-v2'
-        experiment = f'metaworld_launchers/single_task_launchers/ppo_metaworld.py --env-name {env_name}'
+        experiment = f'metaworld_launchers/single_task_launchers/sac_metaworld.py --env_name {env_name}'
         ######################################################
 
         if not gpu:
