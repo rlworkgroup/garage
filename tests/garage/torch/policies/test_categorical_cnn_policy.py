@@ -16,7 +16,7 @@ class TestCategoricalCNNPolicy:
         """Initialize observation env depends on observation space type.
 
         If observation space (i.e. akro.Image, gym.spaces.Box) is an image,
-        wrap the input of shape (W, H, 3) for PyTorch (N, 3, W, H).
+        wrap the input of shape (H, W, 3) for PyTorch (N, 3, H, W).
 
         Return:
             Transformed environment (garage.envs).
@@ -37,7 +37,7 @@ class TestCategoricalCNNPolicy:
         """Test get_action function."""
         env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
         env = self._initialize_obs_env(env)
-        policy = CategoricalCNNPolicy(env=env,
+        policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       kernel_sizes=kernel_sizes,
                                       hidden_channels=hidden_channels,
                                       strides=strides,
@@ -58,7 +58,7 @@ class TestCategoricalCNNPolicy:
         """Test get_action function with akro.Image observation space."""
         env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
         env = self._initialize_obs_env(env)
-        policy = CategoricalCNNPolicy(env=env,
+        policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       kernel_sizes=kernel_sizes,
                                       hidden_channels=hidden_channels,
                                       strides=strides,
@@ -80,7 +80,7 @@ class TestCategoricalCNNPolicy:
         """Test get_actions function with akro.Image observation space."""
         env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
         env = self._initialize_obs_env(env)
-        policy = CategoricalCNNPolicy(env=env,
+        policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       kernel_sizes=kernel_sizes,
                                       hidden_channels=hidden_channels,
                                       strides=strides,
@@ -107,7 +107,7 @@ class TestCategoricalCNNPolicy:
         """Test if policy is pickable."""
         env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
         env = self._initialize_obs_env(env)
-        policy = CategoricalCNNPolicy(env=env,
+        policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       kernel_sizes=kernel_sizes,
                                       hidden_channels=hidden_channels,
                                       strides=strides,
@@ -131,7 +131,7 @@ class TestCategoricalCNNPolicy:
         with pytest.raises(ValueError,
                            match=('CNN policies do not support '
                                   'with akro.Dict observation spaces.')):
-            CategoricalCNNPolicy(env=env,
+            CategoricalCNNPolicy(env_spec=env.spec,
                                  kernel_sizes=(3, ),
                                  hidden_channels=(3, ))
 
@@ -139,7 +139,7 @@ class TestCategoricalCNNPolicy:
         """Test that policy raises error if passed a box obs space."""
         env = GymEnv(DummyDictEnv(act_space_type='box'))
         with pytest.raises(ValueError):
-            CategoricalCNNPolicy(env=env,
+            CategoricalCNNPolicy(env_spec=env.spec,
                                  kernel_sizes=(3, ),
                                  hidden_channels=(3, ))
 
@@ -157,7 +157,7 @@ class TestCategoricalCNNPolicy:
         env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
         env = self._initialize_obs_env(env)
         env.reset()
-        policy = CategoricalCNNPolicy(env=env,
+        policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       kernel_sizes=kernel_sizes,
                                       hidden_channels=hidden_channels,
                                       strides=strides,

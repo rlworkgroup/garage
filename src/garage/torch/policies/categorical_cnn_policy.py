@@ -16,7 +16,7 @@ class CategoricalCNNPolicy(StochasticPolicy):
     It only works with akro.Discrete action space.
 
     Args:
-        env (garage.envs): Environment.
+        env_spec (EnvSpec): Environment specification.
         kernel_sizes (tuple[int]): Dimension of the conv filters.
             For example, (3, 5) means there are two convolutional layers.
             The filter for first layer is of dimension (3 x 3)
@@ -64,7 +64,7 @@ class CategoricalCNNPolicy(StochasticPolicy):
     """
 
     def __init__(self,
-                 env,
+                 env_spec,
                  kernel_sizes,
                  hidden_channels,
                  strides=1,
@@ -83,35 +83,40 @@ class CategoricalCNNPolicy(StochasticPolicy):
                  layer_normalization=False,
                  name='CategoricalCNNPolicy'):
 
-        if not isinstance(env.spec.action_space, akro.Discrete):
+        if not isinstance(env_spec.action_space, akro.Discrete):
             raise ValueError('CategoricalMLPPolicy only works '
                              'with akro.Discrete action space.')
-        if isinstance(env.spec.observation_space, akro.Dict):
+        if isinstance(env_spec.observation_space, akro.Dict):
             raise ValueError('CNN policies do not support '
                              'with akro.Dict observation spaces.')
 
-        super().__init__(env.spec, name)
-        self._env = env
-        self._obs_dim = self._env.spec.observation_space.shape
-        self._action_dim = self._env.spec.action_space.flat_dim
-        self._kernel_sizes = kernel_sizes
-        self._strides = strides
-        self._hidden_nonlinearity = hidden_nonlinearity
-        self._hidden_conv_channels = hidden_channels
-        self._hidden_w_init = hidden_w_init
-        self._hidden_b_init = hidden_b_init
-        self._hidden_sizes = hidden_sizes
-        self._paddings = paddings
-        self._padding_mode = padding_mode
-        self._max_pool = max_pool
-        self._pool_shape = pool_shape
-        self._pool_stride = pool_stride
-        self._output_nonlinearity = output_nonlinearity
-        self._output_w_init = output_w_init
-        self._output_b_init = output_b_init
-        self._layer_normalization = layer_normalization
-        self._is_image = isinstance(self._env.spec.observation_space,
+        super().__init__(env_spec, name)
+        self._env_spec = env_spec
+        self._input_shape = self._env_spec.observation_space.shape
+        self._output_dim = self._env_spec.action_space.flat_dim
+        self._is_image = isinstance(self._env_spec.observation_space,
                                     akro.Image)
+
+        self._module = CategoricalCNNModule(
+            input_var=torch.zeros(self._input_shape),
+            output_dim=self._output_dim,
+            kernel_sizes=kernel_sizes,
+            strides=strides,
+            hidden_channels=hidden_channels,
+            hidden_sizes=hidden_sizes,
+            hidden_nonlinearity=hidden_nonlinearity,
+            hidden_w_init=hidden_w_init,
+            hidden_b_init=hidden_b_init,
+            paddings=paddings,
+            padding_mode=padding_mode,
+            max_pool=max_pool,
+            pool_shape=pool_shape,
+            pool_stride=pool_stride,
+            output_nonlinearity=output_nonlinearity,
+            output_w_init=output_w_init,
+            output_b_init=output_b_init,
+            layer_normalization=layer_normalization,
+            is_image=self._is_image)
 
     def forward(self, observations):
         """Compute the action distributions from the observations.
@@ -125,26 +130,4 @@ class CategoricalCNNPolicy(StochasticPolicy):
             dict[str, torch.Tensor]: Additional agent_info, as torch Tensors.
                 Do not need to be detached, and can be on any device.
         """
-        module = CategoricalCNNModule(
-            input_var=observations,
-            output_dim=self._action_dim,
-            kernel_sizes=self._kernel_sizes,
-            strides=self._strides,
-            hidden_channels=self._hidden_conv_channels,
-            hidden_sizes=self._hidden_sizes,
-            hidden_nonlinearity=self._hidden_nonlinearity,
-            hidden_w_init=self._hidden_w_init,
-            hidden_b_init=self._hidden_b_init,
-            paddings=self._paddings,
-            padding_mode=self._padding_mode,
-            max_pool=self._max_pool,
-            pool_shape=self._pool_shape,
-            pool_stride=self._pool_stride,
-            output_nonlinearity=self._output_nonlinearity,
-            output_w_init=self._output_w_init,
-            output_b_init=self._output_b_init,
-            layer_normalization=self._layer_normalization,
-            is_image=self._is_image)
-
-        dist = module(observations)
-        return dist, {}
+        return self._module(observations), {}

@@ -381,7 +381,7 @@ class TransposeImage(Wrapper):
     def observation_space(self):
         """akro.Space: The observation space specification."""
         obs_shape = self._env.observation_space.shape
-        return akro.Image((obs_shape[2], obs_shape[1], obs_shape[0]))
+        return akro.Image((obs_shape[2], obs_shape[0], obs_shape[1]))
 
     @property
     def spec(self):
