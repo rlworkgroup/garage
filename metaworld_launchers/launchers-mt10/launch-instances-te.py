@@ -54,8 +54,8 @@ def launch_experiments(gpu):
 
         with open(f'launchers/launch-experiment-{i}.sh', mode='w') as f:
             f.write(script)
-        if i % 3 and i != 0:
-            time.sleep(500)
+        if not (i % 3) and i!=0:
+            time.sleep(400)
         subprocess.Popen([launch_command], shell=True)
         print(launch_command)
 

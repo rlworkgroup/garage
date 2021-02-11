@@ -6,12 +6,14 @@ import time
 @click.command()
 @click.option('--gpu', default=False, type=bool)
 def launch_experiments(gpu):
-    entropies = [1e-4, 1e-4, 1e-4, 1e-5, 1e-5, 1e-5, 5e-5, 5e-5, 5e-5]
+    # entropies = [1e-4, 1e-4, 1e-4, 1e-5, 1e-5, 1e-5, 5e-5, 5e-5, 5e-5]
+    entropies = [5e-5, 5e-5]
+
     for i, entropy in enumerate(entropies):
         ####################EDIT THESE FIELDS##################
         username = f'avnishnarayan' # your google username
         algorithm = f'mtppo'
-        zone = f'us-west2-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
+        zone = f'us-west1-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         entropy_str = str(entropy).replace('.', '-')
         instance_name = f'v1-mtppo-round2-entropy-{entropy_str}-{i}'
         bucket = f'mt10/round2/mtppo/v1'
@@ -54,8 +56,8 @@ def launch_experiments(gpu):
 
         with open(f'launchers/launch-experiment-{i}.sh', mode='w') as f:
             f.write(script)
-        if i % 3:
-            time.sleep(500)
+        if not (i % 3) and i!=0:
+            time.sleep(400)
         subprocess.Popen([launch_command], shell=True)
         print(launch_command)
 

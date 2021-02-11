@@ -13,7 +13,7 @@ def launch_experiments(gpu):
         algorithm = f'mttrpo'
         zone = f'us-east1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         entropy_str = str(entropy).replace('.', '-')
-        instance_name = f'v1-mttrpo-tuned-entropy-{entropy_str}-{i}'
+        instance_name = f'v1-actual-mttrpo-tuned-entropy-{entropy_str}-{i}'
         bucket = f'mt10/round2/mttrpo/v1'
         branch = 'avnish-old-metaworld-results'
         experiment = f'metaworld_launchers/mt10/mttrpo_metaworld_mt10.py --entropy {entropy}'
@@ -54,8 +54,8 @@ def launch_experiments(gpu):
 
         with open(f'launchers/launch-experiment-{i}.sh', mode='w') as f:
             f.write(script)
-        if i % 3 and i != 0:
-            time.sleep(500)
+        if not (i % 3) and i!=0:
+            time.sleep(400)
         subprocess.Popen([launch_command], shell=True)
         print(launch_command)
 
