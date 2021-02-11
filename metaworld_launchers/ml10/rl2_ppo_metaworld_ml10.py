@@ -26,9 +26,9 @@ from garage.envs import normalize
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--entropy_coefficient', type=float, default=1e-5)
-@wrap_experiment(snapshot_mode='gap', snapshot_gap=100, name_parameters='passed')
-def rl2_ppo_tuned_metaworld_ml10(ctxt, seed, entropy_coefficient, meta_batch_size=10, n_epochs=2000,
+@click.option('--entropy_coefficient', type=float, default=5e-6)
+@wrap_experiment(snapshot_mode='none', name_parameters='passed')
+def rl2_ppo_metaworld_ml10(ctxt, seed, entropy_coefficient=5e-6, meta_batch_size=10, n_epochs=2000,
                            episode_per_task=10):
     """Train RL2 PPO with ML10 environment.
 
@@ -121,4 +121,4 @@ def rl2_ppo_tuned_metaworld_ml10(ctxt, seed, entropy_coefficient, meta_batch_siz
                       env_spec.max_episode_length * meta_batch_size)
 
 
-rl2_ppo_tuned_metaworld_ml10()
+rl2_ppo_metaworld_ml10()
