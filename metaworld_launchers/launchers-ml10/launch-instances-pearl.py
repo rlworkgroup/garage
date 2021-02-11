@@ -10,7 +10,8 @@ def launch_experiments(gpu):
         ####################EDIT THESE FIELDS##################
         username = f'avnishnarayan' # your google username
         algorithm = f'pearl'
-        zone = f'us-central1-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
+        # gpu zones are 'us-central1-a' 'us-east1-c' 'europe-west1-b' 'asia-east1-a' 'asia-east1-b'
+        zone = f'us-east1-c' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         instance_name = f'v1-pearl-{i}'
         bucket = f'ml10/round2/pearl/v1'
         branch = 'avnish-old-metaworld-results'
@@ -22,7 +23,7 @@ def launch_experiments(gpu):
             # You can use n1 cpus which are slower, but we are capped to a total of 72 cpus per zone anyways
             docker_run_file = 'docker_metaworld_run_cpu.py' # 'docker_metaworld_run_gpu.py' for gpu experiment
             docker_build_command = 'make run-headless -C ~/garage/'
-            source_machine_image = 'metaworld-v2-cpu-instance'
+            source_machine_image = 'cpu-instance-2'
             launch_command = (f"gcloud beta compute instances create {instance_name} "
                 f"--metadata-from-file startup-script=launchers/launch-experiment-{i}.sh --zone {zone} "
                 f"--source-machine-image {source_machine_image} --machine-type {machine_type}")
@@ -52,8 +53,8 @@ def launch_experiments(gpu):
 
         with open(f'launchers/launch-experiment-{i}.sh', mode='w') as f:
             f.write(script)
-        if not (i % 3) and i!=0:
-            time.sleep(400)
+        if not (i % 4) and i!=0:
+            time.sleep(500)
         subprocess.Popen([launch_command], shell=True)
         print(launch_command)
     time.sleep(300)

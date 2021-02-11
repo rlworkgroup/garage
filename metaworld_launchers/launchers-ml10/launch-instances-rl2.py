@@ -24,7 +24,7 @@ def launch_experiments(gpu):
             # You can use n1 cpus which are slower, but we are capped to a total of 72 cpus per zone anyways
             docker_run_file = 'docker_metaworld_run_cpu.py' # 'docker_metaworld_run_gpu.py' for gpu experiment
             docker_build_command = 'make run-headless -C ~/garage/'
-            source_machine_image = 'metaworld-v2-cpu-instance'
+            source_machine_image = 'cpu-instance-2'
             launch_command = (f"gcloud beta compute instances create {instance_name} "
                 f"--metadata-from-file startup-script=launchers/launch-experiment-{i}.sh --zone {zone} "
                 f"--source-machine-image {source_machine_image} --machine-type {machine_type}")
