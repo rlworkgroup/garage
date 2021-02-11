@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""This is an example to train MAML-TRPO on ML10 environment."""
+"""This is an example to train MAML-TRPO on ML1 Push environment."""
 # pylint: disable=no-value-for-parameter
 # yapf: disable
 import click
+import metaworld
 import torch
 
 from garage import wrap_experiment
@@ -13,20 +14,17 @@ from garage.experiment.deterministic import set_seed
 from garage.sampler import RaySampler
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
-from garage.torch.value_functions import LinearFeatureValueFunction
+from garage.torch.value_functions import GaussianMLPValueFunction
 from garage.trainer import Trainer
-
-import metaworld
 
 # yapf: enable
 @click.command()
 @click.option('--seed', type=int, default=1)
 @click.option('--epochs', type=int, default=2000)
-@click.option('--rollouts_per_task', type=int, default=10)
+@click.option('--rollouts_per_task', type=int, default=5)
 @click.option('--meta_batch_size', type=int, default=20)
-@click.option('--inner_lr', default=1e-3, type=float)
 @wrap_experiment(snapshot_mode='gap', name_parameters='passed', snapshot_gap=50)
-def maml_trpo_metaworld_ml10(ctxt, seed, epochs, rollouts_per_task, meta_batch_size, inner_lr):
+def maml_trpo_metaworld_ml10(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -56,15 +54,15 @@ def maml_trpo_metaworld_ml10(ctxt, seed, epochs, rollouts_per_task, meta_batch_s
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
-        hidden_sizes=(128, 128),
+        hidden_sizes=(256, 256),
         hidden_nonlinearity=torch.tanh,
-        output_nonlinearity=torch.tanh,
-        min_std=0.5,
-        max_std=1.5,
-        std_mlp_type='share_mean_std'
+        output_nonlinearity=None,
     )
 
-    value_function = LinearFeatureValueFunction(env_spec=env.spec,)
+    value_function = GaussianMLPValueFunction(env_spec=env.spec,
+                                              hidden_sizes=[128, 128],
+                                              hidden_nonlinearity=torch.tanh,
+                                              output_nonlinearity=None)
 
     meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
                                    n_exploration_eps=rollouts_per_task,
@@ -85,17 +83,17 @@ def maml_trpo_metaworld_ml10(ctxt, seed, epochs, rollouts_per_task, meta_batch_s
                     meta_batch_size=meta_batch_size,
                     discount=0.99,
                     gae_lambda=1.,
-                    inner_lr=inner_lr,
-                    num_grad_updates=1,
+                    inner_lr=0.1,
+                    num_grad_updates=2,
                     meta_evaluator=meta_evaluator,
                     entropy_method='max',
-                    policy_ent_coeff=5e-5,
+                    policy_ent_coeff=0.02,
                     stop_entropy_gradient=True,
-                    center_adv=False,)
+                    center_adv=False)
 
     trainer.setup(algo, env)
     trainer.train(n_epochs=epochs,
-                  batch_size=rollouts_per_task * env.spec.max_episode_length)
+                  batch_size=rollouts_per_task * env.spec.max_episode_length * meta_batch_size)
 
 
 maml_trpo_metaworld_ml10()
