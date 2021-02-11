@@ -66,7 +66,7 @@ def launch_experiments(gpu):
         algorithm = f'ppo'
         zone = f'us-west1-b'  # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         instance_name = f'ppo-metaworld-round2-{env_name}'
-        bucket = f'ppo_round2'
+        bucket = f'ppo_round2/{env_name}'
         branch = 'hayden-new-metaworld-results-st-v2'
         experiment = f'metaworld_launchers/single_task_launchers/ppo_metaworld.py --env-name {env_name}'
         ######################################################
