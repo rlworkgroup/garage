@@ -13,9 +13,9 @@ def launch_experiments(gpu):
         username = f'avnishnarayan' # your google username
         algorithm = f'rl2'
         zone = f'us-west1-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
-        instance_name = f'v1-rl2-round2-{i}'
-        bucket = f'ml10/round2/rl2/v1'
-        branch = 'avnish-old-metaworld-results'
+        instance_name = f'v2-rl2-round2-{i}'
+        bucket = f'ml10/round2/rl2/v2'
+        branch = 'avnish-new-metworld-results-ml10-mt10'
         experiment = f'metaworld_launchers/ml10/rl2_ppo_metaworld_ml10.py'
         ######################################################
 

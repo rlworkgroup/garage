@@ -6,16 +6,16 @@ import time
 @click.command()
 @click.option('--gpu', default=False, type=bool)
 def launch_experiments(gpu):
-    entropies = [5e-3] * 3
+    entropies = [5e-3] * 10
     for i, entropy in enumerate(entropies):
         ####################EDIT THESE FIELDS##################
         username = f'avnishnarayan' # your google username
         algorithm = f'mttrpo'
         zone = f'us-east1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         entropy_str = str(entropy).replace('.', '-')
-        instance_name = f'v1-actual-mttrpo-tuned-entropy-{entropy_str}-{i}'
-        bucket = f'mt10/round2/mttrpo/v1'
-        branch = 'avnish-old-metaworld-results'
+        instance_name = f'v2-actual-mttrpo-tuned-entropy-{entropy_str}-{i}'
+        bucket = f'mt10/round2/mttrpo/v2'
+        branch = 'avnish-new-metworld-results-ml10-mt10'
         experiment = f'metaworld_launchers/mt10/mttrpo_metaworld_mt10.py --entropy {entropy}'
         ######################################################
 

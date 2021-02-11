@@ -6,14 +6,14 @@ import time
 @click.command()
 @click.option('--gpu', default=True, type=bool)
 def launch_experiments(gpu):
-    for i in range(5):
+    for i in range(10):
         ####################EDIT THESE FIELDS##################
         username = f'avnishnarayan' # your google username
         algorithm = f'mtsac'
         zone = f'us-central1-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
-        instance_name = f'v1-mtsac-tuned{i}'
-        bucket = f'mt10/round2/mtsac/v1'
-        branch = 'avnish-old-metaworld-results'
+        instance_name = f'v2-mtsac-tuned{i}'
+        bucket = f'mt10/round2/mtsac/v2'
+        branch = 'avnish-new-metworld-results-ml10-mt10'
         experiment = f'metaworld_launchers/mt10/mtsac_metaworld_mt10.py'
         ######################################################
 

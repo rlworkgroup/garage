@@ -12,9 +12,9 @@ def launch_experiments(gpu):
         username = f'avnishnarayan' # your google username
         algorithm = f'maml'
         zone = f'us-central1-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
-        instance_name = f'v1-maml-round2-{i}'
-        bucket = f'ml10/round2/maml/v1'
-        branch = 'avnish-old-metaworld-results'
+        instance_name = f'v2-maml-round2-{i}'
+        bucket = f'ml10/round2/maml/v2'
+        branch = 'avnish-new-metworld-results-ml10-mt10'
         experiment = f'metaworld_launchers/ml10/maml_trpo_metaworld_ml10.py'
         ######################################################
 

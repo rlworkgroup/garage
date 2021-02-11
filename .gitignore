@@ -154,3 +154,5 @@ garage/config_personal.py
 sandbox/
 MUJOCO_LOG.TXT
 *.pkl
+
+metaworld_launchers/*.sh
