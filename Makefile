@@ -154,7 +154,7 @@ build-headless: docker/Dockerfile
 		${BUILD_ARGS} .
 
 build-nvidia: TAG ?= rlworkgroup/garage-nvidia:latest
-build-nvidia: PARENT_IMAGE ?= nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04
+build-nvidia: PARENT_IMAGE ?= nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04
 build-nvidia: docker/Dockerfile
 	docker build \
 		-f docker/Dockerfile \
@@ -196,7 +196,7 @@ run-headless: build-headless
 		rlworkgroup/garage-headless ${RUN_CMD}
 
 run-nvidia: ## Run the Docker container for machines with NVIDIA GPUs
-run-nvidia: ## Requires https://github.com/NVIDIA/nvidia-container-runtime and CUDA 10.2
+run-nvidia: ## Requires https://github.com/NVIDIA/nvidia-container-runtime and CUDA 10.1
 run-nvidia: CONTAINER_NAME ?= ''
 run-nvidia: user ?= $$USER
 run-nvidia: build-nvidia
