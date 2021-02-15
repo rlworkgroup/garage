@@ -10,7 +10,7 @@ GYM_VERSION = '0.17.2'
 # Required dependencies
 REQUIRED = [
     # Please keep alphabetized
-    'akro',
+    'akro>=0.0.8',
     'click>=2.0',
     'cloudpickle',
     'cma==2.7.0',
