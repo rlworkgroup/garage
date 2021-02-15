@@ -66,7 +66,7 @@ def test_mtsac_get_log_alpha(monkeypatch):
     monkeypatch.setattr(mtsac, '_log_alpha', torch.Tensor([1., 2.]))
     for i, _ in enumerate(env_names):
         obs = torch.Tensor([env.reset()[0]] * buffer_batch_size)
-        log_alpha = mtsac._get_log_alpha(dict(observation=obs))
+        log_alpha = mtsac._get_log_alpha(dict(observations=obs))
         assert (log_alpha == torch.Tensor([i + 1, i + 1])).all().item()
         assert log_alpha.size() == torch.Size([mtsac._buffer_batch_size])
 
@@ -123,7 +123,7 @@ def test_mtsac_get_log_alpha_incorrect_num_tasks(monkeypatch):
                     'The correct number of tasks?')
     obs = torch.Tensor([env.reset()[0]] * buffer_batch_size)
     with pytest.raises(ValueError, match=error_string):
-        mtsac._get_log_alpha(dict(observation=obs))
+        mtsac._get_log_alpha(dict(observations=obs))
 
 
 @pytest.mark.mujoco

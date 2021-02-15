@@ -176,7 +176,7 @@ class MTSAC(SAC):
             torch.Tensor: log_alpha. shape is (1, self.buffer_batch_size)
 
         """
-        obs = samples_data['observation']
+        obs = samples_data['observations']
         log_alpha = self._log_alpha
         one_hots = obs[:, -self._num_tasks:]
         if (log_alpha.shape[0] != one_hots.shape[1]

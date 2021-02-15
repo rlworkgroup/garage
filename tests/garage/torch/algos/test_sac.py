@@ -104,11 +104,11 @@ def testCriticLoss():
     terminals = torch.Tensor([[0.], [0.]])
     next_observations = torch.FloatTensor([[5, 6], [7, 8]])
     samples_data = {
-        'observation': observations,
-        'action': actions,
-        'reward': rewards,
-        'terminal': terminals,
-        'next_observation': next_observations
+        'observations': observations,
+        'actions': actions,
+        'rewards': rewards,
+        'terminals': terminals,
+        'next_observations': next_observations
     }
     td_targets = [7.3, 19.1]
     pred_td_targets = [7., 10.]
@@ -142,7 +142,7 @@ def testActorLoss():
     observations = torch.Tensor([[1., 2.], [3., 4.]])
     action_dists = policy(observations)[0]
     actions = torch.Tensor(action_dists.rsample_with_pre_tanh_value())
-    samples_data = dict(observation=observations)
+    samples_data = dict(observations=observations)
     log_pi = action_dists.log_prob(actions)
     expected_loss = (2 * 10 - (2 + 1) - (4 + 1)) / 2
     loss = sac._actor_objective(samples_data, actions, log_pi)
