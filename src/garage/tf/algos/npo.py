@@ -174,8 +174,9 @@ class NPO(RLAlgorithm):
         last_return = None
 
         for _ in trainer.step_epochs():
-            trainer.step_path = trainer.obtain_episodes(trainer.step_itr)
-            last_return = self._train_once(trainer.step_itr, trainer.step_path)
+            trainer.step_episode = trainer.obtain_episodes(trainer.step_itr)
+            last_return = self._train_once(trainer.step_itr,
+                                           trainer.step_episode)
             trainer.step_itr += 1
 
         return last_return

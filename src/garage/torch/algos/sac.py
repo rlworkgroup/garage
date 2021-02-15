@@ -192,10 +192,10 @@ class SAC(RLAlgorithm):
                     batch_size = int(self._min_buffer_size)
                 else:
                     batch_size = None
-                trainer.step_path = trainer.obtain_samples(
+                trainer.step_episode = trainer.obtain_samples(
                     trainer.step_itr, batch_size)
                 path_returns = []
-                for path in trainer.step_path:
+                for path in trainer.step_episode:
                     self.replay_buffer.add_path(
                         dict(observation=path['observations'],
                              action=path['actions'],
@@ -206,7 +206,7 @@ class SAC(RLAlgorithm):
                                  for step_type in path['step_types']
                              ]).reshape(-1, 1)))
                     path_returns.append(sum(path['rewards']))
-                assert len(path_returns) == len(trainer.step_path)
+                assert len(path_returns) == len(trainer.step_episode)
                 self.episode_rewards.append(np.mean(path_returns))
                 for _ in range(self._gradient_steps):
                     policy_loss, qf1_loss, qf2_loss = self.train_once()
