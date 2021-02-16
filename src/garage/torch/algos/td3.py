@@ -198,13 +198,13 @@ class TD3(RLAlgorithm):
                 # Afterwards, get action from policy.
                 if self._uniform_random_policy and \
                         trainer.step_itr < self._start_steps:
-                    trainer.step_path = trainer.obtain_episodes(
+                    trainer.step_episode = trainer.obtain_episodes(
                         trainer.step_itr,
                         agent_update=self._uniform_random_policy)
                 else:
-                    trainer.step_path = trainer.obtain_episodes(
+                    trainer.step_episode = trainer.obtain_episodes(
                         trainer.step_itr, agent_update=self.exploration_policy)
-                self._replay_buffer.add_episode_batch(trainer.step_path)
+                self._replay_buffer.add_episode_batch(trainer.step_episode)
 
                 # Update after warm-up steps.
                 if trainer.total_env_steps >= self._update_after:
@@ -215,7 +215,7 @@ class TD3(RLAlgorithm):
                         self._min_buffer_size):
                     trainer.enable_logging = True
                     eval_eps = self._evaluate_policy()
-                    log_performance(trainer.step_path,
+                    log_performance(trainer.step_episode,
                                     eval_eps,
                                     discount=self._discount,
                                     prefix='Training')

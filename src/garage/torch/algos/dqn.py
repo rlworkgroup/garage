@@ -170,11 +170,12 @@ class DQN(RLAlgorithm):
                                np.mean(self._episode_reward_mean))
 
             for _ in range(self._steps_per_epoch):
-                trainer.step_path = trainer.obtain_episodes(trainer.step_itr)
+                trainer.step_episode = trainer.obtain_episodes(
+                    trainer.step_itr)
                 if hasattr(self.exploration_policy, 'update'):
-                    self.exploration_policy.update(trainer.step_path)
+                    self.exploration_policy.update(trainer.step_episode)
 
-                self._train_once(trainer.step_itr, trainer.step_path)
+                self._train_once(trainer.step_itr, trainer.step_episode)
                 trainer.step_itr += 1
 
         return np.mean(last_returns)

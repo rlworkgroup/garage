@@ -209,11 +209,12 @@ class DQN(RLAlgorithm):
         qf_losses = []
         for _ in trainer.step_epochs():
             for cycle in range(self._steps_per_epoch):
-                trainer.step_path = trainer.obtain_episodes(trainer.step_itr)
+                trainer.step_episode = trainer.obtain_episodes(
+                    trainer.step_itr)
                 if hasattr(self.exploration_policy, 'update'):
-                    self.exploration_policy.update(trainer.step_path)
+                    self.exploration_policy.update(trainer.step_episode)
                 qf_losses.extend(
-                    self._train_once(trainer.step_itr, trainer.step_path))
+                    self._train_once(trainer.step_itr, trainer.step_episode))
                 if (cycle == 0 and self._replay_buffer.n_transitions_stored >=
                         self._min_buffer_size):
                     trainer.enable_logging = True
