@@ -3,7 +3,7 @@ name: Garage CI Release-2020.06
 env:
   GARAGE_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-  TRAVIS_COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
+  PR_COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
   DOCKER_TAG: garage-ci-${{ github.run_id }}
   OWNER: "rlworkgroup"
   DOCKER_CACHE_REPO: "garage-ci"
@@ -15,6 +15,8 @@ on:
     tags:
       - 'v2020.06.[0-9]+'
       - 'v2020.06.[0-9]+rc[0-9]'
+    branches:
+      - 'release-2020.06'
   pull_request:
     branches:
       - 'release-2020.06'
@@ -52,10 +54,6 @@ jobs:
     needs: build_docker_container
 
     steps:
-    - uses: actions/checkout@v2
-      if: github.event_name == 'pull_request'
-      with:
-        fetch-depth: 0
     - name: Login to GitHub Package Registry
       if: github.event_name == 'pull_request'
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
@@ -69,11 +67,11 @@ jobs:
       if: github.event_name == 'pull_request'
       run: |
         docker run \
-          -e TRAVIS_COMMIT_RANGE \
+          -e PR_COMMIT_RANGE \
           -e MJKEY \
           --memory 6500m \
           --memory-swap 6500m \
-          "${DOCKER_TAG}" scripts/travisci/check_precommit.sh
+          "${DOCKER_TAG}" scripts/ci/check_precommit.sh
 
 
   normal_test:
@@ -82,9 +80,6 @@ jobs:
     needs: check_pre_commit
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
     - name: Pull from cache (GitHub Package Registry)
@@ -95,9 +90,7 @@ jobs:
       run: |
         ci_env="$(bash <(curl -s https://codecov.io/env))" &&
         docker run \
-          -e TRAVIS_COMMIT_RANGE \
-          -e MJKEY \
-          -e GITHUB_ACTIONS \
+          -e GITHUB_ACTIONS `# used by codecov` \
           -e CODECOV_TOKEN \
           $ci_env\
           --memory 6500m \
@@ -124,9 +117,6 @@ jobs:
     needs: check_pre_commit
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
     - name: Pull from cache (GitHub Package Registry)
@@ -137,8 +127,6 @@ jobs:
       run: |
         ci_env="$(bash <(curl -s https://codecov.io/env))" &&
         docker run \
-          -e TRAVIS_COMMIT_RANGE \
-          -e MJKEY \
           -e GITHUB_ACTIONS \
           -e CODECOV_TOKEN \
           $ci_env\
@@ -165,9 +153,6 @@ jobs:
     needs: check_pre_commit
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
     - name: Pull from cache (GitHub Package Registry)
@@ -178,7 +163,6 @@ jobs:
       run: |
         ci_env="$(bash <(curl -s https://codecov.io/env))" &&
         docker run \
-          -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTIONS \
           -e CODECOV_TOKEN \
@@ -205,9 +189,6 @@ jobs:
     needs: check_pre_commit
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
     - name: Pull from cache (GitHub Package Registry)
@@ -218,7 +199,6 @@ jobs:
       run: |
         ci_env="$(bash <(curl -s https://codecov.io/env))" &&
         docker run \
-          -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTIONS \
           -e CODECOV_TOKEN \
@@ -246,9 +226,6 @@ jobs:
     if: github.event_name == 'schedule'
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
       - name: Login to GitHub Package Registry
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
       - name: Pull from cache (GitHub Package Registry)
@@ -259,10 +236,8 @@ jobs:
         run: |
           ci_env="$(bash <(curl -s https://codecov.io/env))" &&
           docker run \
-            -e TRAVIS_COMMIT_RANGE \
             -e MJKEY \
             -e GITHUB_ACTIONS \
-            -e CODECOV_TOKEN \
             $ci_env\
             --memory 6500m \
             --memory-swap 6500m \
@@ -276,9 +251,6 @@ jobs:
     if: github.event_name == 'schedule'
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
       - name: Login to GitHub Package Registry
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
       - name: Pull from cache (GitHub Package Registry)
@@ -288,7 +260,6 @@ jobs:
       - name: Verify Conda
         run: |
           docker run \
-          -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           --memory 6500m \
           --memory-swap 6500m \
@@ -319,9 +290,6 @@ jobs:
     if: github.event_name == 'schedule'
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
       - name: Login to GitHub Package Registry
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
       - name: Pull from cache (GitHub Package Registry)
@@ -331,7 +299,6 @@ jobs:
       - name: Verify Pipenv
         run: |
           docker run \
-          -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           --memory 6500m \
           --memory-swap 6500m \
