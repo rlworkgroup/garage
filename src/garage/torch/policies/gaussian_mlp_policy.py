@@ -92,11 +92,20 @@ class GaussianMLPPolicy(StochasticPolicy):
         Args:
             observations (torch.Tensor): Batch of observations on default
                 torch device.
-
         Returns:
             torch.distributions.Distribution: Batch distribution of actions.
-            dict[str, torch.Tensor]: Additional agent_info, as torch Tensors
+            dict[str, torch.Tensor]: Additional agent_info, as torch Tensors.
 
         """
+        try:
+            if self._prev_out[0] is not None and hash(
+                    self._prev_out[0]) == hash(observations):
+                return self._prev_out[1]
+        except AttributeError:
+            pass
         dist = self._module(observations)
+        self._prev_out = (observations,
+                          (dist,
+                           dict(mean=dist.mean,
+                                log_std=(dist.variance**.5).log())))
         return (dist, dict(mean=dist.mean, log_std=(dist.variance**.5).log()))
