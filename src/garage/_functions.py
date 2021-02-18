@@ -256,6 +256,9 @@ def log_performance(itr, batch, discount, prefix='Evaluation'):
     episode_mean_in_place_reward = []
     episode_max_in_place_reward = []
     episode_min_in_place_reward = []
+    episode_mean_unscaled_reward = []
+    episode_max_unscaled_reward = []
+    episode_min_unscaled_reward = []
     for eps in batch.split():
         rewards.append(eps.rewards)
         returns.append(discount_cumsum(eps.rewards, discount))
@@ -282,6 +285,13 @@ def log_performance(itr, batch, discount, prefix='Evaluation'):
                 max(eps.env_infos['in_place_reward']))
             episode_min_in_place_reward.append(
                 min(eps.env_infos['in_place_reward']))
+        if 'unscaled_reward' in eps.env_infos:
+            episode_mean_unscaled_reward.append(
+                np.mean(eps.env_infos['unscaled_reward']))
+            episode_max_unscaled_reward.append(
+                max(eps.env_infos['unscaled_reward']))
+            episode_min_unscaled_reward.append(
+                min(eps.env_infos['unscaled_reward']))
 
     average_discounted_return = np.mean([rtn[0] for rtn in returns])
 
@@ -316,5 +326,11 @@ def log_performance(itr, batch, discount, prefix='Evaluation'):
                            np.mean(episode_max_in_place_reward))
             tabular.record('EpisodeMeanMinInPlaceReward',
                            np.mean(episode_min_in_place_reward))
-
+        if episode_mean_unscaled_reward:
+            tabular.record('EpisodeMeanUnscaledReward',
+                           np.mean(episode_mean_unscaled_reward))
+            tabular.record('EpisodeMeanMaxUnscaledReward',
+                           np.mean(episode_max_unscaled_reward))
+            tabular.record('EpisodeMeanMinUnscaledReward',
+                           np.mean(episode_min_unscaled_reward))
     return undiscounted_returns
