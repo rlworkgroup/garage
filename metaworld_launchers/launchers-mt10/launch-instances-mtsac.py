@@ -6,11 +6,11 @@ import time
 @click.command()
 @click.option('--gpu', default=True, type=bool)
 def launch_experiments(gpu):
-    for i in range(10):
+    for i in range(8):
         ####################EDIT THESE FIELDS##################
         username = f'avnishnarayan' # your google username
         algorithm = f'mtsac'
-        zone = f'us-central1-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
+        zone = f'asia-east1-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         instance_name = f'v2-mtsac-tuned{i}'
         bucket = f'mt10/round2/mtsac/v2'
         branch = 'avnish-new-metworld-results-ml10-mt10'
@@ -24,7 +24,7 @@ def launch_experiments(gpu):
             docker_build_command = 'make run-headless -C ~/garage/'
             source_machine_image = 'metaworld-v2-cpu-instance'
             launch_command = (f"gcloud beta compute instances create {instance_name} "
-                f"--metadata-from-file startup-script=launchers/launch-experiment-{i}.sh --zone {zone} "
+                f"--metadata-from-file startup-script=launchers/launch-experiment-{algorithm}-{i}.sh --zone {zone} "
                 f"--source-machine-image {source_machine_image} --machine-type {machine_type}")
         else:
             machine_type =  'n1-standard-4'
@@ -34,7 +34,7 @@ def launch_experiments(gpu):
             source_machine_image = 'metaworld-v2-gpu-instance'
             accelerator = '"type=nvidia-tesla-k80,count=1"'
             launch_command = (f"gcloud beta compute instances create {instance_name} "
-                f"--metadata-from-file startup-script=launchers/launch-experiment-{i}.sh --zone {zone} "
+                f"--metadata-from-file startup-script=launchers/launch-experiment-{algorithm}-{i}.sh --zone {zone} "
                 f"--source-machine-image {source_machine_image} --machine-type {machine_type} "
                 f'--accelerator={accelerator}')
 
@@ -50,7 +50,7 @@ def launch_experiments(gpu):
         f'''runuser -l {username} -c "cd garage && python {docker_run_file} '{experiment}'"\n'''
         f'runuser -l {username} -c "cd garage/metaworld_launchers && python upload_folders.py {bucket} 1200"\n')
 
-        with open(f'launchers/launch-experiment-{i}.sh', mode='w') as f:
+        with open(f'launchers/launch-experiment-{algorithm}-{i}.sh', mode='w') as f:
             f.write(script)
         if not (i % 3) and i!=0:
             time.sleep(400)

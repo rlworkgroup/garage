@@ -25,7 +25,7 @@ def launch_experiments(gpu):
             docker_build_command = 'make run-headless -C ~/garage/'
             source_machine_image = 'cpu-instance-2'
             launch_command = (f"gcloud beta compute instances create {instance_name} "
-                f"--metadata-from-file startup-script=launchers/launch-experiment-{i}.sh --zone {zone} "
+                f"--metadata-from-file startup-script=launchers/launch-experiment-{algorithm}-{i}.sh --zone {zone} "
                 f"--source-machine-image {source_machine_image} --machine-type {machine_type}")
         else:
             machine_type =  'n1-standard-4'
@@ -35,7 +35,7 @@ def launch_experiments(gpu):
             source_machine_image = 'metaworld-v2-gpu-instance'
             accelerator = '"type=nvidia-tesla-k80,count=1"'
             launch_command = (f"gcloud beta compute instances create {instance_name} "
-                f"--metadata-from-file startup-script=launchers/launch-experiment-{i}.sh --zone {zone} "
+                f"--metadata-from-file startup-script=launchers/launch-experiment-{algorithm}-{i}.sh --zone {zone} "
                 f"--source-machine-image {source_machine_image} --machine-type {machine_type} "
                 f'--accelerator={accelerator}')
 
@@ -51,7 +51,7 @@ def launch_experiments(gpu):
         f'''runuser -l {username} -c "cd garage && python {docker_run_file} '{experiment}'"\n'''
         f'runuser -l {username} -c "cd garage/metaworld_launchers && python upload_folders.py {bucket} 1200"\n')
 
-        with open(f'launchers/launch-experiment-{i}.sh', mode='w') as f:
+        with open(f'launchers/launch-experiment-{algorithm}-{i}.sh', mode='w') as f:
             f.write(script)
         if not (i % 3) and i!=0:
             time.sleep(500)
