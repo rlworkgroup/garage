@@ -20,11 +20,11 @@ from garage.trainer import Trainer
 
 
 @click.command()
-@click.option('--env-name', type=str)
+@click.option('--env_name', type=str)
 @click.option('--seed', default=1, type=int)
 @wrap_experiment(snapshot_mode='none', name_parameters='passed')
-def pearl_metaworld_ml10(ctxt,
-                         env_name
+def pearl_metaworld_ml1(ctxt,
+                         env_name,
                          seed=1,
                          num_epochs=1000,
                          latent_size=7,
@@ -79,7 +79,7 @@ def pearl_metaworld_ml10(ctxt,
     encoder_hidden_sizes = (encoder_hidden_size, encoder_hidden_size,
                             encoder_hidden_size)
     # create multi-task environment and sample tasks
-    ml1 = metaworld.ML1('push-v1')
+    ml1 = metaworld.ML1(env_name)
     train_env = MetaWorldSetTaskEnv(ml1, 'train')
     env_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
                                  env=train_env,

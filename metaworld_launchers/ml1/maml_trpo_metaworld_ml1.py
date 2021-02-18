@@ -26,7 +26,7 @@ from garage.trainer import Trainer
 @click.option('--meta_batch_size', type=int, default=25)
 @click.option('--inner_lr', default=1e-4, type=float)
 @wrap_experiment(snapshot_mode='none', name_parameters='passed')
-def maml_trpo_metaworld_ml1(ctxt, seed, epochs, rollouts_per_task, meta_batch_size, inner_lr):
+def maml_trpo_metaworld_ml1(ctxt, env_name, seed, epochs, rollouts_per_task, meta_batch_size, inner_lr):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -42,7 +42,7 @@ def maml_trpo_metaworld_ml1(ctxt, seed, epochs, rollouts_per_task, meta_batch_si
     """
     set_seed(seed)
 
-    ml1 = metaworld.ML1()
+    ml1 = metaworld.ML1(env_name)
     tasks = MetaWorldTaskSampler(ml1, 'train')
     env = tasks.sample(1)[0]()
     test_sampler = SetTaskSampler(
@@ -95,4 +95,4 @@ def maml_trpo_metaworld_ml1(ctxt, seed, epochs, rollouts_per_task, meta_batch_si
                   batch_size=rollouts_per_task * env.spec.max_episode_length)
 
 
-maml_trpo_metaworld_ml10()
+maml_trpo_metaworld_ml1()
