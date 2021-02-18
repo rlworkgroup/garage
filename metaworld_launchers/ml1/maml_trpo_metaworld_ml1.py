@@ -95,4 +95,4 @@ def maml_trpo_metaworld_ml1(ctxt, seed, epochs, rollouts_per_task, meta_batch_si
                   batch_size=rollouts_per_task * env.spec.max_episode_length)
 
 
-maml_trpo_metaworld_ml10()
+maml_trpo_metaworld_ml1()

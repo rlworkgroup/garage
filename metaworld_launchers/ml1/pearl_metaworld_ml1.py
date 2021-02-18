@@ -23,7 +23,7 @@ from garage.trainer import Trainer
 @click.option('--env-name', type=str)
 @click.option('--seed', default=1, type=int)
 @wrap_experiment(snapshot_mode='none', name_parameters='passed')
-def pearl_metaworld_ml10(ctxt,
+def pearl_metaworld_ml1(ctxt,
                          env_name
                          seed=1,
                          num_epochs=1000,

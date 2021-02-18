@@ -24,7 +24,7 @@ from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
 
 @click.command()
-@click.option('--env_name', type=str, default="basketball-v2")
+@click.option('--env_name', type=str, default="push-wall-v2")
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
 @click.option('--gpu', type=int, default=0)
 @wrap_experiment(snapshot_mode='gap', snapshot_gap=50, name_parameters='all')
