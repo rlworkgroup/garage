@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 status=0
 
-echo "Checking commit range ${TRAVIS_COMMIT_RANGE}"
-SOURCE="${TRAVIS_COMMIT_RANGE%...*}"
-ORIGIN="${TRAVIS_COMMIT_RANGE#*...}"
+echo "Checking commit range ${PR_COMMIT_RANGE}"
+SOURCE="${PR_COMMIT_RANGE%...*}"
+ORIGIN="${PR_COMMIT_RANGE#*...}"
 pre-commit run --source "${SOURCE}" --origin "${ORIGIN}"
 status="$((${status} | ${?}))"
 
