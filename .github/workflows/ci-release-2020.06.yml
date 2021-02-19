@@ -3,7 +3,6 @@ name: Garage CI Release-2020.06
 env:
   GARAGE_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-  TRAVIS_COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
   DOCKER_TAG: garage-ci-${{ github.run_id }}
   OWNER: "rlworkgroup"
   DOCKER_CACHE_REPO: "garage-ci"
@@ -11,11 +10,10 @@ env:
   CI_USER: rlworkgroupbot
 
 on:
+  # The release ci in the master branch handles only cron jobs branch
+  # The pull_request and push and tag triggers are in the release branch itself
   schedule:
     - cron: '0 9 * * *'
-  push:
-    branches:
-      - 'release-2020.06'
 
 jobs:
   build_docker_container:
@@ -44,45 +42,12 @@ jobs:
           docker push "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
 
 
-  check_pre_commit:
-    name: Check pre-commit
+  normal_test:
+    name: Normal Tests
     runs-on: ubuntu-latest
     needs: build_docker_container
 
     steps:
-    - uses: actions/checkout@v2
-      if: github.event_name == 'pull_request'
-      with:
-        ref: release-2020.06
-    - name: Login to GitHub Package Registry
-      if: github.event_name == 'pull_request'
-      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
-    - name: Pull from cache (GitHub Package Registry)
-      if: github.event_name == 'pull_request'
-      run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-    - name: Tag docker image
-      if: github.event_name == 'pull_request'
-      run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
-    - name: Check pre-commit
-      if: github.event_name == 'pull_request'
-      run: |
-        docker run \
-          -e TRAVIS_COMMIT_RANGE \
-          -e MJKEY \
-          --memory 6500m \
-          --memory-swap 6500m \
-          "${DOCKER_TAG}" scripts/travisci/check_precommit.sh
-
-
-  normal_test:
-    name: Normal Tests
-    runs-on: ubuntu-latest
-    needs: check_pre_commit
-
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        ref: release-2020.06
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
     - name: Pull from cache (GitHub Package Registry)
@@ -93,9 +58,7 @@ jobs:
       run: |
         ci_env="$(bash <(curl -s https://codecov.io/env))" &&
         docker run \
-          -e TRAVIS_COMMIT_RANGE \
-          -e MJKEY \
-          -e GITHUB_ACTIONS \
+          -e GITHUB_ACTIONS `# used by codecov` \
           -e CODECOV_TOKEN \
           $ci_env\
           --memory 6500m \
@@ -122,9 +85,6 @@ jobs:
     needs: check_pre_commit
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        ref: release-2020.06
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
     - name: Pull from cache (GitHub Package Registry)
@@ -135,8 +95,6 @@ jobs:
       run: |
         ci_env="$(bash <(curl -s https://codecov.io/env))" &&
         docker run \
-          -e TRAVIS_COMMIT_RANGE \
-          -e MJKEY \
           -e GITHUB_ACTIONS \
           -e CODECOV_TOKEN \
           $ci_env\
@@ -163,9 +121,6 @@ jobs:
     needs: check_pre_commit
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        ref: release-2020.06
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
     - name: Pull from cache (GitHub Package Registry)
@@ -176,7 +131,6 @@ jobs:
       run: |
         ci_env="$(bash <(curl -s https://codecov.io/env))" &&
         docker run \
-          -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTIONS \
           -e CODECOV_TOKEN \
@@ -203,9 +157,6 @@ jobs:
     needs: check_pre_commit
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        ref: release-2020.06
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
     - name: Pull from cache (GitHub Package Registry)
@@ -216,7 +167,6 @@ jobs:
       run: |
         ci_env="$(bash <(curl -s https://codecov.io/env))" &&
         docker run \
-          -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           -e GITHUB_ACTIONS \
           -e CODECOV_TOKEN \
@@ -244,9 +194,6 @@ jobs:
     if: github.event_name == 'schedule'
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: release-2020.06
       - name: Login to GitHub Package Registry
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
       - name: Pull from cache (GitHub Package Registry)
@@ -255,13 +202,8 @@ jobs:
         run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
       - name: Nightly tests
         run: |
-          ci_env="$(bash <(curl -s https://codecov.io/env))" &&
           docker run \
-            -e TRAVIS_COMMIT_RANGE \
             -e MJKEY \
-            -e GITHUB_ACTIONS \
-            -e CODECOV_TOKEN \
-            $ci_env\
             --memory 6500m \
             --memory-swap 6500m \
             "${DOCKER_TAG}" pytest -v -m nightly
@@ -274,9 +216,6 @@ jobs:
     if: github.event_name == 'schedule'
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: release-2020.06
       - name: Login to GitHub Package Registry
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
       - name: Pull from cache (GitHub Package Registry)
@@ -286,7 +225,6 @@ jobs:
       - name: Verify Conda
         run: |
           docker run \
-          -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           --memory 6500m \
           --memory-swap 6500m \
@@ -317,9 +255,6 @@ jobs:
     if: github.event_name == 'schedule'
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: release-2020.06
       - name: Login to GitHub Package Registry
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
       - name: Pull from cache (GitHub Package Registry)
@@ -329,7 +264,6 @@ jobs:
       - name: Verify Pipenv
         run: |
           docker run \
-          -e TRAVIS_COMMIT_RANGE \
           -e MJKEY \
           --memory 6500m \
           --memory-swap 6500m \
@@ -346,34 +280,6 @@ jobs:
           pipenv graph && \
           # pylint will verify all imports work
           pipenv run pylint --disable=all --enable=import-error garage"
-
-
-  deploy_to_pypi:
-    name: Deploy to PyPI
-    runs-on: ubuntu-latest
-    needs: [normal_test, large_test, mujoco_test, mujoco_test_long]
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: release-2020.06
-      - name: Set up Python 3.5
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.5
-      - name: Update Version
-        run: echo ${GITHUB_REF##*/} > VERSION
-      - name: Update setuptools
-        run: pip install --upgrade setuptools
-      - name: Setup Distribution
-        run: >-
-          python setup.py sdist
-      - name: Deploy to PyPI
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_TOKEN }}
 
 
   delete_docker_container:
