@@ -100,16 +100,16 @@ jobs:
 
     steps:
     - name: Login to GitHub Package Registry
-      if: github.event_name == 'pull_request'
+      if: github.event_name == 'pull_request' || github.event_name == 'repository_dispatch'
       run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
     - name: Pull from cache (GitHub Package Registry)
-      if: github.event_name == 'pull_request'
+      if: github.event_name == 'pull_request' || github.event_name == 'repository_dispatch'
       run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
     - name: Tag docker image
-      if: github.event_name == 'pull_request'
+      if: github.event_name == 'pull_request' || github.event_name == 'repository_dispatch'
       run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Check pre-commit
-      if: github.event_name == 'pull_request'
+      if: github.event_name == 'pull_request' || github.event_name == 'repository_dispatch'
       run: |
         docker run \
           -e PR_COMMIT_RANGE \
