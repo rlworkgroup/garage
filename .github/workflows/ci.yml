@@ -97,26 +97,20 @@ jobs:
     name: Check pre-commit
     runs-on: ubuntu-latest
     needs: build_docker_container
+    container:
+      image: docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}
+      credentials:
+        username: ${{ CI_USER }}
+        password: ${{ secrets.CI_REGISTRY_TOKEN }}
+      env:
+        MJKEY: MJKEY
+        PR_COMMIT_RANGE: PR_COMMIT_RANGE
+      options: --memory 6500m --memory-swap 6500m
 
     steps:
-    - name: Login to GitHub Package Registry
-      if: github.event_name == 'pull_request' || github.event_name == 'repository_dispatch'
-      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
-    - name: Pull from cache (GitHub Package Registry)
-      if: github.event_name == 'pull_request' || github.event_name == 'repository_dispatch'
-      run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-    - name: Tag docker image
-      if: github.event_name == 'pull_request' || github.event_name == 'repository_dispatch'
-      run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Check pre-commit
       if: github.event_name == 'pull_request' || github.event_name == 'repository_dispatch'
-      run: |
-        docker run \
-          -e PR_COMMIT_RANGE \
-          -e MJKEY \
-          --memory 6500m \
-          --memory-swap 6500m \
-          "${DOCKER_TAG}" scripts/ci/check_precommit.sh
+      run: scripts/ci/check_precommit.sh
     - name: Update check status for PRs from forks
       uses: LouisBrunner/checks-action@v1.1.1
       if: env.IS_PR_FROM_FORK && always()
@@ -131,23 +125,18 @@ jobs:
     name: Run Doctest
     runs-on: ubuntu-latest
     needs: check_pre_commit
+    container:
+      image: docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}
+      credentials:
+        username: ${{ CI_USER }}
+        password: ${{ secrets.CI_REGISTRY_TOKEN }}
+      env:
+        MJKEY: MJKEY
+      options: --memory 6500m --memory-swap 6500m
 
     steps:
-    - name: Login to GitHub Package Registry
-      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
-    - name: Pull from cache (GitHub Package Registry)
-      run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-    - name: Tag docker image
-      run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Doctest
-      run: |
-        docker run \
-          -e MJKEY \
-          --memory 6500m \
-          --memory-swap 6500m \
-          "${DOCKER_TAG}" \
-          /bin/bash -c \
-          'pushd docs && make doctest clean && popd'
+      run: pushd docs && make doctest clean && popd
     - name: Update check status for PRs from forks
       uses: LouisBrunner/checks-action@v1.1.1
       if: env.IS_PR_FROM_FORK && always()
@@ -162,37 +151,31 @@ jobs:
     name: Normal Tests
     runs-on: ubuntu-latest
     needs: check_pre_commit
+    container:
+      image: docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}
+      credentials:
+        username: ${{ CI_USER }}
+        password: ${{ secrets.CI_REGISTRY_TOKEN }}
+      env:
+        CODECOV_TOKEN: CODECOV_TOKEN
+        GITHUB_ACTIONS: GITHUB_ACTIONS
+      options: --memory 6500m --memory-swap 6500m
 
     steps:
-    - name: Login to GitHub Package Registry
-      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
-    - name: Pull from cache (GitHub Package Registry)
-      run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-    - name: Tag docker image
-      run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Normal tests
       run: |
-        ci_env="$(bash <(curl -s https://codecov.io/env))" &&
-        docker run \
-          -e GITHUB_ACTIONS `# used by codecov` \
-          -e CODECOV_TOKEN \
-          $ci_env\
-          --memory 6500m \
-          --memory-swap 6500m \
-          "${DOCKER_TAG}" \
-          /bin/bash -c \
-          '[ ! -f ${MJKEY_PATH} ] || mv ${MJKEY_PATH} ${MJKEY_PATH}.bak &&
-          pytest --cov=garage --cov-report=xml --reruns 1 -m \
-              "not nightly and not huge and not flaky and not large and not mujoco and not mujoco_long" --durations=20 &&
-          for i in {1..5}; do
-              bash <(curl -s https://codecov.io/bash --retry 5) -Z && break
-              if [ $i == 5 ]; then
-                  exit 1
-              else
-                  echo "Retry ${i}..."
-                  sleep 30
-              fi
-          done'
+        ci_env="$(bash <(curl -s https://codecov.io/env))"
+        pytest --cov=garage --cov-report=xml --reruns 1 -m \
+            "not nightly and not huge and not flaky and not large and not mujoco and not mujoco_long" --durations=20 &&
+        for i in {1..5}; do
+            bash <(curl -s https://codecov.io/bash --retry 5) -Z && break
+            if [ $i == 5 ]; then
+                exit 1
+            else
+                echo "Retry ${i}..."
+                sleep 30
+            fi
+        done
     - name: Update check status for PRs from forks
       uses: LouisBrunner/checks-action@v1.1.1
       if: env.IS_PR_FROM_FORK && always()
@@ -207,36 +190,30 @@ jobs:
     name: Large Tests
     runs-on: ubuntu-latest
     needs: check_pre_commit
+    container:
+      image: docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}
+      credentials:
+        username: ${{ CI_USER }}
+        password: ${{ secrets.CI_REGISTRY_TOKEN }}
+      env:
+        CODECOV_TOKEN: CODECOV_TOKEN
+        GITHUB_ACTIONS: GITHUB_ACTIONS
+      options: --memory 6500m --memory-swap 6500m
 
     steps:
-    - name: Login to GitHub Package Registry
-      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
-    - name: Pull from cache (GitHub Package Registry)
-      run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-    - name: Tag docker image
-      run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Large tests
       run: |
-        ci_env="$(bash <(curl -s https://codecov.io/env))" &&
-        docker run \
-          -e GITHUB_ACTIONS \
-          -e CODECOV_TOKEN \
-          $ci_env\
-          --memory 6500m \
-          --memory-swap 6500m \
-          "${DOCKER_TAG}" \
-          /bin/bash -c \
-          '[ ! -f ${MJKEY_PATH} ] || mv ${MJKEY_PATH} ${MJKEY_PATH}.bak &&
-          pytest --cov=garage --cov-report=xml --reruns 1 -m "large and not flaky" --durations=20 &&
-          for i in {1..5}; do
-              bash <(curl -s https://codecov.io/bash --retry 5) -Z && break
-              if [ $i == 5 ]; then
-                  exit 1
-              else
-                  echo "Retry ${i}..."
-                  sleep 30
-              fi
-          done'
+        ci_env="$(bash <(curl -s https://codecov.io/env))"
+        pytest --cov=garage --cov-report=xml --reruns 1 -m "large and not flaky" --durations=20 &&
+        for i in {1..5}; do
+            bash <(curl -s https://codecov.io/bash --retry 5) -Z && break
+            if [ $i == 5 ]; then
+                exit 1
+            else
+                echo "Retry ${i}..."
+                sleep 30
+            fi
+        done
     - name: Update check status for PRs from forks
       uses: LouisBrunner/checks-action@v1.1.1
       if: env.IS_PR_FROM_FORK && always()
@@ -251,36 +228,31 @@ jobs:
     name: MuJoCo-Based Tests
     runs-on: ubuntu-latest
     needs: check_pre_commit
+    container:
+      image: docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}
+      credentials:
+        username: ${{ CI_USER }}
+        password: ${{ secrets.CI_REGISTRY_TOKEN }}
+      env:
+        MJKEY: MJKEY
+        CODECOV_TOKEN: CODECOV_TOKEN
+        GITHUB_ACTIONS: GITHUB_ACTIONS
+      options: --memory 6500m --memory-swap 6500m
 
     steps:
-    - name: Login to GitHub Package Registry
-      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
-    - name: Pull from cache (GitHub Package Registry)
-      run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-    - name: Tag docker image
-      run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: MuJoCo tests
       run: |
-        ci_env="$(bash <(curl -s https://codecov.io/env))" &&
-        docker run \
-          -e MJKEY \
-          -e GITHUB_ACTIONS \
-          -e CODECOV_TOKEN \
-          $ci_env\
-          --memory 6500m \
-          --memory-swap 6500m \
-          "${DOCKER_TAG}" \
-          /bin/bash -c \
-          'pytest --cov=garage --cov-report=xml --reruns 1 -m "mujoco and not flaky" --durations=20 &&
-          for i in {1..5}; do
-              bash <(curl -s https://codecov.io/bash --retry 5) -Z && break
-              if [ $i == 5 ]; then
-                  exit 1
-              else
-                  echo "Retry ${i}..."
-                  sleep 30
-              fi
-          done'
+        ci_env="$(bash <(curl -s https://codecov.io/env))"
+        pytest --cov=garage --cov-report=xml --reruns 1 -m "mujoco and not flaky" --durations=20 &&
+        for i in {1..5}; do
+            bash <(curl -s https://codecov.io/bash --retry 5) -Z && break
+            if [ $i == 5 ]; then
+                exit 1
+            else
+                echo "Retry ${i}..."
+                sleep 30
+            fi
+        done
     - name: Update check status for PRs from forks
       uses: LouisBrunner/checks-action@v1.1.1
       if: env.IS_PR_FROM_FORK && always()
@@ -295,36 +267,32 @@ jobs:
     name: Large MuJoCo-Based Tests
     runs-on: ubuntu-latest
     needs: check_pre_commit
+    container:
+      image: docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}
+      credentials:
+        username: ${{ CI_USER }}
+        password: ${{ secrets.CI_REGISTRY_TOKEN }}
+      env:
+        MJKEY: MJKEY
+        CODECOV_TOKEN: CODECOV_TOKEN
+        GITHUB_ACTIONS: GITHUB_ACTIONS
+      options: --memory 6500m --memory-swap 6500m
+
 
     steps:
-    - name: Login to GitHub Package Registry
-      run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
-    - name: Pull from cache (GitHub Package Registry)
-      run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-    - name: Tag docker image
-      run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Large MuJoCo tests
       run: |
         ci_env="$(bash <(curl -s https://codecov.io/env))" &&
-        docker run \
-          -e MJKEY \
-          -e GITHUB_ACTIONS \
-          -e CODECOV_TOKEN \
-          $ci_env\
-          --memory 6500m \
-          --memory-swap 6500m \
-          "${DOCKER_TAG}" \
-          /bin/bash -c \
-          'pytest --cov=garage --cov-report=xml --reruns 1 -m "mujoco_long and not flaky" --durations=20 &&
-          for i in {1..5}; do
-              bash <(curl -s https://codecov.io/bash --retry 5) -Z && break
-              if [ $i == 5 ]; then
-                  exit 1
-              else
-                  echo "Retry ${i}..."
-                  sleep 30
-              fi
-          done'
+        pytest --cov=garage --cov-report=xml --reruns 1 -m "mujoco_long and not flaky" --durations=20 &&
+        for i in {1..5}; do
+            bash <(curl -s https://codecov.io/bash --retry 5) -Z && break
+            if [ $i == 5 ]; then
+                exit 1
+            else
+                echo "Retry ${i}..."
+                sleep 30
+            fi
+        done
     - name: Update check status for PRs from forks
       uses: LouisBrunner/checks-action@v1.1.1
       if: env.IS_PR_FROM_FORK && always()
@@ -340,21 +308,18 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_docker_container
     if: github.event_name == 'schedule'
+    container:
+      image: docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}
+      credentials:
+        username: ${{ CI_USER }}
+        password: ${{ secrets.CI_REGISTRY_TOKEN }}
+      env:
+        MJKEY: MJKEY
+      options: --memory 6500m --memory-swap 6500m
 
     steps:
-      - name: Login to GitHub Package Registry
-        run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
-      - name: Pull from cache (GitHub Package Registry)
-        run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-      - name: Tag docker image
-        run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
       - name: Nightly tests
-        run: |
-          docker run \
-            -e MJKEY \
-            --memory 6500m \
-            --memory-swap 6500m \
-            "${DOCKER_TAG}" pytest -v --reruns 1 -m nightly
+        run: pytest -v --reruns 1 -m nightly
 
 
   verify_envs_conda:
@@ -362,23 +327,19 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_docker_container
     if: github.event_name == 'schedule'
+    container:
+      image: docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}
+      credentials:
+        username: ${{ CI_USER }}
+        password: ${{ secrets.CI_REGISTRY_TOKEN }}
+      env:
+        MJKEY: MJKEY
+      options: --memory 6500m --memory-swap 6500m
 
     steps:
-      - name: Login to GitHub Package Registry
-        run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
-      - name: Pull from cache (GitHub Package Registry)
-        run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-      - name: Tag docker image
-        run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
       - name: Verify Conda
         run: |
-          docker run \
-          -e MJKEY \
-          --memory 6500m \
-          --memory-swap 6500m \
-          "${DOCKER_TAG}" \
-          /bin/bash -c \
-          'CONDA_ROOT=$HOME/miniconda \
+          CONDA_ROOT=$HOME/miniconda \
           CONDA=${CONDA_ROOT}/bin/conda \
           GARAGE_BIN=${CONDA_ROOT}/envs/garage-ci/bin; \
           touch ${MJKEY_PATH} && \
@@ -393,7 +354,7 @@ jobs:
           ${CONDA} create -n garage-ci python=3.6 pip -y && \
           ${GARAGE_BIN}/pip install --upgrade pip setuptools && \
           ${GARAGE_BIN}/pip install dist/garage.tar.gz[all,dev] && \
-          ${GARAGE_BIN}/pylint --disable=all --enable=import-error garage'
+          ${GARAGE_BIN}/pylint --disable=all --enable=import-error garage
 
 
   verify_envs_pipenv:
@@ -401,26 +362,19 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_docker_container
     if: github.event_name == 'schedule'
+    container:
+      image: docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}
+      credentials:
+        username: ${{ CI_USER }}
+        password: ${{ secrets.CI_REGISTRY_TOKEN }}
+      env:
+        MJKEY: MJKEY
+      options: --memory 6500m --memory-swap 6500m
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Login to GitHub Package Registry
-        run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
-      - name: Pull from cache (GitHub Package Registry)
-        run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-      - name: Tag docker image
-        run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
       - name: Verify Pipenv
         run: |
-          docker run \
-          -e MJKEY \
-          --memory 6500m \
-          --memory-swap 6500m \
-          "${DOCKER_TAG}" \
-          /bin/bash -c \
-          "export PATH=\$PATH_NO_VENV && \
+          export PATH=\$PATH_NO_VENV && \
           export VIRTUAL_ENV= && \
           export PIPENV_MAX_RETRIES=2 && \
           touch \${MJKEY_PATH} && \
@@ -430,7 +384,7 @@ jobs:
           pipenv install dist/garage.tar.gz[all,dev] && \
           pipenv graph && \
           # pylint will verify all imports work
-          pipenv run pylint --disable=all --enable=import-error garage"
+          pipenv run pylint --disable=all --enable=import-error garage
 
 
   deploy_to_pypi:
