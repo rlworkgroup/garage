@@ -110,7 +110,7 @@ jobs:
     steps:
     - name: Check pre-commit
       if: github.event_name == 'pull_request' || github.event_name == 'repository_dispatch'
-      run: scripts/ci/check_precommit.sh
+      run: bash scripts/ci/check_precommit.sh
     - name: Update check status for PRs from forks
       uses: LouisBrunner/checks-action@v1.1.1
       if: env.IS_PR_FROM_FORK && always()
