@@ -6,6 +6,10 @@ steps.
 
 """
 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="-1"
+
+
 import pickle
 
 import click
@@ -30,7 +34,7 @@ from garage.tf.optimizers import FirstOrderOptimizer
 # pip.main(['install', '--upgrade', package])
 
 @click.command()
-@click.option('--env-name', type=str, default='push-v2')
+@click.option('--env-name', type=str, default='stick-push-v2')
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
 @click.option('--entropy', type=float, default=0.01)
 @click.option('--use_softplus_entropy', type=bool, default=False)
@@ -39,7 +43,7 @@ from garage.tf.optimizers import FirstOrderOptimizer
 def ppo_metaworld(
     ctxt=None,
     env_name=None,
-    tag='',
+    tag='stick-push--exp02',
     extra_tags='',
     entropy=5e-3,
     stop_entropy_gradient=True,
