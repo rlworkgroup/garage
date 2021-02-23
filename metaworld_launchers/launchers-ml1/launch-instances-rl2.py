@@ -6,9 +6,7 @@ import time
 @click.command()
 @click.option('--gpu', default=False, type=bool)
 def launch_experiments(gpu):
-
-
-    for i in range(10):
+    for i in range(1):
         ####################EDIT THESE FIELDS##################
         username = f'adibellathur' # your google username
         algorithm = f'rl2'
@@ -45,7 +43,8 @@ def launch_experiments(gpu):
         script = (
         "#!/bin/bash\n"
         f"cd /home/{username}\n"
-        f"cp -r /home/avnishnarayan/.mujoco /home/{username}/\n"
+        f"mkdir /home/{username}/.mujoco\n"
+        f"cp -r /home/avnishnarayan/.mujoco /home/{username}/.mujoco\n"
         f'runuser -l {username} -c "git clone https://github.com/rlworkgroup/garage'
             f' && cd garage/ && git checkout {branch} && mkdir data/"\n'
         f'runuser -l {username} -c "mkdir -p metaworld-runs-v2/local/experiment/"\n'
