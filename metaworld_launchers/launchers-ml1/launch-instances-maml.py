@@ -12,7 +12,7 @@ def launch_experiments(gpu):
         username = f'adibellathur' # your google username
         algorithm = f'maml'
         zone = f'us-central1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
-        instance_name = f'v2-maml-round2-{i}'
+        instance_name = f'v2-ml1-maml-round2-{i}'
         bucket = f'ml1/round1/maml/v2'
         branch = 'adi-new-metaworld-results-ml10-mt10'
         experiment = f'metaworld_launchers/ml1/maml_trpo_metaworld_ml1.py'
@@ -44,7 +44,7 @@ def launch_experiments(gpu):
         script = (
         "#!/bin/bash\n"
         f"cd /home/{username}\n"
-        f"cp -r /home/avnishnarayan/.mujoco /home/{username}/"
+        f"cp -r /home/avnishnarayan/.mujoco .\n"
         f'runuser -l {username} -c "git clone https://github.com/rlworkgroup/garage'
             f' && cd garage/ && git checkout {branch} && mkdir data/"\n'
         f'runuser -l {username} -c "mkdir -p metaworld-runs-v2/local/experiment/"\n'

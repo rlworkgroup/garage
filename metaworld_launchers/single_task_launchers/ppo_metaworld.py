@@ -36,14 +36,14 @@ from garage.tf.optimizers import FirstOrderOptimizer
 @click.command()
 @click.option('--env-name', type=str, default='stick-push-v2')
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
-@click.option('--entropy', type=float, default=0.01)
+@click.option('--entropy', type=float, default=0.005)
 @click.option('--use_softplus_entropy', type=bool, default=False)
 @click.option('--extra_tags', type=str, default='none')
 @wrap_experiment(name_parameters='all', snapshot_mode='gap', snapshot_gap=25)
 def ppo_metaworld(
     ctxt=None,
     env_name=None,
-    tag='stick-push--exp02',
+    tag='stick-push--exp03',
     extra_tags='',
     entropy=5e-3,
     stop_entropy_gradient=True,

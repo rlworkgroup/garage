@@ -45,7 +45,7 @@ def launch_experiments(gpu):
         script = (
         "#!/bin/bash\n"
         f"cd /home/{username}\n"
-        f"cp -r /home/avnishnarayan/.mujoco /home/{username}/"
+        f"cp -r /home/avnishnarayan/.mujoco /home/{username}/\n"
         f'runuser -l {username} -c "git clone https://github.com/rlworkgroup/garage'
             f' && cd garage/ && git checkout {branch} && mkdir data/"\n'
         f'runuser -l {username} -c "mkdir -p metaworld-runs-v2/local/experiment/"\n'

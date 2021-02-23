@@ -27,7 +27,7 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 @click.option('--env_name', type=str, default="push-wall-v2")
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
 @click.option('--gpu', type=int, default=0)
-@wrap_experiment(snapshot_mode='gap', snapshot_gap=50, name_parameters='all')
+@wrap_experiment(snapshot_mode='gap', snapshot_gap=100, name_parameters='all')
 def sac_metaworld_new_reward_function(
         ctxt=None,
         env_name=None,
