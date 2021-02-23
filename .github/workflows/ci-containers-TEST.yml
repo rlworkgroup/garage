@@ -105,7 +105,7 @@ jobs:
       env:
         MJKEY: ${{ secrets.MJKEY }}
         PR_COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
-      options: --memory 6500m --memory-swap 6500m --workdir="code/garage"
+      options: --memory 6500m --memory-swap 6500m --workdir="/garage-user/code/garage"
 
     steps:
     - name: Check pre-commit
