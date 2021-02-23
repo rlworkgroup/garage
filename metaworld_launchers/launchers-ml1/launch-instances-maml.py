@@ -14,7 +14,7 @@ def launch_experiments(gpu):
         zone = f'us-central1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         instance_name = f'v2-ml1-maml-round2-{i}'
         bucket = f'ml1/round1/maml/v2'
-        branch = 'adi-new-metaworld-results-ml10-mt10'
+        branch = 'adi-new-metaworld-results-ml1-mt1'
         experiment = f'metaworld_launchers/ml1/maml_trpo_metaworld_ml1.py'
         ######################################################
 

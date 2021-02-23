@@ -15,7 +15,7 @@ def launch_experiments(gpu):
         zone = f'europe-west1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         instance_name = f'v2-rl2-round2-{i}'
         bucket = f'ml1/round1/rl2/v2'
-        branch = 'adi-new-metaworld-results-ml10-mt10'
+        branch = 'adi-new-metaworld-results-ml1-mt1'
         experiment = f'metaworld_launchers/ml10/rl2_ppo_metaworld_ml10.py'
         ######################################################
 
@@ -55,10 +55,10 @@ def launch_experiments(gpu):
 
         with open(f'launchers/launch-experiment-{algorithm}-{i}.sh', mode='w') as f:
             f.write(script)
-        if not (i % 3) and i!=0:
-            time.sleep(400)
-        subprocess.Popen([launch_command], shell=True)
-        print(launch_command)
-    time.sleep(300)
+        # if not (i % 3) and i!=0:
+            # time.sleep(400)
+        # subprocess.Popen([launch_command], shell=True)
+        # print(launch_command)
+    # time.sleep(300)
 
 launch_experiments()
