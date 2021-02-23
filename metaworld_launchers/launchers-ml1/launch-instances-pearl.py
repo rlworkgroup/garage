@@ -15,7 +15,7 @@ def launch_experiments(gpu):
         instance_name = f'v2-pearl-{i}'
         bucket = f'ml1/round1/pearl/v2'
         branch = 'adi-new-metaworld-results-ml1-mt1'
-        experiment = f'metaworld_launchers/ml10/pearl_metaworld_ml10.py'
+        experiment = f'metaworld_launchers/ml1/pearl_metaworld_ml1.py'
         ######################################################
 
         if not gpu:
