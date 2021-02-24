@@ -50,7 +50,7 @@ def test_obtain_samples():
     env.close()
 
 
-@pytest.mark.flaky
+@pytest.mark.flaky(max_runs=3)
 @pytest.mark.timeout(10)
 def test_update_envs_env_update():
     max_episode_length = 16
