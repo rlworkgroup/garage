@@ -8,7 +8,7 @@ import time
 def launch_experiments(gpu):
     for i in range(8):
         ####################EDIT THESE FIELDS##################
-        username = f'adibellathur' # your google username
+        username = f'avnishnarayan' # your google username
         algorithm = f'pearl'
         # gpu zones are 'us-central1-a' 'us-east1-c' 'europe-west1-b' 'asia-east1-a' 'asia-east1-b'
         zone = f'europe-west1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
@@ -44,8 +44,6 @@ def launch_experiments(gpu):
         script = (
         "#!/bin/bash\n"
         f"cd /home/{username}\n"
-        f"mkdir /home/{username}/.mujoco\n"
-        f"cp -r /home/avnishnarayan/.mujoco /home/{username}/.mujoco\n"
         f'runuser -l {username} -c "git clone https://github.com/rlworkgroup/garage'
             f' && cd garage/ && git checkout {branch} && mkdir data/"\n'
         f'runuser -l {username} -c "mkdir -p metaworld-runs-v2/local/experiment/"\n'
