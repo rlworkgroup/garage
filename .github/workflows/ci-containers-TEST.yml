@@ -1,0 +1,135 @@
+name: Garage CI
+
+env:
+  GARAGE_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  PR_COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
+  DOCKER_TAG: garage-ci-${{ github.run_id }}
+  OWNER: "rlworkgroup"
+  DOCKER_CACHE_REPO: "garage-ci"
+  MJKEY: ${{ secrets.MJKEY }}
+  CI_USER: rlworkgroupbot
+  IS_PR_FROM_FORK: ${{ github.event.client_payload.pull_request.head.repo.fork }}
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  push:
+    branches:
+      - master
+    # Triggers on release candidates from master
+    tags:
+      - 'v[1-9][0-9]*.[0-9]+.[0-9]+rc[0-9]'
+      - 'v2020.06.[0-9]+rc[0-9]'
+  pull_request:
+    branches:
+      - master
+  repository_dispatch:
+    types: [ ok-to-test-command ]
+
+jobs:
+  comment_link_to_output_on_fork_pr:
+    name: Post link to CI output for fork PRs
+    runs-on: ubuntu-latest
+    # can't use env.IS_PR_FROM_FORK here because env is not available here
+    if: github.event.client_payload.pull_request.head.repo.fork
+    steps:
+      - name: Dump the client payload context
+        env:
+          PAYLOAD_CONTEXT: ${{ toJson(github.event.client_payload) }}
+        run: echo "$PAYLOAD_CONTEXT"
+      - name: Create URL to the run output
+        id: vars
+        run: echo ::set-output name=run-url::https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+
+      - name: Create comment
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          token: ${{ secrets.CI_REGISTRY_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          issue-number: ${{ github.event.client_payload.github.payload.issue.number }}
+          body: |
+            [Command run output][1] for ${{ github.event.client_payload.pull_request.html_url }}/commits/${{ github.event.client_payload.pull_request.head.sha }}
+
+            [1]: ${{ steps.vars.outputs.run-url }}
+
+  build_docker_container:
+    name: Build Docker Container
+    runs-on: ubuntu-latest
+    if: ${{ !(github.event.pull_request.head.repo.fork && github.event_name == 'pull_request') }}
+    steps:
+      - name: Docker info
+        run: docker version
+      - uses: actions/checkout@v2
+        if: ${{ !env.IS_PR_FROM_FORK }}
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v2
+        if: env.IS_PR_FROM_FORK
+        with:
+          ref: ${{ github.event.client_payload.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+      - name: Login to GitHub Package Registry
+        run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
+      - name: Build Docker container
+        run: |
+          DOCKER_BUILDKIT=1 docker build . \
+            -f docker/Dockerfile \
+            --target garage-dev \
+            -t "${DOCKER_TAG}" \
+            --build-arg GARAGE_GH_TOKEN \
+            --cache-from="docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+      - name: Push to cache (GitHub Package Registry)
+        run: |
+          docker tag "${DOCKER_TAG}" "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+          docker push "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+      - name: Update check status for PRs from forks
+        uses: LouisBrunner/checks-action@v1.1.1
+        if: always() && env.IS_PR_FROM_FORK
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: Build Docker Container
+          sha: ${{ github.event.client_payload.pull_request.head.sha }}
+          conclusion: ${{ job.status }}
+
+
+  check_pre_commit:
+    name: Check pre-commit
+    runs-on: ubuntu-latest
+    needs: build_docker_container
+    container:
+      image: docker.pkg.github.com/rlworkgroup/garage-ci/garage-ci-${{ github.run_id }}
+      credentials:
+        username: rlworkgroupbot
+        password: ${{ secrets.CI_REGISTRY_TOKEN }}
+      env:
+        MJKEY: ${{ secrets.MJKEY }}
+        PR_COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
+      options: --memory 6500m --memory-swap 6500m
+
+    steps:
+    - name: Check pre-commit
+      if: github.event_name == 'pull_request' || github.event_name == 'repository_dispatch'
+      run: pwd
+    - name: Update check status for PRs from forks
+      uses: LouisBrunner/checks-action@v1.1.1
+      if: env.IS_PR_FROM_FORK && always()
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        name: Check pre-commit
+        sha: ${{ github.event.client_payload.pull_request.head.sha }}
+        conclusion: ${{ job.status }}
+
+#  delete_docker_container:
+#    name: Delete Docker Container
+#    runs-on: ubuntu-latest
+#    needs: check_pre_commit
+#    if: ${{ always() && needs.build_docker_container.result == 'success' }}
+#
+#    steps:
+#      - uses: actions/delete-package-versions@v1
+#        with:
+#          owner: ${{ env.OWNER }}
+#          repo: ${{ env.DOCKER_CACHE_REPO }}
+#          package-name: ${{ env.DOCKER_TAG }}
+#          token: ${{ secrets.CI_REGISTRY_TOKEN }}
