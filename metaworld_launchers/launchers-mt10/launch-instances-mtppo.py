@@ -8,15 +8,17 @@ import time
 def launch_experiments(gpu):
     # entropies = [1e-4, 1e-4, 1e-4, 1e-5, 1e-5, 1e-5, 5e-5, 5e-5, 5e-5]
     entropies = [1e-4] * 10
-
+    instances = [6, 7, 8]
     for i, entropy in enumerate(entropies):
+        if not i % 4:
+            instance_num = instances.pop(0)
         ####################EDIT THESE FIELDS##################
         username = f'avnishnarayan' # your google username
         algorithm = f'mtppo'
         zone = f'us-west1-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         entropy_str = str(entropy).replace('.', '-')
         instance_name = f'v2-mtppo-round2-entropy-{entropy_str}-{i}'
-        bucket = f'mt10/round2/mtppo/v2'
+        bucket = f'mt10/round3/mtppo/v2'
         branch = 'avnish-new-metworld-results-ml10-mt10'
         experiment = f'metaworld_launchers/mt10/mtppo_metaworld_mt10.py --entropy {entropy}'
         ######################################################
@@ -26,7 +28,7 @@ def launch_experiments(gpu):
             # You can use n1 cpus which are slower, but we are capped to a total of 72 cpus per zone anyways
             docker_run_file = 'docker_metaworld_run_cpu.py' # 'docker_metaworld_run_gpu.py' for gpu experiment
             docker_build_command = 'make run-headless -C ~/garage/'
-            source_machine_image = 'metaworld-v2-cpu-instance'
+            source_machine_image = f'cpu-instance-{instance_num}'
             launch_command = (f"gcloud beta compute instances create {instance_name} "
                 f"--metadata-from-file startup-script=launchers/launch-experiment-{i}.sh --zone {zone} "
                 f"--source-machine-image {source_machine_image} --machine-type {machine_type}")
@@ -56,9 +58,6 @@ def launch_experiments(gpu):
 
         with open(f'launchers/launch-experiment-{algorithm}-{i}.sh', mode='w') as f:
             f.write(script)
-        if not (i % 4) and i!=0:
-            time.sleep(400)
         subprocess.Popen([launch_command], shell=True)
         print(launch_command)
-    time.sleep(100)
 launch_experiments()

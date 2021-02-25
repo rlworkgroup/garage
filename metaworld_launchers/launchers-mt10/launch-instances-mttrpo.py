@@ -7,14 +7,17 @@ import time
 @click.option('--gpu', default=False, type=bool)
 def launch_experiments(gpu):
     entropies = [5e-3] * 10
+    instances = [9, 10, 11]
     for i, entropy in enumerate(entropies):
+        if not i % 4:
+            instance_num = instances.pop(0)
         ####################EDIT THESE FIELDS##################
         username = f'avnishnarayan' # your google username
         algorithm = f'mttrpo'
         zone = f'us-east1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         entropy_str = str(entropy).replace('.', '-')
         instance_name = f'v2-actual-mttrpo-tuned-entropy-{entropy_str}-{i}'
-        bucket = f'mt10/round2/mttrpo/v2'
+        bucket = f'mt10/round3/mttrpo/v2'
         branch = 'avnish-new-metworld-results-ml10-mt10'
         experiment = f'metaworld_launchers/mt10/mttrpo_metaworld_mt10.py --entropy {entropy}'
         ######################################################
@@ -24,7 +27,7 @@ def launch_experiments(gpu):
             # You can use n1 cpus which are slower, but we are capped to a total of 72 cpus per zone anyways
             docker_run_file = 'docker_metaworld_run_cpu.py' # 'docker_metaworld_run_gpu.py' for gpu experiment
             docker_build_command = 'make run-headless -C ~/garage/'
-            source_machine_image = 'metaworld-v2-cpu-instance'
+            source_machine_image = f'cpu-instance-{instance_num}'
             launch_command = (f"gcloud beta compute instances create {instance_name} "
                 f"--metadata-from-file startup-script=launchers/launch-experiment-{algorithm}-{i}.sh --zone {zone} "
                 f"--source-machine-image {source_machine_image} --machine-type {machine_type}")
@@ -54,8 +57,6 @@ def launch_experiments(gpu):
 
         with open(f'launchers/launch-experiment-{algorithm}-{i}.sh', mode='w') as f:
             f.write(script)
-        if not (i % 3) and i!=0:
-            time.sleep(400)
         subprocess.Popen([launch_command], shell=True)
         print(launch_command)
 
