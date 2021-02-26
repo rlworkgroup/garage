@@ -25,14 +25,14 @@ def launch_experiments(gpu):
         # 'dial-turn-v2',
         # 'door-close-v2',
         # 'drawer-close-v2',
-        # "faucet-close-v2",
-        # "faucet-open-v2",
+        # 'faucet-close-v2',
+        # 'faucet-open-v2',
         # 'handle-press-side-v2',
         # 'handle-press-v2',
-        # "handle-pull-side-v2",
-        # "handle-pull-v2",
+        # 'handle-pull-side-v2',
+        # 'handle-pull-v2',
         # 'peg-insert-side-v2',
-        # "peg-unplug-side-v2",
+        "peg-unplug-side-v2",
         # 'pick-place-v2',
         # 'pick-place-wall-v2',
         # 'plate-slide-side-v2',
@@ -41,7 +41,7 @@ def launch_experiments(gpu):
         # 'window-open-v2',
         # 'assembly-v2',
         # 'basketball-v2',
-        # 'bin-picking-v2',
+        'bin-picking-v2',
         # 'box-close-v2',
         # 'button-press-topdown-v2',
         # 'button-press-topdown-wall-v2',
@@ -55,7 +55,7 @@ def launch_experiments(gpu):
         # 'door-open-v2',
         # 'door-unlock-v2',
         # 'drawer-open-v2',
-        'hammer-v2',
+        # 'hammer-v2',
         # 'hand-insert-v2',
         # 'lever-pull-v2',
         # 'pick-out-of-hole-v2',
@@ -65,7 +65,7 @@ def launch_experiments(gpu):
         username = f'haydenshively'  # your google username
         zone = f'europe-west1-b'  # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         instance_name = f'sac-metaworld-{env_name}'
-        bucket = f'sac_round2/{env_name}'
+        bucket = f'sac_round3/{env_name}'
         branch = 'hayden-new-metaworld-results-st-v2'
         experiment = f'metaworld_launchers/single_task_launchers/sac_metaworld.py --env_name {env_name}'
         ######################################################
