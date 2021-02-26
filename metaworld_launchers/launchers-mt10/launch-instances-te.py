@@ -7,14 +7,14 @@ import time
 @click.option('--gpu', default=False, type=bool)
 def launch_experiments(gpu):
     entropies = [5e-4]*10
-    instances = [12, 13, 14]
+    instances = [1, 2, 3]
     for i, entropy in enumerate(entropies):
         if not i % 4:
             instance_num = instances.pop(0)
         ####################EDIT THESE FIELDS##################
         username = f'avnishnarayan' # your google username
         algorithm = f'task_embeddings'
-        zone = f'us-east1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
+        zone = f'asia-east1-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         entropy_str = str(entropy).replace('.', '-')
         instance_name = f'v2-te-named-params-entropy-{entropy_str}-{i}'
         bucket = f'mt10/round3/te/v2'

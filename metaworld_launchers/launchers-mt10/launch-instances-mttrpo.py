@@ -7,7 +7,7 @@ import time
 @click.option('--gpu', default=False, type=bool)
 def launch_experiments(gpu):
     entropies = [5e-3] * 10
-    instances = [9, 10, 11]
+    instances = [9, 10, 0]
     for i, entropy in enumerate(entropies):
         if not i % 4:
             instance_num = instances.pop(0)

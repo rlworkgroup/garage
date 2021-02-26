@@ -30,7 +30,7 @@ def launch_experiments(gpu):
             docker_build_command = 'make run-headless -C ~/garage/'
             source_machine_image = f'cpu-instance-{instance_num}'
             launch_command = (f"gcloud beta compute instances create {instance_name} "
-                f"--metadata-from-file startup-script=launchers/launch-experiment-{i}.sh --zone {zone} "
+                f"--metadata-from-file tartup-script=launchers/launch-experiment-{algorithm}-{i}.sh --zone {zone} "
                 f"--source-machine-image {source_machine_image} --machine-type {machine_type}")
         else:
             machine_type =  'n1-standard-4'
