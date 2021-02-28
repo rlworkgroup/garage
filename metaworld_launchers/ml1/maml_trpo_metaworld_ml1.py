@@ -19,7 +19,7 @@ from garage.trainer import Trainer
 
 # yapf: enable
 @click.command()
-@click.option('--env-name', type=str, default='reach-v2')
+@click.option('--env-name', type=str, default='push-v2')
 @click.option('--seed', type=int, default=1)
 @click.option('--epochs', type=int, default=2000)
 @click.option('--rollouts_per_task', type=int, default=10)

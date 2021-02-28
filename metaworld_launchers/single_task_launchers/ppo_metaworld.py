@@ -34,7 +34,7 @@ from garage.tf.optimizers import FirstOrderOptimizer
 # pip.main(['install', '--upgrade', package])
 
 @click.command()
-@click.option('--env-name', type=str, default='stick-push-v2')
+@click.option('--env-name', type=str, default='door-close-v2')
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
 @click.option('--entropy', type=float, default=0.005)
 @click.option('--use_softplus_entropy', type=bool, default=False)

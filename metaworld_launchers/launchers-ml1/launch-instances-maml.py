@@ -12,7 +12,7 @@ def launch_experiments(gpu):
         username = f'avnishnarayan' # your google username
         algorithm = f'maml'
         zone = f'us-central1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
-        instance_name = f'v2-ml1-maml-round1-{i}'
+        instance_name = f'v2-ml1-push-maml-round1-{i}'
         bucket = f'ml1/round1/maml/v2'
         branch = 'adi-new-metaworld-results-ml1-mt1'
         experiment = f'metaworld_launchers/ml1/maml_trpo_metaworld_ml1.py'
@@ -23,7 +23,7 @@ def launch_experiments(gpu):
             # You can use n1 cpus which are slower, but we are capped to a total of 72 cpus per zone anyways
             docker_run_file = 'docker_metaworld_run_cpu.py' # 'docker_metaworld_run_gpu.py' for gpu experiment
             docker_build_command = 'make run-headless -C ~/garage/'
-            source_machine_image = 'cpu-instance-2'
+            source_machine_image = f'cpu-instance-{i}'
             launch_command = (f"gcloud beta compute instances create {instance_name} "
                 f"--metadata-from-file startup-script=launchers/launch-experiment-{algorithm}-{i}.sh --zone {zone} "
                 f"--source-machine-image {source_machine_image} --machine-type {machine_type}")
@@ -32,7 +32,7 @@ def launch_experiments(gpu):
             docker_run_file = 'docker_metaworld_run_gpu.py'
             docker_build_command = ("make run-nvidia-headless -C ~/garage/ "
                 '''PARENT_IMAGE='nvidia/cuda:11.0-cudnn8-runtime-ubuntu18.04' ''')
-            source_machine_image = 'metaworld-v2-gpu-instance'
+            source_machine_image = f'gpu-instance-{i%5}'
             accelerator = '"type=nvidia-tesla-k80,count=1"'
             launch_command = (f"gcloud beta compute instances create {instance_name} "
                 f"--metadata-from-file startup-script=launchers/launch-experiment-{algorithm}-{i}.sh --zone {zone} "
