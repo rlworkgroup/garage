@@ -10,7 +10,7 @@ def launch_experiments(gpu):
         ####################EDIT THESE FIELDS##################
         username = f'avnishnarayan' # your google username
         algorithm = f'rl2'
-        zone = f'europe-west1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
+        zone = f'europe-north1-c' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         instance_name = f'v2-ml1-push-rl2-round1-{i}'
         bucket = f'ml1/round1/rl2/v2'
         branch = 'adi-new-metaworld-results-ml1-mt1'
