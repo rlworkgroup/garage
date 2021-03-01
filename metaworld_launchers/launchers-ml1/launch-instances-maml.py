@@ -11,7 +11,7 @@ def launch_experiments(gpu):
         ####################EDIT THESE FIELDS##################
         username = f'avnishnarayan' # your google username
         algorithm = f'maml'
-        zone = f'us-central1-c' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
+        zone = f'us-west4-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         instance_name = f'v2-ml1-push-maml-round1-{i}'
         bucket = f'ml1/round1/maml/v2'
         branch = 'adi-new-metaworld-results-ml1-mt1'

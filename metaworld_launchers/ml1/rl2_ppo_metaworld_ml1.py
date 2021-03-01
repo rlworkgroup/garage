@@ -21,7 +21,7 @@ from garage.trainer import TFTrainer
 
 
 @click.command()
-@click.option('--env-name', type=str, default='push-v2')
+@click.option('--env-name', type=str, default='pick-place-v2')
 @click.option('--seed', default=1)
 @click.option('--meta_batch_size', default=5)
 @click.option('--n_epochs', default=2000)

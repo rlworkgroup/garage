@@ -12,7 +12,7 @@ def launch_experiments(gpu):
         username = f'avnishnarayan' # your google username
         algorithm = f'pearl'
         # gpu zones are 'us-central1-a' 'us-east1-c' 'europe-west1-b' 'asia-east1-a' 'asia-east1-b'
-        zone = f'europe-west1-c' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
+        zone = f'us-west1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         instance_name = f'v2-ml1-push-pearl-round1-{i}'
         bucket = f'ml1/round1/pearl/v2'
         branch = 'adi-new-metaworld-results-ml1-mt1'
