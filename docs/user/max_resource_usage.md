@@ -26,7 +26,7 @@ from garage.sampler import LocalSampler, DefaultWorker
     sampler = LocalSampler(agents=policy,
                            envs=env,
                            # below is the params for constructing worker factory
-                           max_episode_length=env.spec.max_episode_length,
+                           max_episode_length=env.spec.max_episode_steps,
                            worker_cls=DefaultWorker)
 
     algo = TRPO(...
@@ -58,7 +58,7 @@ from garage.sampler import LocalSampler, VecWorker
     sampler = LocalSampler(agents=policy,
                            envs=env,
                            # below is the params for constructing worker factory
-                           max_episode_length=env.spec.max_episode_length,
+                           max_episode_length=env.spec.max_episode_steps,
                            worker_class=VecWorker,
                            worker_args=dict(n_envs=12))
     ...
@@ -87,7 +87,7 @@ from garage.sampler import RaySampler, VecWorker
     sampler = RaySampler(agents=policy,
                          envs=env,
                          # below is the params for constructing worker factory
-                         max_episode_length=env.spec.max_episode_length,
+                         max_episode_length=env.spec.max_episode_steps,
                          worker_class=VecWorker,
                          worker_args=dict(n_envs=12))
     ...
