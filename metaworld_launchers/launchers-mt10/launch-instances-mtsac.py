@@ -33,7 +33,7 @@ def launch_experiments(gpu):
                 f"--metadata-from-file startup-script=launchers/launch-experiment-{algorithm}-{i}.sh --zone {zone} "
                 f"--source-machine-image {source_machine_image} --machine-type {machine_type}")
         else:
-            machine_type =  'n1-standard-4'
+            machine_type =  'n1-highmem-8'
             docker_run_file = 'docker_metaworld_run_gpu.py'
             docker_build_command = ("make run-nvidia-headless -C ~/garage/ "
                 '''PARENT_IMAGE='nvidia/cuda:11.0-cudnn8-runtime-ubuntu18.04' ''')
@@ -49,6 +49,8 @@ def launch_experiments(gpu):
         script = (
         "#!/bin/bash\n"
         f"cd /home/{username}\n"
+        f'runuser -l {username} -c ""\n'
+        f"rm -rf garage; rm -rf metaworld-runs-v2\n"
         f'runuser -l {username} -c "git clone https://github.com/rlworkgroup/garage'
             f' && cd garage/ && git checkout {branch} && mkdir data/"\n'
         f'runuser -l {username} -c "mkdir -p metaworld-runs-v2/local/experiment/"\n'

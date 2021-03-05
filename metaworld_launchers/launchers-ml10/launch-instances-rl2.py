@@ -7,7 +7,7 @@ import time
 @click.option('--gpu', default=False, type=bool)
 def launch_experiments(gpu):
 
-    instances = [3, 4, 5]
+    instances = [10, 11, 12]
     for i in range(10):
         if not i % 4:
             instance_num = instances.pop(0)
@@ -15,8 +15,8 @@ def launch_experiments(gpu):
         username = f'avnishnarayan' # your google username
         algorithm = f'rl2'
         zone = f'europe-west1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
-        instance_name = f'v2-rl2-round2-{i}'
-        bucket = f'ml10/round3/rl2/v2'
+        instance_name = f'round4-v2-rl2-{i}'
+        bucket = f'ml10/round4/rl2/v2'
         branch = 'avnish-new-metworld-results-ml10-mt10'
         experiment = f'metaworld_launchers/ml10/rl2_ppo_metaworld_ml10.py'
         ######################################################

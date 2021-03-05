@@ -7,7 +7,7 @@ import time
 @click.option('--gpu', default=True, type=bool)
 def launch_experiments(gpu):
     instances = [3, 4, 5]
-    zones = ['europe-west1-b', 'us-central1-a']
+    zones = ['asia-east1-b', 'us-central1-a']
     for i in range(10):
         if not i % 8:
             zone = zones.pop(0)
@@ -18,8 +18,8 @@ def launch_experiments(gpu):
         algorithm = f'pearl'
         # gpu zones are 'us-central1-a' 'us-east1-c' 'europe-west1-b' 'asia-east1-a' 'asia-east1-b'
         zone = zone # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
-        instance_name = f'round3-v2-pearl-{i}'
-        bucket = f'ml10/round3/pearl/v2'
+        instance_name = f'round4-v2-pearl-{i}'
+        bucket = f'ml10/round4/pearl/v2'
         branch = 'avnish-new-metworld-results-ml10-mt10'
         experiment = f'metaworld_launchers/ml10/pearl_metaworld_ml10.py'
         ######################################################
@@ -50,6 +50,8 @@ def launch_experiments(gpu):
         script = (
         "#!/bin/bash\n"
         f"cd /home/{username}\n"
+        f'runuser -l {username} -c ""\n'
+        f"rm -rf garage; rm -rf metaworld-runs-v2\n"
         f'runuser -l {username} -c "git clone https://github.com/rlworkgroup/garage'
             f' && cd garage/ && git checkout {branch} && mkdir data/"\n'
         f'runuser -l {username} -c "mkdir -p metaworld-runs-v2/local/experiment/"\n'
