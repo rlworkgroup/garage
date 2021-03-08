@@ -19,7 +19,8 @@ class TanhNormal(torch.distributions.Distribution):
     """ # noqa: 501
 
     def __init__(self, loc, scale):
-        self._normal = Independent(Normal(loc, scale), 1)
+        # pylint: disable=W0223
+        self._normal = Independent(Normal(loc, scale), 1, validate_args=False)
         super().__init__()
 
     def log_prob(self, value, pre_tanh_value=None, epsilon=1e-6):
