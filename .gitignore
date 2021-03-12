@@ -155,4 +155,4 @@ sandbox/
 MUJOCO_LOG.TXT
 *.pkl
 
-metaworld_launchers/*.sh
+metaworld_launchers/**.sh
