@@ -20,7 +20,7 @@ from garage.trainer import Trainer
 
 
 @click.command()
-@click.option('--env_name', type=str, default='pick-place-v2')
+@click.option('--env_name', type=str, default='push-v2')
 @click.option('--seed', default=1, type=int)
 @wrap_experiment(snapshot_mode='none', name_parameters='passed')
 def pearl_metaworld_ml1(ctxt,
