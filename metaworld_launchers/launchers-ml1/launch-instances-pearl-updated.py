@@ -15,12 +15,15 @@ def launch_experiments(gpu):
     # https://console.cloud.google.com/iam-admin/quotas?project=brain-robotics-metaworld
     # https://cloud.google.com/compute/docs/gpus/gpu-regions-zones
     zones = [
-        'europe-west1-b',
-        'europe-west1-d',
+        'us-west1-b',
+        'us-central1-a',
+        'us-central1-c',
+        'us-east1-c',
+        'us-east1-d',
         'asia-east1-a',
         'asia-east1-b',
     ]
-    for i in range(10):
+    for i in [0,1,6,7,8]:
         if not i % 8:
             zone = zones.pop(0)
         if not i % 4:
@@ -29,7 +32,7 @@ def launch_experiments(gpu):
         username = f'avnishnarayan' # your google username
         algorithm = f'pearl'
         zone = zone # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
-        instance_name = f'v2-ml1-push-pearl-round1-{i}'
+        instance_name = f'v2-ml1-reach-pearl-round2-{i}'
         bucket = f'ml1/round2/pearl/v2'
         branch = 'adi-new-metaworld-results-ml1-mt1'
         experiment = f'metaworld_launchers/ml1/pearl_metaworld_ml1.py'
