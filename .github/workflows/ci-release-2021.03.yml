@@ -36,18 +36,18 @@ jobs:
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
       - name: Build Docker container
         run: |
-          docker build . \
+          DOCKER_BUILDKIT=1 docker build . \
             -f docker/Dockerfile \
-            --target garage-dev-18.04 \
+            --target garage-dev \
             -t "${DOCKER_TAG}" \
             --build-arg GARAGE_GH_TOKEN \
-            --cache-from="docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+            --cache-from="rlworkgroup/garage"
       - name: Push to cache (GitHub Package Registry)
         run: |
           docker tag "${DOCKER_TAG}" "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
           docker push "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-  
-  
+
+
   check_pre_commit:
     name: Check pre-commit
     runs-on: ubuntu-latest
@@ -72,8 +72,8 @@ jobs:
           --memory 6500m \
           --memory-swap 6500m \
           "${DOCKER_TAG}" scripts/ci/check_precommit.sh
-  
-  
+
+
   doctest:
     name: Run Doctest
     runs-on: ubuntu-latest
@@ -132,8 +132,8 @@ jobs:
                   sleep 30
               fi
           done'
-  
-  
+
+
   large_test:
     name: Large Tests
     runs-on: ubuntu-latest
@@ -168,8 +168,8 @@ jobs:
                   sleep 30
               fi
           done'
-  
-  
+
+
   mujoco_test:
     name: MuJoCo-Based Tests
     runs-on: ubuntu-latest
@@ -204,8 +204,8 @@ jobs:
                   sleep 30
               fi
           done'
-  
-  
+
+
   mujoco_test_long:
     name: Large MuJoCo-Based Tests
     runs-on: ubuntu-latest
@@ -240,8 +240,8 @@ jobs:
                   sleep 30
               fi
           done'
-  
-  
+
+
   nightly_test:
     name: Nightly Tests
     runs-on: ubuntu-latest
@@ -265,8 +265,8 @@ jobs:
             --memory 6500m \
             --memory-swap 6500m \
             "${DOCKER_TAG}" pytest -v -m nightly
-  
-  
+
+
   verify_envs_conda:
     name: Verify Conda Environment Installation
     runs-on: ubuntu-latest
@@ -304,8 +304,8 @@ jobs:
           ${GARAGE_BIN}/pip install --upgrade pip setuptools && \
           ${GARAGE_BIN}/pip install dist/garage.tar.gz[all,dev] && \
           ${GARAGE_BIN}/pylint --disable=all --enable=import-error garage'
-  
-  
+
+
   verify_envs_pipenv:
     name: Verify Pipenv Environment Installation
     runs-on: ubuntu-latest
@@ -338,8 +338,8 @@ jobs:
           pipenv graph && \
           # pylint will verify all imports work
           pipenv run pylint --disable=all --enable=import-error garage"
-  
-  
+
+
   deploy_to_pypi:
     name: Deploy to PyPI
     runs-on: ubuntu-latest
