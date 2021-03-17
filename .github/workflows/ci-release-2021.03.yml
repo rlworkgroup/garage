@@ -30,12 +30,12 @@ jobs:
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
       - name: Build Docker container
         run: |
-          docker build . \
+          DOCKER_BUILDKIT=1 docker build . \
             -f docker/Dockerfile \
-            --target garage-dev-18.04 \
+            --target garage-dev \
             -t "${DOCKER_TAG}" \
             --build-arg GARAGE_GH_TOKEN \
-            --cache-from="docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+            --cache-from="rlworkgroup/garage"
       - name: Push to cache (GitHub Package Registry)
         run: |
           docker tag "${DOCKER_TAG}" "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
