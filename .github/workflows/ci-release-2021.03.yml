@@ -273,7 +273,7 @@ jobs:
   delete_docker_container:
     name: Delete Docker Container
     runs-on: ubuntu-latest
-    needs: [check_pre_commit, normal_test, large_test, mujoco_test, mujoco_test_long, nightly_test, verify_envs_conda, verify_envs_pipenv]
+    needs: [check_pre_commit, normal_test, large_test, mujoco_test, mujoco_test_long]
     if: always()
 
     steps:
