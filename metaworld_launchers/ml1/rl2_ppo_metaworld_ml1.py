@@ -115,7 +115,8 @@ def rl2_ppo_metaworld_ml1(ctxt, env_name, seed, entropy_coefficient=5e-6, meta_b
                       center_adv=False,
                       meta_evaluator=meta_evaluator,
                       episodes_per_trial=episode_per_task,
-                      use_neg_logli_entropy=True,)
+                      use_neg_logli_entropy=True,
+                      n_epochs_per_eval=40)
 
         trainer.setup(algo, envs)
 
