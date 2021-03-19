@@ -19,8 +19,7 @@ on:
       - master
     # Triggers on release candidates from master
     tags:
-      - 'v[1-9][0-9]*.[0-9]+.[0-9]+rc[0-9]'
-      - 'v2020.06.[0-9]+rc[0-9]'
+      - 'v20[2-9][0-9].[0-9][0-9].[0-9]+rc[0-9]'
   pull_request:
     branches:
       - master
