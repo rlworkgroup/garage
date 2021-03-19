@@ -28,8 +28,8 @@ from garage.envs import normalize
 @click.option('--env-name', type=str, default='pick-place-v2')
 @click.option('--seed', default=1)
 @click.option('--meta_batch_size', default=25)
-@click.option('--n_epochs', default=2000)
-@click.option('--episode_per_task', default=20)
+@click.option('--n_epochs', default=4000)
+@click.option('--episode_per_task', default=10)
 @wrap_experiment(snapshot_mode='none', name_parameters='passed')
 def rl2_ppo_metaworld_ml1(ctxt, env_name, seed, entropy_coefficient=5e-6, meta_batch_size=25, n_epochs=4000,
                            episode_per_task=10):
@@ -47,7 +47,7 @@ def rl2_ppo_metaworld_ml1(ctxt, env_name, seed, entropy_coefficient=5e-6, meta_b
     """
     set_seed(seed)
     with TFTrainer(snapshot_config=ctxt) as trainer:
-        ml1 = metaworld.ml1(env_name)
+        ml1 = metaworld.ML1(env_name)
         tasks = MetaWorldTaskSampler(ml1, 'train', lambda env, _: RL2Env(normalize(env, normalize_reward=True)))
         test_task_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
                                            env=MetaWorldSetTaskEnv(
