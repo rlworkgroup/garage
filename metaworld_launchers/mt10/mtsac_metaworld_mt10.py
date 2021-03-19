@@ -40,7 +40,7 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed):
     """
     _gpu=0
     n_tasks=10
-    timesteps=20000000
+    timesteps=500000000
     deterministic.set_seed(seed)
     trainer = Trainer(ctxt)
     mt10 = metaworld.MT10()  # pylint: disable=no-member

@@ -21,8 +21,8 @@ from garage.trainer import TFTrainer
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--n_epochs', default=2000)
-@click.option('--batch_size_per_task', default=2000)
+@click.option('--n_epochs', default=10000)
+@click.option('--batch_size_per_task', default=5000)
 @click.option('--entropy', default=2e-2)
 @wrap_experiment(snapshot_mode='none', name_parameters='passed')
 def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task, entropy):

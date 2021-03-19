@@ -93,7 +93,7 @@ def mtppo_metaworld_mt10(ctxt, seed, entropy):
             )
 
         trainer.setup(algo, env)
-        trainer.train(n_epochs=int(100000000 / (500 * 100)),
+        trainer.train(n_epochs=int(500000000 / (500 * 100)),
                     batch_size=(500 * 100),
                     plot=False)
 
