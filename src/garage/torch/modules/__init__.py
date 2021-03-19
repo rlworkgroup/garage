@@ -14,6 +14,8 @@ from garage.torch.modules.multi_headed_mlp_module import MultiHeadedMLPModule
 from garage.torch.modules.discrete_cnn_module import DiscreteCNNModule
 from garage.torch.modules.discrete_dueling_cnn_module import (
     DiscreteDuelingCNNModule)
+from garage.torch.modules.gru_module import GRUModule
+from garage.torch.modules.categorical_gru_module import CategoricalGRUModule
 # yapf: enable
 
 __all__ = [
@@ -26,4 +28,6 @@ __all__ = [
     'GaussianMLPModule',
     'GaussianMLPIndependentStdModule',
     'GaussianMLPTwoHeadedModule',
+    'GRUModule',
+    'CategoricalGRUModule',
 ]
