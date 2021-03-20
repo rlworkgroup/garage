@@ -36,18 +36,18 @@ jobs:
         run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
       - name: Build Docker container
         run: |
-          docker build . \
+          DOCKER_BUILDKIT=1 docker build . \
             -f docker/Dockerfile \
-            --target garage-dev-18.04 \
+            --target garage-dev \
             -t "${DOCKER_TAG}" \
             --build-arg GARAGE_GH_TOKEN \
-            --cache-from="docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
+            --cache-from="rlworkgroup/garage"
       - name: Push to cache (GitHub Package Registry)
         run: |
           docker tag "${DOCKER_TAG}" "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
           docker push "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-  
-  
+
+
   check_pre_commit:
     name: Check pre-commit
     runs-on: ubuntu-latest
@@ -72,8 +72,8 @@ jobs:
           --memory 6500m \
           --memory-swap 6500m \
           "${DOCKER_TAG}" scripts/ci/check_precommit.sh
-  
-  
+
+
   doctest:
     name: Run Doctest
     runs-on: ubuntu-latest
@@ -121,7 +121,7 @@ jobs:
           "${DOCKER_TAG}" \
           /bin/bash -c \
           '[ ! -f ${MJKEY_PATH} ] || mv ${MJKEY_PATH} ${MJKEY_PATH}.bak &&
-          pytest --cov=garage --cov-report=xml -m \
+          pytest --cov=garage --cov-report=xml --reruns 1 -m \
               "not nightly and not huge and not flaky and not large and not mujoco and not mujoco_long" --durations=20 &&
           for i in {1..5}; do
               bash <(curl -s https://codecov.io/bash --retry 5) -Z && break
@@ -132,8 +132,8 @@ jobs:
                   sleep 30
               fi
           done'
-  
-  
+
+
   large_test:
     name: Large Tests
     runs-on: ubuntu-latest
@@ -158,7 +158,7 @@ jobs:
           "${DOCKER_TAG}" \
           /bin/bash -c \
           '[ ! -f ${MJKEY_PATH} ] || mv ${MJKEY_PATH} ${MJKEY_PATH}.bak &&
-          pytest --cov=garage --cov-report=xml -m "large and not flaky" --durations=20 &&
+          pytest --cov=garage --cov-report=xml --reruns 1 -m "large and not flaky" --durations=20 &&
           for i in {1..5}; do
               bash <(curl -s https://codecov.io/bash --retry 5) -Z && break
               if [ $i == 5 ]; then
@@ -168,8 +168,8 @@ jobs:
                   sleep 30
               fi
           done'
-  
-  
+
+
   mujoco_test:
     name: MuJoCo-Based Tests
     runs-on: ubuntu-latest
@@ -194,7 +194,7 @@ jobs:
           --memory-swap 6500m \
           "${DOCKER_TAG}" \
           /bin/bash -c \
-          'pytest --cov=garage --cov-report=xml -m "mujoco and not flaky" --durations=20 &&
+          'pytest --cov=garage --cov-report=xml --reruns 1 -m "mujoco and not flaky" --durations=20 &&
           for i in {1..5}; do
               bash <(curl -s https://codecov.io/bash --retry 5) -Z && break
               if [ $i == 5 ]; then
@@ -204,8 +204,8 @@ jobs:
                   sleep 30
               fi
           done'
-  
-  
+
+
   mujoco_test_long:
     name: Large MuJoCo-Based Tests
     runs-on: ubuntu-latest
@@ -230,7 +230,7 @@ jobs:
           --memory-swap 6500m \
           "${DOCKER_TAG}" \
           /bin/bash -c \
-          'pytest --cov=garage --cov-report=xml -m "mujoco_long and not flaky" --durations=20 &&
+          'pytest --cov=garage --cov-report=xml --reruns 1 -m "mujoco_long and not flaky" --durations=20 &&
           for i in {1..5}; do
               bash <(curl -s https://codecov.io/bash --retry 5) -Z && break
               if [ $i == 5 ]; then
@@ -240,106 +240,8 @@ jobs:
                   sleep 30
               fi
           done'
-  
-  
-  nightly_test:
-    name: Nightly Tests
-    runs-on: ubuntu-latest
-    needs: build_docker_container
-    if: github.event_name == 'schedule'
 
-    steps:
-      - name: Login to GitHub Package Registry
-        run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
-      - name: Pull from cache (GitHub Package Registry)
-        run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-      - name: Tag docker image
-        run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
-      - name: Nightly tests
-        run: |
-          ci_env="$(bash <(curl -s https://codecov.io/env))" &&
-          docker run \
-            -e MJKEY \
-            -e GITHUB_ACTIONS \
-            $ci_env\
-            --memory 6500m \
-            --memory-swap 6500m \
-            "${DOCKER_TAG}" pytest -v -m nightly
-  
-  
-  verify_envs_conda:
-    name: Verify Conda Environment Installation
-    runs-on: ubuntu-latest
-    needs: build_docker_container
-    if: github.event_name == 'schedule'
 
-    steps:
-      - name: Login to GitHub Package Registry
-        run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
-      - name: Pull from cache (GitHub Package Registry)
-        run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-      - name: Tag docker image
-        run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
-      - name: Verify Conda
-        run: |
-          docker run \
-          -e MJKEY \
-          --memory 6500m \
-          --memory-swap 6500m \
-          "${DOCKER_TAG}" \
-          /bin/bash -c \
-          'CONDA_ROOT=$HOME/miniconda \
-          CONDA=${CONDA_ROOT}/bin/conda \
-          GARAGE_BIN=${CONDA_ROOT}/envs/garage-ci/bin; \
-          touch ${MJKEY_PATH} && \
-          wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \
-          bash miniconda.sh -b -p ${CONDA_ROOT} && \
-          hash -r && \
-          ${CONDA} config --set always_yes yes --set changeps1 no && \
-          ${CONDA} install -c anaconda setuptools && \
-          ${CONDA} update -q conda && \
-          ${CONDA} init && \
-          ${CONDA} info -a && \
-          ${CONDA} create -n garage-ci python=3.5 pip -y && \
-          ${GARAGE_BIN}/pip install --upgrade pip setuptools && \
-          ${GARAGE_BIN}/pip install dist/garage.tar.gz[all,dev] && \
-          ${GARAGE_BIN}/pylint --disable=all --enable=import-error garage'
-  
-  
-  verify_envs_pipenv:
-    name: Verify Pipenv Environment Installation
-    runs-on: ubuntu-latest
-    needs: build_docker_container
-    if: github.event_name == 'schedule'
-
-    steps:
-      - name: Login to GitHub Package Registry
-        run: echo ${{ secrets.CI_REGISTRY_TOKEN }} | docker login docker.pkg.github.com -u ${CI_USER} --password-stdin
-      - name: Pull from cache (GitHub Package Registry)
-        run: docker pull "docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG}"
-      - name: Tag docker image
-        run: docker tag docker.pkg.github.com/${OWNER}/${DOCKER_CACHE_REPO}/${DOCKER_TAG} ${DOCKER_TAG}
-      - name: Verify Pipenv
-        run: |
-          docker run \
-          -e MJKEY \
-          --memory 6500m \
-          --memory-swap 6500m \
-          "${DOCKER_TAG}" \
-          /bin/bash -c \
-          "export PATH=\$PATH_NO_VENV && \
-          export VIRTUAL_ENV= && \
-          export PIPENV_MAX_RETRIES=2 && \
-          touch \${MJKEY_PATH} && \
-          pip3 install --upgrade pip setuptools && \
-          pip3 install pipenv && \
-          pipenv --python=3.5 && \
-          pipenv install dist/garage.tar.gz[all,dev] && \
-          pipenv graph && \
-          # pylint will verify all imports work
-          pipenv run pylint --disable=all --enable=import-error garage"
-  
-  
   deploy_to_pypi:
     name: Deploy to PyPI
     runs-on: ubuntu-latest
@@ -350,10 +252,10 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Set up Python 3.5
+      - name: Set up Python 3.6
         uses: actions/setup-python@v1
         with:
-          python-version: 3.5
+          python-version: 3.6
       - name: Update Version
         run: echo ${GITHUB_REF##*/} > VERSION
       - name: Update setuptools
@@ -371,7 +273,7 @@ jobs:
   delete_docker_container:
     name: Delete Docker Container
     runs-on: ubuntu-latest
-    needs: [normal_test, large_test, mujoco_test, mujoco_test_long, nightly_test, verify_envs_conda, verify_envs_pipenv]
+    needs: [check_pre_commit, normal_test, large_test, mujoco_test, mujoco_test_long]
     if: always()
 
     steps:

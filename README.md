@@ -137,12 +137,11 @@ Our testing strategy has three pillars:
 
 | Release | Build Status | Last date of support |
 | ------- | ------------ | -------------------- |
-| [v2020.06](https://github.com/rlworkgroup/garage/releases/tag/v2020.06.0) | [![Garage CI Release-2020.06](https://github.com/rlworkgroup/garage/workflows/Garage%20CI%20Release-2020.06/badge.svg)](https://github.com/rlworkgroup/garage/actions?query=workflow%3A%22Garage+CI+Release-2020.06%22) | February 28th, 2021 |
+| [v2021.03](https://github.com/rlworkgroup/garage/releases/tag/v2020.06.0) | [![Garage CI Release-2021.03](https://github.com/rlworkgroup/garage/workflows/Garage%20CI%20Release-2021.03/badge.svg)](https://github.com/rlworkgroup/garage/actions?query=workflow%3A%22Garage+CI+Release-2021.03%22) | May 31st, 2021 |
 
-Garage releases a new stable version approximately every 4 months, in February,
-June, and October. Maintenance releases have a stable API and dependency tree,
+Maintenance releases have a stable API and dependency tree,
 and receive bug fixes and critical improvements but not new features. We
-currently support each release for a window of 8 months.
+currently support each release for a window of 2 months.
 
 ## Citing garage
 
