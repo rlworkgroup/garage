@@ -524,7 +524,7 @@ class SAC(RLAlgorithm):
             self._log_alpha = torch.Tensor([self._fixed_alpha
                                             ]).log().to(device)
         else:
-            self._log_alpha = torch.Tensor([self._initial_log_entropy
+            self._log_alpha = torch.Tensor([self._log_alpha.data
                                             ]).to(device).requires_grad_()
             self._alpha_optimizer = self._optimizer([self._log_alpha],
                                                     lr=self._policy_lr)
