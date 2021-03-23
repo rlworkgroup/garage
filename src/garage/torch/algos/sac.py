@@ -10,7 +10,7 @@ import torch.nn.functional as F
 
 from garage import log_performance, obtain_evaluation_episodes, StepType
 from garage.np.algos import RLAlgorithm
-from garage.torch import dict_np_to_torch, global_device
+from garage.torch import as_torch_dict, global_device
 
 # yapf: enable
 
@@ -236,7 +236,7 @@ class SAC(RLAlgorithm):
         if self.replay_buffer.n_transitions_stored >= self._min_buffer_size:
             samples = self.replay_buffer.sample_transitions(
                 self._buffer_batch_size)
-            samples = dict_np_to_torch(samples)
+            samples = as_torch_dict(samples)
             policy_loss, qf1_loss, qf2_loss = self.optimize_policy(samples)
             self._update_targets()
 

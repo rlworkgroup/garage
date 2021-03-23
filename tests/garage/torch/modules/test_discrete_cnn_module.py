@@ -1,11 +1,13 @@
 """Test DiscreteCNNModule."""
 import pickle
 
+import akro
 import numpy as np
 import pytest
 import torch
 import torch.nn as nn
 
+from garage import InOutSpec
 from garage.torch.modules import CNNModule, DiscreteCNNModule, MLPModule
 
 
@@ -22,15 +24,16 @@ from garage.torch.modules import CNNModule, DiscreteCNNModule, MLPModule
 def test_output_values(output_dim, kernel_sizes, hidden_channels, strides,
                        paddings):
 
-    batch_size = 64
     input_width = 32
     input_height = 32
     in_channel = 3
-    input_shape = (batch_size, in_channel, input_height, input_width)
+    input_shape = (in_channel, input_height, input_width)
+    spec = InOutSpec(akro.Box(shape=input_shape, low=-np.inf, high=np.inf),
+                     akro.Box(shape=(output_dim, ), low=-np.inf, high=np.inf))
     obs = torch.rand(input_shape)
 
-    module = DiscreteCNNModule(input_shape=input_shape,
-                               output_dim=output_dim,
+    module = DiscreteCNNModule(spec=spec,
+                               image_format='NCHW',
                                hidden_channels=hidden_channels,
                                hidden_sizes=hidden_channels,
                                kernel_sizes=kernel_sizes,
@@ -38,17 +41,17 @@ def test_output_values(output_dim, kernel_sizes, hidden_channels, strides,
                                paddings=paddings,
                                padding_mode='zeros',
                                hidden_w_init=nn.init.ones_,
-                               output_w_init=nn.init.ones_,
-                               is_image=False)
+                               output_w_init=nn.init.ones_)
 
-    cnn = CNNModule(input_var=obs,
+    cnn = CNNModule(spec=InOutSpec(
+        akro.Box(shape=input_shape, low=-np.inf, high=np.inf), None),
+                    image_format='NCHW',
                     hidden_channels=hidden_channels,
                     kernel_sizes=kernel_sizes,
                     strides=strides,
                     paddings=paddings,
                     padding_mode='zeros',
-                    hidden_w_init=nn.init.ones_,
-                    is_image=False)
+                    hidden_w_init=nn.init.ones_)
     flat_dim = torch.flatten(cnn(obs).detach(), start_dim=1).shape[1]
 
     mlp = MLPModule(
@@ -69,14 +72,15 @@ def test_output_values(output_dim, kernel_sizes, hidden_channels, strides,
                          [(1, (32, ), (1, ), (1, ))])
 def test_without_nonlinearity(output_dim, hidden_channels, kernel_sizes,
                               strides):
-    batch_size = 64
     input_width = 32
     input_height = 32
     in_channel = 3
-    input_shape = (batch_size, in_channel, input_height, input_width)
+    input_shape = (in_channel, input_height, input_width)
+    spec = InOutSpec(akro.Box(shape=input_shape, low=-np.inf, high=np.inf),
+                     akro.Box(shape=(output_dim, ), low=-np.inf, high=np.inf))
 
-    module = DiscreteCNNModule(input_shape=input_shape,
-                               output_dim=output_dim,
+    module = DiscreteCNNModule(spec=spec,
+                               image_format='NCHW',
                                hidden_channels=hidden_channels,
                                hidden_sizes=hidden_channels,
                                kernel_sizes=kernel_sizes,
@@ -84,8 +88,7 @@ def test_without_nonlinearity(output_dim, hidden_channels, kernel_sizes,
                                mlp_hidden_nonlinearity=None,
                                cnn_hidden_nonlinearity=None,
                                hidden_w_init=nn.init.ones_,
-                               output_w_init=nn.init.ones_,
-                               is_image=False)
+                               output_w_init=nn.init.ones_)
 
     assert len(module._module) == 3
 
@@ -96,15 +99,16 @@ def test_without_nonlinearity(output_dim, hidden_channels, kernel_sizes,
                           (3, (32, 64), (1, 1), (1, 1)),
                           (4, (32, 64), (3, 3), (1, 1))])
 def test_is_pickleable(output_dim, hidden_channels, kernel_sizes, strides):
-    batch_size = 64
     input_width = 32
     input_height = 32
     in_channel = 3
-    input_shape = (batch_size, in_channel, input_height, input_width)
+    input_shape = (in_channel, input_height, input_width)
     input_a = torch.ones(input_shape)
+    spec = InOutSpec(akro.Box(shape=input_shape, low=-np.inf, high=np.inf),
+                     akro.Box(shape=(output_dim, ), low=-np.inf, high=np.inf))
 
-    model = DiscreteCNNModule(input_shape=input_shape,
-                              output_dim=output_dim,
+    model = DiscreteCNNModule(spec=spec,
+                              image_format='NCHW',
                               hidden_channels=hidden_channels,
                               kernel_sizes=kernel_sizes,
                               mlp_hidden_nonlinearity=nn.ReLU,

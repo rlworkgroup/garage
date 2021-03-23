@@ -1,12 +1,15 @@
 """Test CNNModule."""
 import pickle
 
+import akro
 import numpy as np
 import pytest
 import torch
 import torch.nn as nn
 
+from garage import InOutSpec
 from garage.torch.modules import CNNModule
+from garage.torch.modules.cnn_module import _check_spec
 
 
 class TestCNNModule:
@@ -18,6 +21,11 @@ class TestCNNModule:
         self.input_height = 32
         self.in_channel = 3
         self.dtype = torch.float32
+        self.input_spec = InOutSpec(
+            akro.Box(
+                shape=[self.in_channel, self.input_height, self.input_width],
+                high=np.inf,
+                low=np.inf), None)
         self.input = torch.zeros(
             (self.batch_size, self.in_channel, self.input_height,
              self.input_width),
@@ -45,7 +53,8 @@ class TestCNNModule:
 
         """
         module_with_nonlinear_function_and_module = CNNModule(
-            input_var=self.input,
+            self.input_spec,
+            image_format='NCHW',
             hidden_channels=hidden_channels,
             kernel_sizes=kernel_sizes,
             strides=strides,
@@ -55,7 +64,8 @@ class TestCNNModule:
             hidden_w_init=nn.init.xavier_uniform_)
 
         module_with_nonlinear_module_instance_and_function = CNNModule(
-            input_var=self.input,
+            self.input_spec,
+            image_format='NCHW',
             hidden_channels=hidden_channels,
             kernel_sizes=kernel_sizes,
             strides=strides,
@@ -99,7 +109,8 @@ class TestCNNModule:
             paddings (tuple[int]): value of zero-padding.
 
         """
-        model = CNNModule(input_var=self.input,
+        model = CNNModule(self.input_spec,
+                          image_format='NCHW',
                           hidden_channels=hidden_channels,
                           kernel_sizes=kernel_sizes,
                           strides=strides,
@@ -136,7 +147,8 @@ class TestCNNModule:
             strides (tuple[int]): strides.
 
         """
-        model = CNNModule(input_var=self.input,
+        model = CNNModule(self.input_spec,
+                          image_format='NCHW',
                           hidden_channels=hidden_channels,
                           kernel_sizes=kernel_sizes,
                           strides=strides)
@@ -158,13 +170,14 @@ class TestCNNModule:
                               ((3, 3), (32, 64), (1, 1), 2, 2)])
     def test_output_with_max_pooling(self, kernel_sizes, hidden_channels,
                                      strides, pool_shape, pool_stride):
-        model = CNNModule(input_var=self.input,
+        model = CNNModule(self.input_spec,
+                          image_format='NCHW',
                           hidden_channels=hidden_channels,
                           kernel_sizes=kernel_sizes,
                           strides=strides,
                           max_pool=True,
-                          pool_shape=(pool_shape, pool_shape),
-                          pool_stride=(pool_stride, pool_stride))
+                          pool_shape=[(pool_shape, pool_shape)],
+                          pool_stride=[(pool_stride, pool_stride)])
         x = model(self.input)
         fc_w = torch.zeros((x.shape[1], 10))
         fc_b = torch.zeros(10)
@@ -182,8 +195,61 @@ class TestCNNModule:
         """
         expected_msg = 'Non linear function .* is not supported'
         with pytest.raises(ValueError, match=expected_msg):
-            CNNModule(input_var=self.input,
+            CNNModule(self.input_spec,
+                      image_format='NCHW',
                       hidden_channels=(32, ),
                       kernel_sizes=(3, ),
                       strides=(1, ),
                       hidden_nonlinearity=hidden_nonlinear)
+
+
+@pytest.mark.parametrize('kernel_sizes, hidden_channels, '
+                         'strides, pool_shape, pool_stride',
+                         [((1, ), (32, ), (1, ), 1, 1),
+                          ((3, ), (32, ), (1, ), 1, 1),
+                          ((3, ), (32, ), (2, ), 2, 2),
+                          ((1, 1), (32, 64), (1, 1), 1, 1),
+                          ((3, 2), (32, 64), (1, 1), 1, 1),
+                          ((3, 2), (32, 64), (2, 1), 1, 1),
+                          ((3, 3), (32, 64), (1, 1), 1, 1),
+                          ((3, 3), (32, 64), (1, 1), 2, 2)])
+def test_set_output_size(kernel_sizes, hidden_channels, strides, pool_shape,
+                         pool_stride):
+    spec = InOutSpec(akro.Box(shape=[3, 19, 15], high=np.inf, low=-np.inf),
+                     akro.Box(shape=[200], high=np.inf, low=-np.inf))
+    model = CNNModule(spec,
+                      image_format='NCHW',
+                      hidden_channels=hidden_channels,
+                      kernel_sizes=kernel_sizes,
+                      strides=strides,
+                      pool_shape=[(pool_shape, pool_shape)],
+                      pool_stride=[(pool_stride, pool_stride)],
+                      layer_normalization=True)
+    images = torch.ones(10, 3, 19, 15)
+    x = model(images)
+    assert x.shape == (10, 200)
+
+
+def test_check_spec():
+    with pytest.raises(ValueError, match='should be an akro.Box'):
+        # Input space is not Box or Image
+        _check_spec(InOutSpec(akro.Dict(), None), 'NCHW')
+    with pytest.raises(ValueError, match='should have three dimensions'):
+        # Too many input dimensions
+        _check_spec(
+            InOutSpec(akro.Box(shape=[1, 1, 1, 1], low=-np.inf, high=np.inf),
+                      None), 'NCHW')
+    with pytest.raises(ValueError, match='akro.Box with a single dimension'):
+        # Output is not one-dimensional
+        _check_spec(
+            InOutSpec(akro.Box(shape=[1, 1, 1], low=-np.inf, high=np.inf),
+                      akro.Box(
+                          shape=[1, 1],
+                          low=-np.inf,
+                          high=np.inf,
+                      )), 'NCHW')
+    with pytest.warns(UserWarning):
+        # 4 color channels should warn
+        _check_spec(
+            InOutSpec(akro.Box(shape=[4, 1, 1], low=-np.inf, high=np.inf),
+                      None), 'NCHW')

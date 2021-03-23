@@ -25,6 +25,7 @@ def test_forward(batch_size, hidden_channels, kernel_sizes, strides):
     obs = torch.zeros((batch_size, ) + obs_dim, dtype=torch.float32)
 
     qf = DiscreteDuelingCNNQFunction(env_spec=env_spec,
+                                     image_format='NCHW',
                                      kernel_sizes=kernel_sizes,
                                      strides=strides,
                                      mlp_hidden_nonlinearity=None,
@@ -32,8 +33,7 @@ def test_forward(batch_size, hidden_channels, kernel_sizes, strides):
                                      hidden_channels=hidden_channels,
                                      hidden_sizes=hidden_channels,
                                      hidden_w_init=nn.init.ones_,
-                                     output_w_init=nn.init.ones_,
-                                     is_image=False)
+                                     output_w_init=nn.init.ones_)
 
     output = qf(obs)
     expected_output = torch.zeros(output.shape)
@@ -54,6 +54,7 @@ def test_is_pickleable(batch_size, hidden_channels, kernel_sizes, strides):
     obs = torch.ones((batch_size, ) + obs_dim, dtype=torch.float32)
 
     qf = DiscreteDuelingCNNQFunction(env_spec=env_spec,
+                                     image_format='NCHW',
                                      kernel_sizes=kernel_sizes,
                                      strides=strides,
                                      mlp_hidden_nonlinearity=None,
@@ -61,8 +62,7 @@ def test_is_pickleable(batch_size, hidden_channels, kernel_sizes, strides):
                                      hidden_channels=hidden_channels,
                                      hidden_sizes=hidden_channels,
                                      hidden_w_init=nn.init.ones_,
-                                     output_w_init=nn.init.ones_,
-                                     is_image=False)
+                                     output_w_init=nn.init.ones_)
 
     output1 = qf(obs)
     p = pickle.dumps(qf)

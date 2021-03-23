@@ -5,19 +5,12 @@ import pytest
 import torch
 import torch.nn.functional as F
 
-from garage.torch import (compute_advantages,
-                          dict_np_to_torch,
-                          flatten_to_single_vector,
-                          global_device,
-                          pad_to_last,
-                          product_of_gaussians,
-                          set_gpu_mode,
-                          torch_to_np,
-                          TransposeImage)
+from garage.torch import (as_torch_dict, compute_advantages,
+                          flatten_to_single_vector, global_device, pad_to_last,
+                          product_of_gaussians, set_gpu_mode, torch_to_np)
 import garage.torch._functions as tu
 
 from tests.fixtures import TfGraphTestCase
-from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 # yapf: enable
 
@@ -59,10 +52,10 @@ def test_torch_to_np():
     assert isinstance(np_out_2, np.ndarray)
 
 
-def test_dict_np_to_torch():
+def test_as_torch_dict():
     """Test if dict whose values are tensors can be converted to np arrays."""
     dic = {'a': np.zeros(1), 'b': np.ones(1)}
-    dict_np_to_torch(dic)
+    as_torch_dict(dic)
     for tensor in dic.values():
         assert isinstance(tensor, torch.Tensor)
 
@@ -85,16 +78,6 @@ def test_flatten_to_single_vector():
     # expect [[ 0,  1,  2,  3,  4,  5], [ 6,  7,  8,  9, 10, 11]]
     assert torch.Size([2, 6]) == flatten_tensor.size()
     assert expected.shape == flatten_tensor.shape
-
-
-def test_transpose_image():
-    """Test TransposeImage."""
-    original_env = DummyDiscretePixelEnv()
-    obs_shape = original_env.observation_space.shape
-    if len(obs_shape) == 3 and obs_shape[2] in [1, 3]:
-        transposed_env = TransposeImage(original_env)
-        assert (original_env.observation_space.shape[2] ==
-                transposed_env.observation_space.shape[0])
 
 
 class TestTorchAlgoUtils(TfGraphTestCase):
@@ -194,3 +177,20 @@ class TestTorchAlgoUtils(TfGraphTestCase):
         """Test pad_to_last raises IndexError."""
         with pytest.raises(IndexError):
             pad_to_last(nums, total_length=10, axis=len(nums.shape))
+
+
+def test_expand_var():
+    with pytest.raises(ValueError, match='test_var is length 2'):
+        tu.expand_var('test_var', (1, 2), 3, 'reference_var')
+
+
+def test_value_at_axis():
+    assert tu._value_at_axis('test_value', 0) == 'test_value'
+    assert tu._value_at_axis('test_value', 1) == 'test_value'
+    assert tu._value_at_axis(['a', 'b', 'c'], 0) == 'a'
+    assert tu._value_at_axis(['a', 'b', 'c'], 1) == 'b'
+    assert tu._value_at_axis(['a', 'b', 'c'], 2) == 'c'
+    assert tu._value_at_axis(('a', 'b', 'c'), 0) == 'a'
+    assert tu._value_at_axis(('a', 'b', 'c'), 1) == 'b'
+    assert tu._value_at_axis(('a', 'b', 'c'), 2) == 'c'
+    assert tu._value_at_axis(['test_value'], 3) == 'test_value'

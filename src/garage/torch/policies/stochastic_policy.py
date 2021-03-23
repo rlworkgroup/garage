@@ -1,11 +1,10 @@
 """Base Stochastic Policy."""
 import abc
 
-import akro
 import numpy as np
 import torch
 
-from garage.torch import global_device
+from garage.torch import as_torch
 from garage.torch.policies.policy import Policy
 
 
@@ -39,8 +38,7 @@ class StochasticPolicy(Policy, abc.ABC):
             observation = torch.flatten(observation)
         with torch.no_grad():
             if not isinstance(observation, torch.Tensor):
-                observation = torch.as_tensor(observation).float().to(
-                    global_device())
+                observation = as_torch(observation)
             observation = observation.unsqueeze(0)
             action, agent_infos = self.get_actions(observation)
             return action[0], {k: v[0] for k, v in agent_infos.items()}
@@ -81,18 +79,9 @@ class StochasticPolicy(Policy, abc.ABC):
         elif isinstance(observations[0],
                         torch.Tensor) and len(observations[0].shape) > 1:
             observations = torch.flatten(observations, start_dim=1)
-
-        if isinstance(self._env_spec.observation_space, akro.Image) and \
-                len(observations.shape) < \
-                len(self._env_spec.observation_space.shape):
-            observations = self._env_spec.observation_space.unflatten_n(
-                observations)
         with torch.no_grad():
             if not isinstance(observations, torch.Tensor):
-                observations = torch.as_tensor(observations).float().to(
-                    global_device())
-            if isinstance(self._env_spec.observation_space, akro.Image):
-                observations /= 255.0  # scale image
+                observations = as_torch(observations)
             dist, info = self.forward(observations)
             return dist.sample().cpu().numpy(), {
                 k: v.detach().cpu().numpy()

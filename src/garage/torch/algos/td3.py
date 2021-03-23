@@ -9,7 +9,7 @@ import torch.nn.functional as F
 from garage import (_Default, log_performance, make_optimizer,
                     obtain_evaluation_episodes)
 from garage.np.algos import RLAlgorithm
-from garage.torch import (dict_np_to_torch, global_device, soft_update_model,
+from garage.torch import (as_torch_dict, global_device, soft_update_model,
                           torch_to_np)
 
 
@@ -238,7 +238,7 @@ class TD3(RLAlgorithm):
                 # Sample from buffer
                 samples = self._replay_buffer.sample_transitions(
                     self._buffer_batch_size)
-                samples = dict_np_to_torch(samples)
+                samples = as_torch_dict(samples)
 
                 # Optimize
                 qf_loss, y, q, policy_loss = torch_to_np(
