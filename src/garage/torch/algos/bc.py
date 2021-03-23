@@ -11,7 +11,7 @@ from garage import (_Default, log_performance, make_optimizer,
 from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.np.policies import Policy
 from garage.sampler import Sampler
-from garage.torch import np_to_torch
+from garage.torch import as_torch
 
 # yapf: enable
 
@@ -130,8 +130,8 @@ class BC(RLAlgorithm):
         minibatches = np.array_split(indices, self._minibatches_per_epoch)
         losses = []
         for minibatch in minibatches:
-            observations = np_to_torch(batch.observations[minibatch])
-            actions = np_to_torch(batch.actions[minibatch])
+            observations = as_torch(batch.observations[minibatch])
+            actions = as_torch(batch.actions[minibatch])
             self._optimizer.zero_grad()
             loss = self._compute_loss(observations, actions)
             loss.backward()

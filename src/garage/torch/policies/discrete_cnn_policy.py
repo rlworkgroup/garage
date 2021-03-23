@@ -1,8 +1,8 @@
 """Discrete CNN Policy."""
-import akro
 import torch
 from torch import nn
 
+from garage import InOutSpec
 from garage.torch.modules import DiscreteCNNModule
 from garage.torch.policies.stochastic_policy import StochasticPolicy
 
@@ -15,6 +15,8 @@ class DiscreteCNNPolicy(StochasticPolicy):
 
     Args:
         env_spec (EnvSpec): Environment specification.
+        image_format (str): Either 'NCHW' or 'NHWC'. Should match env_spec. Gym
+            uses NHWC by default, but PyTorch uses NCHW by default.
         kernel_sizes (tuple[int]): Dimension of the conv filters.
             For example, (3, 5) means there are two convolutional layers.
             The filter for first layer is of dimension (3 x 3)
@@ -66,6 +68,7 @@ class DiscreteCNNPolicy(StochasticPolicy):
 
     def __init__(self,
                  env_spec,
+                 image_format,
                  kernel_sizes,
                  hidden_channels,
                  strides,
@@ -86,19 +89,28 @@ class DiscreteCNNPolicy(StochasticPolicy):
                  name='DiscreteCNNPolicy'):
 
         super().__init__(env_spec, name)
-        self._env_spec = env_spec
-        self._input_shape = env_spec.observation_space.shape
-        self._output_dim = env_spec.action_space.flat_dim
-        self._is_image = isinstance(self._env_spec.observation_space,
-                                    akro.Image)
 
         self._cnn_module = DiscreteCNNModule(
-            self._input_shape, self._output_dim, kernel_sizes, hidden_channels,
-            strides, hidden_sizes, cnn_hidden_nonlinearity,
-            mlp_hidden_nonlinearity, hidden_w_init, hidden_b_init, paddings,
-            padding_mode, max_pool, pool_shape, pool_stride,
-            output_nonlinearity, output_w_init, output_b_init,
-            layer_normalization, self._is_image)
+            spec=InOutSpec(input_space=env_spec.observation_space,
+                           output_space=env_spec.action_space),
+            image_format=image_format,
+            kernel_sizes=kernel_sizes,
+            hidden_channels=hidden_channels,
+            strides=strides,
+            hidden_sizes=hidden_sizes,
+            cnn_hidden_nonlinearity=cnn_hidden_nonlinearity,
+            mlp_hidden_nonlinearity=mlp_hidden_nonlinearity,
+            hidden_w_init=hidden_w_init,
+            hidden_b_init=hidden_b_init,
+            paddings=paddings,
+            padding_mode=padding_mode,
+            max_pool=max_pool,
+            pool_shape=pool_shape,
+            pool_stride=pool_stride,
+            output_nonlinearity=output_nonlinearity,
+            output_w_init=output_w_init,
+            output_b_init=output_b_init,
+            layer_normalization=layer_normalization)
 
     def forward(self, observations):
         """Compute the action distributions from the observations.
@@ -114,12 +126,9 @@ class DiscreteCNNPolicy(StochasticPolicy):
             dict[str, torch.Tensor]: Additional agent_info, as torch Tensors.
                 Do not need to be detached, and can be on any device.
         """
-        observations = self._env_spec.observation_space.unflatten_n(
-            observations)
-        if isinstance(self._env_spec.observation_space, akro.Image):
-            observations = torch.div(observations, 255.0)
-
-        observations = torch.Tensor(observations[0])
+        # We're given flattened observations.
+        observations = observations.reshape(
+            -1, *self._env_spec.observation_space.shape)
         output = self._cnn_module(observations)
         logits = torch.softmax(output, axis=1)
         dist = torch.distributions.Bernoulli(logits=logits)
