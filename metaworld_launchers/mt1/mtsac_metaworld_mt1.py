@@ -15,6 +15,7 @@ from garage.experiment import deterministic
 from garage.experiment.task_sampler import MetaWorldTaskSampler
 from garage.replay_buffer import PathBuffer
 from garage.sampler import FragmentWorker, LocalSampler
+from garage.sampler.default_worker import DefaultWorker
 from garage.torch import set_gpu_mode
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
@@ -41,7 +42,7 @@ def mtsac_metaworld_mt1(ctxt=None, *, seed, env_name):
     """
     _gpu=0
     num_tasks=50
-    timesteps=20000000
+    timesteps=100000000
     deterministic.set_seed(seed)
     trainer = Trainer(ctxt)
     mt1 = metaworld.MT1(env_name)  # pylint: disable=no-member
@@ -51,7 +52,7 @@ def mtsac_metaworld_mt1(ctxt=None, *, seed, env_name):
                                               'train',
                                               add_env_onehot=True)
 
-    assert num_tasks % 10 == 0
+    assert num_tasks % 50 == 0
     assert num_tasks <= 500
     mt1_train_envs = train_task_sampler.sample(num_tasks)
     env = mt1_train_envs[0]()
@@ -105,7 +106,7 @@ def mtsac_metaworld_mt1(ctxt=None, *, seed, env_name):
                   eval_env=mt1_test_envs,
                   env_spec=env.spec,
                   num_tasks=num_tasks,
-                  steps_per_epoch=epoch_cycles,
+                  steps_per_epoch=1,
                   replay_buffer=replay_buffer,
                   min_buffer_size=25000,
                   target_update_tau=5e-3,
