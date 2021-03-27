@@ -2,6 +2,7 @@
 """This is an example to train TRPO on MT1 environment."""
 # pylint: disable=no-value-for-parameter
 import click
+from click.core import MultiCommand
 import metaworld
 import tensorflow as tf
 
@@ -46,13 +47,14 @@ def mttrpo_metaworld_MT1(ctxt, seed, entropy, env_name):
     assert n_tasks % 10 == 0
     assert n_tasks <= 500
     envs = [env_up() for env_up in train_task_sampler.sample(n_tasks)]
-    env = MultiEnvWrapper(envs,
-                          sample_strategy=round_robin_strategy,
-                          mode='vanilla')
+    # env = MultiEnvWrapper(envs,
+    #                       sample_strategy=round_robin_strategy,
+    #                       mode='vanilla')
+    env = envs[0]
     with TFTrainer(snapshot_config=ctxt) as trainer:
         policy = GaussianMLPPolicy(
                 env_spec=env.spec,
-                hidden_sizes=(256, 256),
+                hidden_sizes=(512, 512),
                 hidden_nonlinearity=tf.nn.tanh,
                 output_nonlinearity=None,
                 std_share_network=True,
@@ -62,14 +64,14 @@ def mttrpo_metaworld_MT1(ctxt, seed, entropy, env_name):
 
         baseline = GaussianMLPBaseline(
                 env_spec=env.spec,
-                hidden_sizes=(128, 128),
+                hidden_sizes=(512, 512),
                 use_trust_region=True,
             )
 
         sampler = RaySampler(agents=policy,
-                            envs=env,
+                            envs=envs,
                             max_episode_length=env.spec.max_episode_length,
-                            n_workers=10,
+                            n_workers=50,
                             is_tf_worker=True)
 
         algo = TRPO(
@@ -85,12 +87,13 @@ def mttrpo_metaworld_MT1(ctxt, seed, entropy, env_name):
                 center_adv=False,
                 use_softplus_entropy=False,
                 sampler=sampler,
-                use_neg_logli_entropy=True
+                use_neg_logli_entropy=True,
+                multitask=True
             )
 
         trainer.setup(algo, env)
         trainer.train(n_epochs=int(100000000 / (500 * 100)),
-                    batch_size=(500 * 100),
+                    batch_size=2,
                     plot=False)
 
 

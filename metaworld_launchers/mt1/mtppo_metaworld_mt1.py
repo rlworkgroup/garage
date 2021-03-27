@@ -46,13 +46,14 @@ def mtppo_metaworld_mt1(ctxt, seed, entropy, env_name):
     assert n_tasks % 10 == 0
     assert n_tasks <= 500
     envs = [env_up() for env_up in train_task_sampler.sample(n_tasks)]
-    env = MultiEnvWrapper(envs,
-                          sample_strategy=round_robin_strategy,
-                          mode='vanilla')
+    # env = MultiEnvWrapper(envs,
+    #                       sample_strategy=round_robin_strategy,
+    #                       mode='vanilla')
+    env = envs[0]
     with TFTrainer(snapshot_config=ctxt) as trainer:
         policy = GaussianMLPPolicy(
                 env_spec=env.spec,
-                hidden_sizes=(256, 256),
+                hidden_sizes=(512, 512),
                 hidden_nonlinearity=tf.nn.tanh,
                 output_nonlinearity=None,
                 std_share_network=True,
@@ -62,14 +63,14 @@ def mtppo_metaworld_mt1(ctxt, seed, entropy, env_name):
 
         baseline = GaussianMLPBaseline(
                 env_spec=env.spec,
-                hidden_sizes=(128, 128),
+                hidden_sizes=(512, 512),
                 use_trust_region=True,
             )
 
         sampler = RaySampler(agents=policy,
-                            envs=env,
+                            envs=envs,
                             max_episode_length=env.spec.max_episode_length,
-                            n_workers=10,
+                            n_workers=50,
                             is_tf_worker=True)
 
         algo = PPO(
@@ -82,7 +83,7 @@ def mtppo_metaworld_mt1(ctxt, seed, entropy, env_name):
                 optimizer=FirstOrderOptimizer,
                 optimizer_args=dict(
                     learning_rate=5e-4,
-                    max_optimization_epochs=256,
+                    max_optimization_epochs=16,
                 ),
                 stop_entropy_gradient=True,
                 entropy_method='max',
@@ -90,12 +91,13 @@ def mtppo_metaworld_mt1(ctxt, seed, entropy, env_name):
                 center_adv=False,
                 use_softplus_entropy=False,
                 sampler=sampler,
-                use_neg_logli_entropy=True
+                use_neg_logli_entropy=True,
+                multitask=True
             )
 
-        trainer.setup(algo, env)
+        trainer.setup(algo, envs)
         trainer.train(n_epochs=int(100000000 / (500 * 100)),
-                    batch_size=(500 * 100),
+                    batch_size=2,
                     plot=False)
 
 
