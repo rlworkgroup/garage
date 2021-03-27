@@ -7,7 +7,7 @@ import numpy as np
 import scipy.stats
 import tensorflow as tf
 
-from garage import InOutSpec, log_performance
+from garage import InOutSpec, log_performance, log_multitask_performance
 from garage.experiment import deterministic
 from garage.np import (discount_cumsum, explained_variance_1d, pad_batch_array,
                        rrse, sliding_window)
@@ -220,7 +220,7 @@ class TENPO(RLAlgorithm):
             numpy.float64: Average return.
 
         """
-        undiscounted_returns = log_performance(itr,
+        undiscounted_returns = log_multitask_performance(itr,
                                                episodes,
                                                discount=self._discount)
 
