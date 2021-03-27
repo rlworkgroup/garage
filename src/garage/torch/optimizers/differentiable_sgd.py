@@ -43,7 +43,7 @@ class DifferentiableSGD:
                         continue
 
                     # Original SGD uses param.grad.data
-                    new_param = param.add(-self.lr, param.grad)
+                    new_param = param.add(param.grad, alpha=-self.lr)
 
                     del module._parameters[name]  # pylint: disable=protected-access # noqa: E501
                     setattr(module, name, new_param)
@@ -57,3 +57,13 @@ class DifferentiableSGD:
             if param.grad is not None:
                 param.grad.detach_()
                 param.grad.zero_()
+
+    def set_grads_none(self):
+        """Sets gradients for all model parameters to None.
+
+        This is an alternative to `zero_grad` which sets
+        gradients to zero.
+        """
+        for param in self.module.parameters():
+            if param.grad is not None:
+                param.grad = None

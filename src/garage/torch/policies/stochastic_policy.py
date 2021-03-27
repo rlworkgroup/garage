@@ -1,10 +1,11 @@
 """Base Stochastic Policy."""
 import abc
 
+import akro
 import numpy as np
 import torch
 
-from garage.torch import as_torch
+from garage.torch._functions import list_to_tensor, np_to_torch
 from garage.torch.policies.policy import Policy
 
 
@@ -37,8 +38,11 @@ class StochasticPolicy(Policy, abc.ABC):
                         torch.Tensor) and len(observation.shape) > 1:
             observation = torch.flatten(observation)
         with torch.no_grad():
+            if isinstance(observation, np.ndarray):
+                observation = np_to_torch(observation)
             if not isinstance(observation, torch.Tensor):
-                observation = as_torch(observation)
+
+                observation = list_to_tensor(observation)
             observation = observation.unsqueeze(0)
             action, agent_infos = self.get_actions(observation)
             return action[0], {k: v[0] for k, v in agent_infos.items()}
@@ -80,8 +84,14 @@ class StochasticPolicy(Policy, abc.ABC):
                         torch.Tensor) and len(observations[0].shape) > 1:
             observations = torch.flatten(observations, start_dim=1)
         with torch.no_grad():
+            if isinstance(observations, np.ndarray):
+                observations = np_to_torch(observations)
             if not isinstance(observations, torch.Tensor):
-                observations = as_torch(observations)
+
+                observations = list_to_tensor(observations)
+
+            if isinstance(self._env_spec.observation_space, akro.Image):
+                observations /= 255.0  # scale image
             dist, info = self.forward(observations)
             return dist.sample().cpu().numpy(), {
                 k: v.detach().cpu().numpy()

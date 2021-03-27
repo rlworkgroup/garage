@@ -22,6 +22,27 @@ _DEVICE = None
 _GPU_ID = 0
 
 
+def zero_optim_grads(optim, set_to_none=True):
+    """Sets the gradient of all optimized tensors to None.
+
+    This is an optimization alternative to calling `optimizer.zero_grad()`
+
+    Args:
+        optim (torch.nn.Optimizer): The optimizer instance
+            to zero parameter gradients.
+        set_to_none (bool): Set gradients to None
+            instead of calling `zero_grad()`which
+            sets to 0.
+    """
+    if not set_to_none:
+        optim.zero_grad()
+        return
+
+    for group in optim.param_groups:
+        for param in group['params']:
+            param.grad = None
+
+
 def compute_advantages(discount, gae_lambda, max_episode_length, baselines,
                        rewards):
     """Calculate advantages.
@@ -132,7 +153,7 @@ def filter_valids(tensor, valids):
     return [tensor[i][:valid] for i, valid in enumerate(valids)]
 
 
-def as_torch(array):
+def np_to_torch(array):
     """Numpy arrays to PyTorch tensors.
 
     Args:
@@ -142,7 +163,24 @@ def as_torch(array):
         torch.Tensor: float tensor on the global device.
 
     """
-    return torch.as_tensor(array).float().to(global_device())
+    tensor = torch.from_numpy(array)
+
+    if tensor.dtype != torch.float32:
+        tensor = tensor.float()
+
+    return tensor.to(global_device())
+
+
+def list_to_tensor(data):
+    """Convert a list to a PyTorch tensor.
+
+    Args:
+        data (list): Data to convert to tensor
+
+    Returns:
+        torch.Tensor: A float tensor
+    """
+    return torch.as_tensor(data, dtype=torch.float32, device=global_device())
 
 
 def as_torch_dict(array_dict):
@@ -158,7 +196,7 @@ def as_torch_dict(array_dict):
 
     """
     for key, value in array_dict.items():
-        array_dict[key] = as_torch(value)
+        array_dict[key] = np_to_torch(value)
     return array_dict
 
 
