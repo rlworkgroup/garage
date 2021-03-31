@@ -284,3 +284,59 @@ def test_fixed_alpha():
     trainer.train(n_epochs=1, batch_size=100, plot=False)
     assert torch.allclose(torch.Tensor([0.5]), sac._log_alpha.cpu())
     assert not sac._use_automatic_entropy_tuning
+
+
+@pytest.mark.gpu
+def test_sac_to():
+    """Test moving Sac between CPU and GPU."""
+    env = normalize(GymEnv('InvertedDoublePendulum-v2',
+                           max_episode_length=100))
+    deterministic.set_seed(0)
+    policy = TanhGaussianMLPPolicy(
+        env_spec=env.spec,
+        hidden_sizes=[32, 32],
+        hidden_nonlinearity=torch.nn.ReLU,
+        output_nonlinearity=None,
+        min_std=np.exp(-20.),
+        max_std=np.exp(2.),
+    )
+
+    qf1 = ContinuousMLPQFunction(env_spec=env.spec,
+                                 hidden_sizes=[32, 32],
+                                 hidden_nonlinearity=F.relu)
+
+    qf2 = ContinuousMLPQFunction(env_spec=env.spec,
+                                 hidden_sizes=[32, 32],
+                                 hidden_nonlinearity=F.relu)
+    replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
+    trainer = Trainer(snapshot_config=snapshot_config)
+    sampler = LocalSampler(agents=policy,
+                           envs=env,
+                           max_episode_length=env.spec.max_episode_length,
+                           worker_class=FragmentWorker)
+    sac = SAC(env_spec=env.spec,
+              policy=policy,
+              qf1=qf1,
+              qf2=qf2,
+              sampler=sampler,
+              gradient_steps_per_itr=100,
+              replay_buffer=replay_buffer,
+              min_buffer_size=1e3,
+              target_update_tau=5e-3,
+              discount=0.99,
+              buffer_batch_size=64,
+              reward_scale=1.,
+              steps_per_epoch=2)
+    trainer.setup(sac, env)
+    if torch.cuda.is_available():
+        set_gpu_mode(True)
+    else:
+        set_gpu_mode(False)
+    sac.to()
+    trainer.setup(algo=sac, env=env)
+    trainer.train(n_epochs=1, batch_size=100)
+    log_alpha = torch.clone(sac._log_alpha).cpu()
+    set_gpu_mode(False)
+    sac.to()
+    trainer.train(n_epochs=1, batch_size=100)
+    assert not torch.allclose(log_alpha, sac._log_alpha)

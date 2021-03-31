@@ -516,6 +516,17 @@ class SAC(RLAlgorithm):
             device (str): ID of GPU or CPU.
 
         """
+
+        def optimizer_to(optim, device):
+            for param in optim.state.values():
+                # Not sure there are any global tensors in the state dict
+                if isinstance(param, torch.Tensor):
+                    param.data = param.data.to(device)
+                elif isinstance(param, dict):
+                    for subparam in param.values():
+                        if isinstance(subparam, torch.Tensor):
+                            subparam.data = subparam.data.to(device)
+
         if device is None:
             device = global_device()
         for net in self.networks:
@@ -528,3 +539,7 @@ class SAC(RLAlgorithm):
                                             ]).to(device).requires_grad_()
             self._alpha_optimizer = self._optimizer([self._log_alpha],
                                                     lr=self._policy_lr)
+            optimizer_to(self._alpha_optimizer, device)
+            optimizer_to(self._qf1_optimizer, device)
+            optimizer_to(self._qf2_optimizer, device)
+            optimizer_to(self._policy_optimizer, device)
