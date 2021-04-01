@@ -119,15 +119,17 @@ class LocalSampler(Sampler):
         self._update_workers(agent_update, env_update)
         batches = []
         completed_samples = 0
-        while True:
-            for worker in self._workers:
-                batch = worker.rollout()
-                completed_samples += len(batch.actions)
-                batches.append(batch)
-                if completed_samples >= num_samples:
-                    samples = TrajectoryBatch.concatenate(*batches)
-                    self.total_env_steps += sum(samples.lengths)
-                    return samples
+        with click.progressbar(length=num_samples, label='Sampling') as pbar:
+            while True:
+                for worker in self._workers:
+                    batch = worker.rollout()
+                    completed_samples += len(batch.actions)
+                    batches.append(batch)
+                    pbar.update(collected_samples)
+                    if completed_samples >= num_samples:
+                        samples = TrajectoryBatch.concatenate(*batches)
+                        self.total_env_steps += sum(samples.lengths)
+                        return samples
 
     def obtain_exact_trajectories(self,
                                   n_traj_per_worker,
