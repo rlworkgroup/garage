@@ -1,14 +1,20 @@
 """Module to test garage.torch._functions."""
 # yapf: disable
+import collections
+
 import numpy as np
 import pytest
 import torch
+from torch import tensor
 import torch.nn.functional as F
 
+from garage.envs import GymEnv, normalize
+from garage.experiment.deterministic import set_seed
 from garage.torch import (as_torch_dict, compute_advantages,
                           flatten_to_single_vector, global_device, pad_to_last,
-                          product_of_gaussians, set_gpu_mode, torch_to_np)
+                          product_of_gaussians, set_gpu_mode, state_dict_to, torch_to_np)
 import garage.torch._functions as tu
+from garage.torch.policies import DeterministicMLPPolicy
 
 from tests.fixtures import TfGraphTestCase
 

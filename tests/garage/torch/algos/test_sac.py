@@ -338,5 +338,4 @@ def test_sac_to():
     log_alpha = torch.clone(sac._log_alpha).cpu()
     set_gpu_mode(False)
     sac.to()
-    trainer.train(n_epochs=1, batch_size=100)
-    assert not torch.allclose(log_alpha, sac._log_alpha)
+    assert torch.allclose(log_alpha, sac._log_alpha)

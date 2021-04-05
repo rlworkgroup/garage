@@ -10,7 +10,7 @@ import torch.nn.functional as F
 
 from garage import log_performance, obtain_evaluation_episodes, StepType
 from garage.np.algos import RLAlgorithm
-from garage.torch import as_torch_dict, global_device
+from garage.torch import as_torch_dict, global_device, state_dict_to
 
 # yapf: enable
 
@@ -516,17 +516,6 @@ class SAC(RLAlgorithm):
             device (str): ID of GPU or CPU.
 
         """
-
-        def optimizer_to(optim, device):
-            for param in optim.state.values():
-                # Not sure there are any global tensors in the state dict
-                if isinstance(param, torch.Tensor):
-                    param.data = param.data.to(device)
-                elif isinstance(param, dict):
-                    for subparam in param.values():
-                        if isinstance(subparam, torch.Tensor):
-                            subparam.data = subparam.data.to(device)
-
         if device is None:
             device = global_device()
         for net in self.networks:
@@ -535,11 +524,15 @@ class SAC(RLAlgorithm):
             self._log_alpha = torch.Tensor([self._fixed_alpha
                                             ]).log().to(device)
         else:
-            self._log_alpha = torch.Tensor([self._log_alpha.data
-                                            ]).to(device).requires_grad_()
+            self._log_alpha = self._log_alpha.detach().to(
+                device).requires_grad_()
             self._alpha_optimizer = self._optimizer([self._log_alpha],
                                                     lr=self._policy_lr)
-            optimizer_to(self._alpha_optimizer, device)
-            optimizer_to(self._qf1_optimizer, device)
-            optimizer_to(self._qf2_optimizer, device)
-            optimizer_to(self._policy_optimizer, device)
+            self._alpha_optimizer.load_state_dict(
+                state_dict_to(self._alpha_optimizer.state_dict(), device))
+            self._qf1_optimizer.load_state_dict(
+                state_dict_to(self._qf1_optimizer.state_dict(), device))
+            self._qf2_optimizer.load_state_dict(
+                state_dict_to(self._qf2_optimizer.state_dict(), device))
+            self._policy_optimizer.load_state_dict(
+                state_dict_to(self._policy_optimizer.state_dict(), device))
