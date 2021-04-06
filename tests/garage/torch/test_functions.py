@@ -86,6 +86,62 @@ def test_flatten_to_single_vector():
     assert expected.shape == flatten_tensor.shape
 
 
+<<<<<<< HEAD
+=======
+def test_transpose_image():
+    """Test TransposeImage."""
+    original_env = DummyDiscretePixelEnv()
+    obs_shape = original_env.observation_space.shape
+    if len(obs_shape) == 3 and obs_shape[2] in [1, 3]:
+        transposed_env = TransposeImage(original_env)
+        assert (original_env.observation_space.shape[2] ==
+                transposed_env.observation_space.shape[0])
+
+
+def test_state_dict_to():
+    """Test state_dict_to"""
+    set_seed(42)
+    # Using tensor instead of Tensor so it can be declared on GPU
+    # pylint: disable=not-callable
+    expected = collections.OrderedDict([
+        ('_module._layers.0.linear.weight',
+         tensor([[
+             0.13957974, -0.2693157, -0.19351028, 0.09471931, -0.43573233,
+             0.03590716, -0.4272097, -0.13935488, -0.35843086, -0.25814268,
+             0.03060348
+         ],
+                 [
+                     0.20623916, -0.1914061, 0.46729338, -0.5437773,
+                     -0.50449526, -0.55039907, 0.0141218, -0.02489783,
+                     0.26499796, -0.03836302, 0.7235093
+                 ]],
+                device='cuda:0')),
+        ('_module._layers.0.linear.bias', tensor([0., 0.], device='cuda:0')),
+        ('_module._layers.1.linear.weight',
+         tensor([[-0.7181905, -0.6284401], [0.10591025, -0.14771031]],
+                device='cuda:0')),
+        ('_module._layers.1.linear.bias', tensor([0., 0.], device='cuda:0')),
+        ('_module._output_layers.0.linear.weight',
+         tensor([[-0.29133463, 0.58353233]], device='cuda:0')),
+        ('_module._output_layers.0.linear.bias', tensor([0.], device='cuda:0'))
+    ])
+    # pylint: enable=not-callable
+    env = normalize(GymEnv('InvertedDoublePendulum-v2'))
+    policy = DeterministicMLPPolicy(env_spec=env.spec,
+                                    hidden_sizes=[2, 2],
+                                    hidden_nonlinearity=F.relu,
+                                    output_nonlinearity=torch.tanh)
+    # Initialize model
+    moved_state_dict = state_dict_to(policy.state_dict(), 'cuda')
+    assert np.all([
+        torch.allclose(expected[key], moved_state_dict[key])
+        for key in expected.keys()
+    ])
+    assert np.all(
+        [moved_state_dict[key].is_cuda for key in moved_state_dict.keys()])
+
+
+>>>>>>> Add notes
 class TestTorchAlgoUtils(TfGraphTestCase):
     """Test class for torch algo utility functions."""
     # yapf: disable
