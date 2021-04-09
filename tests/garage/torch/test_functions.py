@@ -87,6 +87,7 @@ def test_flatten_to_single_vector():
     assert expected.shape == flatten_tensor.shape
 
 
+@pytest.mark.gpu
 def test_state_dict_to():
     """Test state_dict_to"""
     set_seed(42)
