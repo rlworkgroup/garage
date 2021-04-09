@@ -17,3 +17,4 @@ scipy
 setproctitle
 tensorflow
 tensorflow-probability
+docutils<0.17
