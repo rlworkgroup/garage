@@ -10,7 +10,7 @@ import torch.nn.functional as F
 
 from garage import log_performance, obtain_evaluation_episodes, StepType
 from garage.np.algos import RLAlgorithm
-from garage.torch import as_torch_dict, global_device
+from garage.torch import as_torch_dict, global_device, state_dict_to
 
 # yapf: enable
 
@@ -524,7 +524,15 @@ class SAC(RLAlgorithm):
             self._log_alpha = torch.Tensor([self._fixed_alpha
                                             ]).log().to(device)
         else:
-            self._log_alpha = torch.Tensor([self._initial_log_entropy
-                                            ]).to(device).requires_grad_()
+            self._log_alpha = self._log_alpha.detach().to(
+                device).requires_grad_()
             self._alpha_optimizer = self._optimizer([self._log_alpha],
                                                     lr=self._policy_lr)
+            self._alpha_optimizer.load_state_dict(
+                state_dict_to(self._alpha_optimizer.state_dict(), device))
+            self._qf1_optimizer.load_state_dict(
+                state_dict_to(self._qf1_optimizer.state_dict(), device))
+            self._qf2_optimizer.load_state_dict(
+                state_dict_to(self._qf2_optimizer.state_dict(), device))
+            self._policy_optimizer.load_state_dict(
+                state_dict_to(self._policy_optimizer.state_dict(), device))

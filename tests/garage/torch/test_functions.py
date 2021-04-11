@@ -1,14 +1,21 @@
 """Module to test garage.torch._functions."""
 # yapf: disable
+import collections
+
 import numpy as np
 import pytest
 import torch
+from torch import tensor
 import torch.nn.functional as F
 
+from garage.envs import GymEnv, normalize
+from garage.experiment.deterministic import set_seed
 from garage.torch import (as_torch_dict, compute_advantages,
                           flatten_to_single_vector, global_device, pad_to_last,
-                          product_of_gaussians, set_gpu_mode, torch_to_np)
+                          product_of_gaussians, set_gpu_mode, state_dict_to,
+                          torch_to_np)
 import garage.torch._functions as tu
+from garage.torch.policies import DeterministicMLPPolicy
 
 from tests.fixtures import TfGraphTestCase
 
@@ -56,8 +63,8 @@ def test_as_torch_dict():
     """Test if dict whose values are tensors can be converted to np arrays."""
     dic = {'a': np.zeros(1), 'b': np.ones(1)}
     as_torch_dict(dic)
-    for tensor in dic.values():
-        assert isinstance(tensor, torch.Tensor)
+    for dic_value in dic.values():
+        assert isinstance(dic_value, torch.Tensor)
 
 
 def test_product_of_gaussians():
@@ -78,6 +85,49 @@ def test_flatten_to_single_vector():
     # expect [[ 0,  1,  2,  3,  4,  5], [ 6,  7,  8,  9, 10, 11]]
     assert torch.Size([2, 6]) == flatten_tensor.size()
     assert expected.shape == flatten_tensor.shape
+
+
+@pytest.mark.gpu
+def test_state_dict_to():
+    """Test state_dict_to"""
+    set_seed(42)
+    # Using tensor instead of Tensor so it can be declared on GPU
+    # pylint: disable=not-callable
+    expected = collections.OrderedDict([
+        ('_module._layers.0.linear.weight',
+         tensor([[
+             0.13957974, -0.2693157, -0.19351028, 0.09471931, -0.43573233,
+             0.03590716, -0.4272097, -0.13935488, -0.35843086, -0.25814268,
+             0.03060348
+         ],
+                 [
+                     0.20623916, -0.1914061, 0.46729338, -0.5437773,
+                     -0.50449526, -0.55039907, 0.0141218, -0.02489783,
+                     0.26499796, -0.03836302, 0.7235093
+                 ]],
+                device='cuda:0')),
+        ('_module._layers.0.linear.bias', tensor([0., 0.], device='cuda:0')),
+        ('_module._layers.1.linear.weight',
+         tensor([[-0.7181905, -0.6284401], [0.10591025, -0.14771031]],
+                device='cuda:0')),
+        ('_module._layers.1.linear.bias', tensor([0., 0.], device='cuda:0')),
+        ('_module._output_layers.0.linear.weight',
+         tensor([[-0.29133463, 0.58353233]], device='cuda:0')),
+        ('_module._output_layers.0.linear.bias', tensor([0.], device='cuda:0'))
+    ])
+    # pylint: enable=not-callable
+    env = normalize(GymEnv('InvertedDoublePendulum-v2'))
+    policy = DeterministicMLPPolicy(env_spec=env.spec,
+                                    hidden_sizes=[2, 2],
+                                    hidden_nonlinearity=F.relu,
+                                    output_nonlinearity=torch.tanh)
+    moved_state_dict = state_dict_to(policy.state_dict(), 'cuda')
+    assert np.all([
+        torch.allclose(expected[key], moved_state_dict[key])
+        for key in expected.keys()
+    ])
+    assert np.all(
+        [moved_state_dict[key].is_cuda for key in moved_state_dict.keys()])
 
 
 class TestTorchAlgoUtils(TfGraphTestCase):

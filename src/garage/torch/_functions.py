@@ -327,6 +327,24 @@ def product_of_gaussians(mus, sigmas_squared):
     return mu, sigma_squared
 
 
+def state_dict_to(state_dict, device):
+    """Move optimizer to a specified device.
+
+    Args:
+        state_dict (dict): state dictionary to be moved
+        device (str): ID of GPU or CPU.
+
+    Returns:
+        dict: state dictionary moved to device
+    """
+    for param in state_dict.values():
+        if isinstance(param, torch.Tensor):
+            param.data = param.data.to(device)
+        elif isinstance(param, dict):
+            state_dict_to(param, device)
+    return state_dict
+
+
 # pylint: disable=W0223
 class NonLinearity(nn.Module):
     """Wrapper class for non linear function or module.
