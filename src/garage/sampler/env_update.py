@@ -107,10 +107,11 @@ class SetTaskUpdate(EnvUpdate):
             Environment: The new, updated environment.
 
         """
+        # We need exact type equality, not just a subtype
+        # pylint: disable=unidiomatic-typecheck
         if old_env is None:
             return self._make_env()
-        elif not isinstance(getattr(old_env, 'unwrapped', old_env),
-                            self._env_type):
+        elif type(getattr(old_env, 'unwrapped', old_env)) != self._env_type:
             warnings.warn('SetTaskEnvUpdate is closing an environment. This '
                           'may indicate a very slow TaskSampler setup.')
             old_env.close()
