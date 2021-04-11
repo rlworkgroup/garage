@@ -7,23 +7,23 @@ import time
 @click.option('--gpu', default=False, type=bool)
 def launch_experiments(gpu):
     entropies = [5e-4]*10
-    instances = [1, 2, 3]
+    instances = [9, 10, 11]
     for i, entropy in enumerate(entropies):
         if not i % 4:
             instance_num = instances.pop(0)
         ####################EDIT THESE FIELDS##################
         username = f'avnishnarayan' # your google username
         algorithm = f'task_embeddings'
-        zone = f'asia-east1-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
+        zone = f'us-west2-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         entropy_str = str(entropy).replace('.', '-')
-        instance_name = f'v2-te-named-params-entropy-{entropy_str}-{i}'
-        bucket = f'mt10/round3/te/v2'
-        branch = 'avnish-new-metworld-results-ml10-mt10'
+        instance_name = f'round6-v2-te-{i}'
+        bucket = f'mt10/round6/te/v2'
+        branch = 'avnish-new-metaworld-results-mt1'
         experiment = f'metaworld_launchers/mt10/te_ppo_metaworld_mt10.py --entropy {entropy}'
         ######################################################
 
         if not gpu:
-            machine_type =  'n2-standard-8' # 'c2-standard-4' we have a quota of 24 of each of these cpus per zone. 
+            machine_type =  'n1-standard-8' # 'c2-standard-4' we have a quota of 24 of each of these cpus per zone. 
             # You can use n1 cpus which are slower, but we are capped to a total of 72 cpus per zone anyways
             docker_run_file = 'docker_metaworld_run_cpu.py' # 'docker_metaworld_run_gpu.py' for gpu experiment
             docker_build_command = 'make run-headless -C ~/garage/'

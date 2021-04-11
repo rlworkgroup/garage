@@ -11,7 +11,7 @@ from garage.envs import MetaWorldSetTaskEnv
 from garage.experiment import (MetaEvaluator, MetaWorldTaskSampler,
                                SetTaskSampler)
 from garage.experiment.deterministic import set_seed
-from garage.sampler import RaySampler
+from garage.sampler import RaySampler, LocalSampler
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import LinearFeatureValueFunction
@@ -21,7 +21,7 @@ from garage.trainer import Trainer
 @click.command()
 @click.option('--seed', type=int, default=1)
 @click.option('--epochs', type=int, default=2000)
-@click.option('--rollouts_per_task', type=int, default=10)
+@click.option('--rollouts_per_task', type=int, default=1)
 @click.option('--meta_batch_size', type=int, default=45)
 @click.option('--inner_lr', default=1e-4, type=float)
 @wrap_experiment(snapshot_mode='none', name_parameters='passed')
@@ -66,11 +66,10 @@ def maml_trpo_metaworld_ML45(ctxt, seed, epochs, rollouts_per_task, meta_batch_s
                                    n_exploration_eps=rollouts_per_task,
                                    n_test_tasks=num_test_envs * 2,
                                    n_test_episodes=10)
-
-    sampler = RaySampler(agents=policy,
+    envs = tasks.sample(meta_batch_size)
+    sampler = LocalSampler(agents=policy,
                          envs=env,
-                         max_episode_length=env.spec.max_episode_length,
-                         n_workers=meta_batch_size)
+                         max_episode_length=env.spec.max_episode_length)
 
     trainer = Trainer(ctxt)
     algo = MAMLTRPO(env=env,

@@ -195,8 +195,12 @@ class MAML:
         all_samples = [[] for _ in range(len(tasks))]
         all_params = []
         theta = dict(self._policy.named_parameters())
-
+        assert "door-open-v2" in [task._task.env_name for task in tasks]
         for i, env_up in enumerate(tasks):
+            if "door-open-v2" == env_up._task.env_name:
+                # either the worker is not applying the env update, or I am observing trajs for previous workers?
+                # test to see the itr of returned information?
+                import ipdb; ipdb.set_trace()
 
             for j in range(self._num_grad_updates + 1):
                 episodes = trainer.obtain_episodes(trainer.step_itr,
@@ -391,6 +395,8 @@ class MAML:
 
         """
         paths = episodes.to_list()
+        if set(paths[0]['env_infos']["task_name"]).pop() == "door-open-v2":
+            import ipdb; ipdb.set_trace()
         for path in paths:
             path['returns'] = discount_cumsum(
                 path['rewards'], self._inner_algo.discount).copy()
@@ -429,6 +435,8 @@ class MAML:
         tabular.record('Iteration', itr)
 
         name_map = None
+        task_names = [set(sample[0].paths[0]['env_infos']["task_name"]).pop() for sample in all_samples]
+        import ipdb; ipdb.set_trace()
         if hasattr(self._env, 'all_task_names'):
             names = self._env.all_task_names
             name_map = dict(zip(names, names))

@@ -7,19 +7,24 @@ import time
 @click.option('--gpu', default=False, type=bool)
 def launch_experiments(gpu):
     entropies = [5e-4]*10
-    instance_groups = [[9, 10, 11], [3, 4, 5], [6, 7, 8]] # [0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 10, 11], [12, 13, 14]
+    instance_groups = [[9, 10, 11], [0,1,2], [6, 7, 8]] # [0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 10, 11], [12, 13, 14]
     env_names = ["reach-v2", "pick-place-v2", "push-v2"]
+    zones = ["us-east1"]
+    counter = 0
     for env_name in env_names:
         instances = instance_groups.pop()
         for i, entropy in enumerate(entropies):
             ####################EDIT THESE FIELDS##################
             if not i % 4:
                 instance_num = instances.pop(0)
+            # if not counter % 64:
+            #     zone = zones.pop(0)
+            zone = "us-east1-d"
+            counter += 1
             username = f'avnishnarayan' # your google username
-            algorithm = f'te_ppo'
-            zone = f'europe-west1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
+            algorithm = f'te_ppo' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
             instance_name = f'mt1-{env_name}-v2-te-ppo-{i}'
-            bucket = f'mt1/{env_name}/{algorithm}/v2'
+            bucket = f'mt1/{env_name}/round2/{algorithm}/v2'
             branch = 'avnish-new-metaworld-results-mt1'
             experiment = f'metaworld_launchers/mt1/{algorithm}_metaworld_mt1.py --entropy {entropy} --env-name {env_name}'
             ######################################################

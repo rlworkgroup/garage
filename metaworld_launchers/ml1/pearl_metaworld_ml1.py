@@ -84,12 +84,14 @@ def pearl_metaworld_ml1(ctxt,
     train_env = MetaWorldSetTaskEnv(ml1, 'train')
     env_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
                                  env=train_env,
-                                 wrapper=lambda env, _: normalize(env))
+                                 wrapper=lambda env, _: normalize(env, scale_reward=100.))
     env = env_sampler.sample(num_train_tasks)
     test_env = MetaWorldSetTaskEnv(ml1, 'test')
     test_env_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
                                       env=test_env,
-                                      wrapper=lambda env, _: normalize(env))
+                                      wrapper=lambda env, _: normalize(env, scale_reward=100.),
+                                      
+                                      )
 
 
     trainer = Trainer(ctxt)
