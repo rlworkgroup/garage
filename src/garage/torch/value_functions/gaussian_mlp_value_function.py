@@ -56,7 +56,7 @@ class GaussianMLPValueFunction(ValueFunction):
                  init_std=1.0,
                  layer_normalization=False,
                  name='GaussianMLPValueFunction'):
-        super(GaussianMLPValueFunction, self).__init__(env_spec, name)
+        super().__init__(env_spec, name)
 
         input_dim = env_spec.observation_space.flat_dim
         output_dim = 1
@@ -102,11 +102,14 @@ class GaussianMLPValueFunction(ValueFunction):
 
         Args:
             obs (torch.Tensor): Observation from the environment
-                with shape :math:`(P, O*)`.
+                with shape :math:`(N \dot [T], O*)`.
 
         Returns:
-            torch.Tensor: Calculated baselines given observations with
-                shape :math:`(P, O*)`.
+            torch.Tensor: Calculated baselines of shape :math:`(N)`
 
         """
-        return self.module(obs).mean.flatten(-2)
+        # Note that policy gradients currently sometimes passes inputs of shape
+        # (N, T, O*) here.
+        # squeeze(-1) removes the last dimension (that would normally be the
+        # action dimension) regardless of input dimensions.
+        return self.module(obs).mean.squeeze(-1)
