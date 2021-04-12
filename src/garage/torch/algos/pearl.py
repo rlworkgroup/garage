@@ -6,7 +6,7 @@ Code is adapted from https://github.com/katerakelly/oyster.
 import copy
 
 import akro
-from dowel import logger
+from dowel import logger, tabular
 import numpy as np
 import torch
 
@@ -418,6 +418,18 @@ class PEARL(MetaRLAlgorithm):
         zero_optim_grads(self._policy_optimizer)
         policy_loss.backward()
         self._policy_optimizer.step()
+        import ipdb; ipdb.set_trace()
+        # logging
+        tabular.record("policy/loss", )
+        tabular.record("policy/mean_reg_loss", )
+        tabular.record("policy/std_reg_loss", )
+        tabular.record("policy/policy_reg_loss", )
+        tabular.record("vf/vf_loss", )
+        tabular.record("qf/qf_loss", )
+        tabular.record("context/kl_loss", )
+
+        
+
 
     def _obtain_samples(self,
                         trainer,
