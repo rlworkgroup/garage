@@ -14,8 +14,8 @@ def launch_experiments(gpu):
         username = f'avnishnarayan' # your google username
         algorithm = f'maml'
         zone = f'europe-west1-b' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
-        instance_name = f'ml45-v2-maml-{i}'
-        bucket = f'ml45/round1/maml/v2'
+        instance_name = f'ml45-v2-round2-maml-{i}'
+        bucket = f'ml45/round2/maml/v2'
         branch = 'avnish-new-metaworld-results-mt1'
         experiment = f'metaworld_launchers/ml45/maml_trpo_metaworld_ml45.py'
         ######################################################
@@ -24,7 +24,7 @@ def launch_experiments(gpu):
             machine_type =  'n2-standard-8' # 'c2-standard-4' we have a quota of 24 of each of these cpus per zone. 
             # You can use n1 cpus which are slower, but we are capped to a total of 72 cpus per zone anyways
             docker_run_file = 'docker_metaworld_run_cpu.py' # 'docker_metaworld_run_gpu.py' for gpu experiment
-            docker_build_command = 'make run-headless -C ~/garage/'
+            docker_build_command = 'make run-dev -C ~/garage/'
             source_machine_image = f'cpu-instance-{instance_num}'
             launch_command = (f"gcloud beta compute instances create {instance_name} "
                 f"--metadata-from-file startup-script=launchers/launch-experiment-{algorithm}-{i}.sh --zone {zone} "
@@ -32,7 +32,7 @@ def launch_experiments(gpu):
         else:
             machine_type =  'n1-standard-4'
             docker_run_file = 'docker_metaworld_run_gpu.py'
-            docker_build_command = ("make run-nvidia-headless -C ~/garage/ "
+            docker_build_command = ("make run-dev-nvidia-headless -C ~/garage/ "
                 '''PARENT_IMAGE='nvidia/cuda:11.0-cudnn8-runtime-ubuntu18.04' ''')
             source_machine_image = 'metaworld-v2-gpu-instance'
             accelerator = '"type=nvidia-tesla-k80,count=1"'

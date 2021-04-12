@@ -19,7 +19,7 @@ rm -rf garage/
 rm -rf metaworld-runs-v2
 runuser -l avnishnarayan -c "git clone https://github.com/rlworkgroup/garage && cd garage/ && git checkout run-ml1 && mkdir data/"
 runuser -l avnishnarayan -c "mkdir -p metaworld-runs-v2/local/experiment/"
-runuser -l avnishnarayan -c "make run-headless -C ~/garage/"
+runuser -l avnishnarayan -c "make run-dev -C ~/garage/"
 runuser -l avnishnarayan -c "cd garage && python docker_metaworld_run_cpu.py 'metaworld_launchers/mt1/rl2_ppo_metaworld_mt1.py --env-name pick-place-v2 --entropy_coefficient {entropy_coeff[i-num_experiments]} --use_sp_clip False --use_share_std_mean_network True'"
 runuser -l avnishnarayan -c "cd garage/metaworld_launchers && python upload_folders.py {bucket} 1200"''')
     with open(f'launch-experiment-{i-num_experiments}.sh', mode='w') as f:
