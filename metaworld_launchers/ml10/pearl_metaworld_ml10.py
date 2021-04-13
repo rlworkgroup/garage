@@ -31,10 +31,10 @@ def pearl_metaworld_ml10(ctxt=None,
                          num_initial_steps=5000,
                          num_steps_prior=2500,
                          num_extra_rl_steps_posterior=2500,
-                         batch_size=500,
-                         embedding_batch_size=64,
-                         embedding_mini_batch_size=64,
-                         reward_scale=10.,
+                         batch_size=1000,
+                         embedding_batch_size=250,
+                         embedding_mini_batch_size=250,
+                         reward_scale=1000.,
                          use_gpu=True):
     """Train PEARL with ML10 environments.
 
@@ -70,8 +70,8 @@ def pearl_metaworld_ml10(ctxt=None,
         use_gpu (bool): Whether or not to use GPU for training.
 
     """
-    num_steps_per_epoch=15
-    num_tasks_sample=num_train_tasks=meta_batch_size=40
+    num_steps_per_epoch=60
+    num_tasks_sample=num_train_tasks=meta_batch_size=10
 
     set_seed(seed)
     encoder_hidden_sizes = (encoder_hidden_size, encoder_hidden_size,

@@ -28,14 +28,14 @@ def pearl_metaworld_ML45(ctxt,
                          latent_size=7,
                          encoder_hidden_size=200,
                          net_size=300,
-                         num_initial_steps=5000,
+                         num_initial_steps=22500,
                          num_steps_prior=2500,
                          num_extra_rl_steps_posterior=2500,
-                         batch_size=500,
-                         embedding_batch_size=64,
-                         embedding_mini_batch_size=64,
-                         reward_scale=10.,
-                         use_gpu=False):
+                         batch_size=1000,
+                         embedding_batch_size=250,
+                         embedding_mini_batch_size=250,
+                         reward_scale=1000.,
+                         use_gpu=True):
     """Train PEARL with ML450 environments.
 
     Args:
@@ -70,9 +70,9 @@ def pearl_metaworld_ML45(ctxt,
         use_gpu (bool): Whether or not to use GPU for training.
 
     """
-    num_steps_per_epoch = 4000
-    num_tasks_sample = num_train_tasks = 15
-    meta_batch_size = 25
+    num_steps_per_epoch = 14
+    num_tasks_sample = num_train_tasks = 45
+    meta_batch_size = 45
 
     set_seed(seed)
     encoder_hidden_sizes = (encoder_hidden_size, encoder_hidden_size,
