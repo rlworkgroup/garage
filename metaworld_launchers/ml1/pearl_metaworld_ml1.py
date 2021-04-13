@@ -34,9 +34,9 @@ def pearl_metaworld_ml1(ctxt,
                          num_steps_prior=2500,
                          num_extra_rl_steps_posterior=2500,
                          batch_size=1000,
-                         embedding_batch_size=64,
-                         embedding_mini_batch_size=64,
-                         reward_scale=10.,
+                         embedding_batch_size=250,
+                         embedding_mini_batch_size=250,
+                         reward_scale=1000.,
                          use_gpu=True):
     """Train PEARL with ML10 environments.
 
@@ -84,13 +84,12 @@ def pearl_metaworld_ml1(ctxt,
     train_env = MetaWorldSetTaskEnv(ml1, 'train')
     env_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
                                  env=train_env,
-                                 wrapper=lambda env, _: normalize(env, scale_reward=100.))
+                                 wrapper=lambda env, _: normalize(env))
     env = env_sampler.sample(num_train_tasks)
     test_env = MetaWorldSetTaskEnv(ml1, 'test')
     test_env_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
                                       env=test_env,
-                                      wrapper=lambda env, _: normalize(env, scale_reward=100.),
-                                      
+                                      wrapper=lambda env, _: normalize(env),
                                       )
 
 
