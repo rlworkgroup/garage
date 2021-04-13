@@ -13,29 +13,31 @@
 import subprocess
 import os
 import click
-import time
 
 @click.command()
 @click.option('--gpu', default=True, type=bool)
 def launch_experiments(gpu):
-    env_names = ["push-v2", "pick-place-v2", "reach-v2"]
+    # env_names = ["push-v2", "pick-place-v2", "reach-v2"]
+    env_names = ["push-v2", "pick-place-v2"]
+
     instance_groups = [[3, 4, 5], [6, 7, 8], [0, 1, 2],]
-    zones_map = {"v100" : set(["us-central1-a", "asia-east1-c"]),
-             "p100" : set(["australia-southeast1-c", "asia-east1-a", "europe-west4-a", "us-central1-a", "us-west1-b", ])}
-    zones = ["asia-east1-c", "us-central1-a", "us-central1-a", "europe-west4-b", "us-central1-a",
-        "us-central1-a", "asia-east1-a", "europe-west4-a", "us-central1-a", "us-west1-b"]
+    # zones_map = {"v100" : set(["us-central1-a", "asia-east1-c"]),
+    #          "p100" : set(["australia-southeast1-c", "asia-east1-a", "europe-west4-a", "us-central1-a", "us-west1-b", ])}
+    zones_map = {"t4" : set(["asia-east1-c", "australia-southeast1-c", "europe-west2-b", "europe-west4-b", "us-central1-a"])}
+    zones = ["asia-east1-c", "australia-southeast1-c", "europe-west2-b", "europe-west4-b", "us-central1-a"]
     counter = 0
     for env_name in env_names:
         instances = instance_groups.pop()
         for i in range(10):
             if not counter % 4:
                 zone = zones.pop(0)
-                if zone in zones_map['v100']:
-                    gpu_type = "v100"
-                elif zone in zones_map['p100']:
-                    gpu_type = "p100"
-                else:
-                    raise ValueError(zone)
+                # if zone in zones_map['v100']:
+                #     gpu_type = "v100"
+                # elif zone in zones_map['p100']:
+                #     gpu_type = "p100"
+                # else:
+                #     raise ValueError(zone)
+                gpu_type = "t4"
             if not counter % 4:
                 instance_num = instances.pop(0)
             counter += 1

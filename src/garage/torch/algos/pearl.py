@@ -418,18 +418,14 @@ class PEARL(MetaRLAlgorithm):
         zero_optim_grads(self._policy_optimizer)
         policy_loss.backward()
         self._policy_optimizer.step()
-        import ipdb; ipdb.set_trace()
         # logging
-        tabular.record("policy/loss", )
-        tabular.record("policy/mean_reg_loss", )
-        tabular.record("policy/std_reg_loss", )
-        tabular.record("policy/policy_reg_loss", )
-        tabular.record("vf/vf_loss", )
-        tabular.record("qf/qf_loss", )
-        tabular.record("context/kl_loss", )
-
-        
-
+        tabular.record("policy/loss", policy_loss.detach().to("cpu").item())
+        tabular.record("policy/mean_reg_loss", float(mean_reg_loss))
+        tabular.record("policy/std_reg_loss", float(std_reg_loss))
+        tabular.record("policy/policy_reg_loss", policy_reg_loss.detach().to("cpu").item())
+        tabular.record("vf/vf_loss", vf_loss.detach().to("cpu").item())
+        tabular.record("qf/qf_loss", qf_loss.detach().to("cpu").item())
+        tabular.record("context/kl_loss", kl_loss.detach().to("cpu").item())
 
     def _obtain_samples(self,
                         trainer,
