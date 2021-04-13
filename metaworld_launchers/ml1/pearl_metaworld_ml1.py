@@ -72,7 +72,7 @@ def pearl_metaworld_ml1(ctxt,
         use_gpu (bool): Whether or not to use GPU for training.
 
     """
-    num_steps_per_epoch = 4000
+    num_steps_per_epoch = 40
     num_tasks_sample = num_train_tasks = 15
     meta_batch_size = 16
 
