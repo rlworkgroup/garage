@@ -11,6 +11,7 @@ from garage import log_performance
 from garage.np import discount_cumsum
 from garage.np.algos import RLAlgorithm
 from garage.torch import compute_advantages, filter_valids
+from garage.torch._functions import np_to_torch, zero_optim_grads
 from garage.torch.optimizers import OptimizerWrapper
 
 
@@ -144,9 +145,9 @@ class VPG(RLAlgorithm):
             numpy.float64: Calculated mean value of undiscounted returns.
 
         """
-        obs = torch.Tensor(eps.padded_observations)
-        rewards = torch.Tensor(eps.padded_rewards)
-        returns = torch.Tensor(
+        obs = np_to_torch(eps.padded_observations)
+        rewards = np_to_torch(eps.padded_rewards)
+        returns = np_to_torch(
             np.stack([
                 discount_cumsum(reward, self.discount)
                 for reward in eps.padded_rewards
@@ -159,9 +160,9 @@ class VPG(RLAlgorithm):
             policy_entropies = self._compute_policy_entropy(obs)
             rewards += self._policy_ent_coeff * policy_entropies
 
-        obs_flat = torch.Tensor(eps.observations)
-        actions_flat = torch.Tensor(eps.actions)
-        rewards_flat = torch.Tensor(eps.rewards)
+        obs_flat = np_to_torch(eps.observations)
+        actions_flat = np_to_torch(eps.actions)
+        rewards_flat = np_to_torch(eps.rewards)
         returns_flat = torch.cat(filter_valids(returns, valids))
         advs_flat = self._compute_advantage(rewards, valids, baselines)
 
@@ -264,7 +265,8 @@ class VPG(RLAlgorithm):
             torch.Tensor: Calculated mean scalar value of policy loss (float).
 
         """
-        self._policy_optimizer.zero_grad()
+        # pylint: disable=protected-access
+        zero_optim_grads(self._policy_optimizer._optimizer)
         loss = self._compute_loss_with_adv(obs, actions, rewards, advantages)
         loss.backward()
         self._policy_optimizer.step()
@@ -285,7 +287,8 @@ class VPG(RLAlgorithm):
                 (float).
 
         """
-        self._vf_optimizer.zero_grad()
+        # pylint: disable=protected-access
+        zero_optim_grads(self._vf_optimizer._optimizer)
         loss = self._value_function.compute_loss(obs, returns)
         loss.backward()
         self._vf_optimizer.step()

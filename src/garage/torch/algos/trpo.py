@@ -1,6 +1,7 @@
 """Trust Region Policy Optimization."""
 import torch
 
+from garage.torch._functions import zero_optim_grads
 from garage.torch.algos import VPG
 from garage.torch.optimizers import (ConjugateGradientOptimizer,
                                      OptimizerWrapper)
@@ -133,7 +134,8 @@ class TRPO(VPG):
             torch.Tensor: Calculated mean scalar value of policy loss (float).
 
         """
-        self._policy_optimizer.zero_grad()
+        # pylint: disable=protected-access
+        zero_optim_grads(self._policy_optimizer._optimizer)
         loss = self._compute_loss_with_adv(obs, actions, rewards, advantages)
         loss.backward()
         self._policy_optimizer.step(

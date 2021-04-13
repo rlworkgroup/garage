@@ -13,7 +13,7 @@ from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
 from garage.sampler import FragmentWorker, LocalSampler
-from garage.torch import as_torch
+from garage.torch import np_to_torch
 from garage.torch.algos import DQN
 from garage.torch.policies import DiscreteQFArgmaxPolicy
 from garage.torch.q_functions import DiscreteMLPQFunction
@@ -94,11 +94,11 @@ def test_dqn_loss(setup):
     timesteps = buff.sample_timesteps(algo._buffer_batch_size)
     timesteps_copy = copy.deepcopy(timesteps)
 
-    observations = as_torch(timesteps.observations)
-    rewards = as_torch(timesteps.rewards).reshape(-1, 1)
-    actions = as_torch(timesteps.actions)
-    next_observations = as_torch(timesteps.next_observations)
-    terminals = as_torch(timesteps.terminals).reshape(-1, 1)
+    observations = np_to_torch(timesteps.observations)
+    rewards = np_to_torch(timesteps.rewards).reshape(-1, 1)
+    actions = np_to_torch(timesteps.actions)
+    next_observations = np_to_torch(timesteps.next_observations)
+    terminals = np_to_torch(timesteps.terminals).reshape(-1, 1)
 
     next_inputs = next_observations
     inputs = observations
@@ -138,11 +138,11 @@ def test_double_dqn_loss(setup):
     timesteps = buff.sample_timesteps(algo._buffer_batch_size)
     timesteps_copy = copy.deepcopy(timesteps)
 
-    observations = as_torch(timesteps.observations)
-    rewards = as_torch(timesteps.rewards).reshape(-1, 1)
-    actions = as_torch(timesteps.actions)
-    next_observations = as_torch(timesteps.next_observations)
-    terminals = as_torch(timesteps.terminals).reshape(-1, 1)
+    observations = np_to_torch(timesteps.observations)
+    rewards = np_to_torch(timesteps.rewards).reshape(-1, 1)
+    actions = np_to_torch(timesteps.actions)
+    next_observations = np_to_torch(timesteps.next_observations)
+    terminals = np_to_torch(timesteps.terminals).reshape(-1, 1)
 
     next_inputs = next_observations
     inputs = observations

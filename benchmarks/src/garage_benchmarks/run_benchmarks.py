@@ -14,10 +14,8 @@ import inspect
 
 import click
 
-from garage_benchmarks import (benchmark_algos,
-                               benchmark_auto,
-                               benchmark_baselines,
-                               benchmark_policies,
+from garage_benchmarks import (benchmark_algos, benchmark_auto,
+                               benchmark_baselines, benchmark_policies,
                                benchmark_q_functions)
 
 # yapf: enable

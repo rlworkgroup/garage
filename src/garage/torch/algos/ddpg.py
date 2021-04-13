@@ -10,6 +10,7 @@ from garage import (_Default, log_performance, make_optimizer,
                     obtain_evaluation_episodes)
 from garage.np.algos import RLAlgorithm
 from garage.torch import as_torch_dict, torch_to_np
+from garage.torch._functions import zero_optim_grads
 
 # yapf: enable
 
@@ -254,14 +255,14 @@ class DDPG(RLAlgorithm):
         qval = self._qf(inputs, actions)
         qf_loss = torch.nn.MSELoss()
         qval_loss = qf_loss(qval, y_target)
-        self._qf_optimizer.zero_grad()
+        zero_optim_grads(self._qf_optimizer)
         qval_loss.backward()
         self._qf_optimizer.step()
 
         # optimize actor
         actions = self.policy(inputs)
         action_loss = -1 * self._qf(inputs, actions).mean()
-        self._policy_optimizer.zero_grad()
+        zero_optim_grads(self._policy_optimizer)
         action_loss.backward()
         self._policy_optimizer.step()
 

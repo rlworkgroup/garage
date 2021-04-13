@@ -61,10 +61,9 @@ class CNNModule(nn.Module):
         hidden_w_init (callable): Initializer function for the weight
             of intermediate dense layer(s). The function should return a
             torch.Tensor.
-
-    Raises:
-        ValueError: If spec or other arguments are inconsistent.
-
+        enable_cudnn_benchmarks (bool): Whether to enable cudnn benchmarks
+            in `torch`. If enabled, the backend selects the CNN benchamark
+            algorithm with the best performance.
     """
 
     def __init__(
@@ -83,7 +82,8 @@ class CNNModule(nn.Module):
             max_pool=False,
             pool_shape=None,
             pool_stride=1,
-            layer_normalization=False):
+            layer_normalization=False,
+            enable_cudnn_benchmarks=True):
         super().__init__()
         assert len(hidden_channels) > 0
         # PyTorch forces us to use NCHW internally.
@@ -101,6 +101,7 @@ class CNNModule(nn.Module):
                                  len(hidden_channels), 'hidden_channels')
 
         self._cnn_layers = nn.Sequential()
+        torch.backends.cudnn.benchmark = enable_cudnn_benchmarks
 
         # In case there are no hidden channels, handle output case.
         out_channels = in_channels
