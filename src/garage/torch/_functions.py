@@ -369,11 +369,11 @@ def state_dict_to(state_dict, device):
     """Move optimizer to a specified device.
 
     Args:
-        state_dict (dict): state dictionary to be moved
+        state_dict (dict): state dictionary to be moved.
         device (str): ID of GPU or CPU.
 
     Returns:
-        dict: state dictionary moved to device
+        dict: state dictionary moved to device.
     """
     for param in state_dict.values():
         if isinstance(param, torch.Tensor):
@@ -381,6 +381,61 @@ def state_dict_to(state_dict, device):
         elif isinstance(param, dict):
             state_dict_to(param, device)
     return state_dict
+
+
+# pylint: disable=abstract-method
+class Module(nn.Module):
+    """Wrapper class for Garage PyTorch modules."""
+
+    def __getstate__(self):
+        """Save the current device of the module before saving module state.
+
+        Returns:
+            dict: State dictionary.
+        """
+        # do we always run experiments on global device?
+        save_from_device = global_device()
+        self.to('cpu')
+        state = self.__dict__.copy()
+        state['device'] = save_from_device
+        return state
+
+    def __setstate__(self, state):
+        """Restore the module state, moving it back to the original device if possible.
+
+        Args:
+            state (dict): State dictionary.
+
+        """
+        system_device = global_device()
+        save_from_device = state['device']
+        if save_from_device == system_device:
+            module_state_to(state, system_device)
+        # what to do if it doesn't match?
+        # do I need to set global device to the current device?
+        del state['device']
+        self.__dict__ = state
+        if save_from_device == system_device:
+            self.to(system_device)
+
+
+def module_state_to(state, device):
+    """Move elements of a module state to a device.
+
+    Notes - are there other types of parameters in a
+    module state to be moved? are some of them recursive?
+
+    Args:
+        state (dict): State dictionary.
+        device (str): ID of GPU or CPU.
+
+    Returns:
+        dict: moved state dict.
+    """
+    for param in state.values():
+        if hasattr(param, 'to'):
+            param = param.to(device)
+    return state
 
 
 # pylint: disable=W0223

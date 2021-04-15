@@ -4,6 +4,7 @@ import pytest
 import torch
 
 from garage.envs import GymEnv
+from garage.torch import global_device, set_gpu_mode
 from garage.torch.policies import CategoricalCNNPolicy
 
 from tests.fixtures.envs.dummy import DummyDictEnv, DummyDiscretePixelEnv
@@ -152,3 +153,36 @@ class TestCategoricalCNNPolicy:
         obs = env.observation_space.sample()
         action, _ = policy.get_action(env.observation_space.flatten(obs))
         env.step(action)
+
+
+@pytest.mark.gpu
+@pytest.mark.parametrize(
+    'hidden_channels, kernel_sizes, strides, hidden_sizes', [
+        ((3, ), (3, ), (1, ), (4, )),
+        ((3, 3), (3, 3), (1, 1), (4, 4)),
+        ((3, 3), (3, 3), (2, 2), (4, 4)),
+    ])
+def test_is_pickleable_on_gpu(hidden_channels, kernel_sizes, strides,
+                              hidden_sizes):
+    """Test if policy is pickable when on gpu."""
+    set_gpu_mode(True)
+    env = GymEnv(DummyDiscretePixelEnv(), is_image=True)
+    policy = CategoricalCNNPolicy(env_spec=env.spec,
+                                  image_format='NHWC',
+                                  kernel_sizes=kernel_sizes,
+                                  hidden_channels=hidden_channels,
+                                  strides=strides,
+                                  hidden_sizes=hidden_sizes)
+    policy.to(global_device())
+    env.reset()
+    obs = env.step(1).observation
+
+    output_action_1, _ = policy.get_action(obs)
+
+    p = cloudpickle.dumps(policy)
+    policy_pickled = cloudpickle.loads(p)
+    output_action_2, _ = policy_pickled.get_action(obs)
+
+    assert env.action_space.contains(output_action_1)
+    assert env.action_space.contains(output_action_2)
+    assert output_action_1.shape == output_action_2.shape

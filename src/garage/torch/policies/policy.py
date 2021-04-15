@@ -1,12 +1,11 @@
 """Base Policy."""
 import abc
 
-import torch
-
 from garage.np.policies import Policy as BasePolicy
+from garage.torch import Module
 
 
-class Policy(torch.nn.Module, BasePolicy, abc.ABC):
+class Policy(Module, BasePolicy, abc.ABC):
     """Policy base class.
 
     Args:
