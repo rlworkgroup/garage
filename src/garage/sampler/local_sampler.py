@@ -1,5 +1,6 @@
 """Sampler that runs workers in the main process."""
 import copy
+import click
 
 from garage import TrajectoryBatch
 from garage.sampler.sampler import Sampler
@@ -125,7 +126,7 @@ class LocalSampler(Sampler):
                     batch = worker.rollout()
                     completed_samples += len(batch.actions)
                     batches.append(batch)
-                    pbar.update(collected_samples)
+                    pbar.update(completed_samples)
                     if completed_samples >= num_samples:
                         samples = TrajectoryBatch.concatenate(*batches)
                         self.total_env_steps += sum(samples.lengths)
