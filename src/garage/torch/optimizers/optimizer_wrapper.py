@@ -1,4 +1,6 @@
 """A PyTorch optimizer wrapper that compute loss and optimize module."""
+import click
+
 from garage import make_optimizer
 from garage.np.optimizers import BatchDataset
 
@@ -44,9 +46,11 @@ class OptimizerWrapper:
         """
         batch_dataset = BatchDataset(inputs, self._minibatch_size)
 
-        for _ in range(self._max_optimization_epochs):
-            for dataset in batch_dataset.iterate():
-                yield dataset
+        with click.progressbar(range(self._max_optimization_epochs),
+                               label='Optimizing minibatches') as pbar:
+            for _ in pbar:
+                for dataset in batch_dataset.iterate():
+                    yield dataset
 
     def zero_grad(self):
         r"""Clears the gradients of all optimized :class:`torch.Tensor` s."""
