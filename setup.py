@@ -14,7 +14,7 @@ REQUIRED = [
     'click>=2.0',
     'cloudpickle',
     'cma==2.7.0',
-    'dowel==0.0.3',
+    'dowel>=0.0.4',
     'gym[atari,box2d,classic_control]' + GYM_VERSION,
     'numpy>=1.14.5',
     'psutil',
