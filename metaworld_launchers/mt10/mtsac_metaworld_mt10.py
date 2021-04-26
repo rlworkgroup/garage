@@ -14,7 +14,7 @@ from garage.envs import normalize
 from garage.experiment import deterministic
 from garage.experiment.task_sampler import MetaWorldTaskSampler
 from garage.replay_buffer import PathBuffer
-from garage.sampler import FragmentWorker, LocalSampler
+from garage.sampler import DefaultWorker, EvalWorker, RaySampler
 from garage.torch import set_gpu_mode
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
@@ -54,7 +54,6 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed):
     assert n_tasks <= 500
     mt10_train_envs = train_task_sampler.sample(n_tasks)
     env = mt10_train_envs[0]()
-    mt10_test_envs = [env_up() for env_up in mt10_train_envs]
 
     policy = TanhGaussianMLPPolicy(
         env_spec=env.spec,
@@ -75,24 +74,25 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed):
 
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
     num_tasks = 10
+    max_episode_length = env.spec.max_episode_length
 
-    sampler = LocalSampler(
+    sampler = RaySampler(
         agents=policy,
         envs=mt10_train_envs,
-        max_episode_length=env.spec.max_episode_length,
+        max_episode_length=max_episode_length,
         # 1 sampler worker for each environment
         n_workers=num_tasks,
-        worker_class=FragmentWorker,
-        # increasing n_envs increases the vectorization of a sampler worker
-        # which improves runtime performance, but you will need to adjust this
-        # depending on your memory constraints. For reference, each worker by
-        # default uses n_envs=8. Each environment is approximately ~50mb large
-        # so creating 50 envs with 8 copies comes out to 20gb of memory. Many
-        # users want to be able to run multiple seeds on 1 machine, so I have
-        # reduced this to n_envs = 2 for 2 copies in the meantime.
-        worker_args=dict(n_envs=2))
+        worker_class=DefaultWorker)
+    
+    test_sampler = RaySampler(
+        agents=policy,
+        envs=mt10_train_envs,
+        max_episode_length=max_episode_length,
+        # 1 sampler worker for each environment
+        n_workers=num_tasks,
+        worker_class=EvalWorker)
 
-    batch_size = int(env.spec.max_episode_length * num_tasks)
+    batch_size = int(max_episode_length * num_tasks)
     num_evaluation_points = 500
     epochs = timesteps // batch_size
     epoch_cycles = epochs // num_evaluation_points
@@ -101,13 +101,14 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed):
                   qf1=qf1,
                   qf2=qf2,
                   sampler=sampler,
-                  gradient_steps_per_itr=env.spec.max_episode_length,
-                  eval_env=mt10_test_envs,
+                  test_sampler=test_sampler,
+                  gradient_steps_per_itr=max_episode_length,
+                  train_task_sampler=train_task_sampler,
                   env_spec=env.spec,
                   num_tasks=num_tasks,
                   steps_per_epoch=epoch_cycles,
                   replay_buffer=replay_buffer,
-                  min_buffer_size=1500,
+                  min_buffer_size=max_episode_length * num_tasks,
                   target_update_tau=5e-3,
                   discount=0.99,
                   buffer_batch_size=1280)

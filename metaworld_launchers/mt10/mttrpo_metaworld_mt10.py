@@ -83,6 +83,8 @@ def mttrpo_metaworld_mt10(ctxt, seed, entropy):
                 sampler=sampler,
                 use_neg_logli_entropy=True,
                 multitask=True,
+                train_task_sampler=train_task_sampler,
+                task_update_frequency=50,
             )
 
         trainer.setup(algo, env)

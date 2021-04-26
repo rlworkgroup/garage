@@ -72,7 +72,9 @@ class PPO(NPO):
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
                  name='PPO',
-                 multitask=False):
+                 multitask=False,
+                 task_update_frequency=1,
+                 train_task_sampler=None):
         if optimizer is None:
             optimizer = FirstOrderOptimizer
             if optimizer_args is None:
@@ -98,4 +100,6 @@ class PPO(NPO):
                          stop_entropy_gradient=stop_entropy_gradient,
                          entropy_method=entropy_method,
                          name=name,
-                         multitask=multitask)
+                         multitask=multitask,
+                         task_update_frequency=task_update_frequency,
+                         train_task_sampler=train_task_sampler)

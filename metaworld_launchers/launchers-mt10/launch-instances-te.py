@@ -16,8 +16,8 @@ def launch_experiments(gpu):
         algorithm = f'task_embeddings'
         zone = f'us-west2-a' # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
         entropy_str = str(entropy).replace('.', '-')
-        instance_name = f'round6-v2-te-{i}'
-        bucket = f'mt10/round6/te/v2'
+        instance_name = f'round7-v2-te-{i}'
+        bucket = f'mt10/round7/te/v2'
         branch = 'avnish-new-metaworld-results-mt1'
         experiment = f'metaworld_launchers/mt10/te_ppo_metaworld_mt10.py --entropy {entropy}'
         ######################################################

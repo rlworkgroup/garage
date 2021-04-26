@@ -45,9 +45,7 @@ def mtppo_metaworld_MT50(ctxt, seed, entropy):
     assert n_tasks % 10 == 0
     assert n_tasks <= 500
     envs = [env_up() for env_up in train_task_sampler.sample(n_tasks)]
-    # env = MultiEnvWrapper(envs,
-    #                       sample_strategy=round_robin_strategy,
-    #                       mode='vanilla')
+    
     env = envs[0]
     with TFTrainer(snapshot_config=ctxt) as trainer:
         policy = GaussianMLPPolicy(
@@ -91,7 +89,9 @@ def mtppo_metaworld_MT50(ctxt, seed, entropy):
                 use_softplus_entropy=False,
                 sampler=sampler,
                 use_neg_logli_entropy=True,
-                multitask=True
+                multitask=True,
+                train_task_sampler=train_task_sampler,
+                task_update_frequency=50,
             )
 
         trainer.setup(algo, env)

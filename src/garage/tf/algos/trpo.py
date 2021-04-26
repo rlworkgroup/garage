@@ -75,7 +75,9 @@ class TRPO(NPO):
                  kl_constraint='hard',
                  entropy_method='no_entropy',
                  name='TRPO',
-                 multitask=False):
+                 multitask=False,
+                 task_update_frequency=1,
+                 train_task_sampler=None):
         if not optimizer:
             if kl_constraint == 'hard':
                 optimizer = ConjugateGradientOptimizer
@@ -108,4 +110,6 @@ class TRPO(NPO):
                          stop_entropy_gradient=stop_entropy_gradient,
                          entropy_method=entropy_method,
                          name=name,
-                         multitask=multitask)
+                         multitask=multitask,
+                         task_update_frequency=task_update_frequency,
+                         train_task_sampler=train_task_sampler)

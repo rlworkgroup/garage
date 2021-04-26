@@ -18,8 +18,8 @@ def launch_experiments(gpu):
         username = f'avnishnarayan' # your google username
         algorithm = f'mttrpo'
         entropy_str = str(entropy).replace('.', '-')
-        instance_name = f'v2-round6-mt10-mttrpo-tuned-entropy-{entropy_str}-{i}'
-        bucket = f'mt10/round6/mttrpo/v2'
+        instance_name = f'v2-round7-mt10-mttrpo-tuned-entropy-{entropy_str}-{i}'
+        bucket = f'mt10/round7/mttrpo/v2'
         branch = 'avnish-new-metaworld-results-mt1'
         experiment = f'metaworld_launchers/mt10/mttrpo_metaworld_mt10.py --entropy {entropy}'
         ######################################################

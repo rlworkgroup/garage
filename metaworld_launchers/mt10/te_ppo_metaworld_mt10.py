@@ -46,7 +46,8 @@ def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task, entropy):
                                               add_env_onehot=False)
     assert n_tasks % 10 == 0
     assert n_tasks <= 500
-    envs = [env_up() for env_up in train_task_sampler.sample(n_tasks)]
+    env_ups = train_task_sampler.sample(n_tasks)
+    envs = [env_up() for env_up in env_ups]
     env = MultiEnvWrapper(envs,
                           sample_strategy=round_robin_strategy,
                           mode='vanilla')
@@ -136,7 +137,8 @@ def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task, entropy):
                          max_optimization_epochs=10,
                      ),
                      center_adv=True,
-                     stop_ce_gradient=True)
+                     stop_ce_gradient=True,
+                     train_task_sampler=train_task_sampler)
 
         trainer.setup(algo, env)
         trainer.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
