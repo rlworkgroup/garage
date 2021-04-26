@@ -136,7 +136,8 @@ def te_ppo_MT50(ctxt, seed, n_epochs, batch_size_per_task, entropy):
                          max_optimization_epochs=10,
                      ),
                      center_adv=True,
-                     stop_ce_gradient=True)
+                     stop_ce_gradient=True,
+                     train_task_sampler=train_task_sampler)
 
         trainer.setup(algo, env)
         trainer.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)

@@ -22,8 +22,8 @@ def launch_experiments(gpu):
         username = f'avnishnarayan' # your google username
         algorithm = f'mtsac'
         zone = zone # find the apprpropriate zone here https://cloud.google.com/compute/docs/regions-zones
-        instance_name = f'mt50-round1-v2-mtsac-{i}'
-        bucket = f'mt50/round1/mtsac/v2'
+        instance_name = f'mt50-round7-v2-mtsac-{i}'
+        bucket = f'mt50/round7/mtsac/v2'
         branch = 'avnish-new-metaworld-results-mt1'
         experiment = f'metaworld_launchers/mt50/mtsac_metaworld_mt50.py'
         ######################################################

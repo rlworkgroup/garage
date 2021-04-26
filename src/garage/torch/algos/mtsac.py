@@ -1,10 +1,13 @@
 """This modules creates a MTSAC model in PyTorch."""
 # yapf: disable
+from dowel import tabular
 import numpy as np
 import torch
 
+import copy
+
 from garage import (EpisodeBatch, log_multitask_performance,
-                    obtain_evaluation_episodes)
+                    obtain_evaluation_episodes, StepType)
 from garage.torch import global_device
 from garage.torch.algos import SAC
 
@@ -84,9 +87,10 @@ class MTSAC(SAC):
         replay_buffer,
         env_spec,
         sampler,
+        test_sampler,
+        train_task_sampler,
         *,
         num_tasks,
-        eval_env,
         gradient_steps_per_itr,
         max_episode_length_eval=None,
         fixed_alpha=None,
@@ -102,7 +106,7 @@ class MTSAC(SAC):
         optimizer=torch.optim.Adam,
         steps_per_epoch=1,
         num_evaluation_episodes=5,
-        use_deterministic_evaluation=True,
+        task_update_frequency=1
     ):
 
         super().__init__(
@@ -127,12 +131,15 @@ class MTSAC(SAC):
             optimizer=optimizer,
             steps_per_epoch=steps_per_epoch,
             num_evaluation_episodes=num_evaluation_episodes,
-            eval_env=eval_env,
-            use_deterministic_evaluation=use_deterministic_evaluation)
+            eval_env=None,
+            use_deterministic_evaluation=True)
+        self._train_task_sampler = train_task_sampler
+        self._test_sampler = test_sampler
         self._num_tasks = num_tasks
-        self._eval_env = eval_env
+        self._curr_train_tasks = self._train_task_sampler.sample(self._num_tasks)
         self._use_automatic_entropy_tuning = fixed_alpha is None
         self._fixed_alpha = fixed_alpha
+        self._task_update_frequency = task_update_frequency
         if self._use_automatic_entropy_tuning:
             if target_entropy:
                 self._target_entropy = target_entropy
@@ -203,17 +210,12 @@ class MTSAC(SAC):
                 episodes
 
         """
-        eval_eps = []
-        for eval_env in self._eval_env:
-            eval_eps.append(
-                obtain_evaluation_episodes(
-                    self.policy,
-                    eval_env,
-                    self._max_episode_length_eval,
-                    num_eps=self._num_evaluation_episodes,
-                    deterministic=self._use_deterministic_evaluation))
-        eval_eps = EpisodeBatch.concatenate(*eval_eps)
-        last_return = log_multitask_performance(epoch, eval_eps,
+        with torch.no_grad():
+            agent_update = copy.deepcopy(self.policy).to("cpu")
+        eval_batch = self._test_sampler.obtain_exact_episodes(
+            n_eps_per_worker=self._num_evaluation_episodes,
+            agent_update=agent_update)
+        last_return = log_multitask_performance(epoch, eval_batch,
                                                 self._discount)
         return last_return
 
@@ -236,3 +238,58 @@ class MTSAC(SAC):
                 self._num_tasks).to(device).requires_grad_()
             self._alpha_optimizer = self._optimizer([self._log_alpha],
                                                     lr=self._policy_lr)
+
+    def train(self, trainer):
+        """Obtain samplers and start actual training for each epoch.
+
+        Args:
+            trainer (Trainer): Gives the algorithm the access to
+                :method:`~Trainer.step_epochs()`, which provides services
+                such as snapshotting and sampler control.
+
+        Returns:
+            float: The average return in last epoch cycle.
+
+        """
+        if not self._eval_env:
+            self._eval_env = trainer.get_env_copy()
+        last_return = None
+        for _ in trainer.step_epochs():
+            for i in range(self._steps_per_epoch):
+                if not (self.replay_buffer.n_transitions_stored >=
+                        self._min_buffer_size):
+                    batch_size = int(self._min_buffer_size)
+                else:
+                    batch_size = None
+                with torch.no_grad():
+                    agent_update = copy.deepcopy(self.policy).to("cpu")
+                # import ipdb; ipdb.set_trace()
+                env_updates = None
+                if (not i and not i % self._task_update_frequency) or (self._task_update_frequency == 1):
+                    self._curr_train_tasks = self._train_task_sampler.sample(self._num_tasks)
+                    env_updates = self._curr_train_tasks
+                trainer.step_episode = trainer.obtain_samples(
+                    trainer.step_itr, batch_size, agent_update=agent_update,
+                    env_update=env_updates)
+                path_returns = []
+                for path in trainer.step_episode:
+                    self.replay_buffer.add_path(
+                        dict(observation=path['observations'],
+                             action=path['actions'],
+                             reward=path['rewards'].reshape(-1, 1),
+                             next_observation=path['next_observations'],
+                             terminal=np.array([
+                                 step_type == StepType.TERMINAL
+                                 for step_type in path['step_types']
+                             ]).reshape(-1, 1)))
+                    path_returns.append(sum(path['rewards']))
+                assert len(path_returns) == len(trainer.step_episode)
+                self.episode_rewards.append(np.mean(path_returns))
+                for _ in range(self._gradient_steps):
+                    policy_loss, qf1_loss, qf2_loss = self.train_once()
+            last_return = self._evaluate_policy(trainer.step_itr)
+            self._log_statistics(policy_loss, qf1_loss, qf2_loss)
+            tabular.record('TotalEnvSteps', trainer.total_env_steps)
+            trainer.step_itr += 1
+
+        return np.mean(last_return)

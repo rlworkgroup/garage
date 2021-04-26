@@ -3,6 +3,7 @@
 from garage.sampler._dtypes import InProgressEpisode
 from garage.sampler._functions import _apply_env_update
 from garage.sampler.default_worker import DefaultWorker
+from garage.sampler.evaluation_worker import EvalWorker
 from garage.sampler.env_update import (EnvUpdate,
                                        ExistingEnvUpdate,
                                        NewEnvUpdate,
@@ -21,6 +22,7 @@ from garage.sampler.worker_factory import WorkerFactory
 __all__ = [
     '_apply_env_update',
     'InProgressEpisode',
+    'EvalWorker'
     'FragmentWorker',
     'Sampler',
     'LocalSampler',

@@ -79,7 +79,9 @@ class TEPPO(TENPO):
                  inference_optimizer=None,
                  inference_optimizer_args=None,
                  inference_ce_coeff=1e-3,
-                 name='PPOTaskEmbedding'):
+                 name='PPOTaskEmbedding',
+                 task_update_frequency=1,
+                 train_task_sampler=None):
 
         optimizer = optimizer or FirstOrderOptimizer
         optimizer_args = optimizer_args or dict(batch_size=32,
@@ -111,4 +113,6 @@ class TEPPO(TENPO):
                          inference_optimizer=inference_optimizer,
                          inference_optimizer_args=inference_optimizer_args,
                          inference_ce_coeff=inference_ce_coeff,
-                         name=name)
+                         name=name,
+                         task_update_frequency=task_update_frequency,
+                         train_task_sampler=train_task_sampler)

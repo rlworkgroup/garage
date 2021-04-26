@@ -8,6 +8,7 @@ import scipy.stats
 import tensorflow as tf
 
 from garage import InOutSpec, log_performance, log_multitask_performance
+from garage.envs.multi_env_wrapper import MultiEnvWrapper, round_robin_strategy
 from garage.experiment import deterministic
 from garage.np import (discount_cumsum, explained_variance_1d, pad_batch_array,
                        rrse, sliding_window)
@@ -99,10 +100,15 @@ class TENPO(RLAlgorithm):
                  inference_optimizer=None,
                  inference_optimizer_args=None,
                  inference_ce_coeff=0.0,
-                 name='NPOTaskEmbedding'):
+                 name='NPOTaskEmbedding',
+                 task_update_frequency=1,
+                 train_task_sampler=None):
         # pylint: disable=too-many-statements
         assert isinstance(policy, TaskEmbeddingPolicy)
         assert isinstance(inference, StochasticEncoder)
+        
+        self._task_update_frequency = task_update_frequency
+        self._train_task_sampler = train_task_sampler
 
         self.policy = policy
         self._scope = scope
@@ -202,8 +208,18 @@ class TENPO(RLAlgorithm):
         """
         last_return = None
 
-        for _ in trainer.step_epochs():
-            trainer.step_episode = trainer.obtain_episodes(trainer.step_itr)
+        for i, _ in enumerate(trainer.step_epochs()):
+            assert self._train_task_sampler is not None
+            env_updates = None
+            if (not i % self._task_update_frequency) or (self._task_update_frequency == 1):
+                num_tasks = self.policy.task_space.flat_dim
+                env_ups = self._train_task_sampler.sample(num_tasks)
+                envs = [env_up() for env_up in env_ups]
+                del self._sampler
+                self._sampler = MultiEnvWrapper(envs,
+                                                sample_strategy=round_robin_strategy,
+                                                mode='vanilla')
+            trainer.step_episode = trainer.obtain_episodes(trainer.step_itr, env_update=env_updates)
             last_return = self._train_once(trainer.step_itr,
                                            trainer.step_episode)
             trainer.step_itr += 1

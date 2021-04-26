@@ -83,7 +83,9 @@ def mttrpo_metaworld_MT50(ctxt, seed, entropy):
                 use_softplus_entropy=False,
                 sampler=sampler,
                 use_neg_logli_entropy=True,
-                multitask=True
+                multitask=True,
+                train_task_sampler=train_task_sampler,
+                task_update_frequency=50,
             )
 
         trainer.setup(algo, env)

@@ -99,8 +99,13 @@ class NPO(RLAlgorithm):
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
                  name='NPO',
-                 multitask=False):
+                 multitask=False,
+                 task_update_frequency=1,
+                 train_task_sampler=None):
+        self._task_update_frequency = task_update_frequency
         self._multitask = multitask
+        self._train_task_sampler = train_task_sampler
+
         self.policy = policy
         self._scope = scope
         self.max_episode_length = env_spec.max_episode_length
@@ -176,9 +181,13 @@ class NPO(RLAlgorithm):
         """
         last_return = None
 
-        for _ in trainer.step_epochs():
+        for i, _ in enumerate(trainer.step_epochs()):
             if not self._multitask:
-                trainer.step_path = trainer.obtain_episodes(trainer.step_itr)
+                env_updates = None
+                assert self._train_task_sampler is not None
+                if (not i % self._task_update_frequency) or (self._task_update_frequency == 1):
+                    env_updates = self._train_task_sampler.sample(self._num_tasks)
+                trainer.step_path = trainer.obtain_episodes(trainer.step_itr, env_update=env_updates)
             else:
                 trainer.step_path = self.obtain_exact_trajectories(trainer)
             last_return = self._train_once(trainer.step_itr, trainer.step_path)
