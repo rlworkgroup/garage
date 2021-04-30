@@ -259,6 +259,28 @@ class RaySampler(Sampler):
             worker.shutdown.remote()
         ray.shutdown()
 
+    def __getstate__(self):
+        """Get the pickle state.
+
+        Returns:
+            dict: The pickled state.
+
+        """
+        return dict(factory=self._worker_factory,
+                    agents=self._agents,
+                    envs=self._envs)
+
+    def __setstate__(self, state):
+        """Unpickle the state.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
+        self.__init__(state['agents'],
+                      state['envs'],
+                      worker_factory=state['factory'])
+
 
 class SamplerWorker:
     """Constructs a single sampler worker.
