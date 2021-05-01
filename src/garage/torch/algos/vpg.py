@@ -51,6 +51,8 @@ class VPG(RLAlgorithm):
             dense entropy to the reward for each time step. 'regularized' adds
             the mean entropy to the surrogate objective. See
             https://arxiv.org/abs/1805.00909 for more details.
+        use_neg_logli_entropy (bool): Whether to estimate the entropy as the
+            negative log likelihood of the action.
 
     """
 
@@ -71,6 +73,7 @@ class VPG(RLAlgorithm):
             use_softplus_entropy=False,
             stop_entropy_gradient=False,
             entropy_method='no_entropy',
+            use_neg_logli_entropy=True,
     ):
         self.discount = discount
         self.policy = policy
@@ -93,6 +96,7 @@ class VPG(RLAlgorithm):
                                           stop_entropy_gradient,
                                           policy_ent_coeff)
         self._episode_reward_mean = collections.deque(maxlen=100)
+        self._use_neg_logli_entropy = use_neg_logli_entropy
         self.sampler_cls = RaySampler
 
         if policy_optimizer:
@@ -140,7 +144,7 @@ class VPG(RLAlgorithm):
             self.process_samples(paths)
 
         if self._maximum_entropy:
-            policy_entropies = self._compute_policy_entropy(obs)
+            policy_entropies = self._compute_policy_entropy(obs, actions)
             rewards += self._policy_ent_coeff * policy_entropies
 
         obs_flat = torch.cat(filter_valids(obs, valids))
@@ -165,7 +169,7 @@ class VPG(RLAlgorithm):
             vf_loss_after = self._value_function.compute_loss(
                 obs_flat, returns_flat)
             kl_after = self._compute_kl_constraint(obs)
-            policy_entropy = self._compute_policy_entropy(obs)
+            policy_entropy = self._compute_policy_entropy(obs, actions)
 
         with tabular.prefix(self.policy.name):
             tabular.record('/LossBefore', policy_loss_before.item())
@@ -327,7 +331,7 @@ class VPG(RLAlgorithm):
         objectives = self._compute_objective(advantages, obs, actions, rewards)
 
         if self._entropy_regularzied:
-            policy_entropies = self._compute_policy_entropy(obs)
+            policy_entropies = self._compute_policy_entropy(obs, actions)
             objectives += self._policy_ent_coeff * policy_entropies
 
         return -objectives.mean()
@@ -391,7 +395,7 @@ class VPG(RLAlgorithm):
 
         return kl_constraint.mean()
 
-    def _compute_policy_entropy(self, obs):
+    def _compute_policy_entropy(self, obs, actions):
         r"""Compute entropy value of probability distribution.
 
         Notes: P is the maximum path length (self.max_path_length)
@@ -405,11 +409,11 @@ class VPG(RLAlgorithm):
                 with shape :math:`(N, P)`.
 
         """
-        if self._stop_entropy_gradient:
-            with torch.no_grad():
+        with torch.set_grad_enabled(not self._stop_entropy_gradient):
+            if self._use_neg_logli_entropy:
+                policy_entropy = -self.policy(obs)[0].log_prob(actions)
+            else:
                 policy_entropy = self.policy(obs)[0].entropy()
-        else:
-            policy_entropy = self.policy(obs)[0].entropy()
 
         # This prevents entropy from becoming negative for small policy std
         if self._use_softplus_entropy:

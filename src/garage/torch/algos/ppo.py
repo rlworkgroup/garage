@@ -41,6 +41,8 @@ class PPO(VPG):
             dense entropy to the reward for each time step. 'regularized' adds
             the mean entropy to the surrogate objective. See
             https://arxiv.org/abs/1805.00909 for more details.
+        use_neg_logli_entropy (bool): Whether to estimate the entropy as the
+            negative log likelihood of the action.
 
     """
 
@@ -60,7 +62,9 @@ class PPO(VPG):
                  policy_ent_coeff=0.0,
                  use_softplus_entropy=False,
                  stop_entropy_gradient=False,
-                 entropy_method='no_entropy'):
+                 entropy_method='no_entropy',
+                 use_neg_logli_entropy=True,
+                 ):
 
         if policy_optimizer is None:
             policy_optimizer = OptimizerWrapper(
@@ -89,7 +93,8 @@ class PPO(VPG):
                          policy_ent_coeff=policy_ent_coeff,
                          use_softplus_entropy=use_softplus_entropy,
                          stop_entropy_gradient=stop_entropy_gradient,
-                         entropy_method=entropy_method)
+                         entropy_method=entropy_method,
+                         use_neg_logli_entropy=use_neg_logli_entropy)
 
         self._lr_clip_range = lr_clip_range
 
