@@ -100,11 +100,13 @@ class NPO(RLAlgorithm):
                  entropy_method='no_entropy',
                  name='NPO',
                  multitask=False,
+                 num_tasks=None,
                  task_update_frequency=1,
                  train_task_sampler=None):
         self._task_update_frequency = task_update_frequency
         self._multitask = multitask
         self._train_task_sampler = train_task_sampler
+        self._num_tasks = num_tasks
 
         self.policy = policy
         self._scope = scope
@@ -183,13 +185,13 @@ class NPO(RLAlgorithm):
 
         for i, _ in enumerate(trainer.step_epochs()):
             if not self._multitask:
+                trainer.step_path = trainer.obtain_episodes(trainer.step_itr)
+            else:
                 env_updates = None
                 assert self._train_task_sampler is not None
                 if (not i % self._task_update_frequency) or (self._task_update_frequency == 1):
                     env_updates = self._train_task_sampler.sample(self._num_tasks)
-                trainer.step_path = trainer.obtain_episodes(trainer.step_itr, env_update=env_updates)
-            else:
-                trainer.step_path = self.obtain_exact_trajectories(trainer)
+                trainer.step_path = self.obtain_exact_trajectories(trainer, env_update=env_updates)
             last_return = self._train_once(trainer.step_itr, trainer.step_path)
             trainer.step_itr += 1
 
@@ -620,7 +622,7 @@ class NPO(RLAlgorithm):
         self._name_scope = tf.name_scope(self._name)
         self._init_opt()
 
-    def obtain_exact_trajectories(self, trainer):
+    def obtain_exact_trajectories(self, trainer, env_update):
         """Obtain an exact amount of trajs from each env being sampled from.
 
         Args:
@@ -636,6 +638,6 @@ class NPO(RLAlgorithm):
         episodes = sampler.obtain_exact_episodes(
                               episodes_per_trajectory,
                               agent_update,
-                              env_update=None)
+                              env_update=env_update)
         trainer._stats.total_env_steps += sum(episodes.lengths)
         return episodes

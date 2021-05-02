@@ -76,6 +76,7 @@ class TRPO(NPO):
                  entropy_method='no_entropy',
                  name='TRPO',
                  multitask=False,
+                 num_tasks=None,
                  task_update_frequency=1,
                  train_task_sampler=None):
         if not optimizer:
@@ -111,5 +112,6 @@ class TRPO(NPO):
                          entropy_method=entropy_method,
                          name=name,
                          multitask=multitask,
+                         num_tasks=num_tasks,
                          task_update_frequency=task_update_frequency,
                          train_task_sampler=train_task_sampler)

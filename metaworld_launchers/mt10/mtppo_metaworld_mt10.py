@@ -90,6 +90,7 @@ def mtppo_metaworld_mt10(ctxt, seed, entropy):
                 use_neg_logli_entropy=True,
                 multitask=True,
                 train_task_sampler=train_task_sampler,
+                num_tasks=10,
                 task_update_frequency=50,
             )
 
