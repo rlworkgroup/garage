@@ -8,8 +8,8 @@ import tensorflow as tf
 from garage import wrap_experiment
 from garage.envs import normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper, round_robin_strategy
+from garage.experiment import MetaWorldTaskSampler
 from garage.experiment.deterministic import set_seed
-from garage.experiment.task_sampler import MetaWorldTaskSampler
 from garage.np.baselines import LinearMultiFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TEPPO
@@ -21,48 +21,48 @@ from garage.trainer import TFTrainer
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--n_epochs', default=600)
-@click.option('--batch_size_per_task', default=1024)
-@click.option('--n_tasks', default=50)
-@wrap_experiment
-def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task, n_tasks):
+@click.option('--n_epochs', default=2000)
+@click.option('--batch_size_per_task', default=5000)
+@click.option('--entropy', default=2e-2)
+@wrap_experiment(snapshot_mode='none', name_parameters='passed')
+def te_ppo_MT50(ctxt, seed, n_epochs, batch_size_per_task, entropy):
     """Train Task Embedding PPO with PointEnv.
 
     Args:
-        ctxt (garage.experiment.ExperimentContext): The experiment
-            configuration used by Trainer to create the snapshotter.
+        ctxt (ExperimentContext): The experiment configuration used by
+            :class:`~Trainer` to create the :class:`~Snapshotter`.
         seed (int): Used to seed the random number generator to produce
             determinism.
         n_epochs (int): Total number of epochs for training.
         batch_size_per_task (int): Batch size of samples for each task.
-        n_tasks (int): Number of tasks to use. Should be a multiple of 50.
 
     """
+    n_tasks = 50
     set_seed(seed)
-    mt50 = metaworld.MT50()
-    task_sampler = MetaWorldTaskSampler(mt50,
-                                        'train',
-                                        lambda env, _: normalize(env),
-                                        add_env_onehot=False)
-    assert n_tasks % 50 == 0
-    assert n_tasks <= 2500
-    envs = [env_up() for env_up in task_sampler.sample(n_tasks)]
+    MT50 = metaworld.MT50()
+    train_task_sampler = MetaWorldTaskSampler(MT50,
+                                              'train',
+                                              lambda env, _: normalize(env),
+                                              add_env_onehot=False)
+    assert n_tasks % 10 == 0
+    assert n_tasks <= 500
+    envs = [env_up() for env_up in train_task_sampler.sample(n_tasks)]
     env = MultiEnvWrapper(envs,
                           sample_strategy=round_robin_strategy,
                           mode='vanilla')
 
-    latent_length = 6
+    latent_length = 4
     inference_window = 6
-    batch_size = batch_size_per_task * n_tasks
-    policy_ent_coeff = 2e-2
-    encoder_ent_coeff = 2e-4
+    batch_size = batch_size_per_task * len(envs)
+    policy_ent_coeff = entropy
+    encoder_ent_coeff = entropy
     inference_ce_coeff = 5e-2
     embedding_init_std = 0.1
     embedding_max_std = 0.2
     embedding_min_std = 1e-6
     policy_init_std = 1.0
-    policy_max_std = None
-    policy_min_std = None
+    policy_max_std = 1.5
+    policy_min_std = 0.5
 
     with TFTrainer(snapshot_config=ctxt) as trainer:
 
@@ -132,14 +132,15 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task, n_tasks):
                          learning_rate=1e-3,
                      ),
                      inference_optimizer_args=dict(
-                         batch_size=32,
+                         batch_size=64,
                          max_optimization_epochs=10,
                      ),
                      center_adv=True,
-                     stop_ce_gradient=True)
+                     stop_ce_gradient=True,
+                     train_task_sampler=train_task_sampler)
 
         trainer.setup(algo, env)
         trainer.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
 
 
-te_ppo_mt50()
+te_ppo_MT50()

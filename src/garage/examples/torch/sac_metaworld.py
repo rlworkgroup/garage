@@ -6,35 +6,33 @@ import click
 import gym
 from metaworld.envs.mujoco.env_dict import (ALL_V1_ENVIRONMENTS,
                                             ALL_V2_ENVIRONMENTS)
-from metaworld.policies import *
 import numpy as np
-import torch
 from torch import nn
 from torch.nn import functional as F
 
 from garage import wrap_experiment
 from garage.envs import GymEnv
 from garage.experiment import deterministic
-from garage.trainer import Trainer
 from garage.replay_buffer import PathBuffer
-from garage.sampler import LocalSampler, FragmentWorker
+from garage.sampler import FragmentWorker, LocalSampler
 from garage.torch import set_gpu_mode
 from garage.torch.algos import SAC
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
+from garage.trainer import Trainer
+
 
 @click.command()
-@click.option('--env_name', type=str, default="basketball-v2")
+@click.option('--env_name', type=str, default='basketball-v2')
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
 @click.option('--gpu', type=int, default=0)
 @wrap_experiment(snapshot_mode='gap', snapshot_gap=50, name_parameters='all')
-def sac_metaworld_new_reward_function(
-        ctxt=None,
-        env_name=None,
-        gpu=None,
-        reward_scale=1,
-        tag='',
-        seed=1):
+def sac_metaworld(ctxt=None,
+                                      env_name=None,
+                                      gpu=None,
+                                      reward_scale=1,
+                                      tag='',
+                                      seed=1):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -117,4 +115,4 @@ def sac_metaworld_new_reward_function(
     runner.train(n_epochs=num_evaluation_points, batch_size=batch_size)
 
 
-sac_metaworld_new_reward_function()
+sac_metaworld()

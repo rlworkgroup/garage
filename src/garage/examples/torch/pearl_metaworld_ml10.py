@@ -20,36 +20,22 @@ from garage.trainer import Trainer
 
 
 @click.command()
-@click.option('--num_epochs', default=1000)
-@click.option('--num_train_tasks', default=10)
-@click.option('--encoder_hidden_size', default=200)
-@click.option('--net_size', default=300)
-@click.option('--num_steps_per_epoch', default=4000)
-@click.option('--num_initial_steps', default=4000)
-@click.option('--num_steps_prior', default=750)
-@click.option('--num_extra_rl_steps_posterior', default=750)
-@click.option('--batch_size', default=256)
-@click.option('--embedding_batch_size', default=64)
-@click.option('--embedding_mini_batch_size', default=64)
-@wrap_experiment
+@click.option('--seed', default=1, type=int)
+@wrap_experiment(snapshot_mode='none', name_parameters='passed')
 def pearl_metaworld_ml10(ctxt=None,
                          seed=1,
                          num_epochs=1000,
-                         num_train_tasks=10,
                          latent_size=7,
                          encoder_hidden_size=200,
                          net_size=300,
-                         meta_batch_size=16,
-                         num_steps_per_epoch=4000,
-                         num_initial_steps=4000,
-                         num_tasks_sample=15,
-                         num_steps_prior=750,
-                         num_extra_rl_steps_posterior=750,
-                         batch_size=256,
-                         embedding_batch_size=64,
-                         embedding_mini_batch_size=64,
-                         reward_scale=10.,
-                         use_gpu=False):
+                         num_initial_steps=5000,
+                         num_steps_prior=2500,
+                         num_extra_rl_steps_posterior=2500,
+                         batch_size=1000,
+                         embedding_batch_size=250,
+                         embedding_mini_batch_size=250,
+                         reward_scale=1000.,
+                         use_gpu=True):
     """Train PEARL with ML10 environments.
 
     Args:
@@ -84,6 +70,9 @@ def pearl_metaworld_ml10(ctxt=None,
         use_gpu (bool): Whether or not to use GPU for training.
 
     """
+    num_steps_per_epoch = 60
+    num_tasks_sample = num_train_tasks = meta_batch_size = 10
+
     set_seed(seed)
     encoder_hidden_sizes = (encoder_hidden_size, encoder_hidden_size,
                             encoder_hidden_size)
@@ -102,8 +91,10 @@ def pearl_metaworld_ml10(ctxt=None,
 
     # instantiate networks
     augmented_env = PEARL.augment_env_spec(env[0](), latent_size)
-    qf = ContinuousMLPQFunction(env_spec=augmented_env,
-                                hidden_sizes=[net_size, net_size, net_size])
+    qf1 = ContinuousMLPQFunction(env_spec=augmented_env,
+                                 hidden_sizes=[net_size, net_size, net_size])
+    qf2 = ContinuousMLPQFunction(env_spec=augmented_env,
+                                 hidden_sizes=[net_size, net_size, net_size])
 
     vf_env = PEARL.get_env_spec(env[0](), latent_size, 'vf')
     vf = ContinuousMLPQFunction(env_spec=vf_env,
@@ -118,29 +109,29 @@ def pearl_metaworld_ml10(ctxt=None,
                            n_workers=1,
                            worker_class=PEARLWorker)
 
-    pearl = PEARL(
-        env=env,
-        policy_class=ContextConditionedPolicy,
-        encoder_class=MLPEncoder,
-        inner_policy=inner_policy,
-        qf=qf,
-        vf=vf,
-        sampler=sampler,
-        num_train_tasks=num_train_tasks,
-        latent_dim=latent_size,
-        encoder_hidden_sizes=encoder_hidden_sizes,
-        test_env_sampler=test_env_sampler,
-        meta_batch_size=meta_batch_size,
-        num_steps_per_epoch=num_steps_per_epoch,
-        num_initial_steps=num_initial_steps,
-        num_tasks_sample=num_tasks_sample,
-        num_steps_prior=num_steps_prior,
-        num_extra_rl_steps_posterior=num_extra_rl_steps_posterior,
-        batch_size=batch_size,
-        embedding_batch_size=embedding_batch_size,
-        embedding_mini_batch_size=embedding_mini_batch_size,
-        reward_scale=reward_scale,
-    )
+    pearl = PEARL(env=env,
+                  policy_class=ContextConditionedPolicy,
+                  encoder_class=MLPEncoder,
+                  inner_policy=inner_policy,
+                  qf1=qf1,
+                  qf2=qf2,
+                  vf=vf,
+                  sampler=sampler,
+                  num_train_tasks=num_train_tasks,
+                  latent_dim=latent_size,
+                  encoder_hidden_sizes=encoder_hidden_sizes,
+                  test_env_sampler=test_env_sampler,
+                  meta_batch_size=meta_batch_size,
+                  num_steps_per_epoch=num_steps_per_epoch,
+                  num_initial_steps=num_initial_steps,
+                  num_tasks_sample=num_tasks_sample,
+                  num_steps_prior=num_steps_prior,
+                  num_extra_rl_steps_posterior=num_extra_rl_steps_posterior,
+                  batch_size=batch_size,
+                  embedding_batch_size=embedding_batch_size,
+                  embedding_mini_batch_size=embedding_mini_batch_size,
+                  reward_scale=reward_scale,
+                  num_test_tasks=10)
 
     set_gpu_mode(use_gpu, gpu_id=0)
     if use_gpu:

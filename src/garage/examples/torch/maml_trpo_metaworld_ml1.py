@@ -17,15 +17,18 @@ from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import LinearFeatureValueFunction
 from garage.trainer import Trainer
 
+
 # yapf: enable
 @click.command()
+@click.option('--env-name', type=str, default='pick-place-v2')
 @click.option('--seed', type=int, default=1)
 @click.option('--epochs', type=int, default=2000)
 @click.option('--rollouts_per_task', type=int, default=10)
-@click.option('--meta_batch_size', type=int, default=20)
+@click.option('--meta_batch_size', type=int, default=25)
 @click.option('--inner_lr', default=1e-4, type=float)
 @wrap_experiment(snapshot_mode='none', name_parameters='passed')
-def maml_trpo_metaworld_ml10(ctxt, seed, epochs, rollouts_per_task, meta_batch_size, inner_lr):
+def maml_trpo_metaworld_ml1(ctxt, env_name, seed, epochs, rollouts_per_task,
+                            meta_batch_size, inner_lr):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -41,29 +44,24 @@ def maml_trpo_metaworld_ml10(ctxt, seed, epochs, rollouts_per_task, meta_batch_s
     """
     set_seed(seed)
 
-    ml10 = metaworld.ML10()
-    tasks = MetaWorldTaskSampler(
-        ml10,
-        'train',
-    )
-    env = tasks.sample(10)[0]()
+    ml1 = metaworld.ML1(env_name)
+    tasks = MetaWorldTaskSampler(ml1, 'train')
+    env = tasks.sample(1)[0]()
     test_sampler = SetTaskSampler(
         MetaWorldSetTaskEnv,
-        env=MetaWorldSetTaskEnv(ml10, 'test'),
+        env=MetaWorldSetTaskEnv(ml1, 'test'),
     )
     num_test_envs = 5
 
-    policy = GaussianMLPPolicy(
-        env_spec=env.spec,
-        hidden_sizes=(128, 128),
-        hidden_nonlinearity=torch.tanh,
-        output_nonlinearity=torch.tanh,
-        min_std=0.5,
-        max_std=1.5,
-        std_mlp_type='share_mean_std'
-    )
+    policy = GaussianMLPPolicy(env_spec=env.spec,
+                               hidden_sizes=(128, 128),
+                               hidden_nonlinearity=torch.tanh,
+                               output_nonlinearity=torch.tanh,
+                               min_std=0.5,
+                               max_std=1.5,
+                               std_mlp_type='share_mean_std')
 
-    value_function = LinearFeatureValueFunction(env_spec=env.spec,)
+    value_function = LinearFeatureValueFunction(env_spec=env.spec, )
 
     meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
                                    n_exploration_eps=rollouts_per_task,
@@ -76,25 +74,27 @@ def maml_trpo_metaworld_ml10(ctxt, seed, epochs, rollouts_per_task, meta_batch_s
                          n_workers=meta_batch_size)
 
     trainer = Trainer(ctxt)
-    algo = MAMLTRPO(env=env,
-                    policy=policy,
-                    sampler=sampler,
-                    task_sampler=tasks,
-                    value_function=value_function,
-                    meta_batch_size=meta_batch_size,
-                    discount=0.99,
-                    gae_lambda=1.,
-                    inner_lr=inner_lr,
-                    num_grad_updates=1,
-                    meta_evaluator=meta_evaluator,
-                    entropy_method='max',
-                    policy_ent_coeff=5e-5,
-                    stop_entropy_gradient=True,
-                    center_adv=False,)
+    algo = MAMLTRPO(
+        env=env,
+        policy=policy,
+        sampler=sampler,
+        task_sampler=tasks,
+        value_function=value_function,
+        meta_batch_size=meta_batch_size,
+        discount=0.99,
+        gae_lambda=1.,
+        inner_lr=inner_lr,
+        num_grad_updates=1,
+        meta_evaluator=meta_evaluator,
+        entropy_method='max',
+        policy_ent_coeff=5e-5,
+        stop_entropy_gradient=True,
+        center_adv=False,
+    )
 
     trainer.setup(algo, env)
     trainer.train(n_epochs=epochs,
                   batch_size=rollouts_per_task * env.spec.max_episode_length)
 
 
-maml_trpo_metaworld_ml10()
+maml_trpo_metaworld_ml1()

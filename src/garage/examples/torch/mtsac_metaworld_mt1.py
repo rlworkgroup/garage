@@ -26,7 +26,7 @@ from garage.trainer import Trainer
 @click.command()
 @click.option('--seed', 'seed', type=int, default=1)
 @click.option('--env-name')
-@wrap_experiment(snapshot_mode='none', name_parameters="passed")
+@wrap_experiment(snapshot_mode='none', name_parameters='passed')
 def mtsac_metaworld_mt1(ctxt=None, *, seed, env_name):
     """Train MTSAC with mt1 environment.
 
@@ -40,9 +40,9 @@ def mtsac_metaworld_mt1(ctxt=None, *, seed, env_name):
         timesteps (int): Number of timesteps to run.
 
     """
-    _gpu=0
-    num_tasks=50
-    timesteps=100000000
+    _gpu = 0
+    num_tasks = 50
+    timesteps = 100000000
     deterministic.set_seed(seed)
     trainer = Trainer(ctxt)
     mt1 = metaworld.MT1(env_name)  # pylint: disable=no-member

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Example script to run RL2 in ML10."""
+"""Example script to run RL2 in ml1."""
 # pylint: disable=no-value-for-parameter
 # yapf: disable
 import click
@@ -7,30 +7,36 @@ import metaworld
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import MetaWorldSetTaskEnv
+from garage.envs import MetaWorldSetTaskEnv, normalize
 from garage.experiment import (MetaEvaluator, MetaWorldTaskSampler,
                                SetTaskSampler)
 from garage.experiment.deterministic import set_seed
-from garage.sampler import RaySampler, LocalSampler
+from garage.sampler import LocalSampler, RaySampler
 from garage.tf.algos import RL2PPO
 from garage.tf.algos.rl2 import RL2Env, RL2Worker
-from garage.tf.policies import GaussianGRUPolicy
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.optimizers import FirstOrderOptimizer
+from garage.tf.policies import GaussianGRUPolicy
 from garage.trainer import TFTrainer
-
-from garage.envs import normalize
 
 # yapf: enable
 
 
 @click.command()
+@click.option('--env-name', type=str, default='pick-place-v2')
 @click.option('--seed', default=1)
-@click.option('--entropy_coefficient', type=float, default=5e-6)
+@click.option('--meta_batch_size', default=25)
+@click.option('--n_epochs', default=4000)
+@click.option('--episode_per_task', default=10)
 @wrap_experiment(snapshot_mode='none', name_parameters='passed')
-def rl2_ppo_metaworld_ml10(ctxt, seed, entropy_coefficient=5e-6, meta_batch_size=10, n_epochs=10000,
-                           episode_per_task=10):
-    """Train RL2 PPO with ML10 environment.
+def rl2_ppo_metaworld_ml1(ctxt,
+                          env_name,
+                          seed,
+                          entropy_coefficient=5e-6,
+                          meta_batch_size=25,
+                          n_epochs=4000,
+                          episode_per_task=10):
+    """Train RL2 PPO with ml1 environment.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
@@ -44,19 +50,22 @@ def rl2_ppo_metaworld_ml10(ctxt, seed, entropy_coefficient=5e-6, meta_batch_size
     """
     set_seed(seed)
     with TFTrainer(snapshot_config=ctxt) as trainer:
-        ml10 = metaworld.ML10()
-        tasks = MetaWorldTaskSampler(ml10, 'train', lambda env, _: RL2Env(normalize(env, normalize_reward=True)))
-        test_task_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
-                                           env=MetaWorldSetTaskEnv(
-                                               ml10, 'test'),
-                                           wrapper=lambda env, _: RL2Env(normalize(env, normalize_reward=True)))
+        ml1 = metaworld.ML1(env_name)
+        tasks = MetaWorldTaskSampler(
+            ml1, 'train',
+            lambda env, _: RL2Env(normalize(env, normalize_reward=True)))
+        test_task_sampler = SetTaskSampler(
+            MetaWorldSetTaskEnv,
+            env=MetaWorldSetTaskEnv(ml1, 'test'),
+            wrapper=lambda env, _: RL2Env(normalize(env, normalize_reward=True)
+                                          ))
         num_test_envs = 5
         meta_evaluator = MetaEvaluator(test_task_sampler=test_task_sampler,
                                        n_exploration_eps=episode_per_task,
-                                       n_test_tasks=num_test_envs*2,
+                                       n_test_tasks=num_test_envs * 2,
                                        n_test_episodes=10)
 
-        env_updates = tasks.sample(10)
+        env_updates = tasks.sample(50)
         env = env_updates[0]()
 
         env_spec = env.spec
@@ -70,7 +79,6 @@ def rl2_ppo_metaworld_ml10(ctxt, seed, entropy_coefficient=5e-6, meta_batch_size
                                    max_std=1.5,
                                    output_nonlinearity=tf.nn.tanh,
                                    use_sp_clip=False)
-
 
         baseline = GaussianMLPBaseline(
             env_spec=env.spec,
@@ -113,7 +121,7 @@ def rl2_ppo_metaworld_ml10(ctxt, seed, entropy_coefficient=5e-6, meta_batch_size
                       meta_evaluator=meta_evaluator,
                       episodes_per_trial=episode_per_task,
                       use_neg_logli_entropy=True,
-                      n_epochs_per_eval=100)
+                      n_epochs_per_eval=40)
 
         trainer.setup(algo, envs)
 
@@ -122,4 +130,4 @@ def rl2_ppo_metaworld_ml10(ctxt, seed, entropy_coefficient=5e-6, meta_batch_size
                       env_spec.max_episode_length * meta_batch_size)
 
 
-rl2_ppo_metaworld_ml10()
+rl2_ppo_metaworld_ml1()
