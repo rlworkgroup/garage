@@ -9,6 +9,7 @@ import tensorflow as tf
 
 from garage.experiment import deterministic
 from garage.experiment.snapshotter import SnapshotConfig
+from garage.torch import set_gpu_mode
 
 from tests.fixtures.logger import NullOutput
 
@@ -64,3 +65,8 @@ class TfGraphTestCase:
         del self.graph
         del self.sess
         gc.collect()
+
+
+def reset_gpu_mode():
+    """Reset mode to CPU after test."""
+    set_gpu_mode(False)
