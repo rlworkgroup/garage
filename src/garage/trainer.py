@@ -11,7 +11,7 @@ from garage.experiment.deterministic import get_seed, set_seed
 from garage.experiment.experiment import dump_json
 from garage.experiment.snapshotter import Snapshotter
 
-tf = False
+tf = None
 
 
 class ExperimentStats:
@@ -586,6 +586,10 @@ class TFTrainer(Trainer):
 
     def __init__(self, snapshot_config, sess=None):
         # pylint: disable=import-outside-toplevel
+        import tensorflow
+        # pylint: disable=global-statement
+        global tf
+        tf = tensorflow
         super().__init__(snapshot_config=snapshot_config)
         self.sess = sess or tf.compat.v1.Session()
         self.sess_entered = False
