@@ -11,13 +11,7 @@ from garage.experiment.deterministic import get_seed, set_seed
 from garage.experiment.experiment import dump_json
 from garage.experiment.snapshotter import Snapshotter
 
-# pylint: disable=no-name-in-module
-
-tf = False
-try:
-    import tensorflow as tf
-except ImportError:
-    pass
+tf = None
 
 
 class ExperimentStats:
@@ -536,6 +530,7 @@ class NotSetupError(Exception):
     """Raise when an experiment is about to run without setup."""
 
 
+# pylint: disable=no-member
 class TFTrainer(Trainer):
     """This class implements a trainer for TensorFlow algorithms.
 
@@ -590,6 +585,11 @@ class TFTrainer(Trainer):
     """
 
     def __init__(self, snapshot_config, sess=None):
+        # pylint: disable=import-outside-toplevel
+        import tensorflow
+        # pylint: disable=global-statement
+        global tf
+        tf = tensorflow
         super().__init__(snapshot_config=snapshot_config)
         self.sess = sess or tf.compat.v1.Session()
         self.sess_entered = False
@@ -663,17 +663,3 @@ class TFTrainer(Trainer):
                     v for v in tf.compat.v1.global_variables()
                     if v.name.split(':')[0] in uninited_set
                 ]))
-
-
-class __FakeTFTrainer:
-    # noqa: E501; pylint: disable=missing-param-doc,too-few-public-methods,no-method-argument
-    """Raises an ImportError for environments without TensorFlow."""
-
-    def __init__(*args, **kwargs):
-        raise ImportError(
-            'TFTrainer requires TensorFlow. To use it, please install '
-            'TensorFlow.')
-
-
-if not tf:
-    TFTrainer = __FakeTFTrainer  # noqa: F811
