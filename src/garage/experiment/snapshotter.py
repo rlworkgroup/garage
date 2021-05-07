@@ -138,6 +138,7 @@ class Snapshotter:
             if torch:
 
                 class _pickle_module:
+                    dump = cloudpickle.dump
                     Pickler = cloudpickle.CloudPickler
 
                 params['global_device'] = global_device()
