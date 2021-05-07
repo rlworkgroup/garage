@@ -141,7 +141,10 @@ class Snapshotter:
                     Pickler = cloudpickle.CloudPickler
 
                 params['global_device'] = global_device()
-                torch.save(params, file_name, pickle_module=_pickle_module)
+                torch.save(params,
+                           file_name,
+                           pickle_module=_pickle_module,
+                           _use_new_zipfile_serialization=False)
             else:
                 with open(file_name, 'wb') as file:
                     cloudpickle.dump(params, file)
