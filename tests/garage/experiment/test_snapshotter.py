@@ -22,6 +22,7 @@ configurations = [('all', {
 class TestSnapshotter:
 
     def setup_method(self):
+        # pylint: disable=consider-using-with
         self.temp_dir = tempfile.TemporaryDirectory()
 
     def teardown_method(self):
