@@ -111,7 +111,7 @@ class EnvStep:
 
     env_spec: EnvSpec
     action: np.ndarray
-    reward: np.ndarray
+    reward: float
     observation: np.ndarray
     env_info: Dict[str, np.ndarray or dict]
     step_type: StepType
