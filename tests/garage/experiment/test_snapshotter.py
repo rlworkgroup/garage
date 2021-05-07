@@ -44,6 +44,7 @@ class TestSnapshotter:
             assert osp.exists(filename)
             with open(filename, 'rb') as pkl_file:
                 data = pickle.load(pkl_file)
+                snapshot_data[num]['global_device'] = None
                 assert data == snapshot_data[num]
 
     def test_gap_overwrite(self):
@@ -60,7 +61,7 @@ class TestSnapshotter:
         assert osp.exists(filename)
         with open(filename, 'rb') as pkl_file:
             data = pickle.load(pkl_file)
-            assert data == snapshot_data[1]
+            assert data == {'global_device': None, 'testparam': 4}
 
     def test_invalid_snapshot_mode(self):
         with pytest.raises(ValueError):
