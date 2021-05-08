@@ -12,24 +12,24 @@ from garage.torch.modules.gaussian_mlp_module import GaussianMLPModule
 # yapf: enable
 
 plain_settings = [
-    (1, 1, (1, )),
-    (1, 2, (2, )),
-    (1, 3, (3, )),
-    (1, 1, (1, 2)),
-    (1, 2, (2, 1)),
-    (1, 3, (4, 5)),
-    (2, 1, (1, )),
-    (2, 2, (2, )),
-    (2, 3, (3, )),
-    (2, 1, (1, 2)),
-    (2, 2, (2, 1)),
-    (2, 3, (4, 5)),
-    (5, 1, (1, )),
-    (5, 2, (2, )),
-    (5, 3, (3, )),
-    (5, 1, (1, 2)),
-    (5, 2, (2, 1)),
-    (5, 3, (4, 5)),
+    (1, 1, (1, ), True),
+    (1, 2, (2, ), False),
+    (1, 3, (3, ), True),
+    (1, 1, (1, 2), True),
+    (1, 2, (2, 1), True),
+    (1, 3, (4, 5), True),
+    (2, 1, (1, ), True),
+    (2, 2, (2, ), True),
+    (2, 3, (3, ), True),
+    (2, 1, (1, 2), False),
+    (2, 2, (2, 1), True),
+    (2, 3, (4, 5), True),
+    (5, 1, (1, ), True),
+    (5, 2, (2, ), True),
+    (5, 3, (3, ), True),
+    (5, 1, (1, 2), True),
+    (5, 2, (2, 1), True),
+    (5, 3, (4, 5), True),
 ]
 
 different_std_settings = [(1, 1, (1, ), (1, )), (1, 2, (2, ), (2, )),
@@ -43,15 +43,18 @@ different_std_settings = [(1, 1, (1, ), (1, )), (1, 2, (2, ), (2, )),
                           (5, 2, (2, 1), (2, 1)), (5, 3, (4, 5), (4, 5))]
 
 
-@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes', plain_settings)
-def test_std_share_network_output_values(input_dim, output_dim, hidden_sizes):
+@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes, learn_std',
+                         plain_settings)
+def test_std_share_network_output_values(input_dim, output_dim, hidden_sizes,
+                                         learn_std):
     module = GaussianMLPTwoHeadedModule(input_dim=input_dim,
                                         output_dim=output_dim,
                                         hidden_sizes=hidden_sizes,
                                         hidden_nonlinearity=None,
                                         std_parameterization='exp',
                                         hidden_w_init=nn.init.ones_,
-                                        output_w_init=nn.init.ones_)
+                                        output_w_init=nn.init.ones_,
+                                        learn_std=learn_std)
 
     dist = module(torch.ones(input_dim))
 
@@ -68,16 +71,18 @@ def test_std_share_network_output_values(input_dim, output_dim, hidden_sizes):
     assert dist.rsample().shape == (output_dim, )
 
 
-@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes', plain_settings)
+@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes, learn_std',
+                         plain_settings)
 def test_std_share_network_output_values_with_batch(input_dim, output_dim,
-                                                    hidden_sizes):
+                                                    hidden_sizes, learn_std):
     module = GaussianMLPTwoHeadedModule(input_dim=input_dim,
                                         output_dim=output_dim,
                                         hidden_sizes=hidden_sizes,
                                         hidden_nonlinearity=None,
                                         std_parameterization='exp',
                                         hidden_w_init=nn.init.ones_,
-                                        output_w_init=nn.init.ones_)
+                                        output_w_init=nn.init.ones_,
+                                        learn_std=learn_std)
 
     batch_size = 5
     dist = module(torch.ones([batch_size, input_dim]))
@@ -95,8 +100,10 @@ def test_std_share_network_output_values_with_batch(input_dim, output_dim,
     assert dist.rsample().shape == (batch_size, output_dim)
 
 
-@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes', plain_settings)
-def test_std_network_output_values(input_dim, output_dim, hidden_sizes):
+@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes, learn_std',
+                         plain_settings)
+def test_std_network_output_values(input_dim, output_dim, hidden_sizes,
+                                   learn_std):
     init_std = 2.
 
     module = GaussianMLPModule(input_dim=input_dim,
@@ -106,7 +113,8 @@ def test_std_network_output_values(input_dim, output_dim, hidden_sizes):
                                hidden_nonlinearity=None,
                                std_parameterization='exp',
                                hidden_w_init=nn.init.ones_,
-                               output_w_init=nn.init.ones_)
+                               output_w_init=nn.init.ones_,
+                               learn_std=learn_std)
 
     dist = module(torch.ones(input_dim))
 
@@ -122,9 +130,10 @@ def test_std_network_output_values(input_dim, output_dim, hidden_sizes):
     assert dist.rsample().shape == (output_dim, )
 
 
-@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes', plain_settings)
+@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes, learn_std',
+                         plain_settings)
 def test_std_network_output_values_with_batch(input_dim, output_dim,
-                                              hidden_sizes):
+                                              hidden_sizes, learn_std):
     init_std = 2.
 
     module = GaussianMLPModule(input_dim=input_dim,
@@ -134,7 +143,8 @@ def test_std_network_output_values_with_batch(input_dim, output_dim,
                                hidden_nonlinearity=None,
                                std_parameterization='exp',
                                hidden_w_init=nn.init.ones_,
-                               output_w_init=nn.init.ones_)
+                               output_w_init=nn.init.ones_,
+                               learn_std=learn_std)
 
     batch_size = 5
     dist = module(torch.ones([batch_size, input_dim]))
@@ -182,9 +192,10 @@ def test_std_adaptive_network_output_values(input_dim, output_dim,
     assert dist.rsample().shape == (output_dim, )
 
 
-@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes', plain_settings)
+@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes, learn_std',
+                         plain_settings)
 def test_softplus_std_network_output_values(input_dim, output_dim,
-                                            hidden_sizes):
+                                            hidden_sizes, learn_std):
     init_std = 2.
 
     module = GaussianMLPModule(input_dim=input_dim,
@@ -194,7 +205,8 @@ def test_softplus_std_network_output_values(input_dim, output_dim,
                                hidden_nonlinearity=None,
                                std_parameterization='softplus',
                                hidden_w_init=nn.init.ones_,
-                               output_w_init=nn.init.ones_)
+                               output_w_init=nn.init.ones_,
+                               learn_std=learn_std)
 
     dist = module(torch.ones(input_dim))
 
@@ -208,8 +220,9 @@ def test_softplus_std_network_output_values(input_dim, output_dim,
     assert dist.rsample().shape == (output_dim, )
 
 
-@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes', plain_settings)
-def test_exp_min_std(input_dim, output_dim, hidden_sizes):
+@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes, learn_std',
+                         plain_settings)
+def test_exp_min_std(input_dim, output_dim, hidden_sizes, learn_std):
     min_value = 10.
 
     module = GaussianMLPModule(input_dim=input_dim,
@@ -220,7 +233,8 @@ def test_exp_min_std(input_dim, output_dim, hidden_sizes):
                                hidden_nonlinearity=None,
                                std_parameterization='exp',
                                hidden_w_init=nn.init.zeros_,
-                               output_w_init=nn.init.zeros_)
+                               output_w_init=nn.init.zeros_,
+                               learn_std=learn_std)
 
     dist = module(torch.ones(input_dim))
 
@@ -230,8 +244,9 @@ def test_exp_min_std(input_dim, output_dim, hidden_sizes):
         torch.full((output_dim, ), exp_variance, dtype=torch.float))
 
 
-@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes', plain_settings)
-def test_exp_max_std(input_dim, output_dim, hidden_sizes):
+@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes, learn_std',
+                         plain_settings)
+def test_exp_max_std(input_dim, output_dim, hidden_sizes, learn_std):
     max_value = 1.
 
     module = GaussianMLPModule(input_dim=input_dim,
@@ -242,7 +257,8 @@ def test_exp_max_std(input_dim, output_dim, hidden_sizes):
                                hidden_nonlinearity=None,
                                std_parameterization='exp',
                                hidden_w_init=nn.init.zeros_,
-                               output_w_init=nn.init.zeros_)
+                               output_w_init=nn.init.zeros_,
+                               learn_std=learn_std)
 
     dist = module(torch.ones(input_dim))
 
@@ -252,8 +268,9 @@ def test_exp_max_std(input_dim, output_dim, hidden_sizes):
         torch.full((output_dim, ), exp_variance, dtype=torch.float))
 
 
-@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes', plain_settings)
-def test_softplus_min_std(input_dim, output_dim, hidden_sizes):
+@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes, learn_std',
+                         plain_settings)
+def test_softplus_min_std(input_dim, output_dim, hidden_sizes, learn_std):
     min_value = 2.
 
     module = GaussianMLPModule(input_dim=input_dim,
@@ -264,7 +281,8 @@ def test_softplus_min_std(input_dim, output_dim, hidden_sizes):
                                hidden_nonlinearity=None,
                                std_parameterization='softplus',
                                hidden_w_init=nn.init.zeros_,
-                               output_w_init=nn.init.zeros_)
+                               output_w_init=nn.init.zeros_,
+                               learn_std=learn_std)
 
     dist = module(torch.ones(input_dim))
 
@@ -274,8 +292,9 @@ def test_softplus_min_std(input_dim, output_dim, hidden_sizes):
         torch.full((output_dim, ), exp_variance[0], dtype=torch.float))
 
 
-@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes', plain_settings)
-def test_softplus_max_std(input_dim, output_dim, hidden_sizes):
+@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes, learn_std',
+                         plain_settings)
+def test_softplus_max_std(input_dim, output_dim, hidden_sizes, learn_std):
     max_value = 1.
 
     module = GaussianMLPModule(input_dim=input_dim,
@@ -286,7 +305,8 @@ def test_softplus_max_std(input_dim, output_dim, hidden_sizes):
                                hidden_nonlinearity=None,
                                std_parameterization='softplus',
                                hidden_w_init=nn.init.ones_,
-                               output_w_init=nn.init.ones_)
+                               output_w_init=nn.init.ones_,
+                               learn_std=learn_std)
 
     dist = module(torch.ones(input_dim))
 
