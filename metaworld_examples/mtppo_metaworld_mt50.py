@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""This is an example to train TRPO on MT50 environment."""
+"""This is an example to train PPO on MT50 environment."""
 # pylint: disable=no-value-for-parameter
 import click
 import metaworld
@@ -7,11 +7,10 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import normalize
-from garage.envs.multi_env_wrapper import MultiEnvWrapper, round_robin_strategy
 from garage.experiment import MetaWorldTaskSampler
 from garage.experiment.deterministic import set_seed
 from garage.sampler import RaySampler
-from garage.tf.algos import TRPO
+from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.optimizers import FirstOrderOptimizer
 from garage.tf.policies import GaussianMLPPolicy
@@ -22,7 +21,7 @@ from garage.trainer import TFTrainer
 @click.option('--seed', default=1)
 @click.option('--entropy', default=5e-3)
 @wrap_experiment(snapshot_mode='none', name_parameters='passed')
-def mttrpo_metaworld_MT50(ctxt, seed, entropy):
+def mtppo_metaworld_MT50(ctxt, seed, entropy):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -30,9 +29,8 @@ def mttrpo_metaworld_MT50(ctxt, seed, entropy):
             configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
-        epochs (int): Number of training epochs.
-        batch_size (int): Number of environment steps in one batch.
-        n_tasks (int): Number of tasks to use. Should be a multiple of 10.
+        entropy (float): Coefficient to weigh the entropy reward term by
+            when using the max entropy reward.
 
     """
     n_tasks = 50
@@ -45,6 +43,7 @@ def mttrpo_metaworld_MT50(ctxt, seed, entropy):
     assert n_tasks % 10 == 0
     assert n_tasks <= 500
     envs = [env_up() for env_up in train_task_sampler.sample(n_tasks)]
+
     env = envs[0]
     with TFTrainer(snapshot_config=ctxt) as trainer:
         policy = GaussianMLPPolicy(
@@ -69,13 +68,18 @@ def mttrpo_metaworld_MT50(ctxt, seed, entropy):
                              n_workers=50,
                              is_tf_worker=True)
 
-        algo = TRPO(
+        algo = PPO(
             env_spec=env.spec,
             policy=policy,
             baseline=baseline,
             discount=0.99,
             gae_lambda=0.95,
             lr_clip_range=0.2,
+            optimizer=FirstOrderOptimizer,
+            optimizer_args=dict(
+                learning_rate=5e-4,
+                max_optimization_epochs=16,
+            ),
             stop_entropy_gradient=True,
             entropy_method='max',
             policy_ent_coeff=entropy,
@@ -95,4 +99,4 @@ def mttrpo_metaworld_MT50(ctxt, seed, entropy):
                       plot=False)
 
 
-mttrpo_metaworld_MT50()
+mtppo_metaworld_MT50()

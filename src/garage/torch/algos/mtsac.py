@@ -1,13 +1,12 @@
 """This modules creates a MTSAC model in PyTorch."""
+import copy
+
 # yapf: disable
 from dowel import tabular
 import numpy as np
 import torch
 
-import copy
-
-from garage import (EpisodeBatch, log_multitask_performance,
-                    obtain_evaluation_episodes, StepType)
+from garage import log_multitask_performance, StepType
 from garage.torch import global_device
 from garage.torch.algos import SAC
 
@@ -42,8 +41,6 @@ class MTSAC(SAC):
         max_episode_length_eval (int or None): Maximum length of episodes used
             for off-policy evaluation. If None, defaults to
             `max_episode_length`.
-        eval_env (Environment): The environment used for collecting evaluation
-            episodes.
         gradient_steps_per_itr (int): Number of optimization steps that should
             occur before the training step is over and a new batch of
             transitions is collected by the sampler.
@@ -74,69 +71,71 @@ class MTSAC(SAC):
         steps_per_epoch (int): Number of train_once calls per epoch.
         num_evaluation_episodes (int): The number of evaluation episodes used
             for computing eval stats at the end of every epoch.
-        use_deterministic_evaluation (bool): True if the trained policy
-            should be evaluated deterministically.
+        train_task_sampler (garage.experiment.TaskSampler): sampler used for
+            sampling training tasks from the train task distribution.
+        test_sampler (garage.experiment.TaskSampler): sampler used for
+            sampling test tasks from the test task distribution.
+        task_update_frequency (int): how many epochs between sampling a new
+            set of tasks from the task samplers.
 
     """
 
-    def __init__(
-        self,
-        policy,
-        qf1,
-        qf2,
-        replay_buffer,
-        env_spec,
-        sampler,
-        test_sampler,
-        train_task_sampler,
-        *,
-        num_tasks,
-        gradient_steps_per_itr,
-        max_episode_length_eval=None,
-        fixed_alpha=None,
-        target_entropy=None,
-        initial_log_entropy=0.,
-        discount=0.99,
-        buffer_batch_size=64,
-        min_buffer_size=int(1e4),
-        target_update_tau=5e-3,
-        policy_lr=3e-4,
-        qf_lr=3e-4,
-        reward_scale=1.0,
-        optimizer=torch.optim.Adam,
-        steps_per_epoch=1,
-        num_evaluation_episodes=5,
-        task_update_frequency=1
-    ):
+    def __init__(self,
+                 policy,
+                 qf1,
+                 qf2,
+                 replay_buffer,
+                 env_spec,
+                 sampler,
+                 test_sampler,
+                 train_task_sampler,
+                 *,
+                 num_tasks,
+                 gradient_steps_per_itr,
+                 max_episode_length_eval=None,
+                 fixed_alpha=None,
+                 target_entropy=None,
+                 initial_log_entropy=0.,
+                 discount=0.99,
+                 buffer_batch_size=64,
+                 min_buffer_size=int(1e4),
+                 target_update_tau=5e-3,
+                 policy_lr=3e-4,
+                 qf_lr=3e-4,
+                 reward_scale=1.0,
+                 optimizer=torch.optim.Adam,
+                 steps_per_epoch=1,
+                 num_evaluation_episodes=5,
+                 task_update_frequency=1):
 
-        super().__init__(
-            policy=policy,
-            qf1=qf1,
-            qf2=qf2,
-            replay_buffer=replay_buffer,
-            sampler=sampler,
-            env_spec=env_spec,
-            max_episode_length_eval=max_episode_length_eval,
-            gradient_steps_per_itr=gradient_steps_per_itr,
-            fixed_alpha=fixed_alpha,
-            target_entropy=target_entropy,
-            initial_log_entropy=initial_log_entropy,
-            discount=discount,
-            buffer_batch_size=buffer_batch_size,
-            min_buffer_size=min_buffer_size,
-            target_update_tau=target_update_tau,
-            policy_lr=policy_lr,
-            qf_lr=qf_lr,
-            reward_scale=reward_scale,
-            optimizer=optimizer,
-            steps_per_epoch=steps_per_epoch,
-            num_evaluation_episodes=num_evaluation_episodes,
-            eval_env=None,
-            use_deterministic_evaluation=True)
+        super().__init__(policy=policy,
+                         qf1=qf1,
+                         qf2=qf2,
+                         replay_buffer=replay_buffer,
+                         sampler=sampler,
+                         env_spec=env_spec,
+                         max_episode_length_eval=max_episode_length_eval,
+                         gradient_steps_per_itr=gradient_steps_per_itr,
+                         fixed_alpha=fixed_alpha,
+                         target_entropy=target_entropy,
+                         initial_log_entropy=initial_log_entropy,
+                         discount=discount,
+                         buffer_batch_size=buffer_batch_size,
+                         min_buffer_size=min_buffer_size,
+                         target_update_tau=target_update_tau,
+                         policy_lr=policy_lr,
+                         qf_lr=qf_lr,
+                         reward_scale=reward_scale,
+                         optimizer=optimizer,
+                         steps_per_epoch=steps_per_epoch,
+                         num_evaluation_episodes=num_evaluation_episodes,
+                         eval_env=None,
+                         use_deterministic_evaluation=True)
         self._train_task_sampler = train_task_sampler
         self._test_sampler = test_sampler
         self._num_tasks = num_tasks
-        self._curr_train_tasks = self._train_task_sampler.sample(self._num_tasks)
+        self._curr_train_tasks = self._train_task_sampler.sample(
+            self._num_tasks)
         self._use_automatic_entropy_tuning = fixed_alpha is None
         self._fixed_alpha = fixed_alpha
         self._task_update_frequency = task_update_frequency
@@ -189,6 +188,7 @@ class MTSAC(SAC):
         if (log_alpha.shape[0] != one_hots.shape[1]
                 or one_hots.shape[1] != self._num_tasks
                 or log_alpha.shape[0] != self._num_tasks):
+
             raise ValueError(
                 'The number of tasks in the environment does '
                 'not match self._num_tasks. Are you sure that you passed '
@@ -211,7 +211,7 @@ class MTSAC(SAC):
 
         """
         with torch.no_grad():
-            agent_update = copy.deepcopy(self.policy).to("cpu")
+            agent_update = copy.deepcopy(self.policy).to('cpu')
         eval_batch = self._test_sampler.obtain_exact_episodes(
             n_eps_per_worker=self._num_evaluation_episodes,
             agent_update=agent_update)
@@ -251,8 +251,6 @@ class MTSAC(SAC):
             float: The average return in last epoch cycle.
 
         """
-        if not self._eval_env:
-            self._eval_env = trainer.get_env_copy()
         last_return = None
         for _ in trainer.step_epochs():
             for i in range(self._steps_per_epoch):
@@ -262,14 +260,17 @@ class MTSAC(SAC):
                 else:
                     batch_size = None
                 with torch.no_grad():
-                    agent_update = copy.deepcopy(self.policy).to("cpu")
-                # import ipdb; ipdb.set_trace()
+                    agent_update = copy.deepcopy(self.policy).to('cpu')
                 env_updates = None
-                if (not i and not i % self._task_update_frequency) or (self._task_update_frequency == 1):
-                    self._curr_train_tasks = self._train_task_sampler.sample(self._num_tasks)
+                if (not i and not i % self._task_update_frequency) or (
+                        self._task_update_frequency == 1):
+                    self._curr_train_tasks = self._train_task_sampler.sample(
+                        self._num_tasks)
                     env_updates = self._curr_train_tasks
                 trainer.step_episode = trainer.obtain_samples(
-                    trainer.step_itr, batch_size, agent_update=agent_update,
+                    trainer.step_itr,
+                    batch_size,
+                    agent_update=agent_update,
                     env_update=env_updates)
                 path_returns = []
                 for path in trainer.step_episode:

@@ -11,10 +11,10 @@ from garage.envs import MetaWorldSetTaskEnv
 from garage.experiment import (MetaEvaluator, MetaWorldTaskSampler,
                                SetTaskSampler)
 from garage.experiment.deterministic import set_seed
+from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import RaySampler
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
-from garage.torch.value_functions import LinearFeatureValueFunction
 from garage.trainer import Trainer
 
 
@@ -34,12 +34,17 @@ def maml_trpo_metaworld_ml1(ctxt, env_name, seed, epochs, rollouts_per_task,
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
             configuration used by Trainer to create the snapshotter.
+        env_name (str): Name of Meta-World environment to initialize
+            this experiment with.
         seed (int): Used to seed the random number generator to produce
             determinism.
         epochs (int): Number of training epochs.
         rollouts_per_task (int): Number of rollouts per epoch per task
             for training.
         meta_batch_size (int): Number of tasks sampled per batch.
+        inner_lr (float): learning rate to use for the inner TRPO agent.
+            This hyperparameter is typically the one to tune when tuning
+            your MAML.
 
     """
     set_seed(seed)
@@ -61,7 +66,7 @@ def maml_trpo_metaworld_ml1(ctxt, env_name, seed, epochs, rollouts_per_task,
                                max_std=1.5,
                                std_mlp_type='share_mean_std')
 
-    value_function = LinearFeatureValueFunction(env_spec=env.spec, )
+    value_function = LinearFeatureBaseline(env_spec=env.spec)
 
     meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
                                    n_exploration_eps=rollouts_per_task,

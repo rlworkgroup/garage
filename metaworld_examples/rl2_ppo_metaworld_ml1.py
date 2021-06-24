@@ -11,7 +11,7 @@ from garage.envs import MetaWorldSetTaskEnv, normalize
 from garage.experiment import (MetaEvaluator, MetaWorldTaskSampler,
                                SetTaskSampler)
 from garage.experiment.deterministic import set_seed
-from garage.sampler import LocalSampler, RaySampler
+from garage.sampler import RaySampler
 from garage.tf.algos import RL2PPO
 from garage.tf.algos.rl2 import RL2Env, RL2Worker
 from garage.tf.baselines import GaussianMLPBaseline
@@ -41,9 +41,14 @@ def rl2_ppo_metaworld_ml1(ctxt,
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
             configuration used by Trainer to create the snapshotter.
+        env_name (str): Name of Meta-World environment to initialize
+            this experiment with.
         seed (int): Used to seed the random number generator to produce
             determinism.
-        meta_batch_size (int): Meta batch size.
+        entropy_coefficient (float): Coefficient to weigh the entropy reward
+            term by when using the max entropy reward.
+        meta_batch_size (int): Number of tasks to sample from during each
+            meta training epoch.
         n_epochs (int): Total number of epochs for training.
         episode_per_task (int): Number of training episode per task.
 
@@ -77,8 +82,7 @@ def rl2_ppo_metaworld_ml1(ctxt,
                                    init_std=1.,
                                    min_std=0.5,
                                    max_std=1.5,
-                                   output_nonlinearity=tf.nn.tanh,
-                                   use_sp_clip=False)
+                                   output_nonlinearity=tf.nn.tanh)
 
         baseline = GaussianMLPBaseline(
             env_spec=env.spec,

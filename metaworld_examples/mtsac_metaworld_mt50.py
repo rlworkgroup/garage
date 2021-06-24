@@ -10,7 +10,6 @@ from torch import nn
 from torch.nn import functional as F
 
 from garage import wrap_experiment
-from garage.envs import normalize
 from garage.experiment import deterministic
 from garage.experiment.task_sampler import MetaWorldTaskSampler
 from garage.replay_buffer import PathBuffer

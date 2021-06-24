@@ -1,6 +1,6 @@
 """Gaussian GRU Policy.
 
-A policy represented by a Gaussian distribution
+# A policy represented by a Gaussian distribution
 which is parameterized by a Gated Recurrent Unit (GRU).
 """
 # pylint: disable=wrong-import-order
@@ -56,6 +56,8 @@ class GaussianGRUPolicy(GaussianGRUModel, Policy):
         std_share_network (bool): Boolean for whether mean and std share
             the same network.
         init_std (float): Initial value for std.
+        min_std (float): minimum stddev that the policy can learn to output,
+        max_std (float): maximum stddev that the policy can learn to output,
         layer_normalization (bool): Bool for using layer normalization or not.
         state_include_action (bool): Whether the state includes action.
             If True, input dimension will be
@@ -86,8 +88,7 @@ class GaussianGRUPolicy(GaussianGRUModel, Policy):
                  min_std=None,
                  max_std=None,
                  layer_normalization=False,
-                 state_include_action=True,
-                 use_sp_clip=False):
+                 state_include_action=True):
         if not isinstance(env_spec.action_space, akro.Box):
             raise ValueError('GaussianGRUPolicy only works with '
                              'akro.Box action space, but not {}'.format(
@@ -140,8 +141,7 @@ class GaussianGRUPolicy(GaussianGRUModel, Policy):
             std_share_network=std_share_network,
             init_std=init_std,
             min_std=min_std,
-            max_std=max_std,
-            use_sp_clip=use_sp_clip)
+            max_std=max_std)
 
         self._prev_actions = None
         self._prev_hiddens = None

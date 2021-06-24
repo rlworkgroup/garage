@@ -10,10 +10,10 @@ from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import MetaEvaluator
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
+from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import RaySampler
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
-from garage.torch.value_functions import GaussianMLPValueFunction
 from garage.trainer import Trainer
 
 
@@ -51,10 +51,7 @@ def maml_trpo_half_cheetah_dir(ctxt, seed, epochs, episodes_per_task,
         output_nonlinearity=None,
     )
 
-    value_function = GaussianMLPValueFunction(env_spec=env.spec,
-                                              hidden_sizes=[32, 32],
-                                              hidden_nonlinearity=torch.tanh,
-                                              output_nonlinearity=None)
+    value_function = LinearFeatureBaseline(env_spec=env.spec)
 
     task_sampler = SetTaskSampler(
         HalfCheetahDirEnv,

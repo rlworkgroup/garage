@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """PEARL ML10 example."""
-
+# pylint: disable=no-value-for-parameter
 import click
 import metaworld
 
@@ -20,42 +20,41 @@ from garage.trainer import Trainer
 
 
 @click.command()
+@click.option('--env_name', type=str, default='pick-place-v2')
 @click.option('--seed', default=1, type=int)
 @wrap_experiment(snapshot_mode='none', name_parameters='passed')
-def pearl_metaworld_ml10(ctxt=None,
-                         seed=1,
-                         num_epochs=1000,
-                         latent_size=7,
-                         encoder_hidden_size=200,
-                         net_size=300,
-                         num_initial_steps=5000,
-                         num_steps_prior=2500,
-                         num_extra_rl_steps_posterior=2500,
-                         batch_size=1000,
-                         embedding_batch_size=250,
-                         embedding_mini_batch_size=250,
-                         reward_scale=1000.,
-                         use_gpu=True):
+def pearl_metaworld_ml1(ctxt,
+                        env_name,
+                        seed=1,
+                        num_epochs=1000,
+                        latent_size=7,
+                        encoder_hidden_size=200,
+                        net_size=300,
+                        num_initial_steps=15000,
+                        num_steps_prior=2500,
+                        num_extra_rl_steps_posterior=2500,
+                        batch_size=1000,
+                        embedding_batch_size=250,
+                        embedding_mini_batch_size=250,
+                        reward_scale=1000.,
+                        use_gpu=True):
     """Train PEARL with ML10 environments.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
             configuration used by Trainer to create the snapshotter.
+        env_name (str): Name of Meta-World environment to initialize
+            this experiment with.
         seed (int): Used to seed the random number generator to produce
             determinism.
         num_epochs (int): Number of training epochs.
-        num_train_tasks (int): Number of tasks for training.
         latent_size (int): Size of latent context vector.
         encoder_hidden_size (int): Output dimension of dense layer of the
             context encoder.
         net_size (int): Output dimension of a dense layer of Q-function and
             value function.
-        meta_batch_size (int): Meta batch size.
-        num_steps_per_epoch (int): Number of iterations per epoch.
         num_initial_steps (int): Number of transitions obtained per task before
             training.
-        num_tasks_sample (int): Number of random tasks to obtain data for each
-            iteration.
         num_steps_prior (int): Number of transitions to obtain per task with
             z ~ prior.
         num_extra_rl_steps_posterior (int): Number of additional transitions
@@ -70,22 +69,26 @@ def pearl_metaworld_ml10(ctxt=None,
         use_gpu (bool): Whether or not to use GPU for training.
 
     """
-    num_steps_per_epoch = 60
-    num_tasks_sample = num_train_tasks = meta_batch_size = 10
+    num_steps_per_epoch = 40
+    num_tasks_sample = num_train_tasks = 15
+    meta_batch_size = 16
 
     set_seed(seed)
     encoder_hidden_sizes = (encoder_hidden_size, encoder_hidden_size,
                             encoder_hidden_size)
-    ml10 = metaworld.ML10()
-    train_env = MetaWorldSetTaskEnv(ml10, 'train')
+    # create multi-task environment and sample tasks
+    ml1 = metaworld.ML1(env_name)
+    train_env = MetaWorldSetTaskEnv(ml1, 'train')
     env_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
                                  env=train_env,
                                  wrapper=lambda env, _: normalize(env))
     env = env_sampler.sample(num_train_tasks)
-    test_env = MetaWorldSetTaskEnv(ml10, 'test')
-    test_env_sampler = SetTaskSampler(MetaWorldSetTaskEnv,
-                                      env=test_env,
-                                      wrapper=lambda env, _: normalize(env))
+    test_env = MetaWorldSetTaskEnv(ml1, 'test')
+    test_env_sampler = SetTaskSampler(
+        MetaWorldSetTaskEnv,
+        env=test_env,
+        wrapper=lambda env, _: normalize(env),
+    )
 
     trainer = Trainer(ctxt)
 
@@ -131,7 +134,8 @@ def pearl_metaworld_ml10(ctxt=None,
                   embedding_batch_size=embedding_batch_size,
                   embedding_mini_batch_size=embedding_mini_batch_size,
                   reward_scale=reward_scale,
-                  num_test_tasks=10)
+                  num_test_tasks=5,
+                  replay_buffer_size=int(5e6))
 
     set_gpu_mode(use_gpu, gpu_id=0)
     if use_gpu:
@@ -142,4 +146,4 @@ def pearl_metaworld_ml10(ctxt=None,
     trainer.train(n_epochs=num_epochs, batch_size=batch_size)
 
 
-pearl_metaworld_ml10()
+pearl_metaworld_ml1()

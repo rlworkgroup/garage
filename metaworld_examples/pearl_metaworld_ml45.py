@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """PEARL ML450 example."""
-
+# pylint: disable=no-value-for-parameter
 import click
 import metaworld
 
@@ -44,18 +44,13 @@ def pearl_metaworld_ML45(ctxt,
         seed (int): Used to seed the random number generator to produce
             determinism.
         num_epochs (int): Number of training epochs.
-        num_train_tasks (int): Number of tasks for training.
         latent_size (int): Size of latent context vector.
         encoder_hidden_size (int): Output dimension of dense layer of the
             context encoder.
         net_size (int): Output dimension of a dense layer of Q-function and
             value function.
-        meta_batch_size (int): Meta batch size.
-        num_steps_per_epoch (int): Number of iterations per epoch.
         num_initial_steps (int): Number of transitions obtained per task before
             training.
-        num_tasks_sample (int): Number of random tasks to obtain data for each
-            iteration.
         num_steps_prior (int): Number of transitions to obtain per task with
             z ~ prior.
         num_extra_rl_steps_posterior (int): Number of additional transitions

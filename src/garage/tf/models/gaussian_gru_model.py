@@ -53,6 +53,8 @@ class GaussianGRUModel(Model):
             hidden state is trainable.
         learn_std (bool): Is std trainable.
         init_std (float): Initial value for std.
+        min_std (float): minimum stddev that the policy can learn to output,
+        max_std (float): maximum stddev that the policy can learn to output,
         std_share_network (bool): Boolean for whether mean and std share
             the same network.
         layer_normalization (bool): Bool for using layer normalization or not.
@@ -81,8 +83,7 @@ class GaussianGRUModel(Model):
                  min_std=None,
                  max_std=None,
                  std_share_network=False,
-                 layer_normalization=False,
-                 use_sp_clip=False):
+                 layer_normalization=False):
         super().__init__(name)
         self._output_dim = output_dim
         self._hidden_dim = hidden_dim
@@ -99,14 +100,13 @@ class GaussianGRUModel(Model):
         self._layer_normalization = layer_normalization
         self._learn_std = learn_std
         self._std_share_network = std_share_network
-        self._use_sp_clip = use_sp_clip
         # pylint: disable=assignment-from-no-return
         self._init_std_param = np.log(init_std)
         if not ((min_std is None and max_std is None) or
                 (min_std is not None and max_std is not None)):
             raise ValueError(
-                "You must specify both a min and a max standard deviation or none at all"
-            )
+                ('You must specify both a min and a max standard deviation or'
+                 ' none at all'))
         self._log_min_std_param = None if min_std is None else np.log(min_std)
         self._log_max_std_param = None if max_std is None else np.log(max_std)
         self._initialize()
@@ -233,31 +233,32 @@ class GaussianGRUModel(Model):
 
         with tf.compat.v1.variable_scope('std_limits'):
             if self._log_max_std_param and self._log_min_std_param:
-                # high = tf.stop_gradient(
-                #     tf.convert_to_tensor(self._log_max_std_param,
-                #                          dtype=tf.float32))
-                # low = tf.stop_gradient(
-                #     tf.convert_to_tensor(self._log_min_std_param,
-                #                          dtype=tf.float32))
                 high = self._log_max_std_param
                 low = self._log_min_std_param
 
-                def softclip(x, x_min, x_max, alpha=2):
+                def _softclip(x, x_min, x_max, alpha=2):
+                    """Softclipping function for min and max stddev.
+
+                    Args:
+                        x (tf.Tensor): value to be clipped.
+                        x_min (float): min stddev.
+                        x_max (float): max stddev.
+                        alpha (float): coefficient for controlling the width
+                            of the softmax function to clip by.
+
+                    Returns:
+                        tf.Tensor: soft-clipped value.
+
+                    """
                     y_scale = (x_max - x_min) / 2
                     y_offset = (x_max + x_min) / 2
                     x_scale = (2 * alpha) / (x_max - x_min)
                     x_offset = (x_max + x_min) / 2
-                    return (tf.math.tanh((x - x_offset) * x_scale) * y_scale) + y_offset
-                def softclip_2(x, x_min, x_max):
-                    x = tf.math.tanh(x)
-                    clip = x_min + 0.5 * (x_max - x_min) * (x + 1)
-                    return clip
-                if self._use_sp_clip:
-                    log_std_var = softclip_2(log_std_var, low, high)
-                    step_log_std_var = softclip_2(step_log_std_var, low, high)
-                else:
-                    log_std_var = softclip(log_std_var, low, high)
-                    step_log_std_var = softclip(step_log_std_var, low, high)
+                    return (tf.math.tanh(
+                        (x - x_offset) * x_scale) * y_scale) + y_offset
+
+                log_std_var = _softclip(log_std_var, low, high)
+                step_log_std_var = _softclip(step_log_std_var, low, high)
 
         dist = tfp.distributions.MultivariateNormalDiag(
             loc=mean_var, scale_diag=tf.exp(log_std_var))

@@ -1,8 +1,9 @@
+"""Sampling worker that can be used for deterministic eval sampling."""
 from garage.sampler import DefaultWorker
 
 
 class EvalWorker(DefaultWorker):
-
+    """Sampling worker that can be used for deterministic eval sampling."""
 
     def step_episode(self):
         """Take a single time-step in the current episode.

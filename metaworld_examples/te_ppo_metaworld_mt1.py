@@ -21,11 +21,12 @@ from garage.trainer import TFTrainer
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--n_epochs', default=4000)
-@click.option('--batch_size_per_task', default=5000)
+@click.option('--n_epochs', default=2000)
+@click.option('--batch_size_per_task', default=2000)
 @click.option('--entropy', default=2e-2)
+@click.option('--env-name')
 @wrap_experiment(snapshot_mode='none', name_parameters='passed')
-def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task, entropy):
+def te_ppo_MT1(ctxt, seed, n_epochs, batch_size_per_task, entropy, env_name):
     """Train Task Embedding PPO with PointEnv.
 
     Args:
@@ -35,19 +36,22 @@ def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task, entropy):
             determinism.
         n_epochs (int): Total number of epochs for training.
         batch_size_per_task (int): Batch size of samples for each task.
+        entropy (float): Coefficient to weigh the entropy reward term by
+            when using the max entropy reward.
+        env_name (str): Name of Meta-World environment to initialize
+            this experiment with.
 
     """
-    n_tasks = 10
+    n_tasks = 50
     set_seed(seed)
-    mt10 = metaworld.MT10()
-    train_task_sampler = MetaWorldTaskSampler(mt10,
+    MT1 = metaworld.MT1(env_name)
+    train_task_sampler = MetaWorldTaskSampler(MT1,
                                               'train',
                                               lambda env, _: normalize(env),
                                               add_env_onehot=False)
     assert n_tasks % 10 == 0
     assert n_tasks <= 500
-    env_ups = train_task_sampler.sample(n_tasks)
-    envs = [env_up() for env_up in env_ups]
+    envs = [env_up() for env_up in train_task_sampler.sample(n_tasks)]
     env = MultiEnvWrapper(envs,
                           sample_strategy=round_robin_strategy,
                           mode='vanilla')
@@ -137,11 +141,10 @@ def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task, entropy):
                          max_optimization_epochs=10,
                      ),
                      center_adv=True,
-                     stop_ce_gradient=True,
-                     train_task_sampler=train_task_sampler)
+                     stop_ce_gradient=True)
 
         trainer.setup(algo, env)
         trainer.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
 
 
-te_ppo_mt10()
+te_ppo_MT1()

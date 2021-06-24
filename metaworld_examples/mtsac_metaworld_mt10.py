@@ -32,13 +32,10 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed):
             configuration used by Trainer to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
-        _gpu (int): The ID of the gpu to be used (used on multi-gpu machines).
-        n_tasks (int): Number of tasks to use. Should be a multiple of 10.
-        timesteps (int): Number of timesteps to run.
 
     """
     _gpu = 0
-    n_tasks = 10
+    num_tasks = 10
     timesteps = 500000000
     deterministic.set_seed(seed)
     trainer = Trainer(ctxt)
@@ -49,9 +46,9 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed):
                                               'train',
                                               add_env_onehot=True)
 
-    assert n_tasks % 10 == 0
-    assert n_tasks <= 500
-    mt10_train_envs = train_task_sampler.sample(n_tasks)
+    assert num_tasks % 10 == 0
+    assert num_tasks <= 500
+    mt10_train_envs = train_task_sampler.sample(num_tasks)
     env = mt10_train_envs[0]()
 
     policy = TanhGaussianMLPPolicy(
@@ -72,7 +69,6 @@ def mtsac_metaworld_mt10(ctxt=None, *, seed):
                                  hidden_nonlinearity=F.relu)
 
     replay_buffer = PathBuffer(capacity_in_transitions=int(1e6), )
-    num_tasks = 10
     max_episode_length = env.spec.max_episode_length
 
     sampler = RaySampler(

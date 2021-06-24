@@ -8,10 +8,10 @@ import numpy as np
 import torch
 
 from garage import (_Default, EpisodeBatch, log_multitask_performance,
-                    make_optimizer,)
+                    make_optimizer)
 from garage.np import discount_cumsum, explained_variance_1d
 from garage.torch import update_module_params
-from garage.torch._functions import np_to_torch, zero_optim_grads
+from garage.torch._functions import zero_optim_grads
 from garage.torch.optimizers import (ConjugateGradientOptimizer,
                                      DifferentiableSGD)
 
@@ -160,24 +160,6 @@ class MAML:
         update_module_params(self._old_policy, old_theta)
 
         return average_return
-
-    def _train_value_function(self, paths):
-        """Train the value function.
-
-        Args:
-            paths (list[dict]): A list of collected paths.
-
-        Returns:
-            torch.Tensor: Calculated mean scalar value of value function loss
-                (float).
-
-        """
-
-        obs = np.concatenate([path['observations'] for path in paths], axis=0)
-        returns = np.concatenate([path['returns'] for path in paths])
-
-        obs = np_to_torch(obs)
-        returns = np_to_torch(returns.astype(np.float32))
 
     def _obtain_samples(self, trainer):
         """Obtain samples for each task before and after the fast-adaptation.
@@ -401,7 +383,8 @@ class MAML:
         actions = torch.Tensor(episodes.padded_actions)
         rewards = torch.Tensor(episodes.padded_rewards)
         valids = torch.Tensor(episodes.lengths).int()
-        baselines = self._value_function(paths)
+        baselines = torch.Tensor(
+            [self._value_function.predict(path) for path in paths])
 
         return _MAMLEpisodeBatch(paths, obs, actions, rewards, valids,
                                  baselines)
@@ -421,6 +404,8 @@ class MAML:
             kl_before (float): KL divergence before optimization step.
             kl (float): KL divergence after optimization step.
             policy_entropy (float): Policy entropy.
+            stddev (float): Policy stddev
+            explained_variance (float): explained variance of baseline
 
         Returns:
             float: The average return in last epoch cycle.

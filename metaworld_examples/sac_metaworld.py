@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
-"""This is an example to train a task with SAC algorithm written in PyTorch."""
-import pickle
-
+"""This is an example to train a Meta-World Environment with SAC algorithm."""
 import click
-import gym
-from metaworld.envs.mujoco.env_dict import (ALL_V1_ENVIRONMENTS,
-                                            ALL_V2_ENVIRONMENTS)
+from metaworld.envs import ALL_V2_ENVIRONMENTS_GOAL_OBSERVABLE
 import numpy as np
 from torch import nn
 from torch.nn import functional as F
@@ -27,36 +23,26 @@ from garage.trainer import Trainer
 @click.option('--seed', type=int, default=np.random.randint(0, 1000))
 @click.option('--gpu', type=int, default=0)
 @wrap_experiment(snapshot_mode='gap', snapshot_gap=50, name_parameters='all')
-def sac_metaworld(ctxt=None,
-                                      env_name=None,
-                                      gpu=None,
-                                      reward_scale=1,
-                                      tag='',
-                                      seed=1):
+def sac_metaworld(ctxt=None, env_name=None, gpu=None, seed=1):
     """Set up environment and algorithm and run the task.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
             configuration used by LocalRunner to create the snapshotter.
+        env_name (str): Name of Meta-World environment to initialize
+            this experiment with.
+        gpu (int): GPU id to use for training.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
 
     """
-    # torch.set_num_threads(1)
     not_in_mw = 'the env_name specified is not a metaworld environment'
-    assert env_name in ALL_V2_ENVIRONMENTS or env_name in ALL_V1_ENVIRONMENTS, not_in_mw
+    env_name = env_name + '-goal-observable'
+    assert env_name in ALL_V2_ENVIRONMENTS_GOAL_OBSERVABLE, not_in_mw
     deterministic.set_seed(seed)
     runner = Trainer(snapshot_config=ctxt)
-
-    if env_name in ALL_V2_ENVIRONMENTS:
-        env_cls = ALL_V2_ENVIRONMENTS[env_name]
-    else:
-        env_cls = ALL_V1_ENVIRONMENTS[env_name]
-
-    env = env_cls()
-    env._partially_observable = False
-    env._freeze_rand_vec = False
-    env._set_task_called = True
-    env.reset()
-    env._freeze_rand_vec = True
+    env_cls = ALL_V2_ENVIRONMENTS_GOAL_OBSERVABLE[env_name]
+    env = env_cls(seed=seed)
     max_path_length = env.max_path_length
 
     env = GymEnv(env, max_episode_length=max_path_length)
@@ -103,7 +89,6 @@ def sac_metaworld(ctxt=None,
               target_update_tau=5e-3,
               discount=0.99,
               buffer_batch_size=256,
-              reward_scale=float(reward_scale),
               steps_per_epoch=epoch_cycles,
               num_evaluation_episodes=10,
               sampler=sampler)

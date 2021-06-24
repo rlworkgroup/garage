@@ -21,11 +21,11 @@ from garage.trainer import TFTrainer
 
 @click.command()
 @click.option('--seed', default=1)
-@click.option('--n_epochs', default=2000)
+@click.option('--n_epochs', default=4000)
 @click.option('--batch_size_per_task', default=5000)
 @click.option('--entropy', default=2e-2)
 @wrap_experiment(snapshot_mode='none', name_parameters='passed')
-def te_ppo_MT50(ctxt, seed, n_epochs, batch_size_per_task, entropy):
+def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task, entropy):
     """Train Task Embedding PPO with PointEnv.
 
     Args:
@@ -35,18 +35,21 @@ def te_ppo_MT50(ctxt, seed, n_epochs, batch_size_per_task, entropy):
             determinism.
         n_epochs (int): Total number of epochs for training.
         batch_size_per_task (int): Batch size of samples for each task.
+        entropy (float): Coefficient to weigh the entropy reward term by
+            when using the max entropy reward.
 
     """
-    n_tasks = 50
+    n_tasks = 10
     set_seed(seed)
-    MT50 = metaworld.MT50()
-    train_task_sampler = MetaWorldTaskSampler(MT50,
+    mt10 = metaworld.MT10()
+    train_task_sampler = MetaWorldTaskSampler(mt10,
                                               'train',
                                               lambda env, _: normalize(env),
                                               add_env_onehot=False)
     assert n_tasks % 10 == 0
     assert n_tasks <= 500
-    envs = [env_up() for env_up in train_task_sampler.sample(n_tasks)]
+    env_ups = train_task_sampler.sample(n_tasks)
+    envs = [env_up() for env_up in env_ups]
     env = MultiEnvWrapper(envs,
                           sample_strategy=round_robin_strategy,
                           mode='vanilla')
@@ -143,4 +146,4 @@ def te_ppo_MT50(ctxt, seed, n_epochs, batch_size_per_task, entropy):
         trainer.train(n_epochs=n_epochs, batch_size=batch_size, plot=False)
 
 
-te_ppo_MT50()
+te_ppo_mt10()
