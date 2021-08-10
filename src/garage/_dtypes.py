@@ -525,9 +525,19 @@ class EpisodeBatch(TimeStepBatch):
     last_observations: np.ndarray
     lengths: np.ndarray
 
-    def __init__(self, env_spec, episode_infos, observations,
-                 last_observations, actions, rewards, env_infos, agent_infos,
-                 step_types, lengths):  # noqa: D102
+    def __init__(self,
+                 env_spec,
+                 episode_infos,
+                 observations,
+                 last_observations,
+                 actions,
+                 rewards,
+                 env_infos,
+                 agent_infos,
+                 step_types,
+                 lengths,
+                 next_observations=None,
+                 episode_infos_by_episode=None):  # noqa: D102
         # lengths
         if len(lengths.shape) != 1:
             raise ValueError(
@@ -587,6 +597,13 @@ class EpisodeBatch(TimeStepBatch):
             self,
             np.ndarray,
             ignored_fields={'next_observations', 'episode_infos'})
+        # This should only happen if someone is using `dataclasses.replace`
+        if __debug__:
+            assert ((next_observations is None)
+                    or (self.next_observations == next_observations).all())
+            assert ((episode_infos_by_episode is None)
+                    or (self.episode_infos_by_episode
+                        == episode_infos_by_episode))
 
     @classmethod
     def concatenate(cls, *batches):

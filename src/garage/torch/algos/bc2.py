@@ -93,6 +93,7 @@ class BC2(RLAlgorithm):
                 eval_samples = obtain_evaluation_episodes(
                     self.learner,
                     self._eval_env,
+                    max_episode_length=self._eval_env.spec.max_episode_length,
                     num_eps=self._n_eval_episodes)
                 log_performance(epoch, eval_samples, discount=1.0)
 

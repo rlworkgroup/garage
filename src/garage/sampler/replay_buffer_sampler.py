@@ -1,13 +1,7 @@
 from dataclasses import replace
 import math
 
-import numpy as np
-from torch import nn
-
 from garage import log_performance, TimeStepBatch
-from garage.envs import GarageEnv, normalize
-from garage.replay_buffer import PathBuffer
-from garage.sampler import LocalSampler
 
 
 class ReplayBufferSampler:
@@ -47,15 +41,7 @@ class ReplayBufferSampler:
                 self.fill_buffer(itr, needed_samples, agent_update, env_update)
         else:
             self.total_env_steps += num_samples
-        samples = self.replay_buffer.sample_transitions(num_samples)
-        return TimeStepBatch(env_spec=self._env_spec,
-                             observations=samples['observations'],
-                             actions=samples['actions'],
-                             rewards=samples['rewards'].reshape(-1),
-                             next_observations=samples['next_observations'],
-                             terminals=samples['terminals'].reshape(-1),
-                             env_infos={},
-                             agent_infos={})
+        return self.replay_buffer.sample_timesteps(num_samples)
 
     def fill_buffer(self, itr, samples_to_add, agent_update, env_update=None):
         """Fill the buffer by sampling from the inner sampler."""
@@ -78,7 +64,7 @@ class ReplayBufferSampler:
             traj = replace(traj, actions=traj.agent_infos['action_targets'])
         self._inner_samples += len(traj.rewards)
         self.total_env_steps = self.inner_sampler.total_env_steps
-        self.replay_buffer.add_trajectory_batch(traj)
+        self.replay_buffer.add_episode_batch(traj)
         log_performance(itr,
                         traj,
                         discount=1.0,

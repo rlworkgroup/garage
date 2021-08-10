@@ -134,12 +134,9 @@ class GymEnv(Environment):
         self._env = None
         if isinstance(env, str):
             self._env = gym.make(env)
-        elif isinstance(env, gym.Env):
-            self._env = env
         else:
-            raise ValueError('GymEnv can take env as either a string, '
-                             'or an Gym environment, but got type {} '
-                             'instead.'.format(type(env)))
+            # Assume whatever we've been given implements the gym.Env API
+            self._env = env
 
         self._max_episode_length = _get_time_limit(self._env,
                                                    max_episode_length)
