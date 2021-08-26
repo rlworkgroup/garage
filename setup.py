@@ -15,7 +15,6 @@ REQUIRED = [
     'cloudpickle',
     'cma==2.7.0',
     'dowel>=0.0.4',
-    'gym[atari,box2d,classic_control]' + GYM_VERSION,
     'numpy>=1.14.5',
     'psutil',
     # Pyglet 1.4.0 introduces some api change which breaks some
@@ -35,6 +34,10 @@ REQUIRED = [
 
 # Dependencies for optional features
 EXTRAS = {}
+
+EXTRAS['gym'] = [
+    'gym[atari,box2d,classic_control]' + GYM_VERSION,
+]
 
 EXTRAS['mujoco'] = [
     'mujoco-py<2.1,>=2.0',
