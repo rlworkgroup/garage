@@ -84,7 +84,13 @@ class SAC(RLAlgorithm):
             episodes. If None, a copy of the train env is used.
         use_deterministic_evaluation (bool): True if the trained policy
             should be evaluated deterministically.
-
+        temporal_regularization_factor (float): coefficient that determines 
+            the temporal regularization penalty as defined in CAPS as lambda_t
+        spatial_regularization_factor (float): coefficient that determines 
+            the spatial regularization penalty as defined in CAPS as lambda_s
+        spatial_regularization_eps (float): sigma of the normal distribution
+            from with spatial regularization observations are drawn, 
+            in caps this is defined as epsilon_s
     """
 
     def __init__(
@@ -112,7 +118,10 @@ class SAC(RLAlgorithm):
             steps_per_epoch=1,
             num_evaluation_episodes=10,
             eval_env=None,
-            use_deterministic_evaluation=True):
+            use_deterministic_evaluation=True,
+            temporal_regularization_factor=0.,
+            spatial_regularization_factor=0.,
+            spatial_regularization_eps=1.):
 
         self._qf1 = qf1
         self._qf2 = qf2
@@ -137,6 +146,10 @@ class SAC(RLAlgorithm):
         if max_episode_length_eval is not None:
             self._max_episode_length_eval = max_episode_length_eval
         self._use_deterministic_evaluation = use_deterministic_evaluation
+
+        self._temporal_regularization_factor = temporal_regularization_factor
+        self._spatial_regularization_factor = spatial_regularization_factor
+        self._spatial_regularization_dist = torch.distributions.Normal(0, spatial_regularization_eps)
 
         self.policy = policy
         self.env_spec = env_spec
@@ -387,6 +400,35 @@ class SAC(RLAlgorithm):
 
         return qf1_loss, qf2_loss
 
+    def _caps_regularization_objective(self, action_dists, samples_data):
+        """Compute the spatial and temporal regularization loss as in CAPS
+
+        Args:
+            samples_data (dict): Transitions(S,A,R,S') that are sampled from
+                the replay buffer. It should have the keys 'observation',
+                'action', 'reward', 'terminal', and 'next_observations'.
+            action_dists (torch.distribution.Distribution): Distributions 
+                returned from the policy after feeding through observations.
+
+        Returns:
+            torch.Tensor: combined regularization loss
+        """
+        
+        if self._temporal_regularization_factor:
+            next_action_dists = self.policy(samples_data['next_observation'])[0]
+            temporal_loss = self._temporal_regularization_factor * torch.mean(torch.cdist(action_dists.mean, next_action_dists.mean, p=2))
+        else:
+            temporal_loss = torch.tensor(0.)
+
+        if self._spatial_regularization_factor:
+            obs = samples_data['observation']
+            noisy_action_dists = self.policy(obs + self._spatial_regularization_dist.sample(obs.shape))[0]
+            spatial_loss = self._spatial_regularization_factor * torch.mean(torch.cdist(action_dists.mean, noisy_action_dists.mean, p=2))
+        else:
+            spatial_loss = torch.tensor(0.)
+        
+        return temporal_loss + spatial_loss
+
     def _update_targets(self):
         """Update parameters in the target q-functions."""
         target_qfs = [self._target_qf1, self._target_qf2]
@@ -438,6 +480,8 @@ class SAC(RLAlgorithm):
 
         policy_loss = self._actor_objective(samples_data, new_actions,
                                             log_pi_new_actions)
+        policy_loss += self._caps_regularization_objective(action_dists, 
+                                                           samples_data)
         zero_optim_grads(self._policy_optimizer)
         policy_loss.backward()
 
