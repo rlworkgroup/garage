@@ -37,6 +37,7 @@ class TestCNNMLPMergeModel(TfGraphTestCase):
         self.hidden_nonlinearity = tf.nn.relu
 
     # yapf: disable
+    @pytest.mark.flaky
     @pytest.mark.parametrize('filters, in_channels, strides, hidden_sizes', [
         (((32, (1, 1)), ), (3, ), (1, ), (1, )),  # noqa: E122
         (((32, (3, 3)), ), (3, ), (1, ), (2, )),
@@ -106,6 +107,7 @@ class TestCNNMLPMergeModel(TfGraphTestCase):
 
         np.testing.assert_array_equal(out, mlp_output)
 
+    @pytest.mark.flaky
     @pytest.mark.parametrize(
         'filters, in_channels, strides, pool_strides, pool_shapes',
         [

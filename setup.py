@@ -22,8 +22,6 @@ REQUIRED = [
     'scikit-image',
     'scipy',
     'setproctitle>=1.0',
-    'tensorflow>=1.14,!=2.5.0',
-    'tensorflow-probability>=0.11.0,<=0.12.2',
     'torch>=1.0.0,!=1.5.0,<1.8.0',
     'torchvision>=0.2.1,<=0.8.2',
 ]
@@ -33,6 +31,16 @@ if sys.version_info < (3, 7):
 
 # Dependencies for optional features
 EXTRAS = {}
+
+# Make tensorflow optional
+EXTRAS['tensorflow'] = [
+    'tensorflow>=2.4,!=2.5.0',
+    # This tensorflow version corresponds to the version required by
+    # tensorflow-probability 0.12.
+    # They don't declare their tensorflow version requirements, so that
+    # users can choose to install tensorflow or tensorflow-gpu.
+    'tensorflow-probability>=0.11.0,<=0.12.2',
+]
 
 EXTRAS['gym'] = [
     f'gym[atari,box2d,classic_control]=={GYM_VERSION}',
@@ -58,6 +66,12 @@ EXTRAS['dm_control'] = [
 EXTRAS['bullet'] = ['mpi4py', 'pybullet>=2.8.7']
 
 EXTRAS['all'] = list(set(sum(EXTRAS.values(), [])))
+
+EXTRAS['tensorflow1'] = [
+    # This version is not tested regularly, but should work.
+    'tensorflow>=1.14,<2',
+    'tensorflow-probability<0.9',
+]
 
 # Development dependencies (*not* included in 'all')
 EXTRAS['dev'] = [
@@ -85,11 +99,11 @@ EXTRAS['dev'] = [
     'yapf==0.30.0',
 ]  # yapf: disable
 
-with open('README.md') as f:
+with open('README.md', encoding='UTF-8') as f:
     README = f.read()
 
 # Get the package version dynamically
-with open('VERSION') as v:
+with open('VERSION', encoding='UTF-8') as v:
     VERSION = v.read().strip()
 
 setup(

@@ -3,7 +3,6 @@ import psutil
 
 from garage.experiment.deterministic import get_seed
 from garage.sampler.default_worker import DefaultWorker
-from garage.tf.samplers import TFWorkerClassWrapper
 
 
 def identity_function(value):
@@ -58,6 +57,9 @@ class WorkerFactory:
         self._seed = seed
         self._max_episode_length = max_episode_length
         if is_tf_worker:
+            # Import here to avoid hard dependency on TF.
+            # pylint: disable=import-outside-toplevel
+            from garage.tf.samplers import TFWorkerClassWrapper
             worker_class = TFWorkerClassWrapper(worker_class)
         self._worker_class = worker_class
         if worker_args is None:

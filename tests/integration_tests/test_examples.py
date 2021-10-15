@@ -52,6 +52,8 @@ LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_mt10.py',
     EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_mt50.py',
     EXAMPLES_ROOT_DIR / 'tf/multi_env_ppo.py',
+    EXAMPLES_ROOT_DIR / 'tf/trpo_swimmer_ray_sampler.py',
+    EXAMPLES_ROOT_DIR / 'tf/trpo_cartpole_recurrent.py',
 ]
 # yapf: enable
 

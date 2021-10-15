@@ -150,7 +150,7 @@ jobs:
           --memory-swap 6500m \
           "${DOCKER_TAG}" \
           /bin/bash -c \
-          'pushd docs && make doctest clean && popd'
+          'pip list && pushd docs && make doctest clean && popd; cat /tmp/*.log'
     - name: Update check status for PRs from forks
       uses: LouisBrunner/checks-action@v1.1.1
       if: env.IS_PR_FROM_FORK && always()
