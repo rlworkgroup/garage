@@ -466,10 +466,11 @@ jobs:
     name: Delete Docker Container
     runs-on: ubuntu-latest
     needs: [build_docker_container, normal_test, large_test, mujoco_test, mujoco_test_long, nightly_test, verify_envs_conda, verify_envs_pipenv]
-    if: ${{ always() && needs.build_docker_container.result == 'success' }}
+    # There's currently no working version of this action available, so disable it and delete packages manually
+    if: ${{ false && always() && needs.build_docker_container.result == 'success' }}
 
     steps:
-      - uses: actions/delete-package-versions@v1
+      - uses: actions/delete-package-versions@v2
         with:
           owner: ${{ env.OWNER }}
           repo: ${{ env.DOCKER_CACHE_REPO }}
