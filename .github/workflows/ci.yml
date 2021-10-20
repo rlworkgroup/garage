@@ -403,7 +403,10 @@ jobs:
     name: Verify Pipenv Environment Installation
     runs-on: ubuntu-latest
     needs: build_docker_container
-    if: github.event_name == 'schedule'
+    # For unclear reasons this step takes over six hours on GitHub Actions.
+    # To enable the CI to run, it is disabled for now.
+    # if: github.event_name == 'schedule'
+    if: false
 
     steps:
       - uses: actions/checkout@v2
