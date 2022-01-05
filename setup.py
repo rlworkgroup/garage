@@ -43,7 +43,7 @@ EXTRAS['gym'] = [
 ]
 
 EXTRAS['mujoco'] = [
-    'mujoco-py<2.1,>=2.0',
+    'mujoco-py<2.2,>=2.0',
     'gym[all]' + GYM_VERSION,
 ]
 
