@@ -14,7 +14,7 @@ REQUIRED = [
     'click>=2.0',
     'cloudpickle',
     'cma==2.7.0',
-    'dowel==0.0.3',
+    'dowel>=0.0.3',
     'numpy>=1.14.5',
     'psutil',
     'python-dateutil',
