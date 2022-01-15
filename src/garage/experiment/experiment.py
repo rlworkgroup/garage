@@ -327,6 +327,8 @@ class ExperimentTemplate:
         logger.add_output(dowel.CsvOutput(tabular_log_file))
         logger.add_output(
             dowel.TensorBoardOutput(log_dir, x_axis=options['x_axis']))
+        logger.add_output(
+            dowel.WandBOutput(x_axis=options['x_axis']))
         logger.add_output(dowel.StdOutput())
 
         logger.push_prefix('[{}] '.format(name))
