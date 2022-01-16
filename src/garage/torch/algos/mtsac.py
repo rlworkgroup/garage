@@ -103,6 +103,7 @@ class MTSAC(SAC):
         steps_per_epoch=1,
         num_evaluation_episodes=5,
         use_deterministic_evaluation=True,
+        render_env = False
     ):
 
         super().__init__(
@@ -149,6 +150,7 @@ class MTSAC(SAC):
                                            self._num_tasks).log()
         self._epoch_mean_success_rate = []
         self._epoch_median_success_rate = []
+        self._render_env = render_env
 
     def _get_log_alpha(self, samples_data):
         """Return the value of log_alpha.
@@ -211,6 +213,7 @@ class MTSAC(SAC):
                     eval_env,
                     self._max_episode_length_eval,
                     num_eps=self._num_evaluation_episodes,
+                    render_env = self._render_env,
                     deterministic=self._use_deterministic_evaluation))
         eval_eps = EpisodeBatch.concatenate(*eval_eps)
         last_return = log_multitask_performance(epoch, eval_eps,
