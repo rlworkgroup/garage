@@ -182,7 +182,13 @@ def obtain_evaluation_episodes(policy,
                           render_env = render_env,
                           deterministic=deterministic)
             if render_env:
-                task_name = env._env._task_name 
+                task_name = "name_not_found"
+                # Two Layers needed becaue multitask env is other type as single task env
+                if hasattr(env._env, '_task_name'):
+                    task_name = env._env._task_name
+                elif hasattr(env._env, '_env'):
+                    if hasattr(env._env._env, '_task_name'):
+                        task_name = env._env._env._task_name
                 log_multitask_video(eps, task_name)
             
             episodes.append(eps)
