@@ -56,7 +56,8 @@ class RaySampler(Sampler):
             seed=get_seed(),
             n_workers=psutil.cpu_count(logical=False),
             worker_class=DefaultWorker,
-            worker_args=None):
+            worker_args=None,
+            num_gpus=0):
         # pylint: disable=super-init-not-called
         if not ray.is_initialized():
             ray.init(log_to_driver=False, ignore_reinit_error=True)
@@ -73,7 +74,7 @@ class RaySampler(Sampler):
                 n_workers=n_workers,
                 worker_class=worker_class,
                 worker_args=worker_args)
-        self._sampler_worker = ray.remote(SamplerWorker)
+        self._sampler_worker = ray.remote(SamplerWorker).options(num_gpus=num_gpus)
         self._agents = agents
         self._envs = self._worker_factory.prepare_worker_messages(envs)
         self._all_workers = defaultdict(None)
