@@ -416,6 +416,11 @@ class ExperimentTemplate:
             for param in options['signature'].parameters.values():
                 name_parameters[param.name] = params.get(
                     param.name, param.default)
+        elif isinstance(options['name_parameters'], list):
+            for named_param in options['name_parameters']:
+                name_parameters[named_param] = params.get(
+                    named_param,
+                    options['signature'].parameters[named_param].default)
         elif options['name_parameters'] is not None:
             raise ValueError('wrap_experiment.name_parameters should be set '
                              'to one of None, "passed", or "all"')
@@ -762,5 +767,11 @@ class LogEncoder(json.JSONEncoder):
                 o.__module__ + '.' + o.__class__.__name__ + '.' + o.name
             }
         elif callable(o):
-            return {'$function': o.__module__ + '.' + o.__name__}
-        return json.JSONEncoder.default(self, o)
+            try:
+                return {'$function': o.__module__ + '.' + o.__name__}
+            except AttributeError:
+                pass
+        try:
+            return json.JSONEncoder.default(self, o)
+        except Exception:
+            return '$unknown'
