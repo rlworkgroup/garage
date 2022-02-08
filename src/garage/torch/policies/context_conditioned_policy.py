@@ -211,6 +211,8 @@ class ContextConditionedPolicy(nn.Module):
         """
         z = self.z
         obs = torch.as_tensor(obs[None], device=global_device()).float()
+        obs = obs.to(z.device)
+
         obs_in = torch.cat([obs, z], dim=1)
         action, info = self._policy.get_action(obs_in)
         return action, info
