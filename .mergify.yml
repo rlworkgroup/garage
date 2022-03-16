@@ -24,9 +24,8 @@ pull_request_rules:
       - label=ready-to-merge
     actions:
       merge:
-        strict: smart
-        strict_method: rebase
         method: squash
+        rebase_fallback: none
       delete_head_branch: {}
   - name: Merge queue for master (maintainers)
     conditions:
@@ -45,9 +44,8 @@ pull_request_rules:
       - label=ready-to-merge
     actions:
       merge:
-        strict: smart
-        strict_method: rebase
         method: squash
+        rebase_fallback: none
       delete_head_branch: {}
   - name: Merge for master (docs only)
     conditions:
@@ -62,9 +60,8 @@ pull_request_rules:
       - -files~=\.(?!md|rst|png|bib|html|css)
     actions:
       merge:
-        strict: smart
-        strict_method: rebase
         method: squash
+        rebase_fallback: none
       delete_head_branch: {}
   - name: Merge for master (docs only, maintainers)
     conditions:
@@ -79,9 +76,8 @@ pull_request_rules:
       - -files~=\.(?!md|rst|png|bib|html|css)
     actions:
       merge:
-        strict: smart
-        strict_method: rebase
         method: squash
+        rebase_fallback: none
       delete_head_branch: {}
   - name: Merge queue for release-2019.10
     conditions:
@@ -94,9 +90,8 @@ pull_request_rules:
       - label=ready-to-merge
     actions:
       merge:
-        strict: smart
-        strict_method: rebase
         method: squash
+        rebase_fallback: none
       delete_head_branch: {}
   - name: Merge queue for release-2019.10 (automatic backports)
     conditions:
@@ -108,9 +103,8 @@ pull_request_rules:
       - status-success="codecov/patch"
     actions:
       merge:
-        strict: smart
-        strict_method: rebase
         method: squash
+        rebase_fallback: none
       delete_head_branch: {}
   - name: Merge queue for release-2020.06
     conditions:
@@ -123,9 +117,8 @@ pull_request_rules:
       - label=ready-to-merge
     actions:
       merge:
-        strict: smart
-        strict_method: rebase
         method: squash
+        rebase_fallback: none
       delete_head_branch: {}
   - name: Merge queue for release-2020.06 (automatic backports)
     conditions:
@@ -137,9 +130,8 @@ pull_request_rules:
       - status-success="codecov/patch"
     actions:
       merge:
-        strict: smart
-        strict_method: rebase
         method: squash
+        rebase_fallback: none
       delete_head_branch: {}
   - name: Create backports for v2019.10
     conditions:
