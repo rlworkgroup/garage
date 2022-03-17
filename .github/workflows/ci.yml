@@ -190,7 +190,7 @@ jobs:
           for i in {1..5}; do
               bash <(curl -s https://codecov.io/bash --retry 5) -Z && break
               if [ $i == 5 ]; then
-                  exit 1
+                  exit 0
               else
                   echo "Retry ${i}..."
                   sleep 30
@@ -234,7 +234,7 @@ jobs:
           for i in {1..5}; do
               bash <(curl -s https://codecov.io/bash --retry 5) -Z && break
               if [ $i == 5 ]; then
-                  exit 1
+                  exit 0
               else
                   echo "Retry ${i}..."
                   sleep 30
@@ -278,7 +278,7 @@ jobs:
           for i in {1..5}; do
               bash <(curl -s https://codecov.io/bash --retry 5) -Z && break
               if [ $i == 5 ]; then
-                  exit 1
+                  exit 0
               else
                   echo "Retry ${i}..."
                   sleep 30
@@ -322,7 +322,7 @@ jobs:
           for i in {1..5}; do
               bash <(curl -s https://codecov.io/bash --retry 5) -Z && break
               if [ $i == 5 ]; then
-                  exit 1
+                  exit 0
               else
                   echo "Retry ${i}..."
                   sleep 30
