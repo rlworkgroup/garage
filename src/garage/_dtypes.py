@@ -1044,11 +1044,11 @@ def check_timestep_batch(batch, array_type, ignored_fields=()):
                         f'Each {field[:-1]} has shape {value[0].shape} '
                         f'but must match the observation_space '
                         f'{env_spec.observation_space}')
-                if (isinstance(value[0], np.ndarray)
-                        and not env_spec.observation_space.contains(value[0])):
-                    warnings.warn(
-                        f'Observation {value[0]!r} is outside '
-                        f'observation_space {env_spec.observation_space}')
+                # if (isinstance(value[0], np.ndarray)
+                #         and not env_spec.observation_space.contains(value[0])):
+                #     warnings.warn(
+                #         f'Observation {value[0]!r} is outside '
+                #         f'observation_space {env_spec.observation_space}')
             if env_spec and field == 'actions':
                 if not _space_soft_contains(env_spec.action_space, value[0]):
                     raise ValueError(
