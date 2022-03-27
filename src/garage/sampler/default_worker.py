@@ -107,7 +107,10 @@ class DefaultWorker(Worker):
         """
         if self._eps_length < self._max_episode_length:
             a, agent_info = self.agent.get_action(self._prev_obs)
-            es = self.env.step(a)
+            try:
+                es = self.env.step(a)
+            except RuntimeError:
+                breakpoint()
             self._observations.append(self._prev_obs)
             self._env_steps.append(es)
             for k, v in agent_info.items():
@@ -116,7 +119,17 @@ class DefaultWorker(Worker):
 
             if not es.terminal:
                 self._prev_obs = es.observation
+
+                # For some reason, an episode might be marked as timeout even
+                # though the episode length is smaller than max episode length.
+                # In those cases, we want to terminate.
+                if es.timeout:
+                    self._lengths.append(self._eps_length)
+                    self._last_observations.append(self._prev_obs)
+                    return True
+
                 return False
+
         self._lengths.append(self._eps_length)
         self._last_observations.append(self._prev_obs)
         return True
