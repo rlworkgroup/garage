@@ -5,7 +5,7 @@ from torch import nn
 from garage import InOutSpec
 from garage.torch.modules import DiscreteCNNModule
 from garage.torch.policies.stochastic_policy import StochasticPolicy
-
+from garage.torch import global_device
 
 class DiscreteCNNPolicy(StochasticPolicy):
     """DiscreteCNNPolicy.
@@ -126,6 +126,10 @@ class DiscreteCNNPolicy(StochasticPolicy):
             dict[str, torch.Tensor]: Additional agent_info, as torch Tensors.
                 Do not need to be detached, and can be on any device.
         """
+        original_device = observations.device
+        if observations.device != global_device():
+            observations = observations.to(global_device())
+
         # We're given flattened observations.
         observations = observations.reshape(
             -1, *self._env_spec.observation_space.shape)
