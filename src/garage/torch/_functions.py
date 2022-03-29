@@ -102,7 +102,10 @@ def compute_advantages(discount, gae_lambda, max_episode_length, baselines,
     deltas = F.pad(deltas,
                    (0, max_episode_length - 1)).unsqueeze(0).unsqueeze(0)
 
-    advantages = F.conv2d(deltas, adv_filter, stride=1).reshape(rewards.shape)
+    advantages = F.conv2d(
+        deltas.to(global_device()),
+        adv_filter.to(global_device()), stride=1
+    ).reshape(rewards.shape)
     return advantages
 
 
