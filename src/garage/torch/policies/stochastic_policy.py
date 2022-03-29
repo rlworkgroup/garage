@@ -91,7 +91,7 @@ class StochasticPolicy(Policy, abc.ABC):
                 observations = list_to_tensor(observations)
 
             if isinstance(self._env_spec.observation_space, akro.Image):
-                observations /= 255.0  # scale image
+                observations = torch.div(observations, 255.0)
             dist, info = self.forward(observations)
             return dist.sample().cpu().numpy(), {
                 k: v.detach().cpu().numpy()
