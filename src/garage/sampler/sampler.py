@@ -13,24 +13,8 @@ class Sampler(abc.ABC):
     `Sampler` needs. Specifically, it specifies how to construct `Worker`s,
     which know how to collect episodes and update both agents and environments.
 
-    Currently, `__init__` is also part of the interface, but calling it is
-    deprecated. `start_worker` is also deprecated, and does not need to be
-    implemented.
+    `start_worker` is deprecated, and does not need to be implemented.
     """
-
-    def __init__(self, algo, env):
-        """Construct a Sampler from an Algorithm.
-
-        Args:
-            algo (RLAlgorithm): The RL Algorithm controlling this
-                sampler.
-            env (Environment): The environment being sampled from.
-
-        Calling this method is deprecated.
-
-        """
-        self.algo = algo
-        self.env = env
 
     @classmethod
     def from_worker_factory(cls, worker_factory, agents, envs):
