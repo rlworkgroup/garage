@@ -78,7 +78,8 @@ class MultiprocessingSampler(Sampler):
 
         self._agents = self._factory.prepare_worker_messages(
             agents, cloudpickle.dumps)
-        self._envs = self._factory.prepare_worker_messages(envs)
+        self._envs = self._factory.prepare_worker_messages(
+            envs, cloudpickle.dumps)
         self._to_sampler = mp.Queue(2 * self._factory.n_workers)
         self._to_worker = [mp.Queue(1) for _ in range(self._factory.n_workers)]
         # If we crash from an exception, with full queues, we would rather not
@@ -192,7 +193,8 @@ class MultiprocessingSampler(Sampler):
         updated_workers = set()
         agent_ups = self._factory.prepare_worker_messages(
             agent_update, cloudpickle.dumps)
-        env_ups = self._factory.prepare_worker_messages(env_update)
+        env_ups = self._factory.prepare_worker_messages(
+            env_update, cloudpickle.dumps)
 
         with click.progressbar(length=num_samples, label='Sampling') as pbar:
             while completed_samples < num_samples:
@@ -260,7 +262,8 @@ class MultiprocessingSampler(Sampler):
         updated_workers = set()
         agent_ups = self._factory.prepare_worker_messages(
             agent_update, cloudpickle.dumps)
-        env_ups = self._factory.prepare_worker_messages(env_update)
+        env_ups = self._factory.prepare_worker_messages(
+            env_update, cloudpickle.dumps)
         episodes = defaultdict(list)
 
         with click.progressbar(length=self._factory.n_workers,
@@ -337,7 +340,7 @@ class MultiprocessingSampler(Sampler):
         return dict(
             factory=self._factory,
             agents=[cloudpickle.loads(agent) for agent in self._agents],
-            envs=self._envs)
+            envs=[cloudpickle.loads(env) for env in self._envs])
 
     def __setstate__(self, state):
         """Unpickle the state.
@@ -400,7 +403,7 @@ def run_worker(factory, to_worker, to_sampler, worker_number, agent, env):
 
     inner_worker = factory(worker_number)
     inner_worker.update_agent(cloudpickle.loads(agent))
-    inner_worker.update_env(env)
+    inner_worker.update_env(cloudpickle.loads(env))
 
     version = 0
     streaming_samples = False
@@ -422,7 +425,7 @@ def run_worker(factory, to_worker, to_sampler, worker_number, agent, env):
             # Update env and policy.
             agent_update, env_update, version = contents
             inner_worker.update_agent(cloudpickle.loads(agent_update))
-            inner_worker.update_env(env_update)
+            inner_worker.update_env(cloudpickle.loads(env_update))
             streaming_samples = True
         elif tag == 'stop':
             streaming_samples = False
