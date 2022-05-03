@@ -266,9 +266,11 @@ class RaySampler(Sampler):
             dict: The pickled state.
 
         """
-        return dict(factory=self._worker_factory,
-                    agents=self._agents,
-                    envs=self._envs)
+        return dict(
+            factory=self._worker_factory,
+            agents=self._agents,
+            envs=self._envs,
+            total_env_steps=self.total_env_steps)
 
     def __setstate__(self, state):
         """Unpickle the state.
@@ -280,6 +282,7 @@ class RaySampler(Sampler):
         self.__init__(state['agents'],
                       state['envs'],
                       worker_factory=state['factory'])
+        self.total_env_steps = state['total_env_steps']
 
 
 class SamplerWorker:

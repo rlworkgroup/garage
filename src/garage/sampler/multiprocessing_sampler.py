@@ -295,7 +295,8 @@ class MultiprocessingSampler(Sampler):
         return dict(
             factory=self._factory,
             agents=[cloudpickle.loads(agent) for agent in self._agents],
-            envs=self._envs)
+            envs=self._envs,
+            total_env_steps=self.total_env_steps)
 
     def __setstate__(self, state):
         """Unpickle the state.
@@ -305,6 +306,7 @@ class MultiprocessingSampler(Sampler):
 
         """
         self.__init__(state['factory'], state['agents'], state['envs'])
+        self.total_env_steps = state['total_env_steps']
 
 
 def run_worker(factory, to_worker, to_sampler, worker_number, agent, env):
