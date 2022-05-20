@@ -159,7 +159,7 @@ class Snapshotter:
                     raise FileNotFoundError(errno.ENOENT,
                                             os.strerror(errno.ENOENT),
                                             '*.pkl file in', load_dir)
-                files.sort()
+                files.sort(key=_extract_snapshot_itr)
                 load_from_file = files[0] if itr == 'first' else files[-1]
                 load_from_file = os.path.join(load_dir, load_from_file)
 
@@ -168,6 +168,21 @@ class Snapshotter:
 
         with open(load_from_file, 'rb') as file:
             return cloudpickle.load(file)
+
+
+def _extract_snapshot_itr(filename: str) -> int:
+    """Extracts the integer itr from a filename.
+
+    Args:
+        filename(str): The snapshot filename.
+
+    Returns:
+        int: The snapshot as an integer.
+
+    """
+    base = os.path.splitext(filename)[0]
+    digits = base.split('itr_')[1]
+    return int(digits)
 
 
 class NotAFileError(Exception):

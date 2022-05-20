@@ -22,6 +22,7 @@ configurations = [('all', {
 class TestSnapshotter:
 
     def setup_method(self):
+        # pylint: disable=consider-using-with
         self.temp_dir = tempfile.TemporaryDirectory()
 
     def teardown_method(self):
@@ -78,3 +79,10 @@ class TestSnapshotter:
             Snapshotter(snapshot_dir=self.temp_dir.name,
                         snapshot_mode='gap_overwrite',
                         snapshot_gap=1)
+
+    def test_sorts_correctly(self):
+        snapshotter = Snapshotter(self.temp_dir.name, 'all', 2)
+        snapshotter.save_itr_params(80, {'test_itr': 80})
+        snapshotter.save_itr_params(120, {'test_itr': 120})
+        last = snapshotter.load(self.temp_dir.name)
+        assert last['test_itr'] == 120
