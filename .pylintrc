@@ -34,6 +34,8 @@ disable =
     no-else-return,
     # Discourages small interfaces
     too-few-public-methods,
+    # Too much old code
+    consider-using-f-string,
 
 [REPORTS]
 msg-template = {path}:{line:3d},{column}: {msg} ({symbol})
