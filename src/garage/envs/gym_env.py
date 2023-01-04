@@ -144,7 +144,10 @@ class GymEnv(Environment):
         self._max_episode_length = _get_time_limit(self._env,
                                                    max_episode_length)
 
-        self._render_modes = self._env.metadata['render.modes']
+        try:
+            self._render_modes = self._env.metadata['render_modes']
+        except KeyError:
+            self._render_modes = self._env.metadata['render.modes']
 
         self._step_cnt = None
         self._visualize = False
