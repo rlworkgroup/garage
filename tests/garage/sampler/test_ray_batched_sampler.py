@@ -1,4 +1,5 @@
 """Tests for ray_batched_sampler."""
+import pickle
 from unittest.mock import Mock
 
 import numpy as np
@@ -136,6 +137,40 @@ def test_init_with_env_updates(ray_local_session_fixture):
                                              envs=tasks.sample(n_workers))
     episodes = sampler.obtain_samples(0, 160, policy)
     assert sum(episodes.lengths) >= 160
+
+
+def test_pickle(ray_local_session_fixture):
+    del ray_local_session_fixture
+    assert ray.is_initialized()
+    max_episode_length = 16
+    env = PointEnv()
+    policy = FixedPolicy(env.spec,
+                         scripted_actions=[
+                             env.action_space.sample()
+                             for _ in range(max_episode_length)
+                         ])
+    tasks = SetTaskSampler(PointEnv)
+    n_workers = 4
+    workers = WorkerFactory(seed=100,
+                            max_episode_length=max_episode_length,
+                            n_workers=n_workers)
+    sampler = RaySampler.from_worker_factory(workers, policy, env)
+    sampler_pickled = pickle.dumps(sampler)
+    sampler.shutdown_worker()
+    sampler2 = pickle.loads(sampler_pickled)
+    episodes = sampler2.obtain_samples(0,
+                                       500,
+                                       np.asarray(policy.get_param_values()),
+                                       env_update=tasks.sample(n_workers))
+    mean_rewards = []
+    goals = []
+    for eps in episodes.split():
+        mean_rewards.append(eps.rewards.mean())
+        goals.append(eps.env_infos['task'][0]['goal'])
+    assert np.var(mean_rewards) > 0
+    assert np.var(goals) > 0
+    sampler2.shutdown_worker()
+    env.close()
 
 
 def test_init_without_worker_factory(ray_local_session_fixture):

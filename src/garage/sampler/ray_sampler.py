@@ -37,11 +37,17 @@ class RaySampler(Sampler):
             The maximum length episodes which will be sampled.
         is_tf_worker (bool): Whether it is workers for TFTrainer.
         seed(int): The seed to use to initialize random number generators.
-        n_workers(int): The number of workers to use.
+        n_workers(int or None): The number of workers to use. Defaults to
+            number of physical cpus, if worker_factory is also None.
         worker_class(type): Class of the workers. Instances should implement
             the Worker interface.
         worker_args (dict or None): Additional arguments that should be passed
             to the worker.
+        n_gpus (int or float): Number of GPUs to to use in total for sampling.
+            If `n_workers` is not a power of two, this may need to be set
+            slightly below the true value, since `n_workers / n_gpus` gpus are
+            allocated to each worker. Defaults to zero, because otherwise
+            nothing would run if no gpus were available.
 
     """
 
@@ -54,18 +60,22 @@ class RaySampler(Sampler):
             max_episode_length=None,
             is_tf_worker=False,
             seed=get_seed(),
-            n_workers=psutil.cpu_count(logical=False),
+            n_workers=None,
             worker_class=DefaultWorker,
-            worker_args=None):
-        # pylint: disable=super-init-not-called
+            worker_args=None,
+            n_gpus=0):
         if not ray.is_initialized():
             ray.init(log_to_driver=False, ignore_reinit_error=True)
         if worker_factory is None and max_episode_length is None:
             raise TypeError('Must construct a sampler from WorkerFactory or'
                             'parameters (at least max_episode_length)')
-        if isinstance(worker_factory, WorkerFactory):
+        if worker_factory is not None:
+            if n_workers is None:
+                n_workers = worker_factory.n_workers
             self._worker_factory = worker_factory
         else:
+            if n_workers is None:
+                n_workers = psutil.cpu_count(logical=False)
             self._worker_factory = WorkerFactory(
                 max_episode_length=max_episode_length,
                 is_tf_worker=is_tf_worker,
@@ -73,7 +83,9 @@ class RaySampler(Sampler):
                 n_workers=n_workers,
                 worker_class=worker_class,
                 worker_args=worker_args)
-        self._sampler_worker = ray.remote(SamplerWorker)
+        remote_wrapper = ray.remote(num_gpus=n_gpus / n_workers)
+        self._n_gpus = n_gpus
+        self._sampler_worker = remote_wrapper(SamplerWorker)
         self._agents = agents
         self._envs = self._worker_factory.prepare_worker_messages(envs)
         self._all_workers = defaultdict(None)
@@ -103,7 +115,10 @@ class RaySampler(Sampler):
             Sampler: An instance of `cls`.
 
         """
-        return cls(agents, envs, worker_factory=worker_factory)
+        return cls(agents,
+                   envs,
+                   worker_factory=worker_factory,
+                   n_workers=worker_factory.n_workers)
 
     def start_worker(self):
         """Initialize a new ray worker."""
@@ -308,7 +323,8 @@ class RaySampler(Sampler):
         """
         return dict(factory=self._worker_factory,
                     agents=self._agents,
-                    envs=self._envs)
+                    envs=self._envs,
+                    n_gpus=self._n_gpus)
 
     def __setstate__(self, state):
         """Unpickle the state.
@@ -319,7 +335,8 @@ class RaySampler(Sampler):
         """
         self.__init__(state['agents'],
                       state['envs'],
-                      worker_factory=state['factory'])
+                      worker_factory=state['factory'],
+                      n_gpus=state['n_gpus'])
 
 
 class SamplerWorker:
