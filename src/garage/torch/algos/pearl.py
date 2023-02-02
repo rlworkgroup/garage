@@ -743,7 +743,6 @@ class PEARLWorker(DefaultWorker):
             a, agent_info = self.agent.get_action(self._prev_obs)
             if self._deterministic:
                 a = agent_info['mean']
-            a, agent_info = self.agent.get_action(self._prev_obs)
             es = self.env.step(a)
             self._observations.append(self._prev_obs)
             self._env_steps.append(es)
