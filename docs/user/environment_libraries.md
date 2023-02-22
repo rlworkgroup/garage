@@ -14,7 +14,7 @@ For example:
     import gym
     from garage.envs import GymEnv
 
-    env = GymEnv(gym.make('CarRacing-v0')
+    env = GymEnv(gym.make('CarRacing-v0'))
 ```
 
 The wrapper `GymEnv` is required because it brings `gym` environments
