@@ -16,7 +16,7 @@ from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
 from garage.trainer import Trainer
 
-from tests.fixtures import snapshot_config
+from tests.fixtures import reset_gpu_mode, snapshot_config
 
 
 class _MockDistribution:
@@ -177,6 +177,7 @@ def testTemperatureLoss():
     assert np.all(np.isclose(loss, expected_loss))
 
 
+@pytest.mark.serial
 @pytest.mark.mujoco
 def test_sac_inverted_double_pendulum():
     """Test Sac performance on inverted pendulum."""
@@ -234,6 +235,7 @@ def test_sac_inverted_double_pendulum():
     assert not torch.allclose(torch.Tensor([1.]), sac._log_alpha.to('cpu'))
     # check that policy is learning beyond predecided threshold
     assert ret > 80
+    reset_gpu_mode()
 
 
 @pytest.mark.mujoco
@@ -286,6 +288,7 @@ def test_fixed_alpha():
     assert not sac._use_automatic_entropy_tuning
 
 
+@pytest.mark.serial
 @pytest.mark.gpu
 def test_sac_to():
     """Test moving Sac between CPU and GPU."""
@@ -339,3 +342,4 @@ def test_sac_to():
     set_gpu_mode(False)
     sac.to()
     assert torch.allclose(log_alpha, sac._log_alpha)
+    reset_gpu_mode()

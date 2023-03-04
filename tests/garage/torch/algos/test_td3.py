@@ -15,12 +15,13 @@ from garage.torch.policies import DeterministicMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
 from garage.trainer import Trainer
 
-from tests.fixtures import snapshot_config, TfGraphTestCase
+from tests.fixtures import reset_gpu_mode, snapshot_config, TfGraphTestCase
 
 
 class TestTD3(TfGraphTestCase):
     """Test class for TD3."""
 
+    @pytest.mark.serial
     @pytest.mark.mujoco
     def test_td3_inverted_double_pendulum(self):
         deterministic.set_seed(0)
@@ -67,7 +68,9 @@ class TestTD3(TfGraphTestCase):
         td3.to()
         trainer.setup(td3, env)
         trainer.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
+        reset_gpu_mode()
 
+    @pytest.mark.serial
     @pytest.mark.mujoco
     def test_pickling(self):
         """Test pickle and unpickle."""
@@ -116,3 +119,4 @@ class TestTD3(TfGraphTestCase):
         pickled = pickle.dumps(td3)
         unpickled = pickle.loads(pickled)
         assert unpickled
+        reset_gpu_mode()

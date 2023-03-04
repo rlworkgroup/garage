@@ -15,7 +15,7 @@ from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
 from garage.trainer import Trainer
 
-from tests.fixtures import snapshot_config
+from tests.fixtures import reset_gpu_mode, snapshot_config
 
 
 @pytest.mark.mujoco
@@ -178,6 +178,7 @@ def test_mtsac_inverted_double_pendulum():
     assert ret > 0
 
 
+@pytest.mark.serial
 def test_to():
     """Test the torch function that moves modules to GPU.
 
@@ -236,8 +237,10 @@ def test_to():
     for param in mtsac.policy.parameters():
         assert param.device == device
     assert mtsac._log_alpha.device == device
+    reset_gpu_mode()
 
 
+@pytest.mark.serial
 @pytest.mark.mujoco
 def test_fixed_alpha():
     """Test if using fixed_alpha ensures that alpha is non differentiable."""
@@ -298,3 +301,4 @@ def test_fixed_alpha():
     assert torch.allclose(torch.Tensor([0.5] * num_tasks),
                           mtsac._log_alpha.to('cpu'))
     assert not mtsac._use_automatic_entropy_tuning
+    reset_gpu_mode()

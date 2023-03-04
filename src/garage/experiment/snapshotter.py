@@ -3,8 +3,12 @@ import collections
 import errno
 import os
 import pathlib
+import sys
 
 import cloudpickle
+from dowel import logger
+
+# pylint: disable=no-name-in-module
 
 SnapshotConfig = collections.namedtuple(
     'SnapshotConfig', ['snapshot_dir', 'snapshot_mode', 'snapshot_gap'])
@@ -82,6 +86,7 @@ class Snapshotter:
         """
         return self._snapshot_gap
 
+    # pylint: disable=too-many-branches
     def save_itr_params(self, itr, params):
         """Save the parameters if at the right iteration.
 
@@ -94,8 +99,13 @@ class Snapshotter:
                 "gap_overwrite", "gap_and_last", or "none".
 
         """
+        # pylint: disable=import-outside-toplevel
+        torch = False
+        if 'torch' in sys.modules:
+            import torch
+            from garage.torch import global_device
         file_name = None
-
+        # pylint: enable=import-outside-toplevel
         if self._snapshot_mode == 'all':
             file_name = os.path.join(self._snapshot_dir, 'itr_%d.pkl' % itr)
         elif self._snapshot_mode == 'gap_overwrite':
@@ -113,8 +123,11 @@ class Snapshotter:
                 file_name = os.path.join(self._snapshot_dir,
                                          'itr_%d.pkl' % itr)
             file_name_last = os.path.join(self._snapshot_dir, 'params.pkl')
-            with open(file_name_last, 'wb') as file:
-                cloudpickle.dump(params, file)
+            if torch:
+                torch.save(params, file_name_last, pickle_module=cloudpickle)
+            else:
+                with open(file_name_last, 'wb') as file:
+                    cloudpickle.dump(params, file)
         elif self._snapshot_mode == 'none':
             pass
         else:
@@ -122,8 +135,20 @@ class Snapshotter:
                 self._snapshot_mode))
 
         if file_name:
-            with open(file_name, 'wb') as file:
-                cloudpickle.dump(params, file)
+            if torch:
+
+                class _pickle_module:
+                    dump = cloudpickle.dump
+                    Pickler = cloudpickle.CloudPickler
+
+                params['global_device'] = global_device()
+                torch.save(params,
+                           file_name,
+                           pickle_module=_pickle_module,
+                           _use_new_zipfile_serialization=False)
+            else:
+                with open(file_name, 'wb') as file:
+                    cloudpickle.dump(params, file)
 
     def load(self, load_dir, itr='last'):
         # pylint: disable=no-self-use
@@ -145,6 +170,12 @@ class Snapshotter:
             NotAFileError: If the snapshot exists but is not a file.
 
         """
+        torch = False
+        # pylint: disable=import-outside-toplevel
+        if 'torch' in sys.modules:
+            import torch
+            from garage.torch import global_device
+        # pylint: enable=import-outside-toplevel
         if isinstance(itr, int) or itr.isdigit():
             load_from_file = os.path.join(load_dir, 'itr_{}.pkl'.format(itr))
         else:
@@ -165,7 +196,13 @@ class Snapshotter:
 
         if not os.path.isfile(load_from_file):
             raise NotAFileError('File not existing: ', load_from_file)
-
+        if torch:
+            device = global_device()
+            params = torch.load(load_from_file, map_location=device)
+            origin_device = params['global_device']
+            del params['global_device']
+            logger.log(f'Resuming experiment from {origin_device} on {device}')
+            return params
         with open(load_from_file, 'rb') as file:
             return cloudpickle.load(file)
 
