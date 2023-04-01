@@ -5,7 +5,8 @@ import akro
 import numpy as np
 import torch
 
-from garage.torch._functions import list_to_tensor, np_to_torch
+from garage.torch import (list_to_tensor, np_to_torch, ObservationBatch,
+                          ObservationOrder)
 from garage.torch.policies.policy import Policy
 
 
@@ -92,6 +93,8 @@ class StochasticPolicy(Policy, abc.ABC):
 
             if isinstance(self._env_spec.observation_space, akro.Image):
                 observations /= 255.0  # scale image
+            observations = ObservationBatch(observations,
+                                            order=ObservationOrder.LAST)
             dist, info = self.forward(observations)
             return dist.sample().cpu().numpy(), {
                 k: v.detach().cpu().numpy()
@@ -105,7 +108,12 @@ class StochasticPolicy(Policy, abc.ABC):
 
         Args:
             observations (torch.Tensor): Batch of observations on default
-                torch device.
+                torch device. Stateful policies may require this input to be a
+                garage.torch.ObservationBatch.
+
+        Raises:
+            ShuffledOptimizationNotSupported: If this policy is a stateful
+                policy and the required an ObservationBatch.
 
         Returns:
             torch.distributions.Distribution: Batch distribution of actions.

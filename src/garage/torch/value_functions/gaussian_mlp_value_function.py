@@ -78,11 +78,11 @@ class GaussianMLPValueFunction(ValueFunction):
             std_parameterization='exp',
             layer_normalization=layer_normalization)
 
-    def compute_loss(self, obs, returns):
+    def loss_function(self, observations, returns, lengths=None):
         r"""Compute mean value of loss.
 
         Args:
-            obs (torch.Tensor): Observation from the environment
+            observations (torch.Tensor): Observation from the environment
                 with shape :math:`(N \dot [T], O*)`.
             returns (torch.Tensor): Acquired returns with shape :math:`(N, )`.
 
@@ -91,7 +91,7 @@ class GaussianMLPValueFunction(ValueFunction):
                 objective (float).
 
         """
-        dist = self.module(obs)
+        dist = self.module(observations)
         ll = dist.log_prob(returns.reshape(-1, 1))
         loss = -ll.mean()
         return loss

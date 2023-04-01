@@ -6,6 +6,7 @@ import pytest
 # yapf: disable
 from garage import (EnvSpec, EnvStep, EpisodeBatch, StepType, TimeStep,
                     TimeStepBatch)
+from garage._dtypes import check_timestep_batch
 
 # yapf: enable
 
@@ -77,6 +78,7 @@ def test_new_eps(eps_data):
     assert t.episode_infos_by_episode is eps_data['episode_infos']
     assert (t.episode_infos['task_one_hot'][0].shape ==
             eps_data['episode_infos']['task_one_hot'][0].shape)
+    check_timestep_batch(t, np.ndarray)
 
 
 def test_lengths_shape_mismatch_eps(eps_data):

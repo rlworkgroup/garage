@@ -20,11 +20,11 @@ class ValueFunction(abc.ABC, nn.Module):
         self.name = name
 
     @abc.abstractmethod
-    def compute_loss(self, obs, returns):
+    def loss_function(self, observations, returns, lengths=None):
         r"""Compute mean value of loss.
 
         Args:
-            obs (torch.Tensor): Observation from the environment
+            observations (torch.Tensor): Observation from the environment
                 with shape :math:`(N \dot [T], O*)`.
             returns (torch.Tensor): Acquired returns with shape :math:`(N, )`.
 

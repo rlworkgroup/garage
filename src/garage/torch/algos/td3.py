@@ -84,9 +84,9 @@ class TD3(RLAlgorithm):
             replay_buffer,
             sampler,
             *,  # Everything after this is numbers.
-            max_episode_length_eval=None,
             grad_steps_per_env_step,
             exploration_policy,
+            max_episode_length_eval=None,
             uniform_random_policy=None,
             max_action=None,
             target_update_tau=0.005,

@@ -6,7 +6,7 @@ from garage.envs import GymEnv, normalize
 from garage.experiment import deterministic
 from garage.sampler import RaySampler
 from garage.torch.algos import PPO as PyTorch_PPO
-from garage.torch.optimizers import OptimizerWrapper
+from garage.torch.optimizers import MinibatchOptimizer
 from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
 from garage.torch.value_functions import GaussianMLPValueFunction
 from garage.trainer import Trainer
@@ -45,15 +45,15 @@ def ppo_garage_pytorch(ctxt, env_id, seed):
                                               hidden_nonlinearity=torch.tanh,
                                               output_nonlinearity=None)
 
-    policy_optimizer = OptimizerWrapper((torch.optim.Adam, dict(lr=2.5e-4)),
-                                        policy,
-                                        max_optimization_epochs=10,
-                                        minibatch_size=64)
+    policy_optimizer = MinibatchOptimizer((torch.optim.Adam, dict(lr=2.5e-4)),
+                                          policy,
+                                          max_optimization_epochs=10,
+                                          minibatch_size=64)
 
-    vf_optimizer = OptimizerWrapper((torch.optim.Adam, dict(lr=2.5e-4)),
-                                    value_function,
-                                    max_optimization_epochs=10,
-                                    minibatch_size=64)
+    vf_optimizer = MinibatchOptimizer((torch.optim.Adam, dict(lr=2.5e-4)),
+                                      value_function,
+                                      max_optimization_epochs=10,
+                                      minibatch_size=64)
 
     sampler = RaySampler(agents=policy,
                          envs=env,
