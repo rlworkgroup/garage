@@ -9,7 +9,15 @@ echo DOCKERFILE_PATH="$DOCKERFILE_PATH"
 echo DOCKER_REPO="$DOCKER_REPO"
 echo IMAGE_NAME="$IMAGE_NAME"
 
-if [[ "$DOCKER_REPO" = *"rlworkgroup/garage" ]]; then
+if [[ "$DOCKER_REPO" = *"rlworkgroup/garage-base" ]]; then
+  echo "Building target garage-base"
+  docker build \
+		-f "../$DOCKERFILE_PATH" \
+		--build-arg BUILDKIT_INLINE_CACHE=1 \
+		--target garage-base \
+		-t "$IMAGE_NAME" \
+		..
+elif [[ "$DOCKER_REPO" = *"rlworkgroup/garage" ]]; then
   echo "Building target garage"
   docker build \
 		-f "../$DOCKERFILE_PATH" \
