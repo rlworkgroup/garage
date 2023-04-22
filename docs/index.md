@@ -62,6 +62,7 @@ and how to implement new MDPs and new algorithms.
    RL2 <user/algo_rl2>
    SAC <user/algo_sac>
    TD3 <user/algo_td3>
+   TEPPO <user/algo_teppo>
    TRPO <user/algo_trpo>
    REINFORCE <user/algo_vpg>
    DQN <user/algo_dqn>
