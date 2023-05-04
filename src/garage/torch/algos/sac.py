@@ -154,7 +154,6 @@ class SAC(RLAlgorithm):
 
         self.policy = policy
         self.env_spec = env_spec
-        self.replay_buffer = replay_buffer
 
         self._sampler = sampler
 
