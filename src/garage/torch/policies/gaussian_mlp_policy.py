@@ -99,4 +99,5 @@ class GaussianMLPPolicy(StochasticPolicy):
 
         """
         dist = self._module(observations)
+        assert isinstance(dist, torch.distributions.independent.Independent)
         return (dist, dict(mean=dist.mean, log_std=(dist.variance**.5).log()))
