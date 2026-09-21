@@ -27,7 +27,7 @@ Multi-Task PPO is a multi-task RL method that aims to learn PPO algorithm to max
 This example is to train PPO on Multi-Task 1 (MT1) push environment, in which we learn a policy to perform push tasks.
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/mtppo_metaworld_mt1_push.py
+.. literalinclude:: ../../src/garage/examples/torch/mtppo_metaworld_mt1_push.py
 ```
 
 ### mtppo_metaworld_mt10
@@ -35,7 +35,7 @@ This example is to train PPO on Multi-Task 1 (MT1) push environment, in which we
 This example is to train PPO on Multi-Task 10 (MT10) environment, in which we learn a policy to perform 10 different manipulation tasks.
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/mtppo_metaworld_mt10.py
+.. literalinclude:: ../../src/garage/examples/torch/mtppo_metaworld_mt10.py
 ```
 
 ### mtppo_metaworld_mt50
@@ -43,7 +43,7 @@ This example is to train PPO on Multi-Task 10 (MT10) environment, in which we le
 This example is to train PPO on Multi-Task 50 (MT50) environment, in which we learn a policy to perform 50 different manipulation tasks.
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/mtppo_metaworld_mt50.py
+.. literalinclude:: ../../src/garage/examples/torch/mtppo_metaworld_mt50.py
 ```
 
 ## References

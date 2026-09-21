@@ -38,9 +38,9 @@ environments.
 The following gym environments have been tested with garage and have examples
 written for them:
 
-* `MemorizeDigits-v0` - see `examples/tf/ppo_memorize_digits.py`
-* `CubeCrash-v0`- see `examples/tf/trpo_cubecrash.py`
-* `PongNoFrameskip-v4` - see `examples/tf/dqn_pong.py`
+* `MemorizeDigits-v0` - see `src/garage/examples/tf/ppo_memorize_digits.py`
+* `CubeCrash-v0`- see `src/garage/examples/tf/trpo_cubecrash.py`
+* `PongNoFrameskip-v4` - see `src/garage/examples/tf/dqn_pong.py`
 
 Gym environments that do not return pixel observations by default can be used
 with `garage.envs.wrappers.PixelObservationWrapper`, which overrides the default

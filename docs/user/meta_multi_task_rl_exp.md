@@ -167,7 +167,7 @@ In this example, we assume one-hot task id is appened to observation and to excl
 When performing a multi-task RL experiment, we can use multi-task learning environment such as `MT50`, `MT10` etc. We will take a look at `te_ppo_metaworld_mt50.py` as below:
 
 ```eval_rst
-.. literalinclude:: ../../examples/tf/te_ppo_metaworld_mt50.py
+.. literalinclude:: ../../src/garage/examples/tf/te_ppo_metaworld_mt50.py
 ```
 
 In this example, to sample tasks from `MT50` environments in a round robin fashion, the call to `MultiEnvWrapper` becomes `MultiEnvWrapper(envs , sample_strategy=round_robin_strategy, mode='del-onehot')`.

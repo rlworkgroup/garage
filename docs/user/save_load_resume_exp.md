@@ -205,7 +205,7 @@ policy/dLoss                                  0.0110392
 ---------------------------------------  ---------------
 ```
 
-You may find the full example at `examples/tf/trpo_gym_tf_cartpole_pretrained.py`.
+You may find the full example at `src/garage/examples/tf/trpo_gym_tf_cartpole_pretrained.py`.
 
 ----
 *This page was authored by Iris Liu ([@irisliucy](https://github.com/irisliucy)).*

@@ -31,7 +31,7 @@ This example is to train TRPO on Multi-Task 1 (MT1) push environment, in which
 we learn a policy to perform push tasks.
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/mttrpo_metaworld_mt1_push.py
+.. literalinclude:: ../../src/garage/examples/torch/mttrpo_metaworld_mt1_push.py
 ```
 
 ### mttrpo_metaworld_mt10
@@ -40,7 +40,7 @@ This example is to train TRPO on Multi-Task 10 (MT10) environment, in which we
 learn a policy to perform 10 different manipulation tasks.
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/mttrpo_metaworld_mt10.py
+.. literalinclude:: ../../src/garage/examples/torch/mttrpo_metaworld_mt10.py
 ```
 
 ### mttrpo_metaworld_mt50
@@ -49,7 +49,7 @@ This example is to train TRPO on Multi-Task 50 (MT50) environment, in which we
 learn a policy to perform 10 different manipulation tasks.
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/mttrpo_metaworld_mt50.py
+.. literalinclude:: ../../src/garage/examples/torch/mttrpo_metaworld_mt50.py
 ```
 
 ## References

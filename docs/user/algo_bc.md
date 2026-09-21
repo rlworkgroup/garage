@@ -36,7 +36,7 @@ batch_size = 1000
 ```eval_rst
 .. figure:: ./images/pytorch.png
         :scale: 10%
-.. literalinclude:: ../../examples/torch/bc_point.py
+.. literalinclude:: ../../src/garage/examples/torch/bc_point.py
 ```
 
 ### bc_point_deterministic_policy
@@ -48,7 +48,7 @@ batch_size = 1000
 ```eval_rst
 .. figure:: ./images/pytorch.png
         :scale: 10%
-.. literalinclude:: ../../examples/torch/bc_point_deterministic_policy.py
+.. literalinclude:: ../../src/garage/examples/torch/bc_point_deterministic_policy.py
 ```
 
 ## References

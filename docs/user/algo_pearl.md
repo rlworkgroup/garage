@@ -47,25 +47,25 @@ reward_scale=5.
 ### pearl_half_cheetah_vel
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/pearl_half_cheetah_vel.py
+.. literalinclude:: ../../src/garage/examples/torch/pearl_half_cheetah_vel.py
 ```
 
 ### pearl_metaworld_ml1_push
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/pearl_metaworld_ml1_push.py
+.. literalinclude:: ../../src/garage/examples/torch/pearl_metaworld_ml1_push.py
 ```
 
 ### pearl_metaworld_ml10
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/pearl_metaworld_ml10.py
+.. literalinclude:: ../../src/garage/examples/torch/pearl_metaworld_ml10.py
 ```
 
 ### pearl_metaworld_ml45
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/pearl_metaworld_ml45.py
+.. literalinclude:: ../../src/garage/examples/torch/pearl_metaworld_ml45.py
 ```
 
 ## References

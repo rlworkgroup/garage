@@ -59,13 +59,13 @@ As with all algorithms in garage, you can take a look at the the examples provid
 ### TF
 
 ```eval_rst
-.. literalinclude:: ../../examples/tf/vpg_cartpole.py
+.. literalinclude:: ../../src/garage/examples/tf/vpg_cartpole.py
 ```
 
 ### Pytorch
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/vpg_pendulum.py
+.. literalinclude:: ../../src/garage/examples/torch/vpg_pendulum.py
 ```
 
 ## References

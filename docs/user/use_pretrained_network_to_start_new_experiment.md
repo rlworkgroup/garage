@@ -69,7 +69,7 @@ policy wasn't trained with garage, you can wrap it in garage's `Policy` API
 Garage's DQN module accepts a Q function in its constructor: `DQN(env_space=env.spec, policy=policy, qf=qf, ...)`
 To use a pre-trained Q function, we simply load one and pass it in, rather than
 creating a new one. Since there is a relatively large number of constructs that
-go into creating a DQN, we suggest you use the [Pong example code](https://github.com/rlworkgroup/garage/blob/master/examples/tf/dqn_pong.py)
+go into creating a DQN, we suggest you use the [Pong example code](https://github.com/rlworkgroup/garage/blob/master/src/garage/examples/tf/dqn_pong.py)
 as a starting point. You'll have to modify lines 68-75 (`qf = DiscreteCNNQFunction(...)`)
 as shown below:
 

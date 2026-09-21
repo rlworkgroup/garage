@@ -50,7 +50,7 @@ name='ERWR'
 ```eval_rst
 .. figure:: ./images/tf.png
         :scale: 10%
-.. literalinclude:: ../../examples/tf/erwr_cartpole.py
+.. literalinclude:: ../../src/garage/examples/tf/erwr_cartpole.py
 ```
 
 ## References

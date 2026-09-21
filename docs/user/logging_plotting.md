@@ -68,7 +68,7 @@ it easy to plot a policy running in the environment when training.
 
 To visualize an experiment, just set the `plot` argument to `True` in the
 [`train`](../_autoapi/garage/index.html#garage.Trainer.train) method of
-`Trainer`. For example, in [example/tf/trpo_cartpole.py](https://github.com/rlworkgroup/garage/blob/master/examples/tf/trpo_cartpole.py),
+`Trainer`. For example, in [src/garage/examples/tf/trpo_cartpole.py](https://github.com/rlworkgroup/garage/blob/master/src/garage/examples/tf/trpo_cartpole.py),
 change the train line into:
 
 ```py

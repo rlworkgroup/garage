@@ -45,17 +45,17 @@ use_deterministic_evaluation=True,
 
 ### mtsac_metaworld_ml1_pick_place
 ```eval_rst
-.. literalinclude:: ../../examples/torch/mtsac_metaworld_ml1_pick_place.py
+.. literalinclude:: ../../src/garage/examples/torch/mtsac_metaworld_mt1_pick_place.py
 ```
 
 ### mtsac_metaworld_mt10
 ```eval_rst
-.. literalinclude:: ../../examples/torch/mtsac_metaworld_mt10.py
+.. literalinclude:: ../../src/garage/examples/torch/mtsac_metaworld_mt10.py
 ```
 
 ### mtsac_metaworld_mt50
 ```eval_rst
-.. literalinclude:: ../../examples/torch/mtsac_metaworld_mt10.py
+.. literalinclude:: ../../src/garage/examples/torch/mtsac_metaworld_mt10.py
 ```
 
 ----

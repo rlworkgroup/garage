@@ -31,13 +31,13 @@ Garage has implementations of DDPG with PyTorch and TensorFlow.
 ### PyTorch
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/ddpg_pendulum.py
+.. literalinclude:: ../../src/garage/examples/torch/ddpg_pendulum.py
 ```
 
 ### TensorFlow
 
 ```eval_rst
-.. literalinclude:: ../../examples/tf/ddpg_pendulum.py
+.. literalinclude:: ../../src/garage/examples/tf/ddpg_pendulum.py
 ```
 
 ## References

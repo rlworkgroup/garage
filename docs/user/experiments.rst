@@ -28,9 +28,9 @@ the important objects involved in running an experiment, such as the following:
 Finally, the launcher calls :code:`trainer.setup` and :code:`trainer.train` which co-ordinate running the algorithm.
 
 The garage repository contains several example experiment launchers. A fairly
-simple one, :code:`examples/tf/trpo_cartpole.py`, is also pasted below:
+simple one, :code:`src/garage/examples/tf/trpo_cartpole.py`, is also pasted below:
 
-.. literalinclude:: ../../examples/tf/trpo_cartpole.py
+.. literalinclude:: ../../src/garage/examples/tf/trpo_cartpole.py
 
 Running the above should produce output like:
 
@@ -182,7 +182,7 @@ In order to enable the GPU for PyTorch, add the following code snippets to the e
         set_gpu_mode(False)
     algo.to()
 
-See :code:`examples/torch/sac_half_cheetah_batch.py` for a more detailed example.
+See :code:`src/garage/examples/torch/sac_half_cheetah_batch.py` for a more detailed example.
 
 ----
 

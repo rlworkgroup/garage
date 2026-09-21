@@ -31,19 +31,19 @@ examples of running RL<sup>2</sup> in different environments.
 ### rl2_ppo_halfcheetah
 
 ```eval_rst
-.. literalinclude:: ../../examples/tf/rl2_ppo_halfcheetah.py
+.. literalinclude:: ../../src/garage/examples/tf/rl2_ppo_halfcheetah.py
 ```
 
 ### rl2_ppo_metaworld_ml10
 
 ```eval_rst
-.. literalinclude:: ../../examples/tf/rl2_ppo_metaworld_ml10.py
+.. literalinclude:: ../../src/garage/examples/tf/rl2_ppo_metaworld_ml10.py
 ```
 
 ### rl2_ppo_halfcheetah_meta_test
 
 ```eval_rst
-.. literalinclude:: ../../examples/tf/rl2_ppo_halfcheetah_meta_test.py
+.. literalinclude:: ../../src/garage/examples/tf/rl2_ppo_halfcheetah_meta_test.py
 ```
 
 ## RL<sup>2</sup>TRPO
@@ -53,7 +53,7 @@ Trust Region Policy Optimization specific for RL<sup>2</sup>.
 ## rl2_trpo_halfcheetah
 
 ```eval_rst
-.. literalinclude:: ../../examples/tf/rl2_trpo_halfcheetah.py
+.. literalinclude:: ../../src/garage/examples/tf/rl2_trpo_halfcheetah.py
 ```
 
 ## References

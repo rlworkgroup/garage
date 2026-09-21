@@ -38,7 +38,7 @@ evaluate_every_n_epochs=1
 ```eval_rst
 .. figure:: ./images/pytorch.png
         :scale: 10%
-.. literalinclude:: ../../examples/torch/maml_ppo_half_cheetah_dir.py
+.. literalinclude:: ../../src/garage/examples/torch/maml_ppo_half_cheetah_dir.py
 ```
 
 ### maml_trpo_half_cheetah_dir
@@ -46,7 +46,7 @@ evaluate_every_n_epochs=1
 ```eval_rst
 .. figure:: ./images/pytorch.png
         :scale: 10%
-.. literalinclude:: ../../examples/torch/maml_trpo_half_cheetah_dir.py
+.. literalinclude:: ../../src/garage/examples/torch/maml_trpo_half_cheetah_dir.py
 ```
 
 ### maml_trpo_metaworld_ml1_push
@@ -54,7 +54,7 @@ evaluate_every_n_epochs=1
 ```eval_rst
 .. figure:: ./images/pytorch.png
         :scale: 10%
-.. literalinclude:: ../../examples/torch/maml_trpo_metaworld_ml1_push.py
+.. literalinclude:: ../../src/garage/examples/torch/maml_trpo_metaworld_ml1_push.py
 ```
 
 ### maml_trpo_metaworld_ml10
@@ -62,7 +62,7 @@ evaluate_every_n_epochs=1
 ```eval_rst
 .. figure:: ./images/pytorch.png
         :scale: 10%
-.. literalinclude:: ../../examples/torch/maml_trpo_metaworld_ml10.py
+.. literalinclude:: ../../src/garage/examples/torch/maml_trpo_metaworld_ml10.py
 ```
 
 ### maml_trpo_metaworld_ml45
@@ -70,7 +70,7 @@ evaluate_every_n_epochs=1
 ```eval_rst
 .. figure:: ./images/pytorch.png
         :scale: 10%
-.. literalinclude:: ../../examples/torch/maml_trpo_metaworld_ml45.py
+.. literalinclude:: ../../src/garage/examples/torch/maml_trpo_metaworld_ml45.py
 ```
 
 ## References

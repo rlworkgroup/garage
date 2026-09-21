@@ -48,7 +48,7 @@ num_evaluation_episodes=10
 ## Examples
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/sac_half_cheetah_batch.py
+.. literalinclude:: ../../src/garage/examples/torch/sac_half_cheetah_batch.py
 ```
 
 ## References

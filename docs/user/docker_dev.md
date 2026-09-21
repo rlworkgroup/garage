@@ -37,7 +37,7 @@ To build and run the headless image, first clone the garage repository,
 move to the root folder of your local repository and then execute;
 
 ```bash
-make run-dev RUN_CMD="python examples/tf/trpo_cartpole.py"
+make run-dev RUN_CMD="python -m garage.examples.tf.trpo_cartpole"
 ```
 
 Where `RUN_CMD` specifies the executable to run in the container.

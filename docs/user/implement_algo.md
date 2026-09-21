@@ -245,11 +245,11 @@ from garage import log_performance, EpisodeBatch
             self._train_once(samples)
 ```
 
-For completeness, the full experiment file ([`example/torch/tutorial_vpg.py`](https://github.com/rlworkgroup/garage/blob/master/examples/torch/tutorial_vpg.py))
+For completeness, the full experiment file ([`src/garage/examples/torch/tutorial_vpg.py`](https://github.com/rlworkgroup/garage/blob/master/src/garage/examples/torch/tutorial_vpg.py))
 is repeated below:
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/tutorial_vpg.py
+.. literalinclude:: ../../src/garage/examples/torch/tutorial_vpg.py
 ```
 
 Running the experiment file should print outputs like the following. The policy
@@ -429,11 +429,11 @@ and `__setstate__` like:
         self.init_opt()
 ```
 
-For completeness, the full experiment file ([`example/tf/tutorial_vpg.py`](https://github.com/rlworkgroup/garage/blob/master/examples/tf/tutorial_vpg.py))
+For completeness, the full experiment file ([`src/garage/examples/tf/tutorial_vpg.py`](https://github.com/rlworkgroup/garage/blob/master/src/garage/examples/tf/tutorial_vpg.py))
 is repeated below:
 
 ```eval_rst
-.. literalinclude:: ../../examples/tf/tutorial_vpg.py
+.. literalinclude:: ../../src/garage/examples/tf/tutorial_vpg.py
 ```
 
 Similar to the PyTorch's version, Running the experiment file should print
@@ -574,7 +574,7 @@ class SimpleCEM:
             self._cur_mean)) * sample_std + self._cur_mean
 ```
 
-You can see the full experiment file [here](https://github.com/rlworkgroup/garage/blob/master/examples/np/tutorial_cem.py).
+You can see the full experiment file [here](https://github.com/rlworkgroup/garage/blob/master/src/garage/examples/np/tutorial_cem.py).
 Running the experiment file should print outputs like the following. If you want
 to visualize the policy when training, you can set `plot` to `True` in
 `trainer.train()` as mentioned before in PyTorch section.

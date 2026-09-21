@@ -26,13 +26,13 @@ The garage container comes bundled with the examples available in the garage
 repo. To run an example launcher in the container, execute:
 
 ```bash
-docker run -it --rm rlworkgroup/garage python examples/tf/trpo_cartpole.py
+docker run -it --rm rlworkgroup/garage python -m garage.examples.tf.trpo_cartpole
 ```
 
 To get a list of all the examples, you can run:
 
 ```bash
-docker run -it --rm rlworkgroup/garage ls -R examples
+docker run -it --rm rlworkgroup/garage garage examples
 ```
 
 This will run the latest image available on Docker Hub, which coincides with
@@ -80,7 +80,7 @@ docker run \
   --rm \
   -v /home/user/data:/home/garage-user/data \
   rlworkgroup/garage \
-  python examples/tf/trpo_cartpole.py
+  python -m garage.examples.tf.trpo_cartpole
 ```
 
 Similarly, if you want to run your own code inside the Docker container, you can
@@ -110,7 +110,7 @@ docker run \
   -e MJKEY="$(cat ~/.mujoco/mjkey.txt)" \
   # ... other arguments here
   rlworkgroup/garage \
-  python examples/tf/trpo_swimmer.py
+  python -m garage.examples.tf.trpo_swimmer
 ```
 
 ## `garage-nvidia` image
@@ -142,7 +142,7 @@ docker run \
   --rm \
   # ...
   rlworkgroup/garage-nvidia \
-  python examples/tf/trpo_cartpole.py
+  python -m garage.examples.tf.trpo_cartpole
 ```
 
 ### Enabling environment visualization
@@ -173,7 +173,7 @@ docker run \
   -e DISPLAY=$DISPLAY \
   -e QT_X11_NO_MITSHM=1 \
   rlworkgroup/garage \
-  python examples/tf/trpo_swimmer.py
+  python -m garage.examples.tf.trpo_swimmer
 ```
 
 
@@ -192,7 +192,7 @@ docker run \
   --gpus "device=0,2" \
   # ...
   rlworkgroup/garage-nvidia \
-  python examples/tf/trpo_cartpole.py
+  python -m garage.examples.tf.trpo_cartpole
 ```
 
 ### Using a different CUDA version

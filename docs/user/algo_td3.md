@@ -40,19 +40,19 @@ actor_update_period=2,
 ### td3_pendulum_tf
 
 ```eval_rst
-.. literalinclude:: ../../examples/tf/td3_pendulum.py
+.. literalinclude:: ../../src/garage/examples/tf/td3_pendulum.py
 ```
 
 ### td3_pendulum_pytorch
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/td3_pendulum.py
+.. literalinclude:: ../../src/garage/examples/torch/td3_pendulum.py
 ```
 
 ### td3_halfcheetah_pytorch
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/td3_halfcheetah.py
+.. literalinclude:: ../../src/garage/examples/torch/td3_halfcheetah.py
 ```
 
 ## Benchmarks

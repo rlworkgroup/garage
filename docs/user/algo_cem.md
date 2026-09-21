@@ -32,7 +32,7 @@ n_best top policies in terms of return.
 ### NumPy
 
 ```eval_rst
-.. literalinclude:: ../../examples/np/cem_cartpole.py
+.. literalinclude:: ../../src/garage/examples/np/cem_cartpole.py
 ```
 
 ## References

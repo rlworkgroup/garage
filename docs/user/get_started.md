@@ -189,7 +189,7 @@ You can also directly run an example by passing the fully qualified name to
 `python -m`, as follows:
 
 ```
-python -m garage.examples.tf.dqn_cartpole.py
+python -m garage.examples.tf.dqn_cartpole
 ```
 
 You can also access the examples for a specific version on GitHub by visiting

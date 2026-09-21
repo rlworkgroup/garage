@@ -11,7 +11,7 @@ The most compute-intensive part in training a policy is sampling. Garage uses
 we only need to choose proper `Sampler` and `Worker` when setting up
 `Trainer`.
 
-In the following tests, we will use [`examples/torch/trpo_pendulum.py`](https://github.com/rlworkgroup/garage/blob/master/examples/torch/trpo_pendulum.py)
+In the following tests, we will use [`src/garage/examples/torch/trpo_pendulum.py`](https://github.com/rlworkgroup/garage/blob/master/src/garage/examples/torch/trpo_pendulum.py)
 as example experiment file.
 
 ### LocalSampler and DefaultWorker

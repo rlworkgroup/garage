@@ -109,11 +109,11 @@ See below for a full example.
 
 In the above steps, we construct the required components to train a
 `CategoricalMLPPolicy` with `TRPO` to solve `CartPole-v1` and wrap all into an
-experiment function. You can find the full example in [`examples/tf/trpo_cartpole.py`](https://github.com/rlworkgroup/garage/blob/master/examples/tf/trpo_cartpole.py),
+experiment function. You can find the full example in [`src/garage/examples/tf/trpo_cartpole.py`](https://github.com/rlworkgroup/garage/blob/master/src/garage/examples/tf/trpo_cartpole.py),
 which is also pasted below:
 
 ```eval_rst
-.. literalinclude:: ../../examples/tf/trpo_cartpole.py
+.. literalinclude:: ../../src/garage/examples/tf/trpo_cartpole.py
 ```
 
 Running the above should produce output like:

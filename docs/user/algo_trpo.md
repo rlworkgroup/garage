@@ -25,16 +25,16 @@ Trust Region Policy Optimization, or TRPO, is a policy gradient algorithm that b
 ### TF
 
 ```eval_rst
-.. literalinclude:: ../../examples/tf/trpo_cartpole.py
-.. literalinclude:: ../../examples/tf/trpo_cubecrash.py
-.. literalinclude:: ../../examples/tf/trpo_cartpole_recurrent.py
+.. literalinclude:: ../../src/garage/examples/tf/trpo_cartpole.py
+.. literalinclude:: ../../src/garage/examples/tf/trpo_cubecrash.py
+.. literalinclude:: ../../src/garage/examples/tf/trpo_cartpole_recurrent.py
 ```
 
 ### Pytorch
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/trpo_pendulum.py
-.. literalinclude:: ../../examples/torch/trpo_pendulum_ray_sampler.py
+.. literalinclude:: ../../src/garage/examples/torch/trpo_pendulum.py
+.. literalinclude:: ../../src/garage/examples/torch/trpo_pendulum_ray_sampler.py
 ```
 
 ## References

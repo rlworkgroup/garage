@@ -59,7 +59,7 @@ The PyTorch branch provides an Atari launcher (see below) that allows you to eas
 
 ```bash
 # train on PongNoFrameskip-v4 for 10M steps
-python examples/torch/dqn_atari.py Pong --seed 22 --n_steps 10e6
+python -m garage.examples.torch.dqn_atari Pong --seed 22 --n_steps 10e6
 ```
 
 by default, all the hyperparameters stored in the `hyperparams` dict at the top of the launcher file, as well as the ones passed in via the command line, are stored in the `variant.json` file in the experiment's directory. You can use this feature to quickly compare hyperparameters between multiple runs.
@@ -70,21 +70,21 @@ The training curves for Dueling DQN on the Atari-10M suite are included below.
 
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/dqn_atari.py
+.. literalinclude:: ../../src/garage/examples/torch/dqn_atari.py
 ```
 
 ```eval_rst
-.. literalinclude:: ../../examples/torch/dqn_cartpole.py
+.. literalinclude:: ../../src/garage/examples/torch/dqn_cartpole.py
 ```
 
 ### TF
 
 ```eval_rst
-.. literalinclude:: ../../examples/tf/dqn_cartpole.py
+.. literalinclude:: ../../src/garage/examples/tf/dqn_cartpole.py
 ```
 
 ```eval_rst
-.. literalinclude:: ../../examples/tf/dqn_pong.py
+.. literalinclude:: ../../src/garage/examples/tf/dqn_pong.py
 ```
 
 ## References
